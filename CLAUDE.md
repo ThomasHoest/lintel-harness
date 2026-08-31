@@ -1,0 +1,361 @@
+# CLAUDE.md
+
+Guidance for Claude Code (claude.ai/code) when working in this
+repository. Keep this file short, current, and accurate. A stale
+CLAUDE.md is worse than no CLAUDE.md.
+
+---
+
+## Project overview
+
+This repository is **Lintel Harness** — a **harness template
+generator**. It produces the scaffolding an agentic project needs
+before any real work starts: agent roles, agent teams, the process and
+its document templates, behavioural guidelines, folder structure, and
+the skills and automations that make it run.
+
+The unit of delivery is a **template pack**: one complete, opinionated
+way of working for one *kind* of project. **Coding** is one pack.
+**Writing** is another. More will follow.
+
+The product exists because that knowledge currently ships as *folders
+that get copied and hand-edited* — fast to apply once, impossible to
+update afterwards, and silently drifting from its source. The harness
+replaces copy-paste with a **managed apply**: real files written into
+the target project plus a manifest (pack, version, per-file hash), so a
+later `update` can be computed rather than guessed.
+
+**Status: pre-spec, but unblocked.** The product brief
+(`specifications/lintel-harness-brief.md`) is **Draft**. No
+specification set exists yet, no code is written, and the repo has **no
+commits**. Q-1…Q-10 were resolved on 2026-08-30 (see the brief's
+Resolved Decisions table). **One question remains open — Q-11**, the
+framing of the third pack, which needs a research pass before the spec
+can be complete.
+
+### This repo is self-hosting — know which level you are on
+
+The harness generates agentic project scaffolding, and it *is* an
+agentic project that uses that scaffolding. Two levels, easy to
+confuse:
+
+| Level | What it is | Where |
+|---|---|---|
+| **Meta** — the harness's own working setup | The agents and commands operating **on this repo** | `.claude/` |
+| **Product** — the material being productized | The pack contents this repo turns into a generator | `template/` |
+
+An edit to `.claude/agents/architect.md` changes how *this project* is
+built. An edit under `template/` changes *what the product ships*.
+Never make one thinking you are making the other.
+
+---
+
+## Repository layout
+
+```
+.
+├── .claude/
+│   ├── agents/                  ← the 10 sub-agents working on THIS repo
+│   └── commands/                ← slash commands (currently: /target)
+├── AgentTeams/                  ← APPLIED · Specify.md, Implement.md
+├── specifications/              ← APPLIED · process, conventions, doc templates
+│   └── lintel-harness-brief.md  ← product brief (Draft)
+├── targets/                     ← APPLIED · target.template.md, Run.md
+├── copy/
+│   └── tone-of-voice.md         ← APPLIED · still unfilled (placeholder)
+├── template/                    ← the pack SOURCE — pristine, do not edit
+└── CLAUDE.md                    ← this file
+```
+
+Everything marked **APPLIED** was produced by applying the coding pack
+to this repo (see Dogfooding, below). `template/` is the source those
+copies came from. The version folder `specifications/v1.0/` is created
+by the first `Specify.md` run, once the blocking questions resolve.
+
+---
+
+## Decided architecture (v1.0)
+
+Settled 2026-08-30; rationale for each in the brief's Resolved
+Decisions table. Treat these as given, not as open ground:
+
+| Area | Decision |
+|---|---|
+| Build | A **Node/TypeScript CLI** owns the deterministic mechanics — manifest, per-file hashing, drift, 3-way merge. A **thin Claude Code skill** drives it and handles judgment steps. CLI first. |
+| Pack home | `packs/` in this repo, published with the CLI. `template/` becomes `packs/coding/`. |
+| Versioning | Per-pack semver in `packs/<name>/pack.json` + a separate CLI semver; the manifest records both. |
+| Sharing | Packs are standalone but may reference a `shared/` tree, declared in `pack.json`. Changing a shared file bumps every pack referencing it. |
+| Contribute-back | `harness contribute` diffs an applied copy against its pack version and emits a patch. |
+| `CLAUDE.md` | Generated with **marked regions**: pack-owned regions are maintained by `update`, project-owned prose is never touched. |
+| Source vs applied | **Marked regions everywhere** — `source-only` blocks stripped on apply, `applied-only` blocks added on apply. |
+| Packs at v1.0 | Three: `coding`, `writing`, `planning` (framing open — Q-11). |
+| Presentation | **Not a pack** — a cross-cutting capability in `shared/`, referenced by every pack. |
+| Scaffolds | Opt-in and composable. Two backends: Azure SWA + Neon, and AWS Lambda + CDK. |
+| v1.0 boundary | The generator, not pack content. Packs migrate **faithfully**; cross-pollination lands in the first post-v1.0 bump. |
+
+---
+
+## The core abstraction — the nine-part anatomy
+
+Both existing templates (§ below) reduce to the same nine parts. Only
+the *content* differs between pack types. This is what the generator
+manufactures, and it doubles as the completeness checklist for a pack:
+
+1. **A process** — named, gated phases, one defined artifact per phase.
+2. **A role set** — single-purpose agents with non-overlapping write
+   boundaries.
+3. **Document templates** — one per artifact type.
+4. **Conventions** — naming, numbering, ownership, indexing, status.
+5. **Coordination rules** — routing, sequencing, parallelism,
+   escalation.
+6. **Behavioural guidelines** — the standing instructions for
+   `CLAUDE.md`.
+7. **Folder scaffolding** — the directory shape the process assumes.
+8. **Skills and automations** — slash commands, hooks, skills.
+9. **An autonomy contract** — what runs unsupervised, and how it stops.
+
+A pack missing a part is incomplete, not merely different. Treat that
+as a finding.
+
+---
+
+## The two source templates
+
+### Coding — `template/` (in this repo)
+
+Extracted from the Voxio/Lintel codebase; the source material for the
+`coding` pack. Five parts: the gated spec process
+(`research → spec → design-spec → ADR → epics-and-tasks →
+implementation`) with 11 document templates and `conventions.md`; 10
+agent roles; 2 agent-team prompts (`Specify.md`, `Implement.md`); the
+targets way-of-working for unsupervised runs; and an Azure SWA + Neon
+deploy scaffold.
+
+Proven at scale: **RAFAL** was specified end-to-end through it — 8
+features, 44 epics, 398 tasks, 9 security-reviewed ADRs, all Accepted
+before a line of code.
+
+### Writing — `../AIImpactOnOrganizationsAndLeadership/` (external)
+
+Never extracted; still lives inside the project that grew it. Same
+anatomy, different content: an 8-agent pipeline (`scout → researcher →
+librarian → analyst`, then `outliner → writer → critic → editor →
+published`), a shared research corpus plus per-workstream stage
+folders, a voice guide with an explicit words-to-avoid list, `index.md`
+discipline, and routing/parallelization rules.
+
+**Each is missing what the other proves valuable** — coding has a
+strong autonomy contract and almost no automations; writing has strong
+coordination and behavioural rules and no autonomy contract. Extracting
+the shared anatomy is how both improve at once. (Brief Q-6.)
+
+---
+
+## Dogfooding — this repo is target project #1
+
+**This project must dogfood the template.** Lintel Harness is set up by
+the coding pack it productizes: the `specifications/`, `AgentTeams/`,
+`targets/` and `copy/` folders were produced by applying that pack, by
+hand, exactly as a user would.
+
+That is not decoration. It is the primary source of requirements:
+
+- **Anything the generator will do, we do here first, manually.** Every
+  step that turned out fiddly is a requirement for `harness init`.
+- **Anything the pack claims, we verify here.** If a pack instruction
+  doesn't survive contact with a real repo, the pack is wrong.
+- **We feel our own drift.** This repo will go stale against
+  `template/` the same way any other project would. That pain is the
+  evidence for the manifest and `harness update`.
+
+### What the manual apply actually required
+
+The log below is spec input for R3 (quick to apply) and R4 (easy to
+update). Each line is work the generator must absorb:
+
+| # | Step | What the generator must handle |
+|---|---|---|
+| 1 | `template/specifications/` → `specifications/` | Directory mapping |
+| 2 | `template/agent-teams/` → `AgentTeams/` | Mapping **plus a rename** — the source and applied names differ |
+| 3 | `template/targets/` → `targets/` | Directory mapping |
+| 4 | `template/copy/tone-of-voice.template.md` → `copy/tone-of-voice.md` | **Filename transform** — dropping `.template` |
+| 5 | `template/agents/`, commands → `.claude/` | Mapping into a tool-owned directory |
+| 6 | Path rewrites in 3 files | `template/targets/…` → `targets/…` in `Run.md`, `.claude/commands/target.md`, `targets/README.md` |
+| 7 | Rewrote the stale "adopting this in a new project" section of `targets/README.md` | **A copied doc that describes its own copying goes stale the instant it is applied.** The generator needs a notion of source-only vs applied-copy content |
+| 8 | Rewrote the intro of `specifications/README.md` | Same class of problem as #7 |
+| 9 | Moved the brief into `specifications/` | Where product docs belong |
+
+**Still outstanding** (deliberate, not forgotten):
+
+- `copy/tone-of-voice.md` is an unfilled placeholder — it needs real
+  content before `copywriter` can be trusted.
+- `AgentTeams/Implement.md`'s file-ownership table names `Sources/**`
+  and `Tests/Unit/**`, which don't exist here. **Now unblocked** — Q-1
+  settled on a Node/TypeScript CLI, so redraw it against that layout
+  once the ADR fixes the file plan.
+- `infrastructure/backend-deploy/` was **not** applied: the harness has
+  no backend. Pack sections are optional and composable — that is
+  itself a finding for R6.
+
+### The rule that keeps dogfooding honest
+
+When the pack and an applied copy disagree, **fix the pack first, then
+re-apply.** Fixing only the applied copy is precisely the drift this
+product exists to prevent — and doing it here, of all repos, would
+invalidate the evidence.
+
+---
+
+## Working with `template/` — the pack source
+
+`template/` is the **pack source**, and it is pristine. The folders
+marked APPLIED are its output.
+
+- **Do not make incidental edits under `template/`.** Not to fix a
+  typo, not to improve a prompt in passing.
+- **Do not edit an applied copy to work around a pack defect.** See the
+  rule above.
+- Converting `template/` into a real versioned pack **is** product work
+  — done deliberately under the spec process, once the pack format is
+  specified. Not before.
+
+---
+
+## Specification process
+
+This project follows the process in `specifications/README.md` and
+`specifications/conventions.md` — the **applied** copies, not the pack
+source. **Read both before touching specs.**
+
+```
+research → spec → design-spec (if UI) → ADR (PROCEED) → epics-and-tasks → implementation
+```
+
+Every arrow is a gate. Code for a feature may only be written once its
+spec set is Accepted and its ADR is `PROCEED`. A `securityreviewer`
+Mode-A pass runs at the ADR gate; the security-implementation review
+runs at the code-review gate.
+
+Status values: `Draft | In Review | Accepted | Superseded`. Open
+questions are `Q-N` per document and keep that ID in the Resolved
+Decisions table.
+
+Conventions chosen 2026-08-30 at the first spec run:
+
+- **Filenames are feature-prefixed** (`F1-spec-…`, `F1-ADR-001-…`) —
+  the sanctioned variant, since v1.0 holds six features and sorts
+  better by feature than by document type.
+- **Task IDs use Scheme A**, epic-derived `T-XXYY` (`T-0101` = first
+  task of E-01). Epics are per-feature rather than one cross-feature
+  sequence, so the re-parenting problem that forced RAFAL onto Scheme B
+  does not apply here.
+
+### Feature numbering (v1.0)
+
+| # | Feature |
+|---|---|
+| F1 | Pack format & manifest |
+| F2 | `harness init` — the apply engine |
+| F3 | `harness update` — drift detection & 3-way merge |
+| F4 | `harness status` & `harness contribute` |
+| F5 | Template packs (coding, writing, planning) & shared components |
+| F6 | The Claude Code skill — the judgment layer |
+
+Build sequencing: **F1 → F2 → F5 → F3 → F4 → F6.** F1 first: the pack
+format and manifest are what every other feature reads or writes.
+
+### Counter state
+
+| Counter | Last used | Notes |
+|---|---|---|
+| Epic | — | `E-NN`, per feature |
+| Task | — | Scheme A, epic-derived `T-XXYY` |
+| User story | US-29 | `US-N`, project-monotonic. US-1–US-16 = F1 (pack format & manifest); US-17–US-28 = F5 (template packs); **US-29 = F1** (`harness pack info`, added by the `F1-ADR-001` amendment pass of 2026-08-30, which assigned the command to F1). F5's block was renumbered onto US-17–US-28 by the cross-document consistency pass of 2026-08-30, F1 keeping the earlier block as the earlier feature in build order. F1's block is therefore non-contiguous by design. No gaps, no retired numbers. Next free: **US-30**. |
+| Open question | Q-37 | `Q-N`, **project-monotonic, not per document** — an ID is never reused for a different question, and it keeps its number when it moves to a Resolved Decisions table. Q-1–Q-12 (plus Q-8a, Q-9a, Q-9b) resolved in the brief §12; Q-13–Q-17 cross-feature, owned by the master spec; Q-18–Q-26 = F1; Q-27–Q-37 = F5. **Closed:** Q-1–Q-13, Q-15, Q-18–Q-27, Q-35, Q-37 — Q-13 and Q-15 by `F1-ADR-001` and recorded in the master spec, Q-18–Q-27 by the same ADR and recorded in F1 (Q-27 was raised in F5 but decides an F1 mechanism, so it is recorded where the mechanism lives), Q-35 and Q-37 by the consistency pass. **Open (11):** Q-14, Q-16, Q-17, Q-28, Q-29, Q-30, Q-31, Q-32, Q-33, Q-34, Q-36 — of which six are escalated to Thomas by `F1-ADR-001` §6.1 (Q-14, Q-16, Q-17, Q-28, Q-29, Q-33). The master spec's Open Questions table indexes every open question. Next free: **Q-38**. |
+| ADR | — | Epic-scoped ADRs use `ADR-EXX` and don't consume this counter |
+
+---
+
+## Agents
+
+Sub-agent definitions live in `.claude/agents/` (sourced from
+`template/agents/`):
+
+| Agent | Purpose | Model |
+|---|---|---|
+| `architect` | Validates a spec and produces an ADR | Sonnet 5 |
+| `implementer` | Writes code + unit tests from a spec + ADR | Sonnet 5 |
+| `testwriter` | Writes integration / acceptance tests | Sonnet 5 |
+| `reviewer` | Reviews code for quality/correctness/security | Haiku 4.5 |
+| `securityreviewer` | Validates security at the ADR gate, verifies at the code gate | Sonnet 5 |
+| `specwriter` | Turns a brief into a functional spec | Opus 5 |
+| `researcher` | Investigates topics with web + local search | Sonnet 5 |
+| `designer` | Writes UI/UX design specs | Sonnet 5 |
+| `copywriter` | User-facing copy from a tone-of-voice guide | Opus 5 |
+| `target-reviewer` | Gates a target's Readiness before an unsupervised run | Sonnet 5 |
+
+Coordination prompts: `template/agent-teams/Specify.md` (research →
+spec → ADR → security review → PROCEED-stamped set) and
+`template/agent-teams/Implement.md` (implementer + testwriter +
+reviewer + security review → ships code, epic by epic).
+
+---
+
+## Autonomous work — targets
+
+Long-running unsupervised work uses a **target**: a measurable goal the
+agent works toward alone, stopping at **SUCCESS** (every criterion
+verified) or **ABORT** (a stop condition fired). Never an open-ended
+"improve X".
+
+- **Launch:** `/target <target-file>` (`.claude/commands/target.md`).
+- **Readiness gate:** `target-reviewer` validates the filled target —
+  criteria verifiable, complete, not gameable, autonomy envelope
+  sufficient to finish without asking — returning `READY` /
+  `NEEDS-CORRECTION` **before** any work starts.
+- **Instances:** filled targets and their work logs are project
+  content, not `.claude/` constructs.
+
+The reference pack lives at `targets/` and its path references are
+already fixed — that fixup is logged as step 6 of the manual apply.
+
+---
+
+## Conventions enforced for agents
+
+- **Know your level.** `.claude/` is how this repo works; `template/`
+  is what the product ships. See the table above.
+- **No incidental edits under `template/`.** Copy out, then edit.
+- **Fix the pack before the copy.** A defect found in an applied file
+  is a defect in `template/`; patch it there and re-apply.
+- **Dogfood first.** Before automating a step, do it by hand here and
+  log what it cost.
+- Unit tests live alongside the code they cover (owned by
+  `implementer`). Integration/acceptance tests live in a separate tree
+  (owned by `testwriter`).
+- Cross-cutting decisions are recorded as ADRs under
+  `specifications/`, not settled in chat.
+- **Do not commit secrets.**
+- The brief is the current source of truth for scope. When it and this
+  file disagree, the brief wins — and this file is the thing to fix.
+
+---
+
+## Open decisions (for Thomas)
+
+**None open.** Q-1…Q-12 were resolved on 2026-08-30 and are recorded in
+the brief's Resolved Decisions table with rationale; the architecture
+summary is above. The v1.0 spec set is unblocked.
+
+Two decisions are easy to get wrong later, so they are restated here:
+
+- **A project holds exactly one pack** (Q-12). A user needing two ways
+  of working runs two projects side by side. Nothing in the manifest,
+  `CLAUDE.md` regions or `update` supports composition, by design.
+- **The `planning` pack is authored from the portfolio-roadmap-deck
+  workstream as a knowledge base** (Q-11) — mined for the loop, the
+  absorption gate, the horizon determinants, the template fields and
+  the two calibration poles. It is **not** a reuse of the writing pack,
+  and it carries **no dependency** on that project. Take the process and
+  the templates, which a critic pass found sound; not the surrounding
+  claims, which are still being verified.
