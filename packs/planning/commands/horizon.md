@@ -35,6 +35,18 @@ Read `portfolio/horizons.md` first for this project's calibrated defaults
 and the determinants that usually bind here, then append the new entry to
 the same file.
 
+## Where the four determinants come from
+
+`project-brief.md` §7 states them for this organisation and §2 states the
+constraint floor; `background/` holds the evidence they were drawn from —
+`constraints/` for `L` and `I`, `market/` for `S`, `performance/` for
+`U`. Read the brief section and the matching folder before you answer the
+step. **A determinant that traces back to nothing there was chosen, not
+computed.** If the brief is still at its `{{…}}` placeholders, or the
+folder a step needs holds only its README, **say so and ask for it to be
+filled rather than computing anyway** — see
+`.harness/pack/conventions.md` §7.
+
 ## The record must name
 
 - The computed horizon, as a **range** where the evidence only supports a

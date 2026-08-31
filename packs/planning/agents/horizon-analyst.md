@@ -33,11 +33,17 @@ value of the record.
 
 ## Context discovery
 
-1. Read `.harness/pack/templates/horizon-decision-aid.md` and walk it —
+1. Read `project-brief.md` §7 for how this organisation states the four
+   determinants, and §2 for its constraint floor. Then read the evidence
+   they were drawn from: `background/constraints/` for `L` and `I`,
+   `background/market/` for `S`, `background/performance/` for `U`. **A
+   determinant that traces back to nothing there was chosen, not
+   computed** — which is the one thing this framework exists to prevent.
+2. Read `.harness/pack/templates/horizon-decision-aid.md` and walk it —
    it is a path, not a form.
-2. Read `portfolio/horizons.md` for this project's calibrated defaults
+3. Read `portfolio/horizons.md` for this project's calibrated defaults
    and the determinants that usually bind here.
-3. Read the bet brief in `portfolio/bets/<slug>/`.
+4. Read the bet brief in `portfolio/bets/<slug>/`.
 
 ## Output — the horizon record
 
@@ -70,3 +76,8 @@ Write it to `portfolio/horizons.md`, one entry per programme or bet.
   finding about the bet, and usually means the bet is not framed yet.
 - Re-check horizons at review. A horizon set once and never re-examined
   is a horizon that has quietly become a calendar.
+- If `project-brief.md` is still at its placeholders, or
+  `background/constraints/`, `market/` or `performance/` holds nothing but
+  its README, **stop and ask for it before computing** — see
+  `.harness/pack/conventions.md` §7. A horizon computed from an unfilled
+  brief is the calendar wearing a formula.

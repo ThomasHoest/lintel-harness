@@ -106,3 +106,36 @@ quietly. It is expected to change after the first real portfolio has run
 through it. It does not affect the pack's declared anatomy status — part
 2 is the provisional part; this is a convention marked provisional inside
 a part that is otherwise present.
+
+## 7. Context comes from the brief; its evidence comes from `background/`
+
+Every framework in this pack is contingent on organisational context, and
+that context has one home. **`project-brief.md` at the repo root states
+the conclusions** — the company, the constraint floor, the vision, what
+this portfolio decides, absorption capacity, the horizon determinants,
+governance. **`background/` holds the raw material those conclusions were
+distilled from**, one subfolder per kind of evidence, each file carrying
+where it came from and when. `background/README.md` says which subfolder
+feeds which section.
+
+Read the brief before intake, discovery, framing, horizon-setting, the
+gate or a review — and read the `background/` subfolder the phase you are
+in actually draws on:
+
+| What is being decided | Brief | `background/` |
+|---|---|---|
+| Horizon determinants `L` and `I`, the constraint floor | §2, §7 | `constraints/` |
+| Horizon determinant `S` — competitive substitution | §7 | `market/` |
+| Horizon determinant `U` — uncertainty resolution, and cadence | §7 | `performance/` |
+| Absorption capacity — the input the gate is checked against | §6 | `capacity/` |
+| What this portfolio decides, and the portfolio as it stands | §3, §4, §5 | `strategy/`, `products/` |
+
+**An unfilled brief is a finding, not an obstacle to route around.** If
+`project-brief.md` is still at its `{{…}}` placeholders — or if the
+`background/` subfolder your phase reads holds nothing but its README —
+**say so and ask for it to be filled before you continue.** Do not
+substitute a default, an assumption or the planning calendar. A portfolio
+run on an unfilled brief produces well-formed bets whose horizons came
+from the calendar, which is the failure this pack exists to prevent. The
+rule that governs a claim with no source governs a phase with no context:
+make the gap visible, never invent what should have filled it.

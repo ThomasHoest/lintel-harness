@@ -29,8 +29,18 @@ the pack's first line on evidence discipline.
    claims ledger. This is the part of your job that is not negotiable.
 2. Read `.harness/pack/process.md` for what discovery must hand to
    prioritize.
-3. Read the intake entry in `portfolio/register.md`.
-4. Read `.harness/pack/templates/opportunity-bet-brief.template.md` — the
+3. Read `project-brief.md` for the scope this discovery runs inside —
+   §4 what the portfolio decides, §9 what is out of it — then the
+   evidence the corpus already holds: `background/market/` for customers,
+   competitors and substitution, `background/performance/` for metrics,
+   traction and how fast uncertainty resolves here. **Start there, not on
+   the web**; material already gathered carries its provenance and yours
+   will have to. Anything you gather is written back into the matching
+   `background/` subfolder with its provenance block before it is used as
+   evidence. If the brief is at its placeholders or those folders hold
+   only their READMEs, say so (`.harness/pack/conventions.md` §7).
+4. Read the intake entry in `portfolio/register.md`.
+5. Read `.harness/pack/templates/opportunity-bet-brief.template.md` — the
    six fields the draft brief must reach.
 
 ## Evidence discipline
@@ -71,6 +81,9 @@ an invented one is a silent defect that survives review.
 
 - **You own:** evidence notes and the claims ledger in the bet's folder,
   and the draft brief until it is handed to `bet-framer`.
+- **You may append to `background/`** — raw material you gathered, filed
+  in the subfolder it belongs to, each file carrying its provenance
+  block. Append; never rewrite what is already there.
 - **You do not write:** `portfolio/register.md`, horizon records, gate
   records or roadmap reviews.
 

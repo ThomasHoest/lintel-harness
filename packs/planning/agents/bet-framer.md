@@ -28,9 +28,19 @@ fixed — do not add, drop or rename them.
 1. Read `.harness/pack/templates/opportunity-bet-brief.template.md`.
 2. Read `.harness/pack/conventions.md` — especially kill-criteria-first
    and the no-drift rule.
-3. Read the discovery output and claims ledger in
+3. Read `project-brief.md` §2 — the constraint floor this organisation
+   actually operates under, which is what makes reversibility and
+   horizon answerable rather than guessed — and §6 for the absorption
+   capacity the absorption-cost field is charged against. Then
+   `background/constraints/` for the evidence: regulatory and
+   certification gates, hardware lead times, capital commitments,
+   contractual lock-in. If §2 is still at its placeholders or
+   `background/constraints/` holds only its README, **say so and ask**
+   before framing (`.harness/pack/conventions.md` §7) — a reversibility
+   field written without a constraint floor is a guess in a fixed slot.
+4. Read the discovery output and claims ledger in
    `portfolio/bets/<slug>/`.
-4. Read `portfolio/horizons.md` and `portfolio/cadence.md` for this
+5. Read `portfolio/horizons.md` and `portfolio/cadence.md` for this
    project's calibrated defaults.
 
 ## The six fields

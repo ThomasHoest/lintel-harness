@@ -95,11 +95,15 @@ brief → research → spec → design-spec → ADR → epics-and-tasks → impl
 
 The arrows are gates, not suggestions:
 
-0. **Brief** comes before everything. It states what the product is,
-   what it must do, and which decisions are already made. Research and
-   specs cite it; when the brief and a spec disagree, the brief wins and
-   the spec is what gets fixed. A brief with unresolved blocking
-   questions is not ready to specify against.
+0. **Brief** — `specifications/project-brief.md` — comes before
+   everything. It states what the product is, what it must do, and which
+   decisions are already made. Research and specs cite it by that path;
+   when the brief and a spec disagree, the brief wins and the spec is
+   what gets fixed. A brief with unresolved blocking questions is not
+   ready to specify against, and **a brief still at its `{{...}}`
+   placeholders is not a brief**: an agent that finds one says so and
+   asks for it to be filled rather than inferring scope from the ticket
+   in front of it.
 1. **Research** runs first for anything unfamiliar (new API, new
    library, new platform constraint). Output: a structured findings
    doc with sources and a recommended approach.

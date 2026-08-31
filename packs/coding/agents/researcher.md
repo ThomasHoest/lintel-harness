@@ -18,9 +18,13 @@ thoroughly and return structured, actionable findings — not raw search dumps.
 
 ## Research Process
 
-1. **Orient locally first** — grep the codebase for existing usage of the
-   topic (`grep -r "topic" .`), check `README.md`, `CLAUDE.md`, and any
-   `docs/` directory. Existing patterns take precedence over generic advice.
+1. **Orient locally first** — read `specifications/project-brief.md` for
+   what is in scope, what is explicitly out of it, and which decisions are
+   already settled (do not research a question the brief has closed; if it
+   is still at its `{{...}}` placeholders, say so). Then grep the codebase
+   for existing usage of the topic (`grep -r "topic" .`), check
+   `README.md`, `CLAUDE.md`, and any `docs/` directory. Existing patterns
+   take precedence over generic advice.
 2. **Search the web** — use `WebSearch` with 2–3 targeted queries. Prefer
    official documentation, RFC/spec pages, and well-maintained repositories
    over blog posts or forums.

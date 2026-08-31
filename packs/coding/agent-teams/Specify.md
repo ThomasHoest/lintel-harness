@@ -9,6 +9,14 @@ Spawn: Researcher (conditional), SpecWriter, Designer (conditional),
 Copywriter (conditional), Architect, SecurityReviewer. The lead applies
 the coordination rules below.
 
+**The team starts from `specifications/project-brief.md`** — the product
+brief every spec doc is downstream of. The lead reads it before spawning
+anyone, and states in the kickoff which of its goals, requirements and
+resolved decisions this feature serves. **If the brief is still at its
+`{{...}}` placeholders, halt before spawning and ask for it to be
+filled**; a spec set built on an unfilled brief is a set of documents
+agreeing with each other about nothing.
+
 All artifacts land under `specifications/<version>/` using the
 filename conventions in `.harness/pack/specifications/conventions.md`. Each
 teammate posts an entry on the shared task list on start and on
@@ -22,6 +30,8 @@ Spawn only if the feature brief flags unfamiliar tech, an unverified
 API, or a constraint not already documented. Otherwise skip.
 
 Read first:
+- `specifications/project-brief.md` — scope, exclusions and settled
+  decisions. Do not research a question the brief has closed.
 - Existing research notes in `specifications/<version>/` (avoid
   re-investigating ground already covered).
 - `CLAUDE.md` and any relevant section of `docs/`.
@@ -45,6 +55,9 @@ Wait for the Researcher to post completion (or run first if no
 researcher was spawned).
 
 Read first:
+- `specifications/project-brief.md` — the document this spec is
+  downstream of. Where it and the feature brief below disagree, the
+  project brief wins.
 - The researcher's findings (if any).
 - The existing specs in `specifications/` (read 2–3 to match format
   and detail level).
@@ -148,6 +161,8 @@ completion.
 Read first:
 - The functional spec for this feature.
 - The design spec (if any).
+- `specifications/project-brief.md` — the settled decisions an ADR may
+  not re-open.
 - `CLAUDE.md` and prior ADRs under `specifications/<version>/`.
 - The relevant code under the source folders to confirm the
   components the spec mentions exist and that the contracts you're
@@ -254,6 +269,9 @@ Phase ordering:
    posts SECURITY-PROCEED, to produce the epics-and-tasks doc.
 
 Hard stops — halt and surface to me, do not auto-progress:
+- `specifications/project-brief.md` is missing or still at its `{{...}}`
+  placeholders (surface the request — the brief is filled before the
+  team runs, not inferred by it).
 - SpecWriter halts because the brief is too vague (surface the gap
   list).
 - Designer halts because the functional spec is missing or a value

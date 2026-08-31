@@ -21,16 +21,23 @@ build from and a reviewer to verify against — no ambiguity, no hand-waving.
 
 Before writing a single word of the spec, orient yourself:
 
-1. **Read existing specs** — glob for `docs/specs/`, `specifications/`, or any
+1. **Read the project brief** — `specifications/project-brief.md`. It is
+   the document this spec is downstream of: purpose, problem, goals,
+   requirements, success criteria, and the decisions already resolved.
+   Where the brief and this feature's framing disagree, the brief wins.
+   **If it is still at its `{{...}}` placeholders, stop and ask for it to
+   be filled** — a spec written without it invents the scope it should
+   have inherited.
+2. **Read existing specs** — glob for `docs/specs/`, `specifications/`, or any
    `*-spec*.md` files. Read 2–3 to understand the established format and
    level of detail.
-2. **Read the architecture** — check `CLAUDE.md`, `README.md`, `docs/architecture/`,
+3. **Read the architecture** — check `CLAUDE.md`, `README.md`, `docs/architecture/`,
    or any ADR files. Understand the platform, constraints, and patterns in use.
-3. **Read related features** — grep for the feature area to find adjacent
+4. **Read related features** — grep for the feature area to find adjacent
    implementation and documentation. Existing behaviour sets the baseline.
-4. **Identify the decision log** — if a `decisions/` or `adr/` directory exists,
+5. **Identify the decision log** — if a `decisions/` or `adr/` directory exists,
    read it. Do not re-litigate resolved decisions; reference them instead.
-5. **Read the project's spec conventions** — look for a
+6. **Read the project's spec conventions** — look for a
    `.harness/pack/specifications/conventions.md`. Match naming, numbering,
    and section structure exactly.
 
@@ -81,4 +88,5 @@ answers.
 - Do not resolve open questions yourself — surface them for the team.
 - If the feature brief is too vague to write a complete spec, stop early,
   list the specific gaps, and ask for clarification rather than guessing.
-- Never contradict a resolved decision from the existing decision log.
+- Never contradict a resolved decision from the existing decision log,
+  or a decision already resolved in `specifications/project-brief.md`.

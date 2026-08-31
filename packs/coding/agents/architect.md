@@ -35,12 +35,16 @@ Before producing the ADR:
 
 1. **Read the spec being validated** — every section, not just the
    summary.
-2. **Read `CLAUDE.md`** — project conventions, platform constraints,
+2. **Read `specifications/project-brief.md`** — the scope the spec sits
+   inside and the decisions already settled there; do not re-open one in
+   an ADR. If it is still at its `{{...}}` placeholders, say so rather
+   than assuming the constraints.
+3. **Read `CLAUDE.md`** — project conventions, platform constraints,
    counter state, document inventory.
-3. **Read prior ADRs** — find them under `docs/adr/`, `specifications/*/ADR-*.md`,
+4. **Read prior ADRs** — find them under `docs/adr/`, `specifications/*/ADR-*.md`,
    or whatever the project uses. Do not re-litigate resolved decisions;
    reference them by number.
-4. **Read the relevant code** — grep for the components the spec mentions
+5. **Read the relevant code** — grep for the components the spec mentions
    to confirm they exist and the contracts you're about to lock match
    reality.
 

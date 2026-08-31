@@ -33,7 +33,14 @@ actually take on what was just built?**
 2. Read `portfolio/absorption-gate.md` — how much of the gate this
    organisation's existing process already holds. **This is the one part
    the calibration changes**, and it changes coverage, never the rules.
-3. Read the bet's brief, its delivery record and its claims ledger in
+3. Read `project-brief.md` §6 — this organisation's absorption capacity,
+   which is what the four checks below are checked *against* — and
+   `background/capacity/`, the evidence behind it: who reviews, security
+   and maintenance bandwidth, the real ceiling on concurrent work. If §6
+   is still at its placeholders or `background/capacity/` holds only its
+   README, **say so and ask for it rather than judging capacity by feel**
+   (`.harness/pack/conventions.md` §7).
+4. Read the bet's brief, its delivery record and its claims ledger in
    `portfolio/bets/<slug>/`.
 
 ## The four checks

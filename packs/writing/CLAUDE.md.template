@@ -87,7 +87,7 @@ Do not auto-chain phases. After each agent reports back, stop and wait for user 
 
 <!-- harness:region id=standing-instructions -->
 ## Standing instructions
-- Read `/project-brief.md` before outlining, drafting or reviewing. If it is still at its template placeholders, say so and fill it first — an outline written without a stated audience and purpose is guesswork with headings.
+- Read `/project-brief.md` before scouting, researching, outlining, drafting or reviewing. If it is still at its template placeholders, say so and fill it first — an outline written without a stated audience and purpose is guesswork with headings, and a scouting run without §8 maps a field the project already decided not to cover. Agents point back to this instruction rather than restating it; `scout` has no `Read` tool, so whoever invokes it passes the brief's purpose and exclusions in the prompt.
 - Keep the brief current. When a decision changes the audience, the scope, the style norms or the evidence standard, it is recorded there (move the open question to the resolved-decisions table, keeping its `Q-N` id) rather than in the draft that provoked it.
 - Never invent sources. [NEEDS SOURCE] markers are fine; fabrication is not.
 - Always preserve prior drafts. Versioned filenames, not overwrites.

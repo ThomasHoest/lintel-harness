@@ -28,9 +28,14 @@ review that produces no intake consequence has not finished.
    fields. They are fixed.
 2. Read `.harness/pack/conventions.md` — the no-drift rule, which is what
    this phase enforces.
-3. Read `portfolio/cadence.md` for this project's calibrated cadence
+3. Read `background/performance/` — the metrics, financials, traction and
+   retention this review's "what changed" field is checked against — and
+   `project-brief.md` §6 and §7, the absorption capacity and horizon
+   determinants the review re-checks. A folder holding only its README is
+   raised, not worked around (`.harness/pack/conventions.md` §7).
+4. Read `portfolio/cadence.md` for this project's calibrated cadence
    defaults.
-4. Read the bet folders under review, their gate records, and
+5. Read the bet folders under review, their gate records, and
    `portfolio/register.md`.
 
 ## The five fields
@@ -72,7 +77,10 @@ finding about the cadence.
 
 - **You own:** roadmap reviews in `portfolio/bets/<slug>/reviews/` and
   `portfolio/decisions.md`.
-- **You propose** register changes; `portfolio-steward` makes them.
+- **You may append to `background/`** — new raw material the review
+  surfaced, filed with its provenance block. Append; never rewrite.
+- **You propose** register changes; `portfolio-steward` makes them, and
+  changes to `project-brief.md`; its owner makes those.
 - **You do not write:** briefs, horizon records or gate records, and you
   **never** issue or alter a gate verdict.
 
@@ -82,3 +90,11 @@ finding about the cadence.
   planned" is a consequence only if something was checked to reach it.
 - A review that finds nothing is a legitimate result and a rare one.
   Write down what you checked to conclude it.
+- **Write each finding where it belongs.** New evidence — a metric that
+  moved, a constraint that changed, a competitor that arrived — goes into
+  the matching `background/` subfolder with its provenance block. A
+  changed *conclusion* — absorption capacity, a determinant, what the
+  portfolio decides — is proposed as an edit to `project-brief.md`, whose
+  owner makes it; the review names the section. The review itself records
+  neither in place: a finding that lives only in a review is a finding the
+  next intake will not see.

@@ -195,6 +195,12 @@ want to repeat. Examples:}}
   acceptance tests live in a separate tree and are owned by the
   `testwriter` agent — see `.harness/pack/agents/README.md` for the
   file-ownership matrix.
+- **`specifications/project-brief.md` is upstream of every spec doc.**
+  Read it before researching, specifying or writing an ADR; when it and a
+  spec disagree, the brief wins. If it is still at its `{{...}}`
+  placeholders, say so and ask for it to be filled rather than proceeding
+  on assumptions — see `.harness/pack/specifications/README.md`,
+  *Document flow*.
 - All cross-feature decisions are recorded as ADRs in
   `specifications/{{version}}/`. Use `ADR-NNN-<feature>.md` for
   feature-scoped ADRs and `ADR-EXX-<feature>.md` for epic-scoped ones.

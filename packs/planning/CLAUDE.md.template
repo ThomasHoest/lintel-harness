@@ -35,6 +35,10 @@ material is treated as unreliable, and a two-year-old market read is not
 evidence about today. When you gather context, write it into
 `background/` with its provenance block before you distil it into the
 brief; `background/README.md` says which subfolder feeds which section.
+**A `background/` subfolder holding nothing but its README is the same
+failure as an unfilled brief**: say so and ask for the material rather
+than filling the gap with an assumption. `.harness/pack/conventions.md`
+§7 states this rule once, and every agent and command points back to it.
 
 **The calibration this project was initialised at is recorded in
 `calibration.md` at the repo root.** It set the cadence defaults, the

@@ -23,6 +23,22 @@ reason to skip the review — the backstop exists because uncertainty that
 never resolves is itself a result. This project's cadence defaults are in
 `portfolio/cadence.md`.
 
+## Read the context the five fields are checked against
+
+`project-brief.md` at the repo root: §6 absorption capacity, §7 horizon
+determinants, §4 what this portfolio decides. Then the evidence —
+`background/performance/` for what actually moved since the last review,
+`background/capacity/` for the capacity check, `background/market/` and
+`background/constraints/` for a determinant that may have shifted.
+**An unfilled brief, or a `background/` subfolder holding only its
+README, is reported and asked for — not reviewed around**
+(`.harness/pack/conventions.md` §7).
+
+New raw material the review surfaces is written back into the matching
+`background/` subfolder with its provenance block; a changed conclusion
+is proposed as an edit to the brief section it belongs to, named in the
+review.
+
 ## Run the five fields
 
 Read `.harness/pack/templates/roadmap-review.template.md`. The five

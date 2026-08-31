@@ -15,14 +15,21 @@ If `$ARGUMENTS` is empty, ask for the bet slug before doing anything.
    six fields are **fixed**: problem/opportunity, the bet, reversibility,
    absorption cost, horizon, kill criteria. Do not add, drop or rename
    them.
-2. Read `.harness/pack/conventions.md` for evidence discipline and the
+2. Read `project-brief.md` — §2 the constraint floor and §6 absorption
+   capacity, which are what make reversibility, absorption cost and
+   horizon answerable — plus `background/constraints/` for the evidence
+   behind §2. **If the brief is still at its `{{…}}` placeholders, or
+   `background/constraints/` holds only its README, say so and ask for it
+   to be filled before opening the bet.** Do not fill the six fields
+   against assumptions; see `.harness/pack/conventions.md` §7.
+3. Read `.harness/pack/conventions.md` for evidence discipline and the
    claims ledger, and `portfolio/register.md` for what is already in
    flight.
-3. Create `portfolio/bets/<slug>/brief.md` from the template, with
+4. Create `portfolio/bets/<slug>/brief.md` from the template, with
    `Status: proposed`.
-4. Fill what the discovery evidence supports. Leave the rest at its
+5. Fill what the discovery evidence supports. Leave the rest at its
    placeholder — a placeholder is honest, an invented fill is not.
-5. Add the bet to `portfolio/register.md` with its status and placement.
+6. Add the bet to `portfolio/register.md` with its status and placement.
 
 ## Committing a bet
 

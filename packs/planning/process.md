@@ -36,6 +36,17 @@ part that stopped binding.
 Each phase has exactly one artifact. If you cannot name the artifact, the
 phase has not happened.
 
+**Where every phase gets its context.** The loop reads its organisational
+inputs from `project-brief.md` at the repo root — the constraint floor,
+absorption capacity, the horizon determinants, what this portfolio
+decides — and the evidence behind them from `background/`, whose README
+maps each subfolder to the brief section it feeds. Intake and prioritize
+read §4 and §6; discovery reads `market/` and `performance/`; commit
+reads §2, §7 and `constraints/`; the gate reads §6 and `capacity/`; learn
+reads `performance/`. **A phase run against an unfilled brief, or against
+a `background/` subfolder holding only its README, stops and says so** —
+see `conventions.md` §7.
+
 ---
 
 ## The absorption / security gate

@@ -1,11 +1,25 @@
 # Coordination rules
 
 How the phases hand off, who may do what, and what fires out of band.
-This file is the pack's part 5. The four rules below are
+This file is the pack's part 5. The four numbered rules below are
 **calibration-invariant**; only the cadence *defaults* they refer to vary,
 and those live in `portfolio/cadence.md` in an applied project.
 
 ---
+
+## Before any handoff — where the context comes from
+
+Before a phase hands off, the receiving role reads the same two places:
+**`project-brief.md`** at the repo root for the decided context, and the
+**`background/`** subfolder that feeds its phase for the evidence behind
+it. `background/README.md` carries the subfolder-to-section map. Nothing
+below can be applied without them — the cadence defaults assume the
+brief's constraint floor, the gate is only meaningful against its
+absorption-capacity number, and a horizon is computed from its
+determinants or it was chosen. **An unfilled brief, or a `background/`
+subfolder holding only its README, is raised rather than worked around**
+— `conventions.md` §7 states the rule once and this file does not repeat
+it.
 
 ## 1. Cadence follows uncertainty resolution, not the calendar
 

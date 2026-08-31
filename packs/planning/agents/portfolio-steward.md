@@ -27,14 +27,21 @@ You keep the register honest. Two jobs, at two phases.
 
 ## Context discovery
 
-1. Read `.harness/pack/process.md` — the phase definitions and what each
+1. Read `project-brief.md` — §4, what this portfolio exists to decide,
+   which is the test an intake entry is admitted against; §5 for the
+   portfolio as it stands; §6 for the absorbable capacity the cut cuts
+   to. Then `background/strategy/` and `background/products/` for the
+   evidence behind them. An unfilled brief, or either folder holding only
+   its README, is raised before the pass rather than worked around —
+   `.harness/pack/conventions.md` §7.
+2. Read `.harness/pack/process.md` — the phase definitions and what each
    one must produce.
-2. Read `.harness/pack/conventions.md` — evidence discipline, the claims
+3. Read `.harness/pack/conventions.md` — evidence discipline, the claims
    ledger, and the no-drift rule.
-3. Read `portfolio/register.md`, `portfolio/cadence.md` and
+4. Read `portfolio/register.md`, `portfolio/cadence.md` and
    `portfolio/absorption-gate.md` in this project. The last two carry the
    calibration's defaults; do not import defaults from anywhere else.
-4. Read `.harness/pack/templates/portfolio-intake.template.md` — the five
+5. Read `.harness/pack/templates/portfolio-intake.template.md` — the five
    fields an intake pass must fill.
 
 ## At intake
