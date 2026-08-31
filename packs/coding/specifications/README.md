@@ -6,12 +6,39 @@ This folder is the specifications kit. It contains:
 - **`*.template.md`** — one template per document type.
 - **This file** — the process: how an idea becomes a buildable spec.
 
-When you bootstrap a new project, copy this folder to `specifications/`
-at the repo root. Then create a per-version folder inside it
-(e.g. `specifications/v1.0/`) and start producing documents. Every
-template, agent prompt, and convention in this pack assumes that
-path — if your project uses a different one, swap it consistently
-everywhere.
+---
+
+## Folder structure
+
+A project's `specifications/` folder has exactly three kinds of thing in
+it: the master spec, one folder per version, and one `general/` folder.
+
+```
+specifications/
+├── README.md                        ← project-local index (what lives where)
+├── <Project>Specification-1.0.md    ← master spec, one per version
+├── general/                         ← CROSS-CUTTING reference specs
+│   ├── system-architecture.md       ← required
+│   ├── technology-choices.md        ← required
+│   └── <topic>.md                   ← any other cross-cutting reference
+├── v1.0/                            ← everything scoped to one version
+│   ├── research-<topic>.md
+│   ├── spec-<topic>.md
+│   ├── design-spec-<topic>.md
+│   ├── ADR-NNN-<topic>.md
+│   └── epics-and-tasks-<topic>.md
+└── v1.1/                            ← the next version, when it starts
+```
+
+**Version folders are frozen.** A shipped version's folder is not
+edited in place when the next version starts; a new folder is created.
+There is no shared "current" folder.
+
+**`general/` is version-spanning.** It holds the documents that describe
+the system as a whole rather than one release — the whole-system view,
+the technology choices, and any other cross-cutting reference a reader
+needs before the per-feature specs make sense. These are reviewed at
+every version bump and each carries its own `## Change history`.
 
 ---
 
@@ -38,12 +65,23 @@ structure below, edit it for your context.
 | `general/system-architecture.md` | Cross-cutting — the whole-system view: principles, container diagram, the trust-critical path, feature→component map, key tech-decision table |
 | `general/technology-choices.md` | Cross-cutting — per-component technology choices + reasoning + a ⚠️ unclarity register |
 
-The two `general/` docs are **version-level, not per-feature** — one set per product,
-living in a `specifications/<product>/general/` folder, reviewed on every version bump
-(each carries its own `## Change history`). Each doc type above has a template in this
-folder. **Read the template before
-writing — they show the section structure and the level of detail
-expected.**
+`system-architecture.md` and `technology-choices.md` are the two
+**required** `general/` documents. `general/` is not limited to them —
+it is the home for **any cross-cutting reference specification**: a
+document that describes a mechanism, model or inventory spanning
+features and versions, which a reader needs before the per-feature
+specs make sense. Name it `general/<topic>.md`.
+
+Write a reference spec into `general/` when the thing being described
+is (a) referenced by more than one feature spec, and (b) still true
+after the version ships. If it is true only for this release, it
+belongs in the version folder.
+
+Each per-feature doc type above has a template in this folder. **Read
+the template before writing** — they show the section structure and the
+level of detail expected. Reference specs in `general/` have no fixed
+template beyond the two required documents; lead with what the reader
+must know, and state which decisions the document is downstream of.
 
 ---
 
