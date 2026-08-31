@@ -21,6 +21,7 @@ exception to "one page".
 | 2026-08-30 | Initial | Settled six F1↔F5 contract conflicts; closed Q-13, Q-15, Q-18…Q-27. Verdict `PROCEED`. |
 | 2026-08-30 | Security remediation | Folded the Mode A finding (`REVISE-SPEC`, C-1…C-18). Added §7 Security architecture and §8 conditions. |
 | **2026-08-31** | **Two-phase rewrite** | **Written against Q-39…Q-53. The 2026-08-30 verdict does not transfer and is void.** The declarative `mappings` model, `.harness/base/`, the marked-region grammar, `source-only`/`applied-only`, `shared/` components, `--adopt` and the per-file-hash manifest are all **gone** — not deferred, removed. The apply becomes **two phases**: a verbatim payload copy to `.harness/pack/`, then a **declarative recipe** over seven closed primitives. The manifest becomes **six keys** (Q-43 as amended by Q-52). `verify` is F1's (Q-53). The file-level plan is **rebuilt**; 14 modules of the old plan are deleted and 13 are new. §7's security architecture is **carried forward and rescoped**, not rewritten: both CRITICALs were apply-time and survive intact. Verdict: **`REVISE SPEC`** — see §10. |
+| **2026-08-31** | **Escalation answered: `.harness/README.md` is dropped** | §3.4's escalated branch was answered **option C**, recorded in `project-brief.md` §12 as an amendment to Q-50: **`.harness/` is excluded from the folder-README rule as tool-owned, exactly as `.claude/` is.** There is no `.harness/README.md`, no CLI write that produces one, and **C-5 is absolute with no carve-out** — which is what §7.1's own argument asked for, since `.harness/pack/` is phase 2's input. `packs/coding/applied-readmes/harness.md` is deleted from disk; the folder holds five files. §6.1 change 3 is withdrawn; §1, §3.4, §4, §5, §7.1, §8 (C-5), the interface contract and the file-level plan are amended. **New in the same pass:** `validate` gains a mechanical Q-50 check (`W-FOLDER-README-MISSING`, US-16 order step 12) and `pack.json` gains `folderReadme` — see §3.5 and §6.1 changes 12–15. Verdict re-examined in §10: **`PROCEED`, conditional.** |
 
 ---
 
@@ -75,27 +76,41 @@ part of the frozen contract as the pipeline order:
    forward from the 2026-08-30 remediation pass and rescoped where the
    model moved under it.
 
-Two consequences of the settled model are recorded here because they
-change what F1 must specify and F1 v2.0 has not yet folded them:
+Three consequences of the settled model are recorded here because they
+change what F1 must specify. The first two are folded into F1 **v2.1**;
+the third is new in this pass and is not yet folded:
 
 - **Q-50 dissolves the empty-directory problem rather than solving it.**
   Every folder an apply creates carries a README (`README.md` for
-  `coding` and `planning`, `index.md` for `writing`; `.claude/`
-  excluded), so **no folder is ever empty**. There is **no `mkdir`
-  primitive**, no eighth primitive, no `skeleton/` tree and no
-  `.gitkeep`. Five of the coding pack's six new folder READMEs are
-  ordinary `rename` steps out of `packs/coding/applied-readmes/`, which
-  already exists on disk. F1 v2.0's `skeleton/specifications/` step and
-  its "an empty directory is not representable" known limit are
-  **superseded** and must come out.
+  `coding` and `planning`, `index.md` for `writing`; **`.claude/` and
+  `.harness/` excluded, both tool-owned**), so **no folder is ever
+  empty**. There is **no `mkdir` primitive**, no eighth primitive, no
+  `skeleton/` tree and no `.gitkeep`. The coding pack's five new folder
+  READMEs are ordinary `rename` steps out of
+  `packs/coding/applied-readmes/`, which already exists on disk. F1
+  v2.0's `skeleton/specifications/` step and its "an empty directory is
+  not representable" known limit are **superseded** and must come out.
 
-- **The sixth README collides with C-5, and the collision is decided
-  here.** `.harness/README.md` is a folder README Q-50 requires, and C-5
-  forbids any recipe step writing under `.harness/`. Neither yields.
-  **The CLI writes it**, from the fixed payload path
-  `applied-readmes/harness.md` when the pack ships one, as a CLI-owned
-  write confined by construction exactly as the manifest, journal and
-  lock are. C-5 stands unamended and gains one more named carve-out.
+- **`.harness/` is tool-owned and carries no README, so C-5 is
+  absolute.** This ADR originally decided the opposite (§3.4 option A:
+  the CLI writes `.harness/README.md` from `applied-readmes/harness.md`)
+  and escalated the alternative. **The escalation was answered on
+  2026-08-31 in favour of dropping the file** — recorded in
+  `project-brief.md` §12 as an amendment to Q-50. `.harness/` is excluded
+  on exactly the grounds Q-50 already excludes `.claude/`, and is
+  arguably *more* tool-owned: a user edits agent files, but must never
+  edit the payload. **There is no `.harness/README.md`, no CLI write that
+  produces one, and no carve-out in C-5.** The CLI writes five things
+  under `.harness/` — the payload, the manifest, the journal,
+  `journal.d/` and the lock — and that list is complete.
+
+- **`validate` checks Q-50 mechanically.** Under Q-50 the recipe's
+  destination set *is* the pack's folder-README set, so the rule is
+  decidable from the pack alone. `validate` reports
+  `W-FOLDER-README-MISSING` for any directory the applied output implies
+  that receives no folder README, and `pack.json` gains an optional
+  `folderReadme` basename (default `README.md`; `writing` declares
+  `index.md`). See §3.5.
 
 ### File-level plan
 
@@ -179,7 +194,7 @@ These are not deferred. The concepts they implemented no longer exist.
 | `src/verify/compare.ts` | **New** | F1 | `match \| differs \| missing`; normalized comparison for text, raw for binary; the executable bit where the platform represents it |
 | **security — carried forward** | | | |
 | `src/security/confine.ts` | Carried | F1 | **The only constructor of `AppliedPath`.** Anchored `to` grammar, NFC + case-fold `collisionKey`, resolve-and-`lstat` confinement, `confineAtWrite()`. C-4, C-6, C-14 |
-| `src/security/harness-paths.ts` | **New** | F1 | **The only constructor of `HarnessPath`** — the CLI's own writes under `.harness/` (`pack/**`, `manifest.json`, `journal.json`, `journal.d/**`, `lock`, `README.md`). Derived from paths already proven grammar-clean, so confined by construction. Closes the typing hole phase 1 opened |
+| `src/security/harness-paths.ts` | **New** | F1 | **The only constructor of `HarnessPath`** — the CLI's own writes under `.harness/`, and the list is **five and complete**: `pack/**`, `manifest.json`, `journal.json`, `journal.d/**`, `lock`. Derived from paths already proven grammar-clean, so confined by construction. Closes the typing hole phase 1 opened |
 | `src/security/destination-policy.ts` | Carried | F1 | One table keyed by **destination**: the reserved-destination denylist (**extended: no recipe step writes under `.harness/`**), the `ownedKeys` allowlist and its security-relevant marks, the executable-root rules. C-1, C-5, C-12 |
 | `src/security/consent.ts` | Carried | F1→F2 | Builds `SecurityDisclosure` from a plan; `renderDisclosure()`; the gate that turns "no consent" into `E-SETTINGS-CONSENT-REQUIRED` before any write and **before the lock**. C-2 |
 | `src/security/secret-heuristic.ts` | Carried | F1 | `E-PARAM-SECRET-SUSPECTED` at validate time; `W-ANSWER-LOOKS-SECRET` at answer time. C-15 |
@@ -191,10 +206,11 @@ These are not deferred. The concepts they implemented no longer exist.
 | `src/fs/walk.ts` | Carried | F1 | The one bounded, non-symlink-following walk. Depth 32, 10 000 entries, skip list, `E-TRAVERSAL-LIMIT`. **Two call sites**: the phase-1 payload walk and the `verify` project scan. C-17 |
 | **apply** | | | |
 | `src/apply/plan.ts` | Revised | F1 | `ApplyInputs` → `ApplyPlan`. Pure: plans **both phases**, computes `payloadDigest` and the manifest, builds `SecurityDisclosure`, writes **nothing** |
-| `src/apply/execute.ts` | Revised | F1→F2 | consent gate → lock → journal → **phase 1** → **phase 2** → `.harness/README.md` → manifest → journal removal. The only writer. Re-confines immediately before each write (C-14) |
+| `src/apply/execute.ts` | Revised | F1→F2 | consent gate → lock → journal → **phase 1** → **phase 2** → manifest → journal removal. The only writer. Re-confines immediately before each write (C-14) |
 | `src/apply/rollback.ts` | Revised | F1→F2 | The five-case rule of §7.5, now covering phase-1 paths |
 | **validate** | | | |
-| `src/validate/validate-pack.ts` | Revised | F1 | The 13-step ordered check runner of F1 US-16 → `PackReport` |
+| `src/validate/validate-pack.ts` | Revised | F1 | The **14**-step ordered check runner of F1 US-16 → `PackReport`. Step 12 is the Q-50 folder-README check (§3.5) |
+| `src/validate/folder-readmes.ts` | **New** | F1 | §3.5. Per parameter combination: derive the directory set from the combination's applied paths, subtract the project root, `.claude/**` and `.harness/**`, and report `W-FOLDER-README-MISSING` for any directory receiving no `folderReadme` basename. Pure; needs no project |
 | `src/validate/combinations.ts` | Carried | F1 | Per-parameter-combination render; the 32 cap; `parameterVaryingSteps` |
 | `src/validate/link-integrity.ts` | Revised | F1 | `W-LINK-DANGLING`, **payload-aware**: a reference into `.harness/pack/` that exists in the payload is correct and is not reported |
 | `packs/` | New | F5 | Pack content. F1 ships no pack; `lintel-harness validate --all` is what binds them. **No `shared/` tree at v1.0** (Q-48) |
@@ -231,9 +247,10 @@ export type AppliedPath = string & {
 };
 
 // SEC. NEW at v2. The CLI's own writes under .harness/ — the phase-1
-// payload, the manifest, the journal, journal.d/, the lock and
-// .harness/README.md — are NOT recipe steps and do not consult the
-// reserved-destination denylist (which forbids .harness/ outright).
+// payload, the manifest, the journal, journal.d/ and the lock, which is
+// the COMPLETE list — are NOT recipe steps and do not consult the
+// reserved-destination denylist (which forbids .harness/ outright, with
+// no carve-out: .harness/ carries no README, Q-50 as amended).
 // They are confined by CONSTRUCTION: derived from a payload-relative
 // path already proven free of '..', of a leading separator and of every
 // other construct the grammar rejects. Giving them their own brand is
@@ -276,7 +293,7 @@ export function confineAtWrite(
 /** SEC. The only constructor of HarnessPath. `rel` must already satisfy
  *  the payload path grammar; violations are E-PAYLOAD-PATH-INVALID. */
 export function harnessPath(
-  kind: 'payload' | 'manifest' | 'journal' | 'journalBackup' | 'lock' | 'readme',
+  kind: 'payload' | 'manifest' | 'journal' | 'journalBackup' | 'lock',
   rel?: string,
 ): HarnessPath;
 
@@ -361,6 +378,12 @@ export interface PackJson {
   /** Pack-relative path to the recipe; defaults to 'recipe.json'. */
   recipe?: string;
   anatomy: Record<AnatomyPartId, AnatomyDecl>;
+  /** Q-50, §3.5. The basename that satisfies the folder-README rule for
+   *  this pack. ONE path segment, subject to the same segment grammar as
+   *  a step's `to`. Absent ⇒ 'README.md'. `writing` declares 'index.md'.
+   *  Declared rather than guessed, because a checker that accepts either
+   *  basename cannot report a missing one. */
+  folderReadme?: string;
   parameters?: readonly ParameterDecl[];
   scaffolds?: readonly ScaffoldDecl[];
   /** SEC (C-12). Applied-path prefixes, each ending '/', inside which a
@@ -800,7 +823,7 @@ as decided on 2026-08-30 and are recorded in §6.2.
 
 - **A — every created folder carries a README; no eighth primitive
   (chosen, Q-50).** *Advantages:* the placeholder becomes useful content;
-  five of the six coding READMEs are ordinary `rename` steps out of
+  all five coding READMEs are ordinary `rename` steps out of
   `applied-readmes/`, which already exists in the pack; the primitive set
   stays at seven, which is the number `pack info`, `E-RECIPE-PRIMITIVE-
   UNKNOWN` and this ADR's whole "enumerable capability" argument are
@@ -820,15 +843,25 @@ as decided on 2026-08-30 and are recorded in §6.2.
 
 ### 3.4 `.harness/README.md` — Q-50 against C-5
 
-- **A — the CLI writes it, from a fixed payload path (chosen).**
-  `applied-readmes/harness.md`, if the pack ships it, is rendered by the
-  CLI to `.harness/README.md` immediately before the manifest — a
-  CLI-owned write carrying `HarnessPath`, confined by construction,
-  exactly like the manifest. *Advantages:* C-5 stands **unamended** — "a
-  recipe step may never write under `.harness/`" remains absolute, which
-  is the property that keeps the payload it is reading from immutable
-  during phase 2. *Disadvantages:* one more CLI-owned write; it is not
-  produced by the recipe, so `verify` does not recompute it (see §5).
+**Decided C. Escalated on 2026-08-31 and answered the same day** in
+`project-brief.md` §12, as an amendment to Q-50. This ADR's first pass
+chose A and named C as genuinely arguable; the options are kept below
+because the comparison is the work, and because a reversal that hides
+what it reversed is worth less than one that shows it.
+
+- **A — the CLI writes it, from a fixed payload path (**originally
+  chosen; superseded**).** `applied-readmes/harness.md`, if the pack
+  ships it, is rendered by the CLI to `.harness/README.md` immediately
+  before the manifest — a CLI-owned write carrying `HarnessPath`,
+  confined by construction, exactly like the manifest. *Advantages:* C-5
+  is not amended — "a recipe step may never write under `.harness/`"
+  still holds. *Disadvantages:* one more CLI-owned write; it is not
+  produced by the recipe, so `verify` cannot recompute it; and it makes
+  C-5 a rule **with a named carve-out** rather than an absolute. That
+  last cost was underweighted: §7.1's own argument for extending C-5 is
+  that `.harness/pack/` is phase 2's *input*, and a rule that needs the
+  reader to hold an exception in mind is a rule an implementer
+  eventually applies to the exception's neighbours.
 - **B — carve a hole in the denylist for `.harness/README.md`.**
   *Rejected:* a denylist with an exception is a denylist an implementer
   gets wrong, and the exception would be a recipe-declared `to` — which
@@ -836,13 +869,79 @@ as decided on 2026-08-30 and are recorded in §6.2.
   to reason about a path inside the tree phase 2 is reading. Not worth
   one README.
 - **C — drop `.harness/README.md`; treat `.harness/` as tool-owned like
-  `.claude/`.** *Genuinely arguable*, and Q-50 already excludes `.claude/`
-  on exactly that reasoning. Rejected on reader value: `.claude/` is a
-  runtime convention a reader can look up, whereas `.harness/` is this
-  product's own invention and the folder that holds the single largest
-  thing an apply writes. A newcomer opening it deserves a sentence. **If
-  Thomas prefers C the cost is one deleted file and one deleted CLI
-  write; nothing else in this ADR moves.**
+  `.claude/` (chosen, on escalation).** Q-50 already excludes `.claude/`
+  as tool-owned, and `.harness/` is *more* tool-owned, not less: a user
+  edits agent files under `.claude/`, but must **never** edit the
+  payload. Excluding it on the same stated ground keeps Q-50 a rule with
+  **one** exclusion criterion rather than one criterion plus a special
+  case, and it keeps **C-5 absolute with no carve-out** — which is what
+  the §7.1 blockquote asks for in its own words. The reader-value
+  argument that carried A on the first pass is real but small: a
+  newcomer opening `.harness/` finds `pack/`, `manifest.json` and a
+  journal, all of which the applied `CLAUDE.md` and the manifest already
+  describe. **Cost, as predicted: one deleted file** —
+  `packs/coding/applied-readmes/harness.md` existed and has been removed,
+  leaving that folder with exactly five files — **and one deleted CLI
+  write.** Nothing else in the architecture moved.
+
+### 3.5 Whether `validate` enforces Q-50 mechanically — new in this pass
+
+Q-50 has an easily-missed property: **the recipe's destination set *is*
+the pack's folder-README set.** Every directory an apply creates exists
+because some step writes a file into it, and every step's `to` is
+declared. So "every folder an apply creates, outside `.claude/` and
+`.harness/`, carries a README" is decidable from the pack alone, with no
+project — the same class of check as `E-MAP-COLLISION`.
+
+- **A — leave it as prose (**rejected**).** The rule lives in the brief,
+  in F1 US-3 and in F5's three pack sections, and is enforced by an
+  integration test F1 suggests but does not require. R5's recurring
+  weakness in this product is exactly this: rules asserted in prose and
+  checked by nobody. The check costs one pure function over data
+  `validate` has already computed.
+- **B — an error, `E-FOLDER-README-MISSING`, exit 2 (**rejected**).**
+  `validate` has no project root, so it cannot distinguish *a directory
+  this apply creates* — which Q-50 governs — from *a directory that
+  already exists in the target project and into which this apply merely
+  writes*, which Q-50 does not. The check therefore **over-approximates
+  by construction**, and an over-approximating check must not be fatal by
+  code, or a legitimate pack writing into a conventional pre-existing
+  directory becomes unshippable and the remedy is a `.gitkeep`-shaped
+  workaround — precisely what Q-50 exists to avoid.
+- **C — a warning, `W-FOLDER-README-MISSING`, fatal under `--strict`
+  (chosen).** Warning severity is honest about the over-approximation;
+  `--strict` gives it teeth where the over-approximation is known to be
+  empty, which is this repo's CI over the three bundled packs. **US-16's
+  CI criterion must therefore read `validate --all --strict`** — a
+  warning nothing runs strictly is option A with extra steps.
+
+**The specification, precisely.**
+
+- **Where in US-16's order:** a new **step 12**, immediately after the
+  per-combination render (step 11) and before link integrity. It needs
+  the per-combination applied path set that step 11 produces, and it must
+  run **per parameter combination**: a folder created only under
+  `--calibration high-floor` needs its README under that combination, and
+  the merged step set would hide a folder step and a README step gated on
+  *different* answers. Link integrity becomes step 13 and disclosure step
+  14; the order is part of F1's contract, so the renumber is a fold, not
+  an editorial choice.
+- **What it computes:** for each combination, the set of proper directory
+  prefixes of every applied path the recipe writes; minus the project
+  root itself; minus every prefix under `.claude/` or `.harness/`. For
+  each surviving directory `d`, require an applied path exactly
+  `d/<folderReadme>`. Anything else is `W-FOLDER-README-MISSING`, one
+  diagnostic per directory, naming the directory, the expected basename
+  and the combination.
+- **What `folderReadme` is:** a new optional `pack.json` key, one path
+  segment under the same grammar as a step's `to`, defaulting to
+  `README.md`. `coding` and `planning` omit it; `writing` declares
+  `index.md`. Declared rather than sniffed, because a check that accepts
+  either basename cannot report a missing one — the fail-closed habit
+  applied to a content rule.
+- **What it does not do:** it does not check that the README *says*
+  anything, and it does not run at apply time. Q-50 is a content
+  convention; this makes its shape checkable, not its prose.
 
 ---
 
@@ -887,11 +986,23 @@ line-ending edit of the payload. That trade is already made everywhere
 else in the product and it should be made the same way here.
 
 The `.harness/README.md` decision is smaller but the reasoning is the
-same shape: when a content decision (Q-50) collides with a security
-invariant (C-5), move the work to the side that already has the
-capability rather than weakening the invariant. The CLI already writes
-five things under `.harness/`; a sixth costs nothing. A denylist hole
-costs the reader's ability to state C-5 in one sentence.
+same shape, and the escalation sharpened it. When a content decision
+(Q-50) collides with a security invariant (C-5), the invariant does not
+bend — but the first pass took "do not bend it" to mean "move the work to
+the CLI", and that still left C-5 stated as *a rule plus a named
+carve-out*. The answer that came back is better: **ask whether the
+content decision reaches this folder at all.** It does not. Q-50's
+exclusion criterion is *tool-owned*, `.harness/` is tool-owned more
+plainly than `.claude/` is, and applying the criterion the rule already
+has is cheaper than inventing an exception to a different rule. C-5 is
+now statable in one sentence with nothing after the comma: **a recipe
+step may never write under `.harness/`.** That is the sentence §7.1's
+blockquote was already trying to write.
+
+The general lesson is worth keeping, because it will recur: a carve-out
+is a cost paid by every future reader of the invariant, and it should be
+priced against the *content* it buys, not against the implementation
+effort it saves. One paragraph of orientation prose did not clear it.
 
 ---
 
@@ -927,6 +1038,12 @@ costs the reader's ability to state C-5 in one sentence.
   tree, and it must re-evaluate `when` against the **recorded** answers.
   It must check `payloadDigest` before merging — that is C-11's concern
   and Q-52 has already paid for half of it.
+- **Q-50 becomes a checked rule, so every pack pays it.** With §3.5's
+  step 12 and `validate --all --strict` in CI, a pack that adds a folder
+  and forgets its README fails the build. That is the point, and it is
+  also a real constraint on F5's authoring: `writing` must declare
+  `folderReadme: "index.md"`, and any folder any pack creates needs a
+  README step in the same `when` branch as whatever creates the folder.
 - **F5 loses `shared/` entirely.** Its `shared/targets` section, its
   G5.7, its `E-SHARED-*` error rows and its Q-34/Q-49 dependency chain
   all come out (§6.2).
@@ -942,10 +1059,6 @@ costs the reader's ability to state C-5 in one sentence.
   shortfall against R5. **Cheaper than it was**: with `update` deferred
   there is no removal-honouring merge to build (C-3), so the serializer
   is the whole of the difficulty.
-- **`verify` does not recompute `.harness/README.md`.** It is a CLI
-  write, not recipe output, so it falls outside the recomputation
-  identity. A user who deletes it gets no diagnostic. Bounded, stated,
-  and the price of §3.4 option A.
 - **A hand-edited manifest can still lie.** `payloadDigest` binds the
   payload to the manifest; nothing binds the manifest to itself, because
   Q-43 removed the self-hash and its only consumer was a merge that no
@@ -972,7 +1085,14 @@ permissions before that pack can exist.
 Everything below is a place where a current document contradicts this ADR
 or the settled model. **This ADR edits no other file.**
 
-### 6.1 `F1-spec-pack-format-and-manifest.md` v2.0 — 11 changes
+**Fold status as of 2026-08-31.** §6.1's changes 1, 2 and 4–11 are
+**folded into F1 v2.1**; change 3 is **withdrawn** by the escalation
+answer and F1 correctly never applied it; changes **12–15 are new in this
+pass and are not folded**. §6.2 (F5) and §6.3 (the master spec) are in
+flight at the time of writing — see §10 for exactly what the verdict
+depends on.
+
+### 6.1 `F1-spec-pack-format-and-manifest.md` — 11 changes folded at v2.1, one withdrawn, four new
 
 | # | Where | Change | Why |
 |---|---|---|---|

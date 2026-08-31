@@ -1,11 +1,11 @@
 # Pack Format & Manifest Specification — Lintel Harness v1.0
-**Version:** 2.0
+**Version:** 2.1
 **Status:** Draft
 **Date:** 2026-08-31
 **Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/harness`, binary `lintel-harness` (Q-16). Pack content is Markdown, shell, PowerShell and Bicep; `pack.json`, `recipe.json` and the manifest are JSON. No UI.
 **Design spec:** n/a (no UI)
-**ADR:** `F1-ADR-001-pack-format-and-manifest.md` — **PROCEED**, but written against the single-phase model. Q-39…Q-46 supersede it wherever they disagree; its **security conditions C-1…C-18** survive and are carried forward or explicitly deferred in this document.
-**References:** `specifications/general/pack-application.md` (the two-phase model — authoritative), `specifications/general/pack-inventory.md` (the three packs, source and applied trees), `specifications/project-brief.md` §12 Q-1…Q-47 and §9 Q-48, `packs/coding/specifications/conventions.md`, `packs/coding/` (the pack this format must carry)
+**ADR:** `F1-ADR-001-pack-format-and-manifest.md`, **rewritten 2026-08-31 against the two-phase model** — verdict **`REVISE SPEC`**, whose F1-side change list (its §6.1, eleven changes) is folded into **this** version. The ADR is authoritative for the decisions it records; its **security conditions C-1…C-18** survive and are carried forward or explicitly deferred in this document.
+**References:** `specifications/general/pack-application.md` (the two-phase model — authoritative), `specifications/general/pack-inventory.md` (the three packs, source and applied trees), `specifications/project-brief.md` §12 Q-1…Q-53 (**all resolved**), `packs/coding/specifications/conventions.md`, `packs/coding/` (the pack this format must carry)
 
 **Amendment history**
 
@@ -15,7 +15,8 @@
 | 1.0 | 2026-08-30 | Cross-document consistency pass. Open questions renumbered to project-unique ids Q-18…Q-26. |
 | 1.0 | 2026-08-30 | **ADR-001 amendment pass.** Anatomy status enum, `parameters[].flag`, shared `mappings` + `remap`, per-owned-key hashes, `pack.integrity`, `.harness/.gitattributes`, `{{harness:lit:X}}`, US-29. |
 | 1.0 | 2026-08-30 | **Security remediation pass.** Folds `F1-ADR-001` §7–§8 (C-1…C-18): confinement by resolution, the anchored `to` grammar, the reserved-destination denylist, the destination-keyed ownable allowlist, the hook exclusion, journal v2 and the five-case rollback table, the consent gate. |
-| **2.0** | **2026-08-31** | **Two-phase rewrite.** Folds Q-39…Q-47 and Q-16/Q-17. Apply becomes **two phases**: a verbatim payload copy to `.harness/pack/`, then a **declarative recipe** over seven primitives (US-30, US-31). The source→applied *mapping* model, the marked-region grammar, `source-only`/`applied-only`, `shared/` components, `.harness/base/` and the per-file hash list are **removed**; the manifest becomes minimal (Q-43); `--adopt` is dropped (Q-44); regions become **inert anchors only** (Q-45). `update`, `status` and `contribute` leave v1.0 (Q-42), taking C-3, C-9's region half, C-10/C-11's update paths and C-18 with them. **Retired: US-5, US-7, US-11, US-12.** New: US-30…US-33. 24 codes removed, 12 added, 1 renamed. |
+| 2.0 | 2026-08-31 | **Two-phase rewrite.** Folds Q-39…Q-47 and Q-16/Q-17. Apply becomes **two phases**: a verbatim payload copy to `.harness/pack/`, then a **declarative recipe** over seven primitives (US-30, US-31). The source→applied *mapping* model, the marked-region grammar, `source-only`/`applied-only`, `shared/` components, `.harness/base/` and the per-file hash list are **removed**; the manifest becomes minimal (Q-43); `--adopt` is dropped (Q-44); regions become **inert anchors only** (Q-45). `update`, `status` and `contribute` leave v1.0 (Q-42), taking C-3, C-9's region half, C-10/C-11's update paths and C-18 with them. **Retired: US-5, US-7, US-11, US-12.** New: US-30…US-33. 24 codes removed, 12 added, 1 renamed. |
+| **2.1** | **2026-08-31** | **ADR-001 fold (`REVISE SPEC`, §6.1's eleven changes), plus Q-48…Q-53.** The manifest becomes **six keys**: `payloadDigest`, a single tree digest over `.harness/pack/`, top-level between `pack` and `parameters` (Q-52), computed over **normalized** content and over the **planned** payload set. `verify` checks it **first and fail-closed** (US-33, §F1.8), which voids and deletes the old "what `verify` cannot tell you" limit. The `skeleton/specifications/` mechanism is **deleted** and replaced by five `rename` steps out of `packs/coding/applied-readmes/` (Q-50); `.harness/` is **excluded** from the folder-README rule as tool-owned, so **`.harness/README.md` does not exist** and C-5 stands absolute with no carve-out. CLI-owned writes are named: **`HarnessPath`**, with **`WritablePath = AppliedPath \| HarnessPath`** (C-14). Added `E-PAYLOAD-DIGEST-MISMATCH`; extended `E-MERGE-JSON-INVALID` to the payload-side `from`. Q-48, Q-52 and Q-53 move to Resolved; **F1 has no open questions**. Next free question id **Q-54**; next free story id **US-39**. |
 
 ---
 
@@ -67,6 +68,15 @@ applied state is always recomputable from `.harness/pack/` + the recipe +
 the recorded answers, so there is no per-file hash list and no
 `.harness/base/` store.
 
+The manifest carries **one** hash, and only one: `payloadDigest`, a
+single tree digest over `.harness/pack/` (Q-52). Recomputation proves the
+applied tree matches *the payload on disk*; the digest is what makes it
+also prove the payload is the one that shipped. Without it a hand-edited
+payload yields a hand-edited expectation and `verify` reports the project
+clean. One hash over one tree is the smallest closure of that gap — not
+per-file, not per-region — and because the digest is a pure function of
+the payload, determinism is untouched.
+
 This feature is the *format*, not the engine. F2 (`lintel-harness init`)
 owns the CLI surface and the interactive prompting; F5 authors the three
 packs against this format; F6 wraps the CLI in a skill. Where this spec
@@ -94,8 +104,9 @@ downstream features implement it and may not reinterpret it.
   behaviour when missing, corrupt, hand-edited or written by a newer CLI.
   A project holds exactly one pack (Q-12).
 - **Verifiability** — the expected applied tree is recomputable from the
-  payload, the recipe and the recorded answers, and
-  `lintel-harness verify` checks it.
+  payload, the recipe and the recorded answers; the payload itself is
+  bound to the manifest by `payloadDigest`; and `lintel-harness verify`
+  checks both, digest first.
 - The **atomicity, journal and rollback contract** an apply must honour.
 - `lintel-harness validate` and `lintel-harness pack info` — the
   author-facing and adopter-facing views of the same report structure.
@@ -118,10 +129,13 @@ downstream features implement it and may not reinterpret it.
   collisions.
 - **Source-only / applied-only content.** Removed with Q-46; the payload
   is correct as copied.
-- **`shared/` components.** No v1.0 pack references `shared/`
-  (`pack-inventory.md`; `shared/targets` ships inside `coding`,
-  `shared/presentation` defers under Q-28). The mechanism leaves the
-  format for v1.0 — see Q-48.
+- **`shared/` components.** **Resolved: the mechanism does not ship at
+  v1.0** (brief Q-48). There is no `shared` array, no `component.json`,
+  no digest pin and no bump rule anywhere in this format. `targets` ships
+  as `coding`-local content, `planning` ships its own copy (Q-49), and
+  `shared/presentation` defers under Q-28. **Deferred to v1.1**, when
+  there is a second consumer; F1's retired US-7 stays retired and a v1.1
+  mechanism takes a new story id.
 - **Pack content.** The nine parts of `coding`, `writing` and `planning`
   are F5's deliverable.
 - **Two packs in one project** (Q-12), and **changing an answer or a
@@ -143,9 +157,11 @@ Only settled decisions. Rows marked *(brief)* were settled in
 | Phase 2's input | `.harness/pack/` in the project, never the bundle | *(brief Q-41)* One source of truth per apply; the applied result is a function of what is on disk in the project |
 | Templates stay put | A pack's document templates and reference docs are **not** copied out. They live in `.harness/pack/` and the project reads them there | *(brief Q-47, superseding Q-38)* The payload is inside the project, so a project still has every template locally, browsable and offline — which was Q-38's whole rationale — without a second copy the tool must keep in step |
 | Determinism | The recipe is a pure function of (payload, answers). Two applies with the same answers produce byte-identical trees **including the manifest** | *(brief Q-40, Q-43)* Makes "applied correctly every time" a testable property, and is what lets the manifest carry no hashes |
-| Manifest content | Pack name, pack version, CLI version, parameter answers, chosen scaffolds. **No per-file hash list. No `.harness/base/`.** | *(brief Q-43)* With the payload local and the recipe deterministic, the applied state is recomputable; a hash list and a cached base are both redundant |
+| Manifest content | **Six keys**: `manifestVersion`, `cli`, `pack`, `payloadDigest`, `parameters`, `scaffolds`. **No per-file hash list. No `.harness/base/`.** | *(brief Q-43 as amended by Q-52)* With the payload local and the recipe deterministic, the applied state is recomputable, so a hash list and a cached base are both redundant — but the recomputation *trusts* the payload, so exactly one hash goes back in |
+| Payload digest | `payloadDigest` is **one** SHA-256 tree digest over `.harness/pack/`, recorded **top-level, between `pack` and `parameters`** — never nested under `pack` | *(brief Q-52)* `pack` holds what the pack **declared** (name, version, `formatVersion`, all read out of `pack.json`); the digest is what **this apply observed**. Nesting it would make `pack` a heterogeneous object and make "the manifest records the inputs" untrue in a way that is hard to state |
+| Digest content | The digest is over **normalized** content (BOM strip + CRLF/CR → LF), per-file, text normalized and binary raw, never over raw payload bytes | *(brief Q-26, Q-52)* Phase 1 copies raw bytes, so a raw digest would be defeated by any checkout that rewrites them — every Windows clone with `core.autocrlf` would report a tampered payload. **Accepted cost, stated:** a pure line-ending edit of the payload is undetectable |
 | No `appliedAt` | The manifest carries no timestamp | Q-43's list does not include one, and omitting it makes "byte-identical trees" true of the whole project rather than of everything except one file. Version control already records when |
-| No manifest self-hash | `integrity` is dropped, and with it hand-edit detection | Its only consumer was a merge that no longer happens. A hand-edited-but-valid manifest is indistinguishable from a written one, and that is acceptable precisely because v1.0 never merges against it — `verify` catches a manifest whose answers no longer produce the tree on disk |
+| No manifest self-hash | `integrity` is dropped, and with it hand-edit detection | Its only consumer was a merge that no longer happens. A hand-edited-but-valid manifest is indistinguishable from a written one, and that is acceptable precisely because v1.0 never merges against it — `verify` catches a manifest whose answers no longer produce the tree on disk. **Stated plainly:** `payloadDigest` binds the payload to the manifest; nothing binds the manifest to itself, so someone who edits the payload *and* recomputes the digest defeats the check. That is deliberate work rather than an accident |
 | Two files, not one | `pack.json` declares identity; `recipe.json` declares procedure | Amends Q-24. Identity is read by `pack info` and by a user choosing a pack; the recipe is read only by an apply. Splitting them keeps the file a human reads short |
 | Pack home | `packs/<name>/` in this repo, bundled into the published package | *(brief Q-2)* One release artifact; `npx` needs no network |
 | Payload root | The pack directory itself. There is no `contentRoot` | Phase 1 copies the folder verbatim, so a second root would be a thing the copy has to know about. `pack.json` and `recipe.json` land in the payload with everything else |
@@ -156,12 +172,15 @@ Only settled decisions. Rows marked *(brief)* were settled in
 | `CLAUDE.md` | Generated by the `generate` primitive, carrying **inert** region anchors | *(brief Q-45)* Anchors are near-free now and expensive to retrofit; nothing parses them at v1.0 |
 | No bootstrap prose | Manual-apply instructions are deleted from pack sources | *(brief Q-46)* The recipe encodes them, so they describe a procedure nobody will perform. This is also why phase 1 can copy verbatim |
 | Substitution token | `{{harness:…}}` — a reserved prefix; every other `{{…}}` is left verbatim | Pack content is full of `{{Feature name}}`-style placeholders that must survive apply untouched |
-| Hash | SHA-256, lowercase hex, 64 chars, over **normalized** content (§NFR). Used by `verify` and by `--force` byte-identity, not by the manifest | In Node stdlib; normalization is what makes a comparison survive a CRLF checkout |
+| Hash | SHA-256, lowercase hex, 64 chars, over **normalized** content (§NFR). Used by the journal, by `--force` byte-identity, by `verify`'s comparison **and by the manifest's `payloadDigest`** | In Node stdlib; normalization is what makes a comparison — and a digest — survive a CRLF checkout |
 | Text encoding | UTF-8 only; BOM stripped on read, never re-emitted; non-UTF-8 is binary | One encoding, stated once |
 | Exit codes | `0` success · `1` user-correctable error · `2` pack, recipe or manifest integrity error · `3` internal error | Lets F6 and CI branch on outcome without parsing text |
 | Diagnostic vocabulary | F1's `E-`/`W-` codes and these four exit classes are the **only** CLI error model; §Error States is the only message catalogue | *(`F1-ADR-001`, conflict 4)* A scenario with no code can only be asserted by string-matching |
 | Anatomy status | Three values per part: `present` (default) · `provisional` (needs a `note`) · `absent` (needs a `reason`) | *(`F1-ADR-001`, conflict 3)* F5 asserts provisional counts as an NFR, and free text cannot be counted |
 | Confinement | **By resolution, not by string.** The project root is resolved once with `realpath`; every applied path passes one gate and carries the branded type `AppliedPath` | *(`F1-ADR-001` §7.1, C-4/C-14)* Inspecting a declared string says nothing about the filesystem it will meet |
+| Path brands | **Two**, and the writer takes their union: `AppliedPath` (a recipe step's destination, the only output of the confinement gate) and **`HarnessPath`** (a CLI-owned write under `.harness/`). `WritablePath = AppliedPath \| HarnessPath` is what the journal, the atomic writer and rollback accept — nothing takes a bare `string` | *(`F1-ADR-001` §1 contract, C-14)* Phase 1 writes are journalled like any other write, but their destination is one the reserved-destination denylist forbids to a recipe step. With one brand the denylist deadlocks against the payload copier; with none, C-14's "a path that skipped the gate is a compile error" stops holding across phase 1 |
+| Folder READMEs | Every folder an apply creates carries a README (`README.md` for `coding` and `planning`, `index.md` for `writing`). **`.claude/` and `.harness/` are excluded — both tool-owned.** There is no `mkdir` primitive, no eighth primitive, no `skeleton/` tree and no `.gitkeep` | *(brief Q-50, as amended 2026-08-31)* A content decision with a format consequence: it makes the empty-directory premise false rather than solving it. `.harness/` is excluded on stronger grounds than `.claude/` — a user may edit an agent file, but `.harness/pack/` is phase 2's *input* and C-5 forbids any recipe step writing there |
+| v1.0 command surface | **Four commands.** `init` is F2's; **`validate`, `verify` and `pack info` are F1's** | *(brief Q-53)* All three read a pack or a manifest, write nothing, take no lock, and exist to make the format checkable. F2 owns the apply and nothing else |
 | Settings ownership | A **destination-keyed** allowlist decides what a `merge-json` step may own. **No pack may register an agent hook at v1.0**: `hooks` is outside the ownable set entirely | *(`F1-ADR-001` §7.2.1/§7.2.5, C-1)* An unconstrained `ownedKeys` made `permissions.allow` indistinguishable from `theme`. Hooks are excluded by *format* decision, not by consent design |
 
 ---
@@ -182,7 +201,9 @@ Only settled decisions. Rows marked *(brief)* were settled in
 - **G-F1-5** — The expected applied tree is recomputable from
   `.harness/pack/`, the recipe and the manifest's answers alone — no
   network, no bundle, no cached base — and `lintel-harness verify` proves
-  it.
+  it. `verify` first proves the payload it recomputes from is the payload
+  the apply recorded, so the recomputation is an assertion rather than a
+  tautology.
 - **G-F1-6** — A failed apply leaves the project either fully applied or
   fully unapplied; a crashed apply is detectable and reversible by one
   command, and rollback never deletes a file that existed beforehand.
@@ -206,7 +227,8 @@ Only settled decisions. Rows marked *(brief)* were settled in
   never read.
 - `source-only` / `applied-only` content (Q-46).
 - `--adopt` (Q-44).
-- `shared/` components and the Q-4 bump rule's tooling (Q-48).
+- `shared/` components and the Q-4 bump rule's tooling — **deferred to
+  v1.1** (Q-48, resolved in the brief).
 - Re-calibrating a parameter answer or changing the scaffold set after
   init (Q-21, Q-22) — earliest v1.1.
 - Remote or third-party packs, a registry, and pack signing.
@@ -219,11 +241,12 @@ Only settled decisions. Rows marked *(brief)* were settled in
 ## User Stories
 
 Range used: **US-1, US-2, US-3, US-4, US-6, US-8, US-9, US-10, US-13,
-US-14, US-15, US-16, US-29, US-30 … US-33.** Next free id: **US-34**.
+US-14, US-15, US-16, US-29, US-30 … US-33.** Next free id: **US-39**.
 
 **Retired, never to be reused:** **US-5** (source-only/applied-only —
 Q-46), **US-7** (shared components — Q-48), **US-11** (drift reporting —
-Q-42), **US-12** (merge base — Q-43). F5 holds US-17…US-28.
+Q-42), **US-12** (merge base — Q-43). F5 holds **US-17…US-28** and
+**US-34…US-38**.
 
 ---
 
@@ -367,10 +390,21 @@ Q-42), **US-12** (merge base — Q-43). F5 holds US-17…US-28.
 - Two steps that write the same applied path fail with
   `E-MAP-COLLISION`, computed over the merged step set — base steps plus
   the steps of every selected scaffold.
-- **An empty directory is not representable.** No primitive creates one.
-  A pack that needs `specifications/general/` to exist ships a
-  placeholder file in the payload and copies it. This is a stated
-  limitation, not an oversight — see §F1.9.
+- **An empty directory is not representable, and under Q-50 nothing
+  needs one.** No primitive creates a directory on its own; a directory
+  exists because a file lands in it. **Every folder an apply creates
+  carries a README** (`README.md` for `coding` and `planning`, `index.md`
+  for `writing`), so no folder is ever empty and the case does not
+  arise. `.claude/` and `.harness/` are excluded from the rule — both are
+  tool-owned — and `.harness/` additionally may not be written by a
+  recipe step at all (stage 2 below), so **there is no
+  `.harness/README.md`**. There is **no `mkdir` primitive**, no eighth
+  primitive, no `skeleton/` tree and no `.gitkeep`. A test may assert
+  this by applying any v1.0 pack and requiring that every directory below
+  the project root other than `.claude/` and `.harness/` contains the
+  pack's declared folder-README basename. The residual limit — a pack
+  that genuinely wants an empty folder cannot have one — is recorded in
+  §F1.9.
 - Validation rejects any symlink anywhere in the pack
   (`E-SYMLINK-IN-PACK`).
 
@@ -439,13 +473,32 @@ matters precisely when someone runs `init` inside the harness repo).
   copies of it.
 - `.git/hooks/pre-commit` with `"executable": true` is two independent
   errors, this one and `E-EXEC-DEST-FORBIDDEN`.
-- **Carve-out, and it must be stated.** The CLI's own writes under
-  `.harness/` — the phase-1 payload, the manifest, the journal and the
-  lock — are **not recipe steps** and do not consult the denylist. They
-  are produced by the CLI from paths it constructs itself, and are
-  confined by construction. **A recipe step may never write under
-  `.harness/`**, which includes writing into the payload it is reading
-  from.
+- **C-5 is absolute and has no exception: a recipe step may never write
+  under `.harness/`** — which includes writing into the payload it is
+  reading from. Under the two-phase model `.harness/` holds **the input
+  to phase 2**, so a step that could write there could rewrite its own
+  source mid-run, destroying determinism, destroying `verify`'s
+  recomputation identity, and making the applied tree depend on step
+  order in a way the plan did not show. There is no carve-out in the
+  denylist, for a README or for anything else. A test may assert this by
+  giving a recipe a step whose `to` is `.harness/README.md` and requiring
+  `E-MAP-RESERVED-DEST`, exit 2, zero bytes.
+- **The CLI's own writes are a different category, and they are named.**
+  The phase-1 payload, `.harness/manifest.json`, `.harness/journal.json`,
+  `.harness/journal.d/**` and `.harness/lock` are **not recipe steps**
+  and do not consult the denylist. They are the complete list — the CLI
+  writes nothing else under `.harness/` — and each is derived by the CLI
+  from a path it constructs itself out of components already proven
+  grammar-clean, so they are **confined by construction**. They carry the
+  brand **`HarnessPath`**, distinct from `AppliedPath`, and the writer,
+  the journal and rollback accept **`WritablePath = AppliedPath |
+  HarnessPath`**. Two properties depend on the second brand and neither
+  holds without it: the denylist can forbid `.harness/` outright without
+  deadlocking against the payload copier, and a recipe step cannot reach
+  a writer that accepts a `.harness/` destination — that remains a
+  compile error, which is what C-14 asks for. A test may assert the
+  second half structurally: no exported function that constructs a
+  `HarnessPath` is reachable from recipe-step planning.
 
 **Stage 3 — resolution confinement** (C-4; plan time and write time only,
 skipped at `validate`, which has no project root). The **project root is
@@ -590,8 +643,11 @@ every use, not only at the prompt.
   a trivial bypass of everything below.
 - An existing target that is not parseable JSON fails with
   `E-MERGE-JSON-INVALID` and **nothing is written** — the pack never
-  overwrites a settings file it could not read. The same code covers the
-  post-serialization re-parse and deep-equal check of US-4.
+  overwrites a settings file it could not read. The same code covers two
+  further cases: the **payload-side `from`** being unparseable JSON,
+  raised at **validate** time so such a pack never ships; and the
+  post-serialization re-parse and deep-equal check of US-4. The message's
+  `{detail}` distinguishes the three.
 - An array-valued owned key is written as **the pack's declared array, in
   declared order**, unioned onto whatever the destination already holds,
   existing entries keeping their on-disk order. There is no
@@ -828,14 +884,43 @@ against a future version fails loudly instead of silently doing nothing.
 **Acceptance criteria:**
 - After a successful apply, `.harness/manifest.json` exists at the
   project root with the schema in §F1.4.
-- It records exactly: `manifestVersion`, `cli`, `pack` (`name`,
-  `version`, `formatVersion`), `parameters` (every declared parameter and
-  its answer) and `scaffolds` (selected ids, in declared order). Nothing
-  else.
-- **There is no `files` array, no per-file hash, no `regions`, no
-  `ownedKeys` record, no `shared` array, no `pack.integrity` and no
-  `appliedAt`** (Q-43). Each was carried for a consumer that v1.0 does
-  not have.
+- It records exactly **six keys**: `manifestVersion`, `cli`, `pack`
+  (`name`, `version`, `formatVersion`), **`payloadDigest`**, `parameters`
+  (every declared parameter and its answer) and `scaffolds` (selected
+  ids, in declared order). Nothing else.
+- **`payloadDigest` is one SHA-256 tree digest over `.harness/pack/`**
+  (Q-52), of the form `sha256-<64 lowercase hex>`. It is recorded
+  **top-level, between `pack` and `parameters`** — **never nested inside
+  `pack`**. `pack` holds what the pack *declared*, read out of
+  `pack.json`; the digest is what *this apply observed*. A test may
+  assert the position by reading the manifest's key order and requiring
+  `payloadDigest` to be the fourth key and `pack.payloadDigest` to be
+  absent.
+- **The digest is over normalized content, not raw bytes.** Each payload
+  file contributes `hashText(normalizeText(bytes))` when it is text and
+  `hashBytes(bytes)` when it is binary (§NFR); the file hashes are
+  combined by the one path-prefixed, `\n`-joined, byte-ascending
+  `treeDigest`. Phase 1 copies raw bytes, so a raw digest would be
+  defeated by any checkout that rewrites them: every Windows clone with
+  `core.autocrlf` would report a tampered payload on the first `verify`.
+  **The accepted cost is stated rather than hidden: a pure line-ending
+  edit of the payload is undetectable.** A test may assert both halves —
+  rewrite every payload file to CRLF and require the digest unchanged;
+  change one payload character and require it to change.
+- **The digest covers `recipe.json` too**, because the recipe lives in
+  the payload. A hand-edited recipe is caught by the same check, with no
+  second mechanism.
+- **There is no `files` array, no per-file hash list, no `regions`, no
+  `ownedKeys` record, no `shared` array, no `pack.integrity`, no
+  `appliedAt` and no manifest self-hash** (Q-43). Each was carried for a
+  consumer that v1.0 does not have. `payloadDigest` is the one hash the
+  manifest carries and it is a *tree* digest, not the per-file list Q-43
+  rejected.
+- **`.harness/` carries no README** (Q-50 as amended). It is tool-owned,
+  excluded from the folder-README rule exactly as `.claude/` is, and no
+  CLI-owned write produces `.harness/README.md`. The complete list of
+  what the CLI writes under `.harness/` is the payload, the manifest, the
+  journal, `journal.d/` and the lock (US-3 stage 2).
 - **There is no `.harness/base/` store, and no `.harness/.gitattributes`
   is written.** The base existed because a hash cannot be a merge base
   and the old pack version might be unavailable; under Q-39 the payload
@@ -859,6 +944,9 @@ against a future version fails loudly instead of silently doing nothing.
   2-space indent, `\n` endings, keys in the order defined in §F1.4,
   `parameters` sorted by declared parameter order, `scaffolds` in
   declared order.
+- **The digest does not break determinism.** It is a pure function of the
+  payload, and the payload is a pure copy of the pack, so two applies of
+  the same pack version record the same `payloadDigest` (US-14).
 - Two applies of the same pack version with the same answers produce
   **byte-identical manifests**. A test may assert equality of the two
   files directly.
@@ -873,7 +961,19 @@ against a future version fails loudly instead of silently doing nothing.
 - The apply computes **both phases completely in memory** — the payload
   file list and the full phase-2 output set — and runs every validation
   **before writing any file**. A failure at this stage writes nothing,
-  not even `.harness/`.
+  not even `.harness/`. `payloadDigest` is computed here too, over the
+  **planned** payload file set (US-30), so "everything is planned before
+  anything is written" stays literally true of the manifest as well.
+- **Every path the executor may write carries a brand, and the executor
+  takes their union** (C-14). A phase-2 destination is an `AppliedPath`;
+  a CLI-owned write under `.harness/` is a **`HarnessPath`**; the planned
+  file list, the journal, the atomic writer and rollback all take
+  **`WritablePath = AppliedPath | HarnessPath`** and never a bare
+  `string`. Phase 1 is what makes the second brand necessary: its writes
+  are journalled and rolled back exactly as phase-2 writes are, but their
+  destinations are ones the reserved-destination denylist forbids to a
+  recipe step. A test may assert the property by construction — there is
+  no exported cast to either brand outside their single constructors.
 - `init` into a directory where any target applied path already exists
   fails with `E-TARGET-EXISTS`, listing the first ten colliding paths and
   the total count. `--force` proceeds only for paths whose existing
@@ -1007,6 +1107,13 @@ against a future version fails loudly instead of silently doing nothing.
 - **Corrupt** (unparseable JSON, or failing schema validation):
   `E-MANIFEST-CORRUPT`, exit 2, naming the parse position or failing key.
   The CLI does not attempt repair and does not overwrite the file.
+- **Missing or malformed `payloadDigest`.** All six keys are required at
+  `manifestVersion` 1, so a manifest without `payloadDigest`, or with one
+  that is not `sha256-<64 lowercase hex>`, is `E-MANIFEST-CORRUPT`, exit
+  2. **There is no "digest absent, so skip the check" branch**, and its
+  absence is the point: that branch is the one anybody defeating the
+  check would take. A test may assert this by deleting the key and
+  requiring exit 2 with no per-path report.
 - **Hand-edited but valid.** Undetectable, and deliberately so: the
   manifest carries no self-integrity field (§Technical Context). The
   practical consequence is bounded — v1.0 never merges against the
@@ -1059,6 +1166,7 @@ against a future version fails loudly instead of silently doing nothing.
   7   executable declarations      E-EXEC-ROOT-UNDECLARED, E-EXEC-DEST-FORBIDDEN,
                                    E-EXEC-TOO-MANY
   8   destination policy           E-OWNEDKEY-FORBIDDEN, E-SETTINGS-MODE-FORBIDDEN,
+                                   E-MERGE-JSON-INVALID (the payload-side "from"),
                                    W-HOOK-SCRIPT-INERT
   9   parameter declarations       E-PARAM-NO-PATTERN, E-PARAM-PATTERN-INVALID,
                                    E-PARAM-SECRET-SUSPECTED, E-PARAM-UNDECIDABLE,
@@ -1182,8 +1290,21 @@ against a future version fails loudly instead of silently doing nothing.
     `E-PAYLOAD-TOO-LARGE`, both exit 2. The payload is copied into every
     project that applies the pack and committed there, so its size is a
     property users pay for.
+- **`payloadDigest` is computed over the PLANNED payload set** — the
+  file list phase 1 resolved in memory, with its planned contents —
+  **not over whatever is on disk under `.harness/pack/` afterwards.**
+  The digest is therefore known before the first byte is written, which
+  is what keeps "everything is planned before anything is written"
+  (US-13, §F1.6) literally true of the manifest as well, and it means a
+  file that appears under `.harness/pack/` during the write window
+  changes the tree without silently changing the record. The recorded
+  digest is the assertion; `verify` is what tests it against the tree.
+  A test may assert the ordering by requiring the planner to produce the
+  manifest, digest included, with the filesystem mounted read-only.
 - Every phase-1 write is journalled and rolled back exactly as a phase-2
-  write is (US-13). Phase 1 is not privileged; it is only simpler.
+  write is (US-13), and carries the `HarnessPath` brand rather than
+  `AppliedPath` (US-3 stage 2). Phase 1 is not privileged; it is only
+  simpler.
 - **Nothing else in the product reads the bundled pack after phase 1.**
   Phase 2 resolves every `from` against `.harness/pack/` (Q-41). A test
   may assert this by making the bundle unreadable between the phases and
@@ -1287,6 +1408,25 @@ against a future version fails loudly instead of silently doing nothing.
   `.harness/pack/`, re-runs phase 2 **entirely in memory**, and compares
   the result to the project on disk. It writes nothing, ever — including
   no lock and no journal.
+- **The payload digest is checked FIRST, and the check is fail-closed.**
+  `verify` recomputes the tree digest over `.harness/pack/` by the rule
+  of US-10 and compares it to the manifest's `payloadDigest` **before it
+  renders anything**. On a mismatch it fails with
+  **`E-PAYLOAD-DIGEST-MISMATCH`**, exit 2, reporting the recorded and
+  computed digests, and **the tree comparison is suppressed entirely** —
+  no path is recomputed, and the per-path report is empty. That is not a
+  convenience: the expectation `verify` would compare against is computed
+  *from* the payload, so once the payload is untrusted the recomputation
+  is meaningless and reporting it would dress an untrustworthy answer as
+  a result. A test may assert this by changing one byte in a payload file
+  and requiring exit 2, the digest code, and **zero** per-path rows.
+- The two failures are distinct codes with distinct exit classes, and
+  neither may be reported as the other: a payload that moved is
+  `E-PAYLOAD-DIGEST-MISMATCH`, exit 2 (a pack or manifest integrity
+  fault); an applied tree that moved under an intact payload is
+  `E-VERIFY-MISMATCH`, exit 1 (a user may have edited a generated file
+  deliberately). This is exactly what Q-52 buys: `verify` can say **which
+  side moved**.
 - The recomputation uses **only** `.harness/pack/` (payload and recipe),
   the manifest's `parameters` and the manifest's `scaffolds`. It does not
   read the bundled pack, does not use the network, and does not need the
@@ -1305,16 +1445,21 @@ against a future version fails loudly instead of silently doing nothing.
 - Any `differs` or `missing` exits **1** with `E-VERIFY-MISMATCH`,
   listing the first ten paths and the total count. An all-`match` run
   exits `0` and prints the count of paths checked.
-- `verify --json` emits the same structure, so CI can gate on it.
+- `verify --json` emits the same structure, so CI can gate on it. It
+  carries the digest result explicitly — the recorded digest, the
+  computed digest and whether they matched — alongside the per-path
+  entries and the counts, so a consumer can distinguish a suppressed
+  comparison from a comparison that found nothing.
 - The project scan `verify` performs is the bounded walk of C-17: depth ≤
   32, ≤ 10,000 entries, `lstat` only, never following a symlink
   (`W-SCAN-SYMLINK-SKIPPED`), and never descending into `.git/`, `.hg/`,
   `.svn/` or `node_modules/`.
-- **What `verify` cannot tell you at v1.0, stated plainly:** it trusts
-  `.harness/pack/`. A payload edited by hand yields a recomputed
-  expectation that matches the edited applied tree, and `verify` reports
-  `match`. Detecting that needs a payload digest the minimal manifest
-  does not carry — see Q-52.
+- The one thing the digest does not catch is stated in US-10 rather than
+  here, because it is a property of the digest and not of `verify`: a
+  **pure line-ending edit** of a payload file, which normalization erases
+  before hashing. Everything else about the payload — a changed
+  character, an added file, a removed file, a renamed file, an edited
+  `recipe.json` — moves the digest.
 - This repo passes `lintel-harness verify` after S7's re-init, and that
   is the acceptance test for S7.
 
@@ -1402,8 +1547,9 @@ change the exit code.
 | `E-MANIFEST-NEWER` | Exit 2. `lintel-harness: .harness/manifest.json was written by a newer lintel-harness (manifest version {n}; this CLI reads up to {m}).` / `  → Upgrade: npm i -g @lintel/harness@latest` |
 | `W-MANIFEST-NEWER-CLI` | Warning. `lintel-harness: this project was last touched by lintel-harness {recorded}; you are running {current}.` |
 | `W-PACK-NEWER-THAN-CLI` | Warning. `lintel-harness: this project has {pack}@{version}; the newest {pack} bundled with lintel-harness {cliVersion} is {bundled}.` / `  verify still works — it reads .harness/pack/, not the bundle.` |
+| `E-PAYLOAD-DIGEST-MISMATCH` — `.harness/pack/` does not hash to the manifest's `payloadDigest` | Exit 2. `lintel-harness: .harness/pack/ does not match the payload this project recorded.` / `  recorded {recorded}` / `  computed {computed}` / `  The applied tree cannot be checked against an edited payload.` / `  → Restore .harness/pack/ from version control, or re-apply into a fresh directory.` Raised by `verify` **before** any recomputation, and the tree comparison is suppressed: the expectation is computed from the payload, so an untrusted payload makes it meaningless (US-33). Class 2 and never class 1 — this is a payload integrity fault, not a difference a user may have chosen, which is the line `E-VERIFY-MISMATCH` sits on the other side of. |
 | `E-VERIFY-MISMATCH` — the project differs from the recomputed applied tree | Exit 1. `lintel-harness: {n} of {total} applied paths do not match what this pack and these answers produce.` / `  {first ten paths, one per line, with "differs" or "missing"}` / `  → Inspect the differences, or re-apply into a fresh directory.` A `differs` is not necessarily a fault — a user may have edited a generated file deliberately — so this is exit 1 and never exit 2. |
-| `E-MERGE-JSON-INVALID` — a `merge-json` target exists but is not parseable JSON, **or the merged output fails its post-serialization check** | Exit 2. `lintel-harness: "{path}" {detail}.` / `  lintel-harness will not overwrite a settings file it cannot read, and will not write one it cannot read back.` / `  → Fix or move the file, then re-run.` Nothing is written. `{detail}` is either `already exists and is not valid JSON ({parse error})` or `could not be written safely: the value at "{key}" did not survive a re-parse`. |
+| `E-MERGE-JSON-INVALID` — a `merge-json` step's **payload-side `from`** is not parseable JSON, **or** its target exists and is not parseable JSON, **or** the merged output fails its post-serialization check | Exit 2. `lintel-harness: "{path}" {detail}.` / `  lintel-harness will not merge from a source it cannot read, will not overwrite a settings file it cannot read, and will not write one it cannot read back.` / `  → Fix or move the file, then re-run.` Nothing is written. `{detail}` is one of `is not valid JSON ({parse error})` — the payload-side `from`, raised at **validate** time, so such a pack never ships — `already exists and is not valid JSON ({parse error})` — the destination — or `could not be written safely: the value at "{key}" did not survive a re-parse`. One code, three details: all three are "a JSON document this step depends on is not usable", and the remedy is the same sentence. |
 | `E-OWNEDKEY-FORBIDDEN` — a declared `ownedKeys` entry is not ownable at its destination, or a security-relevant key is claimed via a parent rather than a leaf | Exit 2. `lintel-harness: step {index} writes "{to}" and may not own "{key}".` / `  {reason}` / `  Ownable at this destination: {ownable}` / `  → Declare only the specific leaf keys the pack sets.` `{reason}` is one of: `that key is not in this destination's ownable set`; `"{key}" resolves to an object; a security-relevant key must be declared as its own leaf`; or `hooks are not registrable by a pack at v1.0 — see lintel-harness pack info`. Raised at validate time, so such a pack never reaches a consent prompt. |
 | `E-SETTINGS-MODE-FORBIDDEN` — a primitive other than `merge-json` targets `.claude/settings.json` or `.claude/settings.local.json` | Exit 2. `lintel-harness: "{to}" may only be written by a merge-json step; step {index} is a "{op}".` / `  Any other primitive would replace the file wholesale and bypass the rules on what a pack may own there.` / `  → Change the step, or write to a different file.` |
 | `E-SETTINGS-CONSENT-REQUIRED` — the plan grants a security-relevant setting and consent was declined or unavailable | Exit 1. `lintel-harness: {pack}@{version} would grant settings this project has not consented to.` / `  {the full verbatim disclosure, one value per line, two-space indented}` / `  → Re-run interactively and accept, or pass --accept-permissions to accept them all.` **Zero bytes are written**, and the gate runs before the lock is taken. Absence of a consent input means non-interactive with no blanket accept, never "granted". |
@@ -1427,10 +1573,24 @@ change the exit code.
 
 - **Hashing algorithm.** SHA-256, lowercase hex, all 64 characters, no
   truncation, no salt. Implemented with Node's `crypto` — no dependency.
-  It is used in exactly three places at v1.0: the journal's intended and
-  pre-apply hashes (US-13), `--force` byte-identity (US-13), and
-  `verify`'s comparison (US-33). **It is not used in the manifest**,
-  which records no hash of anything (Q-43).
+  It is used in exactly **four** places at v1.0: the journal's intended
+  and pre-apply hashes (US-13), `--force` byte-identity (US-13),
+  `verify`'s comparison (US-33), and **the manifest's `payloadDigest`**
+  (US-10, Q-52).
+- **Tree digest.** `payloadDigest` is the one tree digest in the product
+  and has exactly one call site. It is computed over the payload file
+  set as `sha256-<hex>` of a canonical listing: one line per file,
+  `<posix-relative-path>` then the file's own hash, joined with `\n`, the
+  files in **byte-ascending path order**. A file's own hash is
+  `hashText(normalizeText(bytes))` for text and `hashBytes(bytes)` for
+  binary, by the same text/binary rule as everything else below. The
+  digest is a pure function of the payload, so it neither reads a clock
+  nor breaks determinism, and it changes when a file's content changes,
+  when a file is added or removed, and when a file is renamed.
+  **Normalized, deliberately, and the cost is stated:** a raw-byte digest
+  would make every Windows clone with `core.autocrlf` report a tampered
+  payload, and the price of avoiding that is that a pure line-ending edit
+  of the payload is undetectable.
 - **Normalization before hashing or comparing (text files).** In this
   exact order: (1) strip a leading UTF-8 BOM; (2) replace every `\r\n`
   and every lone `\r` with `\n`. Nothing else is changed — trailing
@@ -1444,7 +1604,9 @@ change the exit code.
 - **Phase 1 does no normalization at all.** The payload copy is raw
   bytes in and raw bytes out, including BOMs and CRLF, so
   `.harness/pack/` is byte-identical to the pack directory. Normalization
-  belongs to phase 2's comparisons, not to the copy.
+  belongs to phase 2's comparisons and to `payloadDigest`, **not** to the
+  copy — the digest normalizes what it *reads*, and changes nothing on
+  disk.
 - **Encoding.** UTF-8 only for text produced by phase 2. A BOM is never
   emitted by a phase-2 primitive. No other encoding is read or produced.
 - **Determinism.** Phase 2 is a pure function of (payload, parameter
@@ -1457,8 +1619,10 @@ change the exit code.
   laptop-class machine with a warm filesystem cache: full validation and
   in-memory phase-2 render ≤ 1.5 s; phase 1's copy ≤ 0.5 s; phase 2's
   write ≤ 0.5 s; total `init` ≤ 3 s excluding time spent waiting for a
-  human. `verify` over the same project completes in ≤ 1.0 s. Hashing
-  throughput ≥ 50 MB/s single-threaded.
+  human. `verify` over the same project completes in ≤ 1.0 s, **payload
+  digest included** — one extra bounded walk of `.harness/pack/` and one
+  hash per payload file, inside the same budget. Hashing throughput ≥ 50
+  MB/s single-threaded.
 - **Memory and size bounds.** The entire phase-2 output set is held in
   memory during validation, so: single pack file ≤ 4 MB
   (`E-CONTENT-TOO-LARGE`); total payload ≤ 32 MB
@@ -1538,8 +1702,12 @@ change the exit code.
   protect.
 - **Legibility (G6).** `pack.json`, `recipe.json` and the manifest are
   readable by a human without tooling: 2-space-indented JSON, stable key
-  order. The manifest fits on a screen, which is a deliberate consequence
-  of Q-43 rather than an accident.
+  order. **The manifest fits on a screen, and this still holds at six
+  keys** — `payloadDigest` adds one line of one value, not a list, and
+  the §F1.4 worked example is the complete file at 16 lines. That is a
+  deliberate consequence of Q-43 and Q-52 rather than an accident, and it
+  is the property that would be lost first if the per-file hash list ever
+  came back.
 
 ---
 
@@ -1587,7 +1755,7 @@ four-stage confinement gate of US-3.
 | `rewrite-path` | `in` matches at least one path already written by an earlier step; `find` matches at least once (`E-REWRITE-UNUSED`); neither `find` nor `replace` contains a line break |
 | `substitute` | every `{{harness:…}}` token resolves (`E-SUBST-UNRESOLVED`); no substituted value contains a line break (`E-SUBST-NEWLINE`) |
 | `generate` | anchors appear exactly once each and are balanced (`E-ANCHOR-INVALID`); substitution rules as above |
-| `merge-json` | `ownedKeys` allowed at the destination (`E-OWNEDKEY-FORBIDDEN`); leaf-only for security-relevant roots; destination parses (`E-MERGE-JSON-INVALID`); output re-parses and deep-equals |
+| `merge-json` | `ownedKeys` allowed at the destination (`E-OWNEDKEY-FORBIDDEN`); leaf-only for security-relevant roots; **the payload-side `from` parses**, the destination parses, and the output re-parses and deep-equals — all three `E-MERGE-JSON-INVALID` |
 
 **Ordering.** Steps run in declared order: base `steps`, then each
 selected scaffold's steps in `pack.json`-declared scaffold order. The
@@ -1681,8 +1849,17 @@ applying either.
                       "to":   "specifications/README.md" },
     { "op": "rename", "from": "specifications/project-brief.template.md",
                       "to":   "specifications/project-brief.md" },
-    { "op": "copy",   "from": "skeleton/specifications/",
-                      "to":   "specifications/" },
+
+    { "op": "rename", "from": "applied-readmes/agentteams.md",
+                      "to":   "AgentTeams/README.md" },
+    { "op": "rename", "from": "applied-readmes/specifications-general.md",
+                      "to":   "specifications/general/README.md" },
+    { "op": "rename", "from": "applied-readmes/specifications-version.md",
+                      "to":   "specifications/v1.0/README.md" },
+    { "op": "rename", "from": "applied-readmes/targets.md",
+                      "to":   "targets/README.md" },
+    { "op": "rename", "from": "applied-readmes/copy.md",
+                      "to":   "copy/README.md" },
 
     { "op": "rewrite-path",
       "in": ["targets/Run.md", ".claude/commands/target.md"],
@@ -1715,12 +1892,12 @@ whole of that log:
 
 | Manual step | Primitive |
 |---|---|
-| 1 `specifications/` kit → `specifications/` | `rename` ×2 + `copy` of the skeleton; **the templates themselves stay in the payload** (Q-47) |
+| 1 `specifications/` kit → `specifications/` | `rename` ×2, plus the folder READMEs that bring `specifications/general/` and `specifications/v1.0/` into existence; **the templates themselves stay in the payload** (Q-47) |
 | 2 `agent-teams/` → `AgentTeams/` | `copy` — the directory rename is the `to` value |
 | 3 `targets/` → `targets/` | `copy` of `Run.md` only; the README and the template stay in the payload |
 | 4 `tone-of-voice.template.md` → `tone-of-voice.md` | `strip-suffix` |
 | 5 agents + commands → `.claude/` | two `copy` steps |
-| 6 path rewrites in three files | one `rewrite-path` over two files — the third, `targets/README.md`, is no longer copied out |
+| 6 path rewrites in three files | one `rewrite-path` over two files — the third, the payload's own `targets/README.md`, is never copied out, and the applied `targets/README.md` comes from `applied-readmes/targets.md` instead |
 | 7, 8 rewrote two self-describing READMEs | **none, and none is needed** — under Q-46 that prose is deleted from the pack, so the files are correct in the payload and are never copied out |
 | 9 moved the brief into `specifications/` | `rename` |
 
@@ -1740,9 +1917,31 @@ asking for a permission is the first one that ever will.
 path collision on `infrastructure/backend-deploy/`. Both diagnostics are
 true; only one is useful.
 
-`skeleton/specifications/` in step 8 is how the pack creates
-`specifications/general/` and `specifications/v1.0/` — see §F1.9's note
-on empty directories.
+**How folders come into existence, worked** (Q-50). There is no
+`skeleton/` tree and no `mkdir` primitive. Every folder this recipe
+creates is created by a file landing in it, and every such folder carries
+a README, so none is ever empty. `coding` creates **five** new folders
+that would otherwise need one, and all five are the five `rename` steps
+above, out of `packs/coding/applied-readmes/` — which exists on disk with
+exactly those five files and no others:
+
+| Payload file | Applied path | The folder it brings into existence |
+|---|---|---|
+| `applied-readmes/agentteams.md` | `AgentTeams/README.md` | `AgentTeams/` (also populated by the `agent-teams/` copy) |
+| `applied-readmes/specifications-general.md` | `specifications/general/README.md` | `specifications/general/` |
+| `applied-readmes/specifications-version.md` | `specifications/v1.0/README.md` | `specifications/v1.0/` |
+| `applied-readmes/targets.md` | `targets/README.md` | `targets/` (also populated by `Run.md`) |
+| `applied-readmes/copy.md` | `copy/README.md` | `copy/` (also populated by the `strip-suffix`) |
+
+The two remaining `coding` folders need no new file: `specifications/`
+gets its README from the `specifications/README.template.md` rename, and
+`infrastructure/backend-deploy/` carries one out of whichever backend
+scaffold is selected.
+**`.harness/` gets none**: it is tool-owned and excluded from Q-50 on the
+same reasoning as `.claude/`, and C-5 forbids a recipe step writing there
+under any circumstance (US-3 stage 2). `applied-readmes/` itself stays in
+the payload like every other payload directory; only these five files are
+copied out of it, and each by an ordinary `rename`.
 
 ### F1.4 — The manifest, worked
 
@@ -1757,6 +1956,7 @@ on empty directories.
     "version": "1.0.0",
     "formatVersion": 1
   },
+  "payloadDigest": "sha256-3f9a1c4e8b2d5706a1ff03c9d84e7b6215ac9048d3e17fb5c206a9184db73e2c",
   "parameters": {
     "projectName": "Lintel Harness",
     "stack": "Node 22 / TypeScript CLI"
@@ -1774,8 +1974,12 @@ will rot:
 | `cli` | `verify`, v1.1 `update` | Warn when a CLI behaviour change would reinterpret this project |
 | `pack.name`, `pack.version` | `verify`, v1.1 `update` | "you applied `coding@1.0.0`, latest is `coding@1.4.0`" |
 | `pack.formatVersion` | `verify` | The payload's format, versioned separately from the manifest's |
+| `payloadDigest` | `verify` (**checked first, fail-closed**), v1.1 `update` (**must check it before merging** — C-11's concern) | One tree digest over `.harness/pack/`, so the recomputation is an assertion about *the pack that shipped* rather than a tautology about *the payload on disk*. **Top-level, not inside `pack`**: `pack` is what the pack declared, this is what the apply observed. Over **normalized** content, so it survives a CRLF checkout |
 | `parameters` | `verify`, v1.1 `update` | Recompute the applied tree. Every declared parameter is recorded, including ones answered by default and ones that selected nothing, because a `when` must be re-evaluated against the *original* answers |
 | `scaffolds` | `verify`, v1.1 `update` | Recompute exactly the same step set; never silently gain or lose one |
+
+Six keys, in that order, and the order is part of the byte-identity
+contract of US-10.
 
 **What is deliberately absent, and why it can be** (Q-43): a `files`
 array, per-file hashes, per-region hashes, per-owned-key records, a
@@ -1785,6 +1989,17 @@ under Q-39/Q-40 that question is answered by re-running phase 2 against
 `.harness/pack/` — which is local, committed, and paired with a
 deterministic recipe. The manifest records the *inputs*; the tree is a
 function of them.
+
+**`payloadDigest` is the one exception, and it is worth naming as one**
+(Q-52). Every other key is an input the user or the pack chose; the
+digest is an **observation this apply made**. That is a real conceptual
+cost of the six-key manifest and it is stated rather than smoothed over.
+It buys the one thing recomputation cannot buy on its own: the identity
+above proves the applied tree matches *the payload on disk*, and
+`verify`'s job is to prove it matches *the pack that shipped*. The digest
+is the smallest closure of that gap — one hash, one tree walk, no
+per-file list — and it also covers `recipe.json`, which lives in the
+payload.
 
 ### F1.5 — Manifest versioning and forward compatibility
 
@@ -1799,11 +2014,18 @@ function of them.
   they version different things and will move at different rates.
 - The manifest is not a public API. No schema is published, and no
   compatibility is promised to any consumer other than this CLI.
-- **v1.1's `update` will need to add fields** — at minimum a payload
-  digest (Q-52) and, if C-3 is honoured, the per-owned-key `entries` /
-  `removed` records. Both are additive optional keys and neither bumps
-  `manifestVersion`. That is the whole of the forward-compatibility
-  claim; nothing stronger is promised.
+- `payloadDigest` is a **required** key at `manifestVersion` 1, not an
+  additive optional one. A manifest at version 1 missing it, or carrying
+  it in any shape other than `sha256-<64 lowercase hex>`, is
+  `E-MANIFEST-CORRUPT`, exit 2 — the fail-closed rule of US-1 applied to
+  the manifest. There is no "digest absent, so skip the check" branch,
+  because that branch is the one an attacker would take.
+- **v1.1's `update` will need to add fields** — if C-3 is honoured, the
+  per-owned-key `entries` / `removed` records. Those are additive
+  optional keys and do not bump `manifestVersion`. The payload digest
+  `update` would otherwise have had to add is already here (Q-52), which
+  is half of C-11 paid for in advance. That is the whole of the
+  forward-compatibility claim; nothing stronger is promised.
 
 ### F1.6 — Apply lifecycle, including failure
 
@@ -1821,7 +2043,12 @@ function of them.
    ├─ 5. resolve the project root ONCE with realpath
    ├─ 6. PLAN BOTH PHASES IN MEMORY
    │        phase 1: the payload file list and its destinations
+   │                 → payloadDigest over the PLANNED payload set
    │        phase 2: every step rendered, every applied path confined
+   │        every planned write carries WritablePath
+   │                 (AppliedPath for phase 2, HarnessPath for phase 1
+   │                  and for the CLI's own .harness/ writes)
+   │        the manifest, digest included, is built here
    │        └─ any failure → exit 1 or 2, ZERO bytes
    ├─ 7. CONSENT GATE on the plan's disclosure (US-13)
    │        └─ declined, or required and unavailable →
@@ -1835,15 +2062,25 @@ function of them.
    │        each write: re-confine → exclusive create → rename
    │        └─ target changed in the window → E-TARGET-RACE
    │        └─ I/O failure → E-WRITE-FAILED, journal remains
-   ├─ 12. write .harness/manifest.json
+   ├─ 12. write .harness/manifest.json   ← six keys, payloadDigest as planned
    └─ 13. delete .harness/journal.json and .harness/journal.d/,
           release the lock                ← apply is now complete
 ```
 
+**The CLI writes five things under `.harness/`, and this list is
+complete**: the payload (step 10), the journal and `journal.d/` (step 9),
+the lock (step 8) and the manifest (step 12). There is **no
+`.harness/README.md`** and no step that writes one — `.harness/` is
+tool-owned and excluded from Q-50's folder-README rule, exactly as
+`.claude/` is. Each of the five carries `HarnessPath`; no recipe step can
+produce one, and C-5 forbids a recipe step any destination under
+`.harness/` without exception (US-3 stage 2).
+
 **Everything is planned before anything is written**, including the
-payload copy. **The consent gate precedes the lock**, deliberately: a
-declined apply must not contend for a lock, must not leave one behind,
-and must write zero bytes — including zero bytes of `.harness/`.
+payload copy and the payload digest that records it. **The consent gate
+precedes the lock**, deliberately: a declined apply must not contend for
+a lock, must not leave one behind, and must write zero bytes — including
+zero bytes of `.harness/`.
 
 The journal is the whole recovery story: its presence means step 10, 11
 or 12 did not finish, and its contents say exactly which paths were in
@@ -1867,9 +2104,11 @@ per pack, and phase 2 resolves every `from` against it.
 
 ### F1.8 — Verifiability: the applied tree is recomputable
 
-This is the property that lets the manifest be five keys.
+This is the property that lets the manifest be six keys.
 
 ```
+payload_ok    = treeDigest( .harness/pack/ ) == manifest.payloadDigest
+
 expected_tree = phase2( payload = .harness/pack/ ,
                         recipe  = .harness/pack/<pack.recipe> ,
                         answers = manifest.parameters ,
@@ -1878,8 +2117,18 @@ expected_tree = phase2( payload = .harness/pack/ ,
 
 Every input on the right is present in the project, committed to version
 control, and readable without the CLI that produced it. Nothing on the
-right is a hash, a cache or a remote fetch. `lintel-harness verify`
-computes the left side and compares it to disk (US-33).
+right is a cache or a remote fetch. `lintel-harness verify` evaluates
+`payload_ok` **first**, and computes `expected_tree` **only if it holds**
+(US-33).
+
+**The order is the whole point, and it is fail-closed.** `expected_tree`
+is a function of the payload, so if the payload is not the one this
+project recorded, the expectation is derived from an input nobody
+vouched for. Comparing it to disk would produce a report — plausible,
+detailed, and meaningless. So a digest mismatch is
+`E-PAYLOAD-DIGEST-MISMATCH`, exit 2, with the tree comparison
+**suppressed** and the per-path report **empty**. `verify` says which
+side moved, or it says nothing about the tree at all.
 
 Three consequences follow, and they are the argument for Q-43:
 
@@ -1891,25 +2140,33 @@ Three consequences follow, and they are the argument for Q-43:
    merge base when the old pack version was unavailable. The old pack
    version is in `.harness/pack/`, in full.
 3. **The manifest cannot go stale against the tree.** It records inputs,
-   and inputs do not drift. What can drift is the tree, and that is
-   exactly what `verify` reports.
+   and inputs do not drift. What can drift is the tree — reported as
+   `E-VERIFY-MISMATCH`, exit 1 — and the payload, reported as
+   `E-PAYLOAD-DIGEST-MISMATCH`, exit 2. Two drifts, two codes, two exit
+   classes.
 
-The known limit, stated rather than glossed: **`verify` trusts
-`.harness/pack/`.** A hand-edited payload produces a hand-edited
-expectation, and the comparison passes. At v1.0 the consequence is
-bounded — nothing merges, so a wrong expectation misleads a reader rather
-than corrupting a file — but it is the first thing v1.1 must close. See
-Q-52.
+**`verify` no longer trusts `.harness/pack/`, and the paragraph that
+said it did is void.** Q-43's argument proved the applied tree matches
+*the payload on disk*; Q-52 adds the one hash that makes it also prove
+the payload is *the payload the apply recorded*. What remains is bounded
+and named in one sentence: the digest is over normalized content, so a
+pure line-ending edit of the payload does not move it (§NFR), and nothing
+binds the manifest to itself, so someone who edits the payload and
+recomputes the digest defeats the check deliberately rather than by
+accident.
 
 ### F1.9 — Forward investment, deferred conditions, and known limits
 
-**Forward investment — the two things v1.0 pays for that only v1.1 uses**
-(and nothing else):
+**Forward investment — the three things v1.0 pays for with v1.1 in mind**
+(and nothing else). Only the first is *purely* forward: the manifest and
+its digest both have v1.0 consumers, and are listed here because their
+shape was chosen with `update` in view:
 
 | Investment | Cost at v1.0 | What it buys v1.1 |
 |---|---|---|
 | **Inert region anchors** (US-32) | Six literal comment lines in one template, plus a line-counting assertion | `update` has stable insertion points in `CLAUDE.md` without a migration that has to guess where pack-owned text begins |
-| **The minimal manifest** (US-10) | Five keys | `update` knows what was applied and can recompute the expected tree, which is what makes it an addition rather than a retrofit |
+| **The minimal manifest** (US-10) | Six keys | `update` knows what was applied and can recompute the expected tree, which is what makes it an addition rather than a retrofit |
+| **`payloadDigest`** (US-10, Q-52) | One key, one tree walk per apply and per `verify` | `update` merges against a recomputed base, and a wrong base loses work silently. Checking the digest before merging is C-11's concern, and the field it needs is already in every v1.0 manifest — so v1.1 adds a check, not a migration. It earns its keep at v1.0 too, as the thing that lets `verify` say which side moved |
 
 Nothing else in this spec is carried for a deferred feature. Where the
 old spec kept a field, a hash or a code "for F3", it has been removed.
@@ -1922,16 +2179,16 @@ old spec kept a field, a hash or a code "for F3", it has been removed.
 | C-2 consent gate on the plan, verbatim disclosure | **Carried in full** — US-13, US-29 |
 | C-3 removal-honouring settings merge | **Deferred with `update`** (Q-42). It exists to stop a *second* apply resurrecting a deleted permission; there is no second apply at v1.0. **v1.1 obligation.** |
 | C-4 confinement by resolution, `realpath`, ancestor `lstat` | **Carried in full** — US-3 stage 3 |
-| C-5 reserved-destination denylist on the resolved path | **Carried in full** — US-3 stage 2, extended: a recipe step may never write under `.harness/` |
+| C-5 reserved-destination denylist on the resolved path | **Carried in full and unamended** — US-3 stage 2, extended in scope: a recipe step may never write under `.harness/`, **absolutely and with no carve-out**. `.harness/` now holds phase 2's *input*, which is a stronger reason than the original denylist's. The CLI's own five `.harness/` writes are not recipe steps; they carry `HarnessPath` and are confined by construction, which is why the denylist can be absolute without deadlocking against the payload copier |
 | C-6 anchored `to` grammar | **Carried in full** — US-3 stage 1, plus `E-PAYLOAD-PATH-INVALID` for payload paths |
 | C-7 parameter `pattern` / `maxLength`, JSON escaping | **Carried in full** — US-8, US-4 |
 | C-8 no substitution into a security-relevant owned key | **Carried in full** — US-4 |
 | C-9 substitution may not forge a marker | **Half carried.** The newline ban survives as `E-SUBST-NEWLINE`. The marker-lex half and `E-REGION-TAMPERED` are **removed with the region parser** (Q-45): anchors are inert, so a forged one hijacks nothing. **v1.1 obligation:** restore the lex check when `update` starts reading anchors. |
-| C-10 integrity fail-closed on write paths | **Rescoped.** Its subject was `shared[].integrity`, and `shared/` leaves v1.0 (Q-48). The general rule it expressed — a flag that downgrades an integrity check exists on read-only commands only — survives as `E-FLAG-NOT-PERMITTED`. |
-| C-11 `pack.integrity` verified same-name-same-version | **Deferred with `update`** (Q-42) and superseded at v1.0 by Q-43, which removes `pack.integrity`. Its concern returns as Q-52. |
+| C-10 integrity fail-closed on write paths | **Rescoped.** Its subject was `shared[].integrity`, and `shared/` does not ship at v1.0 (Q-48, resolved in the brief). The general rule it expressed — a flag that downgrades an integrity check exists on read-only commands only — survives as `E-FLAG-NOT-PERMITTED`, and there is **no flag anywhere in the CLI that skips the `payloadDigest` check**. |
+| C-11 `pack.integrity` verified same-name-same-version | **Half carried, half deferred.** Q-43 removed `pack.integrity`; **Q-52 pays the payload half now** — `payloadDigest` is recorded by every apply and checked first and fail-closed by `verify` (US-10, US-33). The half that stays deferred with `update` (Q-42) is the *merge-time* obligation: v1.1 must check the digest before merging against a recomputed base. **v1.1 obligation, and the field it needs already exists.** |
 | C-12 `executable` declared, bounded, disclosed | **Carried in full** — US-3, US-29 |
 | C-13 journal `preExisting` + pre-apply hash; rollback deletes only what it created | **Carried in full** — US-13, and now covers phase-1 writes too |
-| C-14 branded `AppliedPath`, exclusive create, `E-TARGET-RACE` | **Carried in full** — US-3, US-13 |
+| C-14 branded `AppliedPath`, exclusive create, `E-TARGET-RACE` | **Carried in full, and extended to close the hole phase 1 opened** — US-3, US-13. `AppliedPath` for recipe destinations, **`HarnessPath`** for the CLI's own `.harness/` writes, and `WritablePath = AppliedPath \| HarnessPath` on the journal, the writer and rollback. Without the second brand, phase-1 writes would have to reach the writer as bare strings and C-14's compile-error property would not hold across phase 1 |
 | C-15 no credential-valued parameters | **Carried, message narrowed** — US-8. `.harness/base/` no longer exists, so the disclosure names the manifest only. The manifest and the payload are both committed. |
 | C-16 fail-closed: unknown keys warn, unknown values are hard errors | **Carried in full** — US-1, with the enumeration of behaviour-selecting positions rewritten for the recipe |
 | C-17 traversal bounds, depth 32 / 10,000 entries, no symlink following | **Carried in full** — US-30, US-33, §NFR |
@@ -1940,12 +2197,17 @@ old spec kept a field, a hash or a code "for F3", it has been removed.
 **Known limits of the v1.0 format**, recorded so F5 pays them knowingly
 rather than discovering them:
 
-1. **An empty directory is not representable.** No primitive creates one.
-   A pack that needs `specifications/general/` ships a placeholder file
-   under a payload directory — the worked recipe's `skeleton/` — and
-   copies it. This is expressible but not elegant, and it is the one
-   place the settled model implies something the primitive set does not
-   say out loud.
+1. **An empty directory is not representable, and under Q-50 nothing
+   needs one.** No primitive creates a directory on its own; a directory
+   exists because a file lands in it. Every folder an apply creates
+   carries a README, so no folder is ever empty and the case does not
+   arise — which is why there is no `mkdir` primitive, no `skeleton/`
+   tree and no `.gitkeep`. The residual limit is narrow and worth
+   stating: **a pack that genuinely wants an empty folder cannot have
+   one.** No v1.0 pack does, and a `mkdir` would be worse than it looks —
+   its entire output is invisible to `verify`'s file comparison and
+   uncommittable by git, so a pack using it would produce an applied tree
+   that does not survive a clone.
 2. **The payload is duplicated into every project.** `.harness/pack/`
    holds the whole pack, including scaffolds the project did not select
    and calibrations it did not choose. That is deliberate (Q-41 wants one
@@ -1968,36 +2230,44 @@ rather than discovering them:
 6. **`generate`'s anchor check is a line count, not a parse.** An anchor
    inside a fenced code block in a template is counted. A pack author
    documenting the anchor syntax must use an id that is not declared.
+7. **`payloadDigest` does not see a pure line-ending edit of the
+   payload.** It is computed over normalized content, deliberately: a
+   raw-byte digest would make every Windows clone with `core.autocrlf`
+   report a tampered payload on its first `verify`, which is the same
+   failure the deleted `.harness/.gitattributes` existed to prevent
+   arriving by a different door. The trade is made the same way
+   everywhere else in the product (Q-26). Nothing binds the manifest to
+   itself either, so an edit of both payload and digest defeats the check
+   — which is deliberate work, not an accident, and v1.0 never merges
+   against the manifest.
 
 ---
 
 ## Open Questions
 
-Q-1…Q-47 are resolved in `specifications/project-brief.md` §12 and are
-not restated. Question IDs are unique across the whole project. Next free
-id at the time of writing: **Q-51**.
-
-| # | Question | Owner | Default assumption |
-|---|---|---|---|
-| Q-48 | **See Q-48 in the brief** — does the `shared/` mechanism ship at v1.0 at all? The brief owns it; F1 records the format-side half. Q-4 settled that packs may share by explicit reference and Q-27 settled that a component declares its own destination map, but both were designed against the *mapping* model, which Q-40 replaced: under a recipe, a component would have to contribute **recipe steps** into a host pack's ordered step list, raising ordering, collision and `when`-scoping questions the old design never had to answer. No v1.0 pack references `shared/` (`pack-inventory.md`), so nothing is blocked either way. | Thomas Andersen, via the brief | **F1's assumption: not in the v1.0 format.** This spec declares no `shared` array, no `component.json` and no digest pin; `shared/targets` ships inside `coding` and `shared/presentation` defers under Q-28. If a second consumer appears at v1.1, the shape F1 would propose is a component declaring a step *fragment* that a host pack splices at a declared position, with Q-4's bump rule enforced by `validate --all`. **F1 needs no change to start either way.** |
-| Q-52 | **Does the manifest need a payload digest so that `verify` can tell "the applied tree drifted" from "the payload was edited"?** Q-43 removed `pack.integrity` because the applied tree is recomputable — but the recomputation trusts `.harness/pack/`, so a hand-edited payload yields a hand-edited expectation and `verify` reports `match` (§F1.8). At v1.0 nothing merges, so the consequence is a misleading report rather than lost work. At v1.1 `update` merges against a recomputed base, and a wrong base loses work silently — which is exactly what C-11 existed to prevent. | Thomas Andersen, at the v1.1 `update` design | **Not at v1.0.** One additive optional key (`pack.payloadDigest`, the same `treeDigest` over `.harness/pack/`) closes it without bumping `manifestVersion`, so deferring costs nothing but a later write. `verify` states the limit in its own output rather than implying a check ran. |
-| Q-53 | **Which feature owns `lintel-harness verify`?** F1 specifies the recomputation rule (US-33) because it is a property of the format, and F1 already owns `validate` and `pack info`. But `verify` is a *command*, and F2 owns the CLI surface of `init`. If the master spec lists v1.0 commands, `verify` needs a home there too. | Architect, via the master spec | **F1 owns it**, as it owns `validate` and `pack info`: all three read a pack or a manifest, write nothing, and exist to make the format checkable. F2 owns only `init`. If the master spec disagrees the command moves; the recomputation rule stays here either way. |
+**None.** Q-1…Q-53 are all resolved in `specifications/project-brief.md`
+§12 and are not re-litigated here; the three that were open against F1 at
+v2.0 — **Q-48**, **Q-52** and **Q-53** — are resolved in the brief and
+moved to Resolved Decisions below. Question IDs are unique across the
+whole project, and a question raised during this specification takes the
+next free id: **Q-54**.
 
 ---
 
 ## Resolved Decisions
 
-Every row below was closed by `F1-ADR-001-pack-format-and-manifest.md` on
-2026-08-30 and is re-examined here against Q-39…Q-46. Per
-`conventions.md` each keeps the ID it was raised under. The settled
-inputs upstream of all of them are Q-1…Q-46 in
-`specifications/project-brief.md` §12, which this document does not
+Rows Q-18…Q-38 were closed by `F1-ADR-001-pack-format-and-manifest.md`
+on 2026-08-30 and re-examined against Q-39…Q-46; rows **Q-48…Q-53** are
+closed in `specifications/project-brief.md` §12 and are recorded here
+because F1 carries their format-side consequence. Per `conventions.md`
+each keeps the ID it was raised under. The settled inputs upstream of all
+of them are **Q-1…Q-53** in the brief §12, which this document does not
 re-litigate.
 
 | # | Question | Decision | Date |
 |---|---|---|---|
 | Q-18 | Is `.harness/base/` committed to version control, or gitignored and rebuilt? | **Superseded by Q-43.** There is no `.harness/base/`, so the question and the generated `.harness/.gitattributes` that answered its Windows problem both go. What is committed is `.harness/pack/` and `.harness/manifest.json`, and `init` writes no `.gitignore` entry for either. | 2026-08-31 |
-| Q-19 | Should the manifest record a whole-pack integrity hash? | **Superseded by Q-43.** `pack.integrity` is removed with the rest of the recorded state. Its concern — proving the project holds the build it was applied with — reopens as **Q-52**, scoped to v1.1. | 2026-08-31 |
+| Q-19 | Should the manifest record a whole-pack integrity hash? | **Superseded by Q-43, then partly restored by Q-52.** `pack.integrity` — a hash of the *bundled pack* — is gone for good. Its underlying concern, proving the project holds the content it was applied with, is answered instead by **`payloadDigest`**: one tree digest over `.harness/pack/`, which is the copy that actually matters, since phase 2 reads only that. See Q-52. | 2026-08-31 |
 | Q-20 | Should `harness:if` ever grow beyond a single equality test? | **Superseded by Q-45.** There is no `harness:if`; there is no region parser. The single-equality shape survives as a recipe step's `when`, and the answer is the same: one equality test only. | 2026-08-31 |
 | Q-21 | Can an init-parameter answer be changed after apply? | **No in v1.0** — apply into a fresh directory. Unchanged, and cheaper to revisit than it was: `verify`'s recomputation is "render with these answers", so a v1.1 `recalibrate` is that function with a different input and no format change. | 2026-08-30 |
 | Q-22 | Can a scaffold be added to or removed from an applied project? | **No in v1.0**; same provision as Q-21. | 2026-08-30 |
@@ -2005,5 +2275,9 @@ re-litigate.
 | Q-24 | `pack.json`, or a separate `apply.json`? | **Amended by Q-40 — two files.** `pack.json` declares identity, anatomy, parameters and scaffolds; `recipe.json` declares the phase-2 procedure. The ADR's "one file" was right about there being no *third* concept; the recipe is a second one, and separating what a human reads from what an apply executes keeps both short. | 2026-08-31 |
 | Q-25 | Does `update` delete a file the pack no longer ships? | **Deferred with `update`** (Q-42). No decision is needed at v1.0, and the minimal manifest constrains it no more than the old one did. | 2026-08-31 |
 | Q-26 | Should normalization before hashing also trim trailing whitespace and normalize the final newline? | **No** — BOM and line endings only. Trailing whitespace is real content. Unchanged, and now applies to `verify`'s comparison rather than to a manifest hash. | 2026-08-30 |
-| Q-27 | May one shared component declare a multi-destination file mapping? | **Deferred with `shared/`.** The mechanism it designed — a component's own `mappings`, inherited and optionally remapped — was built on the mapping model Q-40 replaced. Reopened as **Q-48**. | 2026-08-31 |
+| Q-27 | May one shared component declare a multi-destination file mapping? | **Deferred with `shared/`.** The mechanism it designed — a component's own `mappings`, inherited and optionally remapped — was built on the mapping model Q-40 replaced. Reopened as **Q-48**, and **closed there**: no `shared/` at v1.0. | 2026-08-31 |
 | Q-38 | Are a pack's document templates copied into the applied project? | **Superseded by Q-47** (which states the supersession properly), and by Q-41 and `pack-inventory.md`. They stay in the payload at `.harness/pack/specifications/`, which is the only copy in the project. The duplication Q-38 accepted no longer arises: there is nothing to duplicate, because phase 2 does not copy what phase 1 already placed. Only `README.template.md` and `project-brief.template.md` are copied out, because a project fills those in. | 2026-08-31 |
+| Q-48 | Does the `shared/` mechanism ship at v1.0 at all? | **No** — resolved in the brief §12. There is no `shared` array, no `component.json`, no digest pin, no bump rule and no CI enforcement anywhere in this format; `targets` ships as `coding`-local content and `planning` ships its own copy (Q-49). **Deferred to v1.1** alongside `shared/presentation` (Q-28), when there is a second consumer. F1 confirms nothing of the mechanism remains: no `SharedRef`, no `shared` key in `pack.json` or the manifest, no `E-SHARED-*` code, and **retired US-7 stays retired** — a v1.1 mechanism takes a new story id. | 2026-08-31 |
+| Q-50 | How does an apply create a folder, given that no primitive makes an empty directory? | **Every folder an apply creates carries a README** — `README.md` for `coding` and `planning`, `index.md` for `writing`. **`.claude/` and `.harness/` are excluded, both tool-owned.** This dissolves the empty-directory problem rather than solving it: no folder is ever empty, so there is **no `mkdir` primitive**, no eighth primitive, no `skeleton/` tree and no `.gitkeep`. F1's format consequence: the primitive set stays at **seven**, and `coding`'s five new folder READMEs are ordinary `rename` steps out of `packs/coding/applied-readmes/` (§F1.3). `.harness/` was added to the exclusion on **2026-08-31**, superseding the earlier proposal that the CLI write `.harness/README.md`: C-5 forbids any write there by a recipe step and F1 opens no carve-out for one. | 2026-08-31 |
+| Q-52 | Does the manifest need a payload digest so that `verify` can tell "the applied tree drifted" from "the payload was edited"? | **Yes** — resolved in the brief §12, amending Q-43. **`payloadDigest`**, one tree digest over `.harness/pack/`, recorded **top-level between `pack` and `parameters`** — not nested under `pack`, because `pack` records what the pack declared and the digest records what this apply observed. Over **normalized** content (Q-26), so it survives a CRLF checkout; the accepted cost is that a pure line-ending edit of the payload is undetectable. `verify` checks it **first and fail-closed** (US-33, §F1.8). The manifest is therefore **six keys**, not five, and determinism is unaffected because the digest is a pure function of the payload. | 2026-08-31 |
+| Q-53 | Which feature owns `lintel-harness verify`? | **F1 owns it**, resolved in the brief §12, alongside `validate` and `pack info`: all three read a pack or a manifest, write nothing, take no lock, and exist to make the format checkable. F2 owns `init` and nothing else. The v1.0 command surface is therefore **four** commands, which is what `E-CLI-UNKNOWN-COMMAND` already lists, and the master spec's command list must match. | 2026-08-31 |

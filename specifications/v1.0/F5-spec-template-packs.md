@@ -1,21 +1,22 @@
 # F5 — Template Packs Specification — Lintel Harness v1.0
 **Version:** 2.0
 **Status:** Draft
-**Date:** {{YYYY-MM-DD}}
+**Date:** 2026-08-31
 **Platform:** Pack content is plain files — Markdown, JSON, shell/PowerShell, Bicep, CDK TypeScript — bundled with the Node/TypeScript CLI and consumed by Claude Code's `.claude/` conventions. No runtime of its own.
 **Design spec:** n/a (no UI)
 **ADR:** {{`F5-ADR-NNN-template-packs.md` — filled in by the architect after this spec is reviewed}}
-**References:** `specifications/general/pack-application.md` (the two-phase apply model — **authoritative**), `specifications/general/pack-inventory.md` (the three pack trees and per-file phase metadata — **authoritative for structure**), `specifications/project-brief.md` §3, §6 R1/R2/R5/R6, §12 Q-1…Q-46, `specifications/v1.0/research-planning-pack-framing.md`, `specifications/v1.0/F1-spec-pack-format-and-manifest.md`, `packs/coding/specifications/conventions.md`, `packs/coding/` (the coding pack source), `/Users/mrandersen/Projects/AIImpactOnOrganizationsAndLeadership/` (the writing pack source)
+**References:** `specifications/general/pack-application.md` (the two-phase apply model — **authoritative**), `specifications/general/pack-inventory.md` (the three pack trees and per-file phase metadata — **authoritative for structure**), `specifications/project-brief.md` §3, §6 R1/R2/R5/R6, §12 Q-1…Q-53 (**all resolved, authoritative**), `specifications/v1.0/research-planning-pack-framing.md`, `specifications/v1.0/F1-spec-pack-format-and-manifest.md`, `specifications/v1.0/F1-ADR-001-pack-format-and-manifest.md` (**authoritative for the format**), `packs/coding/specifications/conventions.md`, `packs/coding/` (the coding pack source), `/Users/mrandersen/Projects/AIImpactOnOrganizationsAndLeadership/` (the writing pack source)
 
 **Amendment history**
 
 | Version | Date | Summary |
 |---|---|---|
-| 1.0 | 2026-08-30 | Initial draft. Specifies the content of the three v1.0 packs — `coding`, `writing`, `planning` — against the nine-part anatomy, plus the two `shared/` components they reference. |
+| 1.0 | 2026-08-30 | Initial draft. Specifies the content of the three v1.0 packs — `coding`, `writing`, `planning` — against the nine-part anatomy, plus the two shared components that draft still referenced (both since removed by Q-28 and Q-48). |
 | 1.0 | 2026-08-30 | Cross-document consistency pass. User-story block renumbered to US-17…US-28; open questions renumbered to project-unique ids. |
 | 1.0 | 2026-08-30 | **ADR-001 amendment pass.** §Error States re-pointed at F1's code taxonomy and exit classes. Q-13 and Q-27 closed. |
 | 1.0 | 2026-08-30 | **Security remediation pass.** `planning` loses its kill-criteria enforcement hook; no pack may register an agent hook at v1.0. |
-| **2.0** | **{{YYYY-MM-DD}}** | **Two-phase rewrite (Q-39…Q-46).** The whole document is restated against `general/pack-application.md`. **Every pack now authors a `recipe.json`**, specified here as an explicit sub-part of anatomy part 7 (§Flows / *Where the recipe sits*) — the anatomy stays nine parts. Each pack outline is split into **payload** (phase 1, `.harness/pack/`) and **what the recipe produces** (phase 2). **Document templates, conventions and process READMEs are no longer copied out** — they stay in the payload (Q-46 supersedes Q-38). `update`/`status`/`contribute` criteria removed or marked v1.1 (Q-42). `.harness/base/` and all per-file-hash criteria removed (Q-43). All marked-region criteria removed; only inert `CLAUDE.md` anchors remain (Q-45). **Q-46 prose stripping is stated as a migration requirement per pack, with the sections named.** `shared/presentation` removed from v1.0 entirely (Q-28); `shared/targets` kept, declared by `coding`. Scaffolds cut to three, with `backend-azure`/`backend-aws` restated as **alternatives, not composable peers** (Q-17). `constraintFloor` enum values corrected to `high-floor` / `near-zero-floor` per `general/pack-inventory.md`; Helio and Cadenza demoted to reference organisations. **US-23 retired**; US-34…US-38 added. Three new questions: **Q-49, Q-50, Q-51.** |
+| **2.0** | **2026-08-31** | **Two-phase rewrite (Q-39…Q-46).** The whole document is restated against `general/pack-application.md`. **Every pack now authors a `recipe.json`**, specified here as an explicit sub-part of anatomy part 7 (§Flows / *Where the recipe sits*) — the anatomy stays nine parts. Each pack outline is split into **payload** (phase 1, `.harness/pack/`) and **what the recipe produces** (phase 2). **Document templates, conventions and process READMEs are no longer copied out** — they stay in the payload (Q-46 supersedes Q-38). `update`/`status`/`contribute` criteria removed or marked v1.1 (Q-42). `.harness/base/` and all per-file-hash criteria removed (Q-43). All marked-region criteria removed; only inert `CLAUDE.md` anchors remain (Q-45). **Q-46 prose stripping is stated as a migration requirement per pack, with the sections named.** `shared/presentation` removed from v1.0 entirely (Q-28); the targets component still kept as a shared tree at this pass — reversed one row below by Q-48. Scaffolds cut to three, with `backend-azure`/`backend-aws` restated as **alternatives, not composable peers** (Q-17). `constraintFloor` enum values corrected to `high-floor` / `near-zero-floor` per `general/pack-inventory.md`; Helio and Cadenza demoted to reference organisations. **US-23 retired**; US-34…US-38 added. Three new questions: **Q-49, Q-50, Q-51.** |
+| **2.0** | **2026-08-31** | **`F1-ADR-001` fold (`REVISE SPEC`, §6.2's nine changes), plus Q-48…Q-53.** **The `shared/` mechanism is removed from this spec entirely (Q-48)** — no `shared/` tree, no `component.json`, no declared references, no digest pin and no bump rule at v1.0. `targets` ships as `coding`-local content and `planning` ships **its own copy** (Q-49), whose duplication is recorded here as a **named v1.1 reconciliation task**. **`E-SHARED-UNDECLARED` and `E-SHARED-STALE` are deleted** — neither exists in F1's catalogue, which this spec calls the only one. The "gap flagged, not filled" note on recipe validation is **deleted and the codes cited**: F1 carries `E-RECIPE-MISSING`, `-INVALID`, `-PRIMITIVE-UNKNOWN`, `-STEP-INVALID`, `-SOURCE-MISSING`, plus `E-PAYLOAD-PATH-INVALID` and `E-MAP-RESERVED-DEST`. **Q-50 removes every empty directory**: `coding` gains five folder READMEs from `applied-readmes/` (now stated in the payload inventory and the recipe table) and `planning` gains three (`portfolio/`, `portfolio/bets/`, `targets/`), so the coding phase-2 count becomes **24 files and no empty directory**; there is no `mkdir` primitive and no `.gitkeep`. **US-22 is retired** with the mechanism it asserted. **Every question this spec carried closes**: Q-30, Q-31, Q-32, Q-34, Q-36, Q-49, Q-50 and Q-51 move to Resolved Decisions, so **F5 has no open questions**. Next free question id **Q-54**; next free story id **US-39**. |
 
 ---
 
@@ -26,11 +27,17 @@ specify the machinery that validates and applies a pack, F5 specifies
 **what is in the packs**. It is the feature that decides whether the
 harness has anything worth applying.
 
-v1.0 ships three packs — `coding`, `writing` and `planning` — and one
-`shared/` component, `shared/targets`. A project holds **exactly one**
-pack (Q-12). Packs are standalone but may pull files in from `shared/`
-by explicit declaration in `pack.json` (Q-4), and changing a shared file
-bumps every pack that references it.
+v1.0 ships three packs — `coding`, `writing` and `planning` — and
+**nothing else**. A project holds **exactly one** pack (Q-12). Every pack
+is **wholly self-contained**: under **Q-48 the sharing mechanism does not
+ship at v1.0**, so there is no `shared/` tree, no `component.json`, no
+declared reference, no digest pin and no bump rule. The one component
+that would have been shared — the targets contract — ships as
+`coding`-local content, and `planning` ships **its own copy** of it
+(Q-49). Q-4's sharing story lands whole in v1.1, when
+`shared/presentation` (Q-28) gives it a second consumer; the duplication
+Q-49 accepts is booked here as a **named v1.1 reconciliation task**
+rather than left to be rediscovered.
 
 **What changed since version 1.0 of this spec, and why it changes the
 shape of every pack.** Q-39 split applying a pack into two phases, and
@@ -99,8 +106,10 @@ section first if you are here for the packs themselves.
   anatomy, and what each of the three recipes does.
 - The **migration requirements** per pack, including the Q-46 prose
   stripping, named section by section.
-- **`shared/targets`** — its contents, its destinations, and which packs
-  declare it at v1.0.
+- **The targets contract** — its files and their destinations, and the
+  fact that it now exists **twice**: `coding`-local, and a bets-tuned
+  copy inside `planning` (Q-49). Including the v1.1 reconciliation task
+  that duplication creates.
 - The **scaffold inventory**: three scaffolds, which exist and which must
   be authored, and which are alternatives rather than peers.
 - Each pack's **`pack.json` anatomy declaration**: all nine parts named,
@@ -122,8 +131,11 @@ section first if you are here for the packs themselves.
   detection or source-only/applied-only blocks at v1.0. The generated
   `CLAUDE.md` carries **inert anchors** and nothing more.
 - **`.harness/base/` and per-file hash lists (Q-43).**
-- **`shared/presentation` (Q-28).** Deferred to v1.1, and **no pack
-  references it at v1.0**.
+- **The `shared/` mechanism, in full (Q-48).** No shared tree, no
+  `component.json`, no `shared` array in any `pack.json`, no digest pin,
+  no bump rule and no CI enforcement. Deferred to **v1.1**, where it
+  lands together with `shared/presentation` (Q-28) and with the task of
+  reconciling the two targets copies Q-49 creates.
 - **Cross-pollination between packs (Q-6).** `writing` gaining the
   targets contract and `coding` gaining routing and parallelization
   rules land in `coding@1.1` / `writing@1.1`.
@@ -154,8 +166,10 @@ Only settled decisions. Everything unsettled is in **Open Questions**.
 | Pack home | `packs/<name>/`, bundled into the published CLI package | Q-2 — atomic CLI+pack commits, no cross-version compatibility problem, no network fetch at apply |
 | Pack↔project cardinality | A project holds **exactly one** pack | Q-12 |
 | Versioning | Per-pack semver in `pack.json` plus `minCliVersion: 1.0.0`; the manifest records both | Q-3 |
-| Sharing | `shared/targets` only at v1.0, referenced by explicit declaration; nothing inherited implicitly; changing a shared file bumps every referencing pack | Q-4 |
+| Sharing between packs | **None at v1.0.** The `shared/` mechanism does not ship: no shared tree, no `component.json`, no `shared` array, no digest pin, no bump rule. Every pack is self-contained | Q-48 — with `presentation` deferred, `shared/` had one consumer, which is indistinguishable from pack-local content. Q-4's story lands whole in v1.1 |
+| The targets contract | **Two pack-local copies.** `coding` carries it as ordinary pack content; `planning` carries **its own copy**, tuned to bets rather than code, so its part 9 stays `present` and US-27's ABORT keeps a vehicle | Q-49 — follows from Q-48. **Accepted cost, owned here:** the two copies will drift before v1.1 reconciles them, so §Flows books the merge as a **named v1.1 task** rather than a discovery |
 | Presentation | **Deferred to v1.1, and referenced by no pack at v1.0** | Q-28 — F5 could not source its contents; shipping an unspecified component referenced by all three packs is worse than shipping none |
+| Folder READMEs | **Every folder an apply creates carries a README** — `README.md` for `coding` and `planning`, `index.md` for `writing`. **`.claude/` and `.harness/` are excluded** as tool-owned. Consequence: **no applied folder is ever empty**, so there is no eighth `mkdir` primitive and no `.gitkeep` | Q-50 — the placeholder becomes useful content, and the empty-directory problem is dissolved rather than solved. `coding` gains five (`AgentTeams/`, `specifications/general/`, `specifications/v1.0/`, `targets/`, `copy/`), `planning` gains its portfolio and targets folders, `writing` already had the convention |
 | Migration fidelity | `coding` and `writing` migrate **faithfully**, modulo the Q-46 deletions, which are enumerated; `planning` is **authored** | Q-6 keeps S6 verifiable; Q-29 confirms authoring `planning` is not a boundary violation |
 | `planning` framing | Portfolio and roadmap management as a decision loop: `intake → discovery → prioritize → commit → deliver → learn`, non-delegable absorption/security gate between deliver and learn, horizon-setting first-class inside commit | Q-11 — the spine is evidenced research output, not a process invented to fill a template |
 | `planning` parameterisation | Calibrated at init by `constraintFloor`, values `high-floor` \| `near-zero-floor`, expressed as recipe **`when` conditions over `calibrations/<name>/`** | Q-11 + Q-13 — contingency is the research's central finding; the recipe's `when` is the mechanism, and `calibrations/<name>/` is a pack-authoring convention over it, not a format feature |
@@ -172,7 +186,8 @@ Each is assessable yes/no when F5 is done.
 
 - **G5.1** — `packs/coding/`, `packs/writing/` and `packs/planning/` each
   exist with a valid `pack.json` declaring name, semver,
-  `minCliVersion`, `shared/` references, parameters and scaffolds.
+  `minCliVersion`, parameters and scaffolds. **No `pack.json` declares a
+  `shared` array** — the mechanism does not exist at v1.0 (Q-48).
 - **G5.2** — Each pack ships a valid **`recipe.json`** that uses only the
   seven declared primitives and produces the applied tree this spec
   states.
@@ -193,9 +208,12 @@ Each is assessable yes/no when F5 is done.
   produces trees that differ in cadence defaults, horizon defaults and
   the absorption-gate coverage text — from one pack source, with no
   forked pack.
-- **G5.7** — `shared/targets` exists exactly once in the repo, and every
-  pack that uses it declares the reference in its `pack.json`. No pack
-  reads a shared file it has not declared.
+- **G5.7** — **No `shared/` tree exists in the repo and no `pack.json`
+  carries a `shared` array** (Q-48); every pack applies from its own
+  files alone. `coding` and `planning` each carry their own copy of the
+  targets contract (Q-49), and the duplication is recorded — in both pack
+  READMEs and in §Flows — as a **named v1.1 reconciliation task** with an
+  owner, not as an unremarked cost.
 - **G5.8** — Applying each pack to an empty directory produces a project
   with zero broken internal path references and zero unresolved
   `{{harness:…}}` tokens outside the placeholders the pack deliberately
@@ -216,17 +234,23 @@ Each is assessable yes/no when F5 is done.
   investment.
 - **Marked regions, region hashes, tamper detection** (Q-45).
 - **`.harness/base/` and per-file hash lists** (Q-43).
-- **`shared/presentation`** (Q-28) — deferred to v1.1, referenced by no
-  pack at v1.0.
-- **Cross-pollination (Q-6).** `writing` gaining `shared/targets`;
+- **The `shared/` mechanism** (Q-48) and **`shared/presentation`**
+  (Q-28) — both deferred to v1.1, together with reconciling the two
+  targets copies Q-49 leaves behind.
+- **Cross-pollination (Q-6).** `writing` gaining the targets contract;
   `coding` gaining routing and parallelization rules.
 - **Filling the coding pack's part 8** beyond the single `/target`
   command. The R5 candidates (`/spec`, `/feature`, `/review`, a
   no-code-before-PROCEED hook, a default permission set) are deferred.
 - **A registered hook in any pack.** Deferred to the first version that
   gains a hook-registration mechanism with a designed consent surface.
-- **Authoring document templates the writing pack does not have** — see
-  Q-31 and Q-51.
+- **Authoring document templates the writing pack does not have**, with
+  **one bounded exception**: Q-51 permits `index.template.md` and
+  `home.template.md`, recorded as **recipe scaffolding rather than pack
+  content**, because the recipe cannot render `Home.md` or a per-folder
+  `index.md` without them. Part 3 stays thin on the strength of the one
+  real document template (Q-31). Everything beyond those two templates is
+  `writing@1.1` work.
 - **A brief template for the coding pack** — see Q-36. (`coding` ships
   `specifications/project-brief.template.md` as a *project* brief the
   recipe copies out; a *document-kit* brief template is separate work.)
@@ -238,14 +262,17 @@ Each is assessable yes/no when F5 is done.
 
 ## User Stories
 
-**Range used: US-17…US-22, US-24…US-28, US-34…US-38.**
-`US-N` is project-monotonic. F1 holds US-1…US-16 and US-29.
+**Range used: US-17…US-21, US-24…US-28, US-34…US-38.**
+`US-N` is project-monotonic and unique across the project. F1 holds
+US-1…US-4, US-6, US-8…US-10, US-13…US-16 and US-29…US-33; F1 retired
+US-5, US-7, US-11 and US-12. **Next free id: US-39.**
 
 **Retired, never to be reused:**
 
 | ID | Story | Why retired |
 |---|---|---|
-| US-23 | *Be told which packs a shared change bumps* | Two reasons, both structural. The story asserts behaviour of F1's validator (`E-SHARED-STALE`), not pack content — F1 §US-7 owns it. And at v1.0 `shared/targets` has one declared referencer, so "which packs" is degenerate and the story tests nothing. The Q-4 bump rule survives as a criterion on US-22; the validator behaviour survives in F1. |
+| US-23 | *Be told which packs a shared change bumps* | Two reasons, both structural. The story asserted behaviour of F1's validator, not pack content, and at that draft the targets component had one declared referencer, so "which packs" was degenerate and the story tested nothing. **Q-48 has since removed the mechanism outright**, so nothing survives of it at v1.0; Q-4's bump rule returns with the mechanism in v1.1, under a new id. |
+| US-22 | *Reference a shared component rather than copying it* | **Retired by Q-48.** The story existed to assert the `shared/` mechanism — a declared reference, an inherited destination map, an undeclared-read failure and a bump rule — and **none of those exist at v1.0**. Its two error criteria named `E-SHARED-UNDECLARED` and `E-SHARED-STALE`, neither of which is in F1's catalogue; keeping the story would keep F5 asserting a contract F1 does not define. What the story was protecting — one fix reaching every pack that uses a component — is now a **v1.1 task with a named owner**, recorded in §Flows / *The targets contract*. The id is retired, not reused; v1.1's sharing story takes a fresh one. |
 
 ---
 
@@ -260,6 +287,15 @@ Each is assessable yes/no when F5 is done.
   `specifications/README.md`, `specifications/project-brief.md`,
   `specifications/general/`, `specifications/v1.0/`, `targets/Run.md`
   and `copy/tone-of-voice.md`.
+- **Every folder the apply creates carries a README, so no created folder
+  is empty** (Q-50). Concretely: `AgentTeams/README.md`,
+  `specifications/general/README.md`, `specifications/v1.0/README.md`,
+  `targets/README.md` and `copy/README.md` all exist, each written by a
+  `rename` step out of the payload's `applied-readmes/`.
+  `specifications/README.md` and, with a backend scaffold,
+  `infrastructure/backend-deploy/README.md` already come from elsewhere
+  in the recipe. `.claude/` and `.harness/` are **excluded** as
+  tool-owned, and there is **no `.harness/README.md`**.
 - `.harness/pack/` is **byte-identical** to `packs/coding/` at the
   applied version — same file list, same bytes, same modes.
 - `AgentTeams/` exists and `agent-teams/` does not: the directory rename
@@ -290,9 +326,11 @@ Each is assessable yes/no when F5 is done.
 **Acceptance criteria:**
 - `lintel-harness init writing --scaffold writing-workstream` exits `0`
   and produces `.harness/pack/`, `.harness/manifest.json`, `CLAUDE.md`,
-  `Home.md`, `.claude/agents/` (8 files), `writing-guide/` (the voice
-  guide and the words-to-avoid list, both with the `.template` suffix
-  stripped), and the corpus and workstream tree: `sources/` (with
+  `Home.md`, `.claude/agents/` (8 files), `writing-guide/` (the source's
+  **four** guide files under their existing names — `tone-of-voice.md`,
+  `ai-tells.md`, `bilingual-publishing.md`, `README.md` — each with the
+  `.template` suffix stripped where the payload carries one, per Q-51),
+  and the corpus and workstream tree: `sources/` (with
   `_scouting/` and `inbox/`), `analyses/`, `notes/`, `tasks/` and
   `workstreams/`.
 - `lintel-harness init writing` with **no** `--scaffold` produces the
@@ -418,29 +456,6 @@ Each is assessable yes/no when F5 is done.
 
 ---
 
-**US-22 — Reference a shared component rather than copying it**
-> As a pack author, I want a pack to pull a shared component in by declaration so that one fix reaches every pack that uses it instead of being re-fixed in each.
-
-**Acceptance criteria:**
-- `packs/coding/pack.json` declares `shared/targets`.
-- `packs/writing/pack.json` does **not** declare it at v1.0 (Q-6 defers
-  it to `writing@1.1`).
-- No pack declares `shared/presentation` at v1.0, and `shared/` contains
-  no `presentation/` directory (Q-28).
-- `shared/targets/` exists exactly once in the repo; no pack contains a
-  duplicate copy of `target.template.md`, `Run.md`, `README.md`,
-  `target-reviewer.md` or the `/target` command.
-- A pack that reads a `shared/` file without declaring it fails
-  validation with `E-SHARED-UNDECLARED` (F1 §Error States).
-- A shared component's files reach their per-destination locations from a
-  **single declaration**: `shared/targets/component.json` declares its
-  own `mappings`, and a referencing pack inherits all of them. No pack
-  repeats the destination map.
-- Changing a file under `shared/` without bumping every referencing pack
-  fails validation with `E-SHARED-STALE` (F1 §Error States).
-
----
-
 **US-24 — Prove the coding migration changed nothing it should not have**
 > As the maintainer, I want the `coding` migration to be provably faithful so that any later behaviour difference is attributable to a migration bug rather than an undocumented improvement (S6).
 
@@ -451,10 +466,14 @@ Each is assessable yes/no when F5 is done.
   commit.
 - **Every difference the check reports falls into exactly one of four
   declared classes**, and the record says which: (a) a Q-46 deletion,
-  named by file and heading; (b) an added `pack.json` or `recipe.json`;
-  (c) the declared restructure — `infrastructure/backend-deploy/` →
-  `scaffolds/backend-azure/`, and the `/target` command moving into
-  `commands/`; (d) nothing else.
+  named by file and heading; (b) an added `pack.json`, `recipe.json` or
+  `applied-readmes/` file; (c) the declared restructure —
+  `infrastructure/backend-deploy/` → `scaffolds/backend-azure/`, and the
+  `/target` command moving into `commands/`; (d) nothing else.
+- **`targets/` does not move.** Under Q-48 there is no `shared/` tree to
+  lift it into, so the check expects `targets/` and `target-reviewer.md`
+  exactly where the source commit has them; their absence is a migration
+  bug, not a declared restructure.
 - Class (d) is empty. Any difference the check cannot place in (a), (b)
   or (c) fails the check.
 - The Q-46 deletion list is exhaustive and enumerated in §Flows, so the
@@ -522,10 +541,18 @@ Each is assessable yes/no when F5 is done.
 - The run does not mark the gate passed, partially passed, or deferred.
 - `target-reviewer` returns `NEEDS-CORRECTION` for any planning target
   whose success criteria can only be met by passing the gate.
-- The abort criterion is present in the applied tree regardless of how
-  `planning` obtains its targets contract — see **Q-49**, which is open
-  on whether that is via `shared/targets` or pack-local content. This
-  criterion is checkable either way and does not depend on the answer.
+- **The vehicle is `planning`'s own copy of the targets contract**
+  (Q-49). `packs/planning/targets/` carries a bets-tuned copy of
+  `README.md`, `target.template.md` and `Run.md`; the pack ships its own
+  `target-reviewer` agent and `/target` command; and **no `shared/`
+  reference is involved, because the mechanism does not exist at v1.0**
+  (Q-48). Part 9 stays `present` on that basis.
+- **The duplication this creates is a v1.1 task with a named owner, not
+  an accepted silence.** Two copies of the targets contract now exist —
+  `coding`'s and `planning`'s — and they will drift. §Flows /
+  *The targets contract* records the reconciliation as **v1.1-T1**, owned
+  by the architect, to be discharged when Q-48's `shared/` mechanism
+  ships.
 
 ---
 
@@ -541,8 +568,12 @@ Each is assessable yes/no when F5 is done.
 - Each README states **what the recipe produces** — which parts of the
   pack are copied out and which stay at `.harness/pack/` — in at most ten
   lines.
-- Each README states which `shared/` components the pack references, the
-  pack's version, and its `minCliVersion`.
+- Each README states the pack's version and its `minCliVersion`, and
+  states that the pack is **self-contained** — it references no shared
+  component, because no sharing mechanism exists at v1.0 (Q-48).
+  `coding`'s and `planning`'s READMEs each additionally say that their
+  targets contract is a **pack-local copy** and name the other holder, so
+  the duplication Q-49 accepts is legible from either pack.
 - **No README contains bootstrap prose.** It does not tell the reader to
   copy a folder, rename a template, fix a path, or adopt the pack in a
   new project (Q-46).
@@ -558,9 +589,9 @@ Each is assessable yes/no when F5 is done.
 - Every step in every recipe names one of exactly seven primitives:
   `copy`, `rename`, `strip-suffix`, `rewrite-path`, `substitute`,
   `generate`, `merge-json`. A recipe naming anything else fails
-  validation and `init` refuses to apply the pack. **F1 owns the code
-  and the message** — F5 deliberately does not invent one, and flags that
-  F1's catalogue has no recipe-validation code yet (§Error States).
+  validation with `E-RECIPE-PRIMITIVE-UNKNOWN` (F1 §Error States, exit 2)
+  and `init` refuses to apply the pack. **F1 owns the code and the
+  message**; F5 cites and does not invent.
 - Every recipe step reads a source path under `.harness/pack/` and never
   from the bundled pack (Q-41).
 - No recipe step reads a timestamp, an environment variable, the network,
@@ -689,8 +720,12 @@ diagnostics, they have no code, and they do not belong in F1's catalogue.
 | `--calibration` passed to a pack declaring no such alias | `E-CLI-UNKNOWN-FLAG` | 1 |
 | Scaffold requested that the pack does not offer | `E-SCAFFOLD-UNKNOWN` | 1 |
 | Both backend scaffolds requested — same destination | `E-SCAFFOLD-EXCLUSIVE` | 1 |
-| Pack reads a `shared/` file it has not declared | `E-SHARED-UNDECLARED` | 2 |
-| A `shared/` file changed without bumping every referencing pack | `E-SHARED-STALE` | 2 |
+| `pack.json` names a `recipe` the pack does not contain | `E-RECIPE-MISSING` | 2 |
+| `recipe.json` is unparseable or its top-level shape is wrong | `E-RECIPE-INVALID` | 2 |
+| A step declares an `op` outside the seven primitives | `E-RECIPE-PRIMITIVE-UNKNOWN` | 2 |
+| A step's inputs are wrong for its primitive — a missing `to`, a directory `from` on a file-only primitive, a compound `when`, a scaffold with no steps | `E-RECIPE-STEP-INVALID` | 2 |
+| A step's `from` names nothing in the payload | `E-RECIPE-SOURCE-MISSING` | 2 |
+| A pack-relative path escapes the pack or is otherwise illegal | `E-PAYLOAD-PATH-INVALID` | 2 |
 | A pack declares `hooks` among its owned settings keys | `E-OWNEDKEY-FORBIDDEN` / `E-HOOKS-NOT-SUPPORTED` — **F1 decides which** | 2 |
 | A `substitute` step leaves a token unresolved | `E-SUBST-UNRESOLVED` | 2 |
 | A `rewrite-path` step matches nothing | `E-REWRITE-UNUSED` | 2 |
@@ -701,12 +736,24 @@ diagnostics, they have no code, and they do not belong in F1's catalogue.
 | `init` in a directory that already has a manifest | `E-ALREADY-APPLIED` | 1 |
 | Inert guard script present, registered by nothing | `W-HOOK-SCRIPT-INERT` | unchanged |
 
-**Gap flagged, not filled.** F1's catalogue predates Q-39 and carries
-**no code for an invalid `recipe.json`** — an unknown primitive, a step
-reading outside `.harness/pack/`, a step with no source. US-34 requires
-one. F5 does not invent it; **F1 must add it.** Related: F1's
-`E-REGION-*` and `E-BASE-*` families are unreachable at v1.0 under Q-45
-and Q-43, and F5 references none of them.
+**The recipe-validation gap is closed.** An earlier draft of this section
+flagged that F1's catalogue carried no code for an invalid
+`recipe.json`. **It does now**, and US-34's requirement is met by
+citation rather than by invention: `E-RECIPE-MISSING`,
+`E-RECIPE-INVALID`, `E-RECIPE-PRIMITIVE-UNKNOWN`, `E-RECIPE-STEP-INVALID`
+and `E-RECIPE-SOURCE-MISSING` cover a missing recipe, a malformed one, an
+unknown primitive, a badly-shaped step and a step whose source is not in
+the payload; `E-PAYLOAD-PATH-INVALID` covers a `from` that escapes the
+pack; and `E-MAP-RESERVED-DEST` covers a step writing somewhere reserved,
+including anywhere under `.harness/`. All are exit 2 and all are
+fail-closed, so an unusable recipe never reaches an apply.
+
+**Codes F5 deliberately references nowhere.** F1's `E-REGION-*` and
+`E-BASE-*` families are unreachable at v1.0 under Q-45 and Q-43. There is
+**no `E-SHARED-*` family**: Q-48 removed the mechanism, so the two rows an
+earlier draft carried here — `E-SHARED-UNDECLARED` and `E-SHARED-STALE` —
+name codes that do not exist and have been deleted rather than
+reinterpreted.
 
 ### Pack-content scenarios — F5 owns the string, verbatim
 
@@ -763,7 +810,14 @@ Two things follow, both v1.0 facts:
 - **Size:** phase 1 copies **≤ 120 files** for any pack. Phase 2 writes
   **≤ 60 files** with no scaffold selected and **≤ 200** with every
   scaffold a pack offers. Concretely at v1.0: `coding` phase 1 copies
-  ~55 files and phase 2 writes 19 files and 2 empty directories.
+  ~60 files and phase 2 writes **24 files and no empty directory** — the
+  19 working files plus the five folder READMEs Q-50 requires.
+- **No empty directories, in any pack.** Under Q-50 every folder an apply
+  creates carries a README, so a recipe never needs to express an empty
+  directory and no primitive can. There is **no `mkdir` primitive** and
+  **no `.gitkeep`** anywhere in an applied tree. `.claude/` and
+  `.harness/` are excluded from the rule as tool-owned, so neither
+  carries a pack-written README.
 - **Atomicity:** a failure in either phase leaves the directory as it was
   before the run. Rollback never deletes a path that existed before the
   run.
@@ -794,7 +848,8 @@ Two things follow, both v1.0 facts:
 - **Portability:** no pack file contains an absolute path, a
   machine-specific identifier, a credential, a token, a permission-list
   entry, or a personal name outside a declared placeholder.
-  `grep -r '/Users/' packs/ shared/` returns zero matches.
+  `grep -r '/Users/' packs/` returns zero matches. (There is no `shared/`
+  tree to scan — Q-48.)
 - **Encoding:** every pack file is UTF-8 with LF line endings, so an
   applied tree hashes identically on macOS, Linux and Windows.
 - **No executable pack content outside a declared scaffold.** The one
@@ -827,8 +882,9 @@ Two things follow, both v1.0 facts:
   than prose, both counts are checkable by `lintel-harness validate --all`.
   Any change to them is a spec change.
 - **Legibility:** each pack README **≤ 120 lines**, naming all nine
-  parts, the pack's gaps, what its recipe produces, its `shared/`
-  references, its version and its `minCliVersion`.
+  parts, the pack's gaps, what its recipe produces, the fact that the
+  pack is self-contained (no shared component at v1.0, Q-48), its version
+  and its `minCliVersion`.
 
 **Calibration**
 
@@ -845,8 +901,8 @@ Two things follow, both v1.0 facts:
 ## Flows / Behaviour
 
 This section carries the substance of F5: the three pack outlines against
-the anatomy, `shared/targets`, the scaffold inventory and the migration
-requirements. These are the pinned shapes F1 and F2 compile against.
+the anatomy, the targets contract and its two pack-local copies, the
+scaffold inventory and the migration requirements. These are the pinned shapes F1 and F2 compile against.
 
 `specifications/general/pack-inventory.md` holds the **full file-by-file
 trees with per-file phase metadata**. This section states the structure
@@ -933,7 +989,7 @@ nothing branches on them.
 | 7a | Folder scaffolding | present — 5 produced top-level paths, per-version spec folders, 1 backend scaffold (2 alternatives) | present — shared corpus + per-workstream stages, `index.md` everywhere, `Home.md` front door | present *(authored)* — register, per-bet folders, horizons, decision log, calibration record |
 | **7b** | **Apply recipe (`recipe.json`)** | **required** — copy-out + rename + strip-suffix + 2 path rewrites + generate + merge-json + 1 scaffold branch | **required** — copy-out + strip-suffix + rename to `Home.md` + generate + merge-json + 1 scaffold branch | **required** — copy-out + **`when` on `constraintFloor`** + substitute + generate + portfolio skeleton |
 | 8 | Skills & automations | **weak** — 1 slash command (`/target`), 0 hooks, 0 skills, no default permission set | **absent** — 0 commands, 0 pack-owned hooks, 0 skills | present *(authored)* — 3 slash commands **plus 1 inert guard script**; 0 enforcing hooks, because no pack may register one |
-| 9 | Autonomy contract | present — targets: readiness gate, autonomy envelope, abort criteria, work log, SUCCESS/ABORT | **absent** — no target contract, no gate, no envelope, no log | present — targets, plus a phase the envelope may never enter. **Vehicle open — Q-49** |
+| 9 | Autonomy contract | present — targets: readiness gate, autonomy envelope, abort criteria, work log, SUCCESS/ABORT. **Pack-local content** (Q-48) | **absent** — no target contract, no gate, no envelope, no log | present — **its own copy** of the targets contract, tuned to bets (Q-49), plus a phase the envelope may never enter |
 
 Part `7b` has no `status` value: it is required of every pack and cannot
 be absent or provisional. The three-value enum applies to the nine
@@ -971,9 +1027,12 @@ Written by the CLI, not by a recipe:
 <project>/
 ├── .harness/
 │   ├── pack/            phase-1 payload — verbatim copy of the pack, untouched
-│   └── manifest.json    minimal (Q-43): pack name, pack version, CLI version,
-│                        parameter answers, chosen scaffolds. No file hashes,
-│                        no base store — applied state is recomputable
+│   └── manifest.json    six keys (Q-43 as amended by Q-52): manifest version,
+│                        CLI version, pack identity, a single payloadDigest over
+│                        .harness/pack/, parameter answers, chosen scaffolds.
+│                        No per-file hash list, no base store — applied state is
+│                        recomputable, and the digest is what makes recomputing
+│                        it an assertion rather than a tautology
 └── …                    everything else is the pack's phase-2 recipe
 ```
 
@@ -988,7 +1047,9 @@ those two paths.
 today.
 **Migration:** faithful (Q-6), **plus the Q-46 deletions enumerated
 below**.
-**References:** `shared/targets`. **Not** `shared/presentation` (Q-28).
+**References:** **none — the pack is self-contained** (Q-48). The targets
+contract ships as ordinary `coding`-local content; there is no `shared/`
+tree to reference and no `shared` array in `pack.json`.
 **Scaffolds:** `backend-azure` (exists), `backend-aws` (to author) —
 **alternatives, not peers**.
 **Version:** 1.0.0 · `minCliVersion: 1.0.0`.
@@ -1002,12 +1063,33 @@ In summary the payload is `pack.json`, `recipe.json`, `README.md`,
 process README, `conventions.md`, 11 document templates, and two
 `*.template.md` files that *are* copied out), `targets/`
 (README, `Run.md`, `target.template.md`), `copy/tone-of-voice.template.md`,
-`commands/target.md`, and `scaffolds/{backend-azure,backend-aws}/`.
+`commands/target.md`, **`applied-readmes/`**, and
+`scaffolds/{backend-azure,backend-aws}/`.
 
-Four items do not exist in the source tree today and are **new
+**`applied-readmes/` is part of the payload and is stated here because an
+earlier draft of this spec omitted it while it already existed on disk.**
+It holds the Q-50 folder READMEs — one per folder the recipe creates that
+does not otherwise receive one — and it contains **exactly five files**:
+
+| Payload file | Renamed to |
+|---|---|
+| `applied-readmes/agentteams.md` | `AgentTeams/README.md` |
+| `applied-readmes/specifications-general.md` | `specifications/general/README.md` |
+| `applied-readmes/specifications-version.md` | `specifications/v1.0/README.md` |
+| `applied-readmes/targets.md` | `targets/README.md` |
+| `applied-readmes/copy.md` | `copy/README.md` |
+
+There is **no sixth file**. A `harness.md` targeting `.harness/README.md`
+existed in an earlier pass and has been **deleted**: Q-50 excludes
+`.harness/` as tool-owned, and a recipe step may never write under
+`.harness/` in any case, because that is where the payload phase 2 is
+reading from lives.
+
+Five items do not exist in the source tree today and are **new
 authoring** for the migration: `pack.json`, `recipe.json`, `commands/`
-(the `/target` command currently lives in this repo's `.claude/commands/`)
-and `scaffolds/` (today's `infrastructure/backend-deploy/` becomes
+(the `/target` command currently lives in this repo's `.claude/commands/`),
+`applied-readmes/` (the five Q-50 folder READMEs) and `scaffolds/`
+(today's `infrastructure/backend-deploy/` becomes
 `scaffolds/backend-azure/`).
 
 #### 7b. What the recipe produces
@@ -1021,6 +1103,11 @@ and `scaffolds/` (today's `infrastructure/backend-deploy/` becomes
 | Tone guide | `strip-suffix` | `copy/tone-of-voice.template.md` | `copy/tone-of-voice.md` |
 | Spec index | `strip-suffix` | `specifications/README.template.md` | `specifications/README.md` |
 | Project brief | `strip-suffix` | `specifications/project-brief.template.md` | `specifications/project-brief.md` |
+| Folder README | `rename` | `applied-readmes/agentteams.md` | `AgentTeams/README.md` |
+| Folder README | `rename` | `applied-readmes/specifications-general.md` | `specifications/general/README.md` |
+| Folder README | `rename` | `applied-readmes/specifications-version.md` | `specifications/v1.0/README.md` |
+| Folder README | `rename` | `applied-readmes/targets.md` | `targets/README.md` |
+| Folder README | `rename` | `applied-readmes/copy.md` | `copy/README.md` |
 | Path fix | `rewrite-path` | `targets/Run.md`, `.claude/commands/target.md` | `template/targets/…` → `.harness/pack/targets/…` |
 | Answers | `substitute` | project name and stack into the above | — |
 | Onboarding | `generate` | `CLAUDE.md.template` + answers | `CLAUDE.md`, with inert anchors (Q-45) |
@@ -1032,13 +1119,22 @@ and `scaffolds/` (today's `infrastructure/backend-deploy/` becomes
 ```
 <project>/
 ├── .claude/{agents/*.md ×10, commands/target.md, settings.json}
-├── AgentTeams/{Specify.md, Implement.md}
-├── specifications/{README.md, project-brief.md, general/, v1.0/}
-├── targets/Run.md
-├── copy/tone-of-voice.md
+├── AgentTeams/{README.md, Specify.md, Implement.md}
+├── specifications/
+│   ├── README.md  project-brief.md
+│   ├── general/README.md
+│   └── v1.0/README.md
+├── targets/{README.md, Run.md}
+├── copy/{README.md, tone-of-voice.md}
 ├── CLAUDE.md
 └── infrastructure/backend-deploy/     only with a backend scaffold
 ```
+
+**24 files, and not one empty directory.** The 19 working files plus the
+five folder READMEs. `.claude/` and `.harness/` carry no pack-written
+README — both are tool-owned and excluded by Q-50 — and in particular
+**there is no `.harness/README.md`**, because C-5 forbids any recipe step
+writing under `.harness/` and Q-50 does not carve a hole in it.
 
 **Two things the recipe deliberately does not do.**
 
@@ -1053,8 +1149,17 @@ and `scaffolds/` (today's `infrastructure/backend-deploy/` becomes
   nothing left in the payload that is wrong once copied, which is what
   lets phase 1 copy verbatim.
 
-`specifications/general/` and `specifications/v1.0/` are created empty.
-**No primitive creates an empty directory** — see **Q-50**.
+`specifications/general/` and `specifications/v1.0/` are **not created
+empty**: each receives a README from `applied-readmes/`, and so does every
+other folder this recipe brings into being. **Q-50 dissolves the
+empty-directory problem rather than solving it** — no folder is ever
+empty, so no primitive ever needs to create one, and the primitive set
+stays at seven. An earlier draft of this spec proposed an eighth `mkdir`
+primitive; that proposal is **withdrawn**, and the reason it was worse
+than it looked is recorded in `F1-ADR-001` §3.3: a `mkdir`'s entire
+output is invisible to `verify`'s file comparison and uncommittable by
+git, so a pack using it would produce an applied tree that does not
+survive a clone.
 
 #### 1. Process — six gated phases
 
@@ -1110,8 +1215,8 @@ one voice document authoritative across every surface.
 
 `master-spec` · `feature-spec` · `design-spec` · `epics-and-tasks` ·
 `adr-feature` · `adr-epic` · `research` · `system-architecture` ·
-`technology-choices` · `target.template.md` (via `shared/targets`) ·
-`tone-of-voice.template.md`.
+`technology-choices` · `target.template.md` (pack-local, under
+`targets/`) · `tone-of-voice.template.md`.
 
 Each shows structure *and expected depth*; the pack's instruction is to
 read the template before writing. At v1.0 they are read at
@@ -1235,8 +1340,11 @@ the stop condition; bounded autonomy ("ask forgiveness" is banned);
 honest verification; loop avoidance; auditability via the work log;
 fail-safe on ambiguity.
 
-This is the part `writing` lacks entirely, and it is why Q-4 names
-targets the first and clearest `shared/` candidate.
+This is the part `writing` lacks entirely, and it is the component Q-4
+named as the first and clearest candidate for sharing. **At v1.0 it is
+not shared** (Q-48): it is `coding`-local content, and `planning` carries
+its own copy (Q-49). Reconciling the two is the v1.1 task recorded under
+*The targets contract* below.
 
 #### Migration requirements — `coding`
 
@@ -1259,11 +1367,17 @@ everything that describes what the thing *is*.
 
 **(b) Structural additions.** `pack.json`, `recipe.json`, `commands/`
 (the `/target` command moves in from this repo's `.claude/commands/`),
-and `scaffolds/backend-azure/` (from `infrastructure/backend-deploy/`)
-plus `scaffolds/backend-aws/` (to author).
+`applied-readmes/` (the five Q-50 folder READMEs), and
+`scaffolds/backend-azure/` (from `infrastructure/backend-deploy/`) plus
+`scaffolds/backend-aws/` (to author).
 
-**(c) `shared/targets` extraction.** `targets/` and `target-reviewer.md`
-lift out to `shared/targets/`, which `coding` then declares.
+**(c) No extraction.** `targets/`, `target-reviewer.md` and the `/target`
+command **stay inside `coding`** as ordinary pack content. An earlier
+draft lifted them into `shared/targets/`; **Q-48 removes the mechanism
+that would have received them**, so the extraction does not happen and
+`coding`'s tree keeps them where they already are. This is the smaller
+change, not the larger one: the migration now moves nothing out of the
+pack.
 
 **Nothing else changes.** A typo migrates as a typo.
 
@@ -1275,8 +1389,9 @@ lift out to `shared/targets/`, which `coding` then declares.
 at a recorded commit. Never packaged before.
 **Migration:** faithful (Q-6), minus everything project-specific, plus
 the Q-46 stripping.
-**References:** none. **Not** `shared/targets` at v1.0 (Q-6 defers it to
-`writing@1.1`); **not** `shared/presentation` (Q-28).
+**References:** **none, and none are possible** — no sharing mechanism
+exists at v1.0 (Q-48). `writing` gains the targets contract at
+`writing@1.1` (Q-6), by whatever route the v1.1 sharing work settles on.
 **Scaffolds:** `writing-workstream`.
 **Version:** 1.0.0 · `minCliVersion: 1.0.0`.
 
@@ -1293,8 +1408,20 @@ pack-level `templates/` holding `index`, `home` and `post` templates. The
 source project holds `writing-guide/{tone-of-voice.md, ai-tells.md,
 bilingual-publishing.md, README.md}` and **exactly one** template
 (`workstreams/learning-journey/post-template.md`). Renaming three guide
-files into two and authoring two new templates is not a faithful
-extraction. **Q-51.**
+files into two and authoring two new templates would not be a faithful
+extraction. **Q-51 settles it by splitting the difference along the Q-46
+line:** the extraction **may author `index.template.md` and
+`home.template.md`**, recorded in the extraction record as **recipe
+scaffolding rather than pack content** — the recipe cannot render `Home.md`
+or a per-folder `index.md` without them, and both encode a convention the
+source already states in prose. Everything else stays faithful: the
+writing guide keeps its **four files under their existing names**
+(`tone-of-voice.md`, `ai-tells.md`, `bilingual-publishing.md`,
+`README.md`), `.template`-suffixed only where the recipe strips a suffix,
+and the one real document template migrates as it is. **The inventory's
+`voice.template.md` / `words-to-avoid.template.md` naming does not apply**
+— on this point F5 is authoritative for the extraction, and the inventory
+should be corrected to the four-file guide when it is next revised.
 
 #### 7b. What the recipe produces
 
@@ -1322,8 +1449,11 @@ extraction. **Q-51.**
     └── workstreams/{index.md, <name>/{outlines,drafts,reviews,published}/}
 ```
 
-Every created folder carries an `index.md` with a table of contents. That
-convention is enforced by prose at v1.0, not by a hook — part 8 is
+Every created folder carries an `index.md` with a table of contents —
+which is Q-50's rule met by the pack's own existing Obsidian convention,
+so `writing` needs **no new folder READMEs** and creates **no empty
+directory**, `sources/inbox/` included. Keeping the `index.md` current
+thereafter is enforced by prose at v1.0, not by a hook — part 8 is
 absent. The document templates stay in the payload.
 
 #### 1. Process — nine stages in two strict sequences
@@ -1385,9 +1515,12 @@ candidate, the draft, the critic review, the per-folder `index.md`,
 `Home.md` — is **described in prose** inside agent prompts and
 `CLAUDE.md`, not templated.
 
-Compare `coding`'s eleven. A faithful migration cannot close this —
-Q-31, and see Q-51 on whether the inventory's `index` and `home`
-templates may be authored to make the recipe expressible.
+Compare `coding`'s eleven. A faithful migration does not close this:
+**Q-31** keeps part 3 thin, and **Q-51** permits exactly two additions —
+`index.template.md` and `home.template.md` — which are **recipe
+scaffolding, not pack content** and therefore do **not** count toward
+part 3. Part 3 stays declared `present`-but-thin on the strength of the
+one real document template.
 
 What *does* migrate as reusable reference is the writing guide: the
 register (plain, first-person, unhyped), the screen that removes AI
@@ -1484,7 +1617,9 @@ unconditionally human-gated. That is a *supervision* rule, not an
 autonomy contract — it describes what the agent may not do alone rather
 than what it may do alone and how it stops. Under the anatomy this part
 is **missing, not merely different**, and `writing@1.1` closes it by
-referencing `shared/targets` (Q-6).
+gaining the targets contract (Q-6) — by sharing if v1.1's `shared/`
+mechanism lands first, by a third pack-local copy if it does not, which
+is one more reason the reconciliation task below has an owner.
 
 #### Migration requirements — `writing`
 
@@ -1505,10 +1640,14 @@ and every personal name, absolute path and voice sample.
 `scaffolds/writing-workstream/`, and the `.template` suffixing of the
 guide files so `strip-suffix` has something to act on.
 
-**(d) Q-51 is open** on whether (c) may extend to authoring
-`index.template.md` and `home.template.md`. Without them the recipe
-cannot produce `Home.md` or per-folder indexes; with them the extraction
-authors content, which Q-6 forbids.
+**(d) Two authored templates, and exactly two (Q-51).**
+`templates/index.template.md` and `templates/home.template.md` are
+authored by the extraction and recorded in the extraction record as
+**recipe-required additions — recipe scaffolding, not pack content**.
+Without them the recipe cannot produce `Home.md` or a per-folder
+`index.md`, and the pack would ship a convention it cannot execute. The
+writing guide keeps its four files under their existing names; nothing
+else is authored, and part 3 stays thin.
 
 ---
 
@@ -1523,7 +1662,10 @@ Take the process and the templates, which the critic pass found
 which the same pass marked "revise heavily".
 **Migration:** none — this pack is **authored**. Q-6's fidelity
 constraint governs migrations and does not apply (Q-29).
-**References:** see **Q-49**. **Not** `shared/presentation` (Q-28).
+**References:** **none — the pack is self-contained** (Q-48). It carries
+**its own copy of the targets contract**, tuned to bets rather than code
+(Q-49); it does not reference `coding`'s and there is no shared tree to
+reference.
 **Scaffolds:** none — the base pack *is* the portfolio shape.
 **Version:** 1.0.0 · `minCliVersion: 1.0.0`.
 **Provenance to record:** `base-deck-v2.1.md` (slides 8, 12, 17,
@@ -1533,24 +1675,44 @@ appendices A3/B3), `simulated-companies.md`, and
 #### Payload — what phase 1 copies verbatim
 
 `pack.json` (declaring the `constraintFloor` parameter), `recipe.json`,
-`README.md`, `CLAUDE.md.template`, `agents/` (6, all provisional),
-`templates/` (4), `calibrations/{high-floor,near-zero-floor}/`,
-`commands/` (3), and `hooks/kill-criteria-guard.sh`. Full tree:
-`general/pack-inventory.md`. **The inventory omits `hooks/` from the
-source tree while showing `.claude/hooks/kill-criteria-guard.sh` in the
-applied tree; the payload must carry it, and this spec adds it.**
+`README.md`, `CLAUDE.md.template`, `agents/` (**7** — the 6 provisional
+portfolio roles plus `target-reviewer.md`), `templates/` (4),
+`calibrations/{high-floor,near-zero-floor}/`, `commands/` (**4** —
+`bet.md`, `review.md`, `horizon.md`, `target.md`),
+**`targets/`** (`README.md`, `target.template.md`, `Run.md`),
+**`applied-readmes/`** (`portfolio.md`, `portfolio-bets.md`,
+`targets.md`), and `hooks/kill-criteria-guard.sh`. Full tree:
+`general/pack-inventory.md`.
+
+**Two additions this spec makes to the inventory, and the reasons:**
+
+- **The inventory omits `hooks/` from the source tree while showing
+  `.claude/hooks/kill-criteria-guard.sh` in the applied tree.** The
+  payload must carry it, and this spec adds it.
+- **`targets/`, `target-reviewer.md`, `commands/target.md` and
+  `applied-readmes/` are `planning`-local content.** The inventory
+  records planning's part 9 as present "via `shared/targets`"; **Q-48
+  removed that mechanism and Q-49 replaces it with a pack-local copy**,
+  so the three P2 items the contract needs — `Run.md`, the
+  `target-reviewer` agent and the `/target` command — ship inside
+  `planning` exactly as they ship inside `coding`. `applied-readmes/`
+  carries the Q-50 folder READMEs.
 
 #### 7b. What the recipe produces
 
 | Step | Primitive | From (payload) | To (project) |
 |---|---|---|---|
-| Agents | `copy` | `agents/*.md` | `.claude/agents/` (6 files) |
-| Commands | `copy` | `commands/{bet,review,horizon}.md` | `.claude/commands/` |
+| Agents | `copy` | `agents/*.md` | `.claude/agents/` (7 files — 6 provisional roles + `target-reviewer`) |
+| Commands | `copy` | `commands/{bet,review,horizon,target}.md` | `.claude/commands/` (4 files) |
 | Guard | `copy` | `hooks/kill-criteria-guard.sh` | `.claude/hooks/` — **`0644`, inert** |
+| Kickoff | `copy` | `targets/Run.md` | `targets/Run.md` — from `planning`'s **own** targets copy (Q-49) |
 | Calibrated content | `copy`, **`when constraintFloor=high-floor`** | `calibrations/high-floor/**` | cadence, horizon and gate-coverage files |
 | Calibrated content | `copy`, **`when constraintFloor=near-zero-floor`** | `calibrations/near-zero-floor/**` | the same destinations, different content |
 | Calibration record | `substitute` | `{{harness:param.constraintFloor}}` | `calibration.md` at the repo root |
 | Portfolio skeleton | `copy` / `generate` | register, horizons, decisions seeds | `portfolio/{register,horizons,decisions}.md` |
+| Folder README | `rename` | `applied-readmes/portfolio.md` | `portfolio/README.md` |
+| Folder README | `rename` | `applied-readmes/portfolio-bets.md` | `portfolio/bets/README.md` |
+| Folder README | `rename` | `applied-readmes/targets.md` | `targets/README.md` |
 | Onboarding | `generate` | `CLAUDE.md.template` + calibrated fragments + answers | `CLAUDE.md`, with inert anchors |
 | Settings | `merge-json` | declared owned keys only — **never `hooks`** | `.claude/settings.json` |
 
@@ -1559,23 +1721,30 @@ applied tree; the payload must carry it, and this spec adds it.**
 ```
 <project>/
 ├── .claude/
-│   ├── agents/*.md ×6         all marked provisional
-│   ├── commands/{bet,review,horizon}.md
+│   ├── agents/*.md ×7         6 marked provisional, plus target-reviewer
+│   ├── commands/{bet,review,horizon,target}.md
 │   ├── hooks/kill-criteria-guard.sh   INERT 0644 — registered by nothing
 │   └── settings.json
 ├── calibration.md             which calibration this project was initialised at
 ├── portfolio/
+│   ├── README.md              what belongs in this folder and what does not
 │   ├── register.md            every active bet, its phase and its horizon
-│   ├── bets/<slug>/{brief.md, reviews/}
+│   ├── bets/README.md         one folder per bet; nothing else lives here
 │   ├── horizons.md            the computed horizon per programme + determinant
 │   └── decisions.md           what was killed, when, and why
+├── targets/{README.md, Run.md}   planning's own targets contract (Q-49)
 └── CLAUDE.md                  the six-phase loop, the gate, the five practices,
                                calibrated content
 ```
 
-`portfolio/bets/` is created empty — **Q-50**. The four document
-templates stay in the payload and are read from
-`.harness/pack/templates/`.
+**`portfolio/bets/` is not created empty.** It carries a `README.md`
+saying that one folder per bet lives there and nothing else, and
+`portfolio/` and `targets/` carry one each for the same reason — **Q-50**:
+every folder an apply creates carries a README, so no folder is ever
+empty and no `mkdir` primitive is needed. `bets/<slug>/` is created by
+`/bet` at use time, not by the apply, so the rule does not reach it. The
+four document templates and `target.template.md` stay in the payload and
+are read from `.harness/pack/`.
 
 **Calibration is this pack's defining property and the only case in the
 product of pack content varying by an init answer.**
@@ -1632,6 +1801,12 @@ itself**, and declared `provisional` with a note in `pack.json`:
 | `horizon-analyst` | commit | horizon records |
 | `gate-reviewer` | the gate | gate records only; read-only elsewhere |
 | `learning-synthesiser` | learn | roadmap reviews |
+
+A **seventh** agent ships and is **not** provisional: `target-reviewer`,
+which arrives with `planning`'s own copy of the targets contract (Q-49).
+It is migrated, evidenced content rather than an inferred portfolio role,
+so it does not widen part 2's provisional claim — the note in `pack.json`
+covers the six roles above and says so.
 
 Two properties are **not** provisional, because they follow from the
 process rather than the role literature:
@@ -1732,7 +1907,10 @@ All five are **calibration-invariant** (US-19).
 
 #### 8. Skills and automations
 
-The only pack shipping a non-trivial part 8 at v1.0. Declared `present`:
+The only pack shipping a non-trivial part 8 at v1.0. Declared `present`.
+The three portfolio commands below are part 8; `/target` and
+`target-reviewer` arrive with the pack's own targets contract and belong
+to **part 9**, counted there rather than here:
 
 | Construct | Behaviour |
 |---|---|
@@ -1787,15 +1965,28 @@ absorption gate; it may never clear it.** The planning target template
 lists clearing or waiving the gate as an abort criterion, and
 `target-reviewer` returns `NEEDS-CORRECTION` for any planning target
 whose success criteria can only be met by passing it. That is a stronger
-constraint than the targets contract currently expresses — "fail-safe on
+constraint than `coding`'s targets contract expresses — "fail-safe on
 ambiguity" is adjacent but not the same as a named phase the envelope may
-never enter — and whether `shared/targets` should learn to express it is
-Q-34.
+never enter. **Q-34 settles how that lands:** nothing in `coding` changes
+at v1.0, and `planning` expresses the constraint in **its own** copy, as
+an abort criterion in its target template and as a `NEEDS-CORRECTION`
+rule in its `target-reviewer`. Under Q-48 there is no shared component to
+teach, so the question of teaching one defers to v1.1 with the mechanism.
 
-**Where the contract comes from is open — Q-49.** `general/pack-inventory.md`
-records part 9 as present "via `shared/targets`", while also recording
-`shared/targets` as shipping with `coding` only. Both cannot be true. The
-part-9 *content* above is settled either way; only its vehicle is open.
+**Where the contract comes from is settled — Q-49: `planning` ships its
+own copy.** `general/pack-inventory.md` records part 9 as present "via
+`shared/targets`" while also recording that component as shipping with
+`coding` only; both could not be true, and Q-48 has since removed the
+mechanism from under the question entirely. `planning` therefore carries
+`targets/{README.md, target.template.md, Run.md}`, a `target-reviewer`
+agent and a `/target` command of its own, tuned to bets rather than code.
+Part 9 stays **`present`**, and US-27's ABORT has a vehicle that exists.
+
+**The cost of that is owned, not merely noted.** Two copies of the
+targets contract now exist in the product and they will drift, which is
+the exact duplication Q-4 was written to prevent. Q-49 accepts the cost;
+this spec assigns it, as task **v1.1-T1** with the architect as owner —
+stated once, in §Flows / *The targets contract*.
 
 #### Calibration — the poles
 
@@ -1837,44 +2028,59 @@ is the known failure mode. v1.0 ships it saying so.
 
 ---
 
-### `shared/targets`
+### The targets contract — two pack-local copies, and a v1.1 task
 
-Per Q-4: a `shared/` tree sits alongside `packs/`; each pack lists the
-shared files it pulls in via `pack.json`; **nothing is inherited
-implicitly**; and **changing a shared file requires bumping every pack
-that references it**.
+**There is no `shared/` tree at v1.0.** Q-48 removes the mechanism
+outright: no shared directory alongside `packs/`, no `component.json`, no
+`shared` array in any `pack.json`, no inherited destination map, no
+`remap`, no digest pin, no bump rule and no CI enforcement. Q-4's model —
+declare what you pull in, inherit nothing implicitly, bump every
+referencing pack when a shared file changes — is **deferred whole to
+v1.1**, where `shared/presentation` (Q-28) gives it a second consumer and
+the machinery finally has something to be machinery *for*. With
+`presentation` deferred, a shared tree with one consumer is
+indistinguishable from pack-local content, and enforcement with nothing
+to enforce against is cost without benefit.
 
-The autonomy contract lifts out of `coding` because it is genuinely
-domain-agnostic — Q-4 names it "the first and clearest candidate".
+**So the autonomy contract ships twice.** It is still the most
+domain-agnostic thing either migrated pack owns — Q-4 named it "the first
+and clearest candidate" — but at v1.0 it is content, not a component:
+
+| Pack | How it holds the contract |
+|---|---|
+| `coding` | **Pack-local, unmoved.** `targets/`, `agents/target-reviewer.md` and `commands/target.md` stay exactly where the source commit has them. The migration extracts nothing |
+| `planning` | **Its own copy** (Q-49), authored tuned to bets rather than code: kill criteria read as abort criteria, and clearing the absorption gate is itself an abort criterion |
+| `writing` | **None.** Part 9 is `absent`, and closing it is `writing@1.1` work (Q-6) |
+
+Both copies place the same five files the same way, which is what makes
+the drift risk real rather than theoretical:
 
 | File | Phase | Destination |
 |---|---|---|
 | `target.template.md` | P1 | stays in the payload; copied per goal by the user |
-| `README.md` | P1 | stays in the payload — the way of working |
+| `README.md` | P1 | stays in the payload — the way of working. (The applied `targets/README.md` is a Q-50 folder README, written from `applied-readmes/`) |
 | `Run.md` | P2 | `targets/Run.md`, path-rewritten to `.harness/pack/targets/` |
 | `target-reviewer.md` | P2 | `.claude/agents/target-reviewer.md` |
 | `target.md` (the command) | P2 | `.claude/commands/target.md` |
 
-The component declares its own `mappings` in
-`shared/targets/component.json`, and a referencing pack inherits them
-from its one `shared` entry, optionally overriding a single destination
-with `remap`. The declaration lives with the thing being shared, which is
-the only arrangement under which two referencing packs cannot disagree
-about it.
+**The duplication has an owner.** Q-49 accepts the cost; leaving it
+unassigned would make it a discovery rather than a decision, so this spec
+books it:
 
-| Pack | Declares it? |
-|---|---|
-| `coding` | **Yes** — v1.0 |
-| `writing` | **No.** Deferred to `writing@1.1` by Q-6, where it becomes the first genuine acceptance test of `update` (S3) |
-| `planning` | **Open — Q-49.** Its part 9 is `present` and `shared/targets` is its only stated vehicle, but the settled inventory records the component as shipping with `coding` alone |
+> **v1.1-T1 — reconcile the two targets contracts.** Owner: the
+> **architect**, discharged with v1.1's `shared/` work. Diff
+> `packs/coding/targets/` against `packs/planning/targets/`, separate
+> genuine domain tuning from drift, and land the common part as a shared
+> component both packs declare. `writing@1.1` is a third caller, so the
+> task gets harder the longer it waits.
 
-**`shared/presentation` does not exist at v1.0** (Q-28). Q-9b's decision
-stands — presentation is a shared capability, not a pack — but the
-component ships in v1.1 and **no pack references it**. Two reasons: F5
-could not source its contents at all, and under Q-4 a component
-referenced by all three packs makes every change to it bump every pack in
-the product. The portfolio deck remains its best worked example when it
-is authored.
+**`shared/presentation` does not exist at v1.0 either** (Q-28). Q-9b's
+decision stands — presentation is a shared capability, not a pack — but
+it lands in v1.1 alongside the mechanism that would carry it. F5 could
+not source its contents, and shipping an unspecified component every pack
+references would have made every change to it bump every pack in the
+product. The portfolio deck remains its best worked example when it is
+authored.
 
 ---
 
@@ -1910,37 +2116,48 @@ looks runnable but is not.
 
 ## Open Questions
 
-`Q-1`…`Q-46` are allocated and resolved — see the brief §12. **The next
-free ID is Q-50.** Question IDs are unique across the whole project, not
-per document. Cross-feature questions belong in the master spec.
+**None.** `Q-1`…`Q-53` are **all resolved** — see the brief §12, which is
+authoritative, together with the rows below and in *Resolved Decisions*.
+Every question this spec carried at version 2.0 has closed, including the
+three it raised (Q-49, Q-50, Q-51). **The next free ID is Q-54.** Question
+IDs are unique across the whole project, not per document; cross-feature
+questions belong in the master spec, and a question raised from here takes
+Q-54 and is recorded in the document that raises it.
 
-Six questions this spec carried at version 1.0 have closed and are not
-listed below: **Q-17** (scaffolds), **Q-28** (`shared/presentation`),
+| # | Question | Owner | Status |
+|---|---|---|---|
+| — | *No question is open in F5.* | — | — |
+
+This is a statement about **questions**, not about readiness. F5 still has
+outstanding *work* — three packs to author or migrate, the `applied-readmes/`
+content for `planning`, `packs/coding/applied-readmes/` to wire into
+`recipe.json`, and the US-24 / US-25 fidelity checks to make runnable. Those
+are known tasks, not undecided questions.
+
+Six questions this spec carried at version 1.0 closed earlier and are not
+restated below: **Q-17** (scaffolds), **Q-28** (`shared/presentation`),
 **Q-29** (authoring boundary) and **Q-33** (dogfood site) are in the
 brief §12; **Q-13** is in the master spec's Resolved Decisions; **Q-27**
 is in F1's.
-
-| # | Question | Owner | Default assumption |
-|---|---|---|---|
-| Q-30 | **Does `writing` ship any default permission set, given its source project's is unmigratable?** ~120 accreted project-specific entries plus one third-party notifier hook. | architect | Ship none. Declare part 8 `absent` with that reason. Do not invent a default permission set inside a migration Q-6 forbids from changing content. |
-| Q-31 | **Does `writing` ship document templates it does not currently have?** Its part 3 is one post template inside a workstream; every other artifact shape is prose-described. | architect | Migrate the one template into a pack-level `templates/` folder, declare the remaining shapes prose-specified, record part 3 as thin. Authoring new templates is reserved for `writing@1.1`. **Interacts with Q-51.** |
-| Q-32 | **Is `planning`'s bet status vocabulary settled?** `proposed \| committed \| held-at-gate \| killed \| absorbed` is inferred from the process, not sourced. | specwriter / Thomas | Ship it marked **provisional** in the pack, alongside the provisional role set, and revisit after the first dogfood project. |
-| Q-34 | **Should `shared/targets` learn to express "a phase the envelope may never enter"?** `planning`'s absorption gate is non-delegable; the template expresses only pre-authorised actions and abort criteria. | architect | No change to `shared/targets` at v1.0 — a change there bumps `coding` under Q-4. Express the constraint as an abort criterion in `planning`'s own target instances. **Depends on Q-49.** |
-| Q-36 | **Does `coding` gain a document-kit brief template at v1.0?** The brief's §11 step 4 asks for one — the kit templates research, spec, design, ADR and epics, but not the brief that feeds them all. | architect | No at v1.0. Q-6 forbids content changes during migration; log it against `coding@1.1`. Note `specifications/project-brief.template.md` already exists as a *project* artefact the recipe copies out, which is a different thing. |
-| **Q-49** | **Does `packs/planning/` declare `shared/targets` at v1.0, and if not, where does its part 9 come from?** `general/pack-inventory.md` records planning's part 9 as `present` "via `shared/targets`", and in the same document records `shared/targets` as shipping with `coding` only. Planning's source tree in that document contains no `targets/` and its applied tree contains no `targets/`. The three cannot all hold. This spec does **not** decide it: the settled model and the pack content genuinely disagree here. | **Thomas Andersen** (with the architect) | `planning` declares `shared/targets` — making two referencers, which is the arrangement Q-4's bump rule was written for and which US-27's abort criterion needs a vehicle for. The alternative — declaring planning's part 9 `absent` — would make three `absent` parts and break this spec's counted NFR, and contradicts the anatomy ratings the settled model pins. |
-| **Q-50** | **How does a recipe create an empty directory?** None of the seven primitives does: `copy`, `rename`, `strip-suffix` and `generate` all produce files. Yet three packs need empty directories in the applied tree — `coding`'s `specifications/general/` and `specifications/v1.0/`, `writing`'s `sources/inbox/`, and `planning`'s `portfolio/bets/`. This is an F1/F2 question F5 raises because pack content depends on the answer. | architect (F1/F2 owns the mechanism) | An eighth primitive, `mkdir`, taking a destination and nothing else — cheap, inspectable, and it cannot escape path confinement any more than the others can. The alternative, seeding each directory with a placeholder file, changes what the packs ship and puts a `.gitkeep` in a product that otherwise ships only meaningful files. **Where this and F1 disagree, F1 wins.** |
-| **Q-51** | **May the `writing` extraction author the templates its recipe needs?** `general/pack-inventory.md` gives `writing` a pack-level `templates/` with `index.template.md`, `home.template.md` and `post.template.md`, and a two-file writing guide named `voice.template.md` / `words-to-avoid.template.md`. The source has **one** template (`workstreams/learning-journey/post-template.md`) and a **four-file** guide (`tone-of-voice.md`, `ai-tells.md`, `bilingual-publishing.md`, `README.md`). Authoring two templates and renaming/merging three guide files is content change inside a migration Q-6 declares faithful. | **Thomas Andersen** (with the architect) | Split the difference along the Q-46 line. `index.template.md` and `home.template.md` are **recipe scaffolding, not pack content** — the recipe cannot produce `Home.md` or per-folder indexes without them, and both encode a convention the source already states in prose. Author them, record them in the extraction record as recipe-required additions, and keep the writing guide's **four files under their existing names**, `.template`-suffixed only where the recipe strips a suffix. Part 3 stays declared **weak** on the strength of the one real document template. |
 
 ---
 
 ## Resolved Decisions
 
-Q-1…Q-46 were resolved before this rewrite and live in the brief's §12,
-the master spec, or F1. The rows below are questions **F5 raised** that
-have since closed; they keep their original IDs per `conventions.md` and
-are not reused.
+Q-1…Q-53 are **all resolved**. The full decision text for Q-1…Q-53 lives
+in the brief's §12, which is authoritative, or in the master spec or F1.
+The rows below are the questions **F5 raised**, all now closed; they keep
+their original IDs per `conventions.md` and are never reused.
 
 | # | Question | Decision | Date |
 |---|---|---|---|
-| Q-35 | How is the project-monotonic `US-N` counter reconciled across parallel feature specs? | **Reconciled by the 2026-08-30 consistency pass.** F1 keeps US-1…US-16 (earlier in build order) and later gained US-29; F5's block was renumbered to US-17…US-28. Standing rule for later parallel passes: the earlier feature in build order keeps its block, later blocks are renumbered at the merge, and the counter table is updated before either spec reaches `Accepted`. **Applied again in this rewrite:** US-23 is retired rather than reused, and new stories were allocated from US-34. | 2026-08-30 |
+| Q-30 | Does `writing` ship any default permission set, given its source project's is unmigratable? | **No — default adopted.** The source's ~120 accreted, project-specific entries plus one third-party notifier hook are one project's history, not another project's defaults. `writing` ships no permission set and no hook, and declares part 8 `absent` with that reason. Inventing one inside a migration Q-6 forbids from changing content was the alternative, and it is worse. | 2026-08-31 |
+| Q-31 | Does `writing` ship document templates it does not currently have? | **No — default adopted, with Q-51's bounded exception.** The one existing post template migrates into a pack-level `templates/` folder; every other artifact shape stays prose-specified and part 3 is recorded as thin. The only additions are Q-51's `index.template.md` and `home.template.md`, which are **recipe scaffolding rather than pack content** and do not count toward part 3. | 2026-08-31 |
+| Q-32 | Is `planning`'s bet status vocabulary settled? | **Ships marked provisional — default adopted.** `proposed \| committed \| held-at-gate \| killed \| absorbed` is inferred from the process rather than sourced, so it ships flagged as such in the pack alongside the provisional role set, and is revisited after the first dogfood project. It does not change part 2's declared `provisional` status or this spec's counted NFR. | 2026-08-31 |
+| Q-34 | Should the targets contract learn to express "a phase the envelope may never enter"? | **Not at v1.0 — and the question's premise is gone.** Q-48 removed the shared component there was to teach, so nothing outside `planning` changes. `planning` expresses the constraint inside **its own** copy of the contract (Q-49): clearing or waiving the absorption gate is an abort criterion in its target template, and its `target-reviewer` returns `NEEDS-CORRECTION` for any target whose success criteria require passing the gate. Generalising it is v1.1 work, carried by task **v1.1-T1**. | 2026-08-31 |
+| Q-36 | Does `coding` gain a document-kit brief template at v1.0? | **No — default adopted.** Q-6 forbids content changes during a faithful migration, so the gap is logged against `coding@1.1`. `specifications/project-brief.template.md` already exists as a *project* artefact the recipe copies out, which is a different thing and does not close the kit gap. | 2026-08-31 |
+| Q-49 | Does `packs/planning/` declare the shared targets component at v1.0, and if not, where does its part 9 come from? | **`planning` ships its own copy of the targets contract**, tuned to bets rather than code (brief §12). Q-48 removed the mechanism the question assumed, so there was nothing to declare. Part 9 stays **`present`** and US-27's absorption-gate ABORT keeps a vehicle. **Accepted cost, and this spec assigns it an owner:** two copies of the contract now exist and will drift — the exact duplication Q-4 was written to prevent — so reconciling them is booked as **v1.1-T1**, owned by the architect, in §Flows / *The targets contract*. | 2026-08-31 |
+| Q-50 | How does a recipe create an empty directory? | **It does not have to — the premise is dissolved, not the problem solved** (brief §12). Every folder an apply creates carries a README: `README.md` for `coding` and `planning`, `index.md` for `writing`, with **`.claude/` and `.harness/` excluded as tool-owned**. So no folder is ever empty, and there is **no eighth `mkdir` primitive, no `skeleton/` tree and no `.gitkeep`**. The proposed `mkdir` is withdrawn: `F1-ADR-001` §3.3 records that its entire output is invisible to `verify` and uncommittable by git, so an applied tree using it would not survive a clone. `coding` gains five folder READMEs from `applied-readmes/`; `planning` gains its `portfolio/`, `portfolio/bets/` and `targets/` READMEs; `writing` already had the convention. | 2026-08-31 |
+| Q-51 | May the `writing` extraction author the templates its recipe needs? | **Yes, and exactly two** (brief §12). `index.template.md` and `home.template.md` are authored and recorded in the extraction record as **recipe scaffolding rather than content** — without them the recipe cannot render `Home.md` or a per-folder `index.md`, and the pack would ship a convention it cannot execute. Everything else stays faithful: the one real `post` template migrates as it is, and the writing guide keeps its **four files under their existing names**, `.template`-suffixed only where the recipe strips a suffix. Part 3 stays thin. | 2026-08-31 |
+| Q-35 | How is the project-monotonic `US-N` counter reconciled across parallel feature specs? | **Reconciled by the 2026-08-30 consistency pass.** F1 keeps US-1…US-16 (earlier in build order) and later gained US-29; F5's block was renumbered to US-17…US-28. Standing rule for later parallel passes: the earlier feature in build order keeps its block, later blocks are renumbered at the merge, and the counter table is updated before either spec reaches `Accepted`. **Applied again in this rewrite:** US-23 is retired rather than reused, and new stories were allocated from US-34. **Applied again at the ADR-001 fold:** US-22 is retired with the `shared/` mechanism it asserted (Q-48), its id is not reused, and no replacement story is allocated — what it protected is now task **v1.1-T1**. F5's live block is US-17…US-21, US-24…US-28, US-34…US-38; F1 holds US-1…US-4, US-6, US-8…US-10, US-13…US-16 and US-29…US-33; **next free id US-39**. | 2026-08-30 |
 | Q-37 | Where is a pack's anatomy declaration validated — schema or CLI? | **Answered by F1.** `pack.json` carries a mandatory `anatomy` object with exactly nine keys; a missing key is `E-ANATOMY-MISSING`; a key whose globs match no files is `E-ANATOMY-EMPTY`. The anatomy carries a three-value `status` enum — `present \| provisional \| absent`, defaulting to `present` — with `provisional` requiring a `note` and `absent` a `reason`, which is what makes this spec's provisional/absent counts mechanically checkable. **Reaffirmed by this rewrite:** the recipe is a sub-part of part 7 precisely so that nine keys stays nine keys. | 2026-08-30 |

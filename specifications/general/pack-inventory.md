@@ -22,11 +22,13 @@ phase 2 also acts on.
 | `writing` | 1.0.0 | **To extract** | `AIImpactOnOrganizationsAndLeadership/` | Part 3 weak, parts 8 + 9 absent |
 | `planning` | 1.0.0 | **To author** | Portfolio-roadmap-deck research (knowledge base) | Part 2 provisional |
 
-All three declare `minCliVersion: 1.0.0`. `shared/targets` is
-referenced by **`coding` only**; `shared/presentation` defers to v1.1
-(Q-28). That leaves the `shared/` mechanism with a single consumer at
-v1.0 — **see Q-48**, which asks whether it should ship at all in that
-state.
+All three declare `minCliVersion: 1.0.0`. **There is no `shared/` tree
+at v1.0** (Q-48): the mechanism defers to v1.1 alongside
+`shared/presentation` (Q-28). `coding` and `planning` each carry their
+**own copy** of the targets contract (Q-49). That duplication is
+accepted and booked as a named v1.1 task — reconciling the two copies
+is work `shared/` must do when it lands, not something to discover
+then.
 
 ---
 
@@ -296,6 +298,9 @@ packs/planning/
 │   │   └── horizon.md         /horizon — walks the max() decision aid
 │   └── hooks/
 │       └── kill-criteria-guard.sh   INERT 0644 — registered by nothing at v1.0
+├── targets/
+│   ├── README.md              filled targets and work logs live here
+│   └── Run.md                 kickoff prompt for /target
 ├── portfolio/
 │   ├── README.md              what a bet is, and the loop it moves through
 │   ├── bets/README.md         how /bet creates one; kill criteria before start
@@ -323,7 +328,7 @@ ledger, kill criteria before start) · 5 coordination `present` (cadence
 follows uncertainty resolution) · 6 guidelines `present` (five
 practices) · 7 scaffolding `present` · 8 automations `present` — three
 commands **plus one inert guard script**; no pack may register a hook
-at v1.0 · 9 autonomy `present` via `shared/targets`.
+at v1.0 · 9 autonomy `present` via **its own copy** of the targets contract (Q-49) — `targets/` in the payload, plus a `target-reviewer` agent and a `/target` command, both counted under part 9 rather than part 8.
 
 **Calibration** is this pack's defining property and the only case of
 content varying by an init answer. `calibrations/<name>/` is a

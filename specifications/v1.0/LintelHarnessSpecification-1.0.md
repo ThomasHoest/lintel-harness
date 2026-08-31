@@ -3,7 +3,7 @@
 **Status:** Draft
 **Date:** 2026-08-31
 **Platform:** Node.js + TypeScript CLI, published as `@lintel/harness`, binary `lintel-harness`, `engines.node >= 22` (Q-16). Packs are plain files bundled into the published package — no network fetch at init. A thin Claude Code skill under `.claude/skills/` drives the CLI. Target runtime for generated projects is Claude Code's `.claude/` conventions only.
-**References:** `specifications/project-brief.md` §12 (Q-1…Q-46, authoritative) · `specifications/general/pack-application.md` · `specifications/general/pack-inventory.md` · `specifications/v1.0/F1-spec-pack-format-and-manifest.md` · `specifications/v1.0/F5-spec-template-packs.md` · `specifications/v1.0/research-planning-pack-framing.md` · `packs/coding/specifications/conventions.md` · `specifications/README.md`
+**References:** `specifications/project-brief.md` §12 (Q-1…Q-53, **all resolved**, authoritative) · `specifications/general/pack-application.md` · `specifications/general/pack-inventory.md` · `specifications/v1.0/F1-spec-pack-format-and-manifest.md` · `specifications/v1.0/F5-spec-template-packs.md` · `specifications/v1.0/research-planning-pack-framing.md` · `packs/coding/specifications/conventions.md` · `specifications/README.md`
 
 **Amendment history**
 
@@ -13,6 +13,7 @@
 | 1.0.0 | 2026-08-30 | Cross-document consistency pass across this spec, F1 and F5. Duplicate questions collapsed, questions renumbered to unique project-wide ids, F5's user stories renumbered to US-17…US-28. No new design decisions. |
 | 1.0.0 | 2026-08-30 | `F1-ADR-001` amendment pass. Folded the ADR's `PROCEED` into the document set; Q-13 and Q-15 closed; Q-18…Q-27 closed in F1. |
 | 1.0.0 | 2026-08-31 | **Two-phase apply and scope rewrite (Q-39…Q-46).** Rewritten in place against the settled model. The apply becomes two phases — a verbatim payload copy, then a declarative recipe over seven primitives run by the CLI. **v1.0 narrows to F1, F2, F5 and F6; F3 (`update`) and F4 (`status`/`contribute`) defer to v1.1, and G3, S3 and R4 defer with them.** S7 weakens to apply-only. The manifest becomes minimal and `.harness/base/` is deleted; `--adopt` is dropped; marked regions reduce to inert anchors; bootstrap prose is deleted from pack sources. Sequencing becomes F1 → F2 → F5 → F6. All open questions close: none remain, next free **Q-47**. |
+| 1.0.0 | 2026-08-31 | **`F1-ADR-001` fold (§6.3's seven changes), plus Q-47…Q-53.** The **v1.0 command surface is corrected from "`init` only" to four commands** — `init` (F2) and `validate`, `verify`, `pack info` (F1, per Q-53). **The `shared/` mechanism is removed, not merely unconsumed** (Q-48): it does not ship at v1.0, so the Technical Context row, the Out of Scope bullet, F1's stub and the shared-platform-changes row all drop it; `targets` becomes `coding`-local content and `planning` ships its own copy (Q-49). The forward-investment manifest bullet becomes **six keys**, adding the payload digest (Q-52). A **Technical Context row for Q-50** is added — every created folder carries a README, `.claude/` and `.harness/` excluded, no `mkdir` primitive, no `.gitkeep`. **Q-47…Q-53 are indexed as resolved; next free Q-54.** The US counter is corrected to **next free US-39**. §Spec-set readiness is restated against the rewritten ADR and its `REVISE SPEC` verdict. No new design decisions. |
 
 ---
 
@@ -92,12 +93,18 @@ documents: a reader who takes the brief's §2 at face value will expect
 Two pieces of forward investment keep v1.1 an **addition rather than a
 retrofit**:
 
-- **The minimal manifest** (Q-43) records pack name, pack version, CLI
-  version, parameter answers and chosen scaffolds — enough for a later
-  `update` to know what was applied and recompute the expected tree.
-  There is no per-file hash list and no `.harness/base/` store; with
-  the pack local at `.harness/pack/` and a deterministic recipe,
-  applied state is always recomputable from payload + recipe + answers.
+- **The minimal manifest** (Q-43, as amended by Q-52) records **six**
+  things: manifest version, CLI version, pack identity, a single
+  **payload digest** over `.harness/pack/`, parameter answers and chosen
+  scaffolds — enough for a later `update` to know what was applied and
+  recompute the expected tree. There is still no per-file hash list and
+  no `.harness/base/` store; with the pack local at `.harness/pack/` and
+  a deterministic recipe, applied state is recomputable from payload +
+  recipe + answers. The digest is what stops that recomputation being a
+  tautology: without it, a hand-edited payload reproduces itself
+  faithfully and reads as clean, so `verify` could not say which side
+  moved. It is one field and one tree walk, and because it is a pure
+  function of the payload, determinism is untouched.
 - **Inert region anchors** (Q-45) are emitted into the generated
   `CLAUDE.md` so a later `update` can find pack-owned regions. No
   region parser, no region hashes, no malformed-marker diagnostics and
@@ -134,25 +141,37 @@ the moment the recipe runs. Nothing was lost. Author `recipe.json` for
 
 Recorded honestly, because the process gates on it:
 
-- **`F1-ADR-001-pack-format-and-manifest.md` predates these decisions.**
-  It carries verdict `PROCEED`, but it was written against declarative
-  `mappings`, `.harness/base/`, marked regions and a per-file hash
-  manifest — all of which Q-39…Q-46 changed. It is being rewritten and
-  its `PROCEED` does not transfer to the current model.
-- **The security review's last recorded verdict is `REVISE-SPEC`.** The
-  remediation was folded in, but **no fresh `SECURITY-PROCEED` has been
-  issued**, and the two-phase model changed the attack surface it was
-  reviewing.
+- **`F1-ADR-001-pack-format-and-manifest.md` has been rewritten against
+  the two-phase model, and its verdict is `REVISE SPEC`.** The
+  2026-08-30 original carried `PROCEED`; that verdict was written against
+  declarative `mappings`, `.harness/base/`, marked regions and a per-file
+  hash manifest, and it is **void** — it does not transfer. The rewrite
+  is dated 2026-08-31, closes the format questions in its §6.4, and
+  returns `REVISE SPEC` **pending exactly the folds it lists in §6**:
+  eleven changes to F1, nine to F5 and the seven to this document.
+  Those folds are what this amendment discharges for this document and
+  for F5; **F1's own fold is tracked separately.** The verdict clears
+  when every §6 change has landed, not when the ADR is read.
+- **A Mode A security re-review is required before implementation,
+  regardless of the ADR's verdict.** The last recorded security verdict
+  is `REVISE-SPEC` (2026-08-30). Its remediation was folded into the
+  ADR's §7 and carried forward through the rewrite — both CRITICALs were
+  apply-time and survive intact — but **no fresh `SECURITY-PROCEED` has
+  been issued against the rewritten specs**, and the two-phase model
+  moved the surface under review: a verbatim payload copy, a recipe
+  interpreter and a payload digest are all new attack surface. Folding
+  the ADR does not substitute for that verdict.
 - **No epics-and-tasks document exists** for any feature.
+- **F2 and F6 have no feature spec.** Only F1 and F5 have one.
 - **`general/system-architecture.md` and `general/technology-choices.md`
   are required and unwritten.** `system-architecture.md` in particular:
-  Q-39 changed the shape of the system after F1 and ADR-001 were
+  Q-39 changed the shape of the system after F1 and ADR-001 were first
   written, and nothing currently records the whole-system view.
-- **F2 and F6 have no feature spec.** Only F1 and F5 have one, and both
-  are themselves being rewritten against this model.
 
-No implementation should begin until the ADR, the two `general/`
-documents, the F2 and F6 specs and a fresh security verdict exist.
+No implementation should begin until the ADR's §6 folds are complete,
+the two `general/` documents exist, F2 and F6 have specs, every feature
+has an epics-and-tasks document, and a fresh Mode A verdict has been
+issued against the rewritten set.
 
 ### What v1.0 deliberately does *not* change
 
@@ -184,8 +203,9 @@ originating question, whose full rationale is in `project-brief.md`
 | Phase 2 input | Phase 2 reads the **phase-1 copy in the project**, never the bundle. The user cannot adjust the payload between phases at v1.0 | Q-41 |
 | Determinism | The recipe is a pure function of **(payload, parameter answers)**. No timestamps, ordering dependence, environment or network reads. Same pack version + same answers ⇒ byte-identical trees | Q-40 |
 | Planning before writing | Validation, both phases and the manifest are computed in memory; a journal is written; only then do bytes land. Failure in either phase rolls back, and rollback never deletes a pre-existing file | Q-39 · `general/pack-application.md` |
-| v1.0 command surface | **`init` only.** `update`, `status` and `contribute` defer to v1.1 with F3 and F4 | Q-42 |
-| Manifest | **Minimal**: pack name, pack version, CLI version, parameter answers, chosen scaffolds. **No per-file hash list and no `.harness/base/` store** | Q-43 (supersedes Q-18, Q-19) |
+| v1.0 command surface | **Four commands.** `init` (F2) is the apply; `validate`, `verify` and `pack info` (F1) all read a pack or a manifest, write nothing and take no lock. `update`, `status` and `contribute` defer to v1.1 with F3 and F4 | Q-42, Q-53 · F1's `E-CLI-UNKNOWN-COMMAND` lists `init, validate, verify, pack` |
+| Command ownership | **F1 owns the three read-only commands; F2 owns the apply and nothing else.** `verify` sits with `validate` and `pack info` because all three are the same class of read-only question over the same machinery, and F1 defines the recomputation identity `verify` answers | Q-53 |
+| Manifest | **Six keys**: manifest version, CLI version, pack identity, **`payloadDigest`** (one tree digest over `.harness/pack/`, serialized between `pack` and `parameters`), parameter answers, chosen scaffolds. **No per-file hash list and no `.harness/base/` store** | Q-43 (supersedes Q-18, Q-19), amended by Q-52 |
 | Adoption of hand-applied trees | **`init --adopt` is dropped.** A clean `init` loses nothing once bootstrap prose is gone | Q-44 (supersedes Q-14) |
 | Source vs applied content | **No marked regions at v1.0.** The generated `CLAUDE.md` emits **inert region anchors** for v1.1's `update` to find; no parser, region hashes, malformed-marker diagnostics or `E-REGION-TAMPERED` | Q-45 (amends Q-7, Q-10) |
 | Bootstrap prose | **Deleted from the pack sources.** "Copy this folder", "rename the template", "fix the paths" and "adopting this in a new project" come out of `packs/coding/**` entirely — the recipe encodes them, so they are dead content. This is also why phase 1 can copy verbatim | Q-46 (supersedes Q-38) |
@@ -195,8 +215,10 @@ originating question, whose full rationale is in `project-brief.md`
 | Package, binary, runtime floor | Published as `@lintel/harness`; binary `lintel-harness`; `engines.node >= 22` | Q-16 |
 | Pack home and distribution | `packs/` in this repo, bundled into the published package; `template/` becomes `packs/coding/`. `npx` needs no network | Q-2 |
 | Versioning | Per-pack semver in `packs/<name>/pack.json` plus a separate CLI semver; each pack declares `minCliVersion`; the manifest records both. All three packs declare `minCliVersion: 1.0.0` | Q-3 · `general/pack-inventory.md` |
-| Sharing between packs | Packs are standalone but may reference a `shared/` tree, declared explicitly in `pack.json`; nothing is inherited implicitly, and changing a shared file bumps every referencing pack. **At v1.0 no pack references `shared/`** — `shared/targets` ships inside `coding` and `shared/presentation` defers | Q-4, Q-28 · `general/pack-inventory.md` |
+| Sharing between packs | **None. The mechanism does not ship at v1.0** — no shared tree, no `component.json`, no `shared` array in any `pack.json`, no digest pin, no bump rule, no CI enforcement. Every pack is self-contained. Q-4's model defers **whole** to v1.1, where `shared/presentation` gives it a second consumer | Q-48 (supersedes Q-4 for v1.0), Q-28 |
+| The targets contract | Ships **twice** as pack-local content: inside `coding` unmoved, and as `planning`'s **own copy** tuned to bets (so planning's part 9 stays `present`). **Accepted cost:** the two copies will drift before v1.1 reconciles them — F5 books the merge as a named v1.1 task with the architect as owner | Q-49 |
 | Presentation | A cross-cutting capability, not a pack — but **it defers to v1.1 and no pack references it at v1.0** | Q-9b, Q-28 |
+| Folder READMEs | **Every folder an apply creates carries a README** — `README.md` for `coding` and `planning`, `index.md` for `writing`. **`.claude/` and `.harness/` are excluded** as tool-owned, so neither carries a pack-written README and `.harness/README.md` does not exist. Consequence for the format: **no folder is ever empty**, so there is **no eighth `mkdir` primitive, no `skeleton/` tree and no `.gitkeep`** | Q-50 — a content decision with a format consequence: it dissolves the empty-directory problem rather than solving it. Git cannot commit an empty directory, so any answer needed placeholder files; Q-50 makes those files say something |
 | Pack cardinality | Exactly one pack per project. Two ways of working means two projects side by side | Q-12 |
 | Packs at v1.0 | Three: `coding` (exists, migrating), `writing` (to extract), `planning` (to author) | Q-9, Q-9a |
 | `planning` spine | Portfolio and roadmap management as a decision loop — `intake → discovery → prioritize → commit → deliver → learn` — with a non-delegable absorption gate and horizon-setting inside commit, calibrated at init by constraint floor | Q-11 · `research-planning-pack-framing.md` |
@@ -262,9 +284,13 @@ them. These are not restated as v1.0 goals anywhere in this document.
 - **`init --adopt`.** Dropped (Q-44).
 - **User-editable payload between phases.** Phase 2 reads what phase 1
   wrote (Q-41).
-- **`shared/presentation`.** Deferred to v1.1; no pack references it at
-  v1.0 (Q-28). The `shared/` reference *mechanism* is specified, but it
-  has no v1.0 consumer.
+- **The `shared/` mechanism, and `shared/presentation` with it.** Not
+  "specified but unconsumed" — **it does not ship** (Q-48). No shared
+  tree, no `component.json`, no `shared` array, no digest pin, no bump
+  rule. `targets` is `coding`-local content and `planning` carries its
+  own copy (Q-49); `shared/presentation` defers to v1.1 (Q-28), where the
+  mechanism, its second consumer and the task of reconciling the two
+  targets copies all land together.
 - **`frontend` and `app` scaffolds.** Deferred to v1.1 (Q-17).
 - **Authoring a non-IaC deploy scaffold.** Q-8a commits to a
   paper-check of the interface, not to shipping one.
@@ -291,17 +317,20 @@ F1 defines what a pack *is* on disk, how it declares its own
 application, and what an applied project records about it — and it is
 the only feature every other feature reads or writes. It owns
 `pack.json` (pack name and semver, `minCliVersion`, parameter
-declarations, scaffold declarations, the explicit `shared/` references
-Q-4 requires, and the nine-part anatomy declaration with its
-`present | provisional | absent` status); `recipe.json` and the fixed
-seven-primitive vocabulary that phase 2 executes, including the
-validation rules — path confinement, the reserved-destination
-denylist — that make an apply plan inspectable before it runs (Q-40);
-the parameter and substitution grammar that lets content vary by an
-init answer without new syntax (Q-13); the inert region anchor form
-emitted into `CLAUDE.md` (Q-45); and the minimal manifest schema —
-pack, pack version, CLI version, answers, scaffolds, and nothing else
-(Q-43). It is specified and frozen first precisely so that S5 ("adding
+declarations, scaffold declarations, and the nine-part anatomy
+declaration with its `present | provisional | absent` status — and **no
+`shared` array**, because Q-48 removes the mechanism from v1.0);
+`recipe.json` and the fixed seven-primitive vocabulary that phase 2
+executes, including the validation rules — path confinement, the
+reserved-destination denylist — that make an apply plan inspectable
+before it runs (Q-40); the parameter and substitution grammar that lets
+content vary by an init answer without new syntax (Q-13); the inert
+region anchor form emitted into `CLAUDE.md` (Q-45); the six-key manifest
+schema — manifest version, CLI version, pack identity, payload digest,
+answers, scaffolds, and nothing else (Q-43 as amended by Q-52); and the
+three read-only commands `validate`, `verify` and `pack info`, `verify`
+among them because F1 defines the recomputation identity it checks
+(Q-53). It is specified and frozen first precisely so that S5 ("adding
 a pack requires no core change") is a claim `planning` can later
 falsify, and its scaffold declaration carries the Q-8a obligation to
 paper-check the interface against one non-IaC deploy target.
@@ -370,8 +399,11 @@ constraint-floor calibration is the format's hardest test as the only
 case where an init answer changes what is written rather than only
 which values are substituted. Under Q-46 each pack's bootstrap prose is
 deleted rather than rewritten per project, which is what lets phase 1
-copy verbatim; under Q-45 no pack registers a hook; and under Q-28 no
-pack references `shared/` at v1.0. Each pack declares all nine anatomy
+copy verbatim; under Q-45 no pack registers a hook; under Q-48 every
+pack is self-contained, with the targets contract shipping inside
+`coding` and again as `planning`'s own copy (Q-49); and under Q-50 every
+folder a pack's recipe creates carries a README, so no applied tree has
+an empty directory. Each pack declares all nine anatomy
 parts honestly, gaps included — `coding` weak on coordination and
 automations, `writing` absent on automations and autonomy, `planning`
 provisional on roles — because a recorded gap is a roadmap item and an
@@ -394,7 +426,10 @@ project-owned prose so it describes the real layout while leaving the
 inert pack-owned anchors untouched, redrawing file-ownership tables
 against the actual tree, and filling the files the apply deliberately
 leaves empty for a human, such as `copy/tone-of-voice.md`. Its surface
-narrows with v1.0's scope: it wraps one command, not four. It is
+narrows with v1.0's scope: **it wraps `init`, and only `init`.** The
+other three v1.0 commands — `validate`, `verify` and `pack info` — are
+read-only diagnostics a person or CI runs directly and F6 does not
+mediate. It is
 deliberately last in the sequence — it is a wrapper over a command
 whose shape must be settled first, and building it earlier means
 writing it twice (Q-1).
@@ -417,9 +452,9 @@ writing it twice (Q-1).
 
 | Change | Owner | Required by |
 |---|---|---|
-| `pack.json` schema — semver, `minCliVersion`, parameters, scaffolds, `shared` references, nine-part anatomy with three-value status | F1 | F2 (resolution, parameter collection, scaffold selection), F5 (three packs declare it) |
+| `pack.json` schema — semver, `minCliVersion`, parameters, scaffolds, nine-part anatomy with three-value status. **No `shared` array** (Q-48) | F1 | F2 (resolution, parameter collection, scaffold selection), F5 (three packs declare it) |
 | `recipe.json` schema and the seven-primitive vocabulary | F1 | F2 (executes it), F5 (three packs author one) |
-| Minimal manifest schema | F1 | F2 (writes it); v1.1's F3 and F4 (read it) |
+| Six-key manifest schema, `payloadDigest` included | F1 | F2 (writes it); F1's own `verify` (reads it); v1.1's F3 and F4 (read it) |
 | Parameter and substitution grammar (`{{harness:param.<id>}}`, conditional selection) | F1 | F2 (substitutes), F5 (`planning`'s calibration depends on it) |
 | Inert region anchor form | F1 | F2 (emits into `CLAUDE.md`), F6 (must not disturb them); v1.1's F3 (consumes them) |
 | Apply-plan safety rules — path confinement, reserved-destination denylist, consent gating, journal and rollback | F1 | F2 (enforces before any byte lands) |
@@ -474,9 +509,9 @@ failure. Budget for one such revision.
 Cross-feature only. Feature-specific questions belong in each feature
 spec.
 
-**None. Q-1…Q-46 are all resolved** — see Resolved Decisions below and
+**None. Q-1…Q-53 are all resolved** — see Resolved Decisions below and
 `project-brief.md` §12. Questions raised during the remaining
-specification work take the next free ID, **Q-47**, and are recorded in
+specification work take the next free ID, **Q-54**, and are recorded in
 the document that raises them.
 
 | # | Question | Owner | Status |
@@ -484,16 +519,16 @@ the document that raises them.
 | — | *No cross-feature question is open.* | — | — |
 
 This is a statement about **questions**, not about readiness. The spec
-set has outstanding *work* — a rewritten ADR, a fresh security verdict,
-two `general/` documents, the F2 and F6 specs and every epics-and-tasks
-document — listed under *Spec-set readiness* above. Those are known
-tasks, not undecided questions.
+set has outstanding *work* — the ADR's §6 folds (F1's still open), a
+fresh Mode A security verdict, two `general/` documents, the F2 and F6
+specs and every epics-and-tasks document — listed under *Spec-set
+readiness* above. Those are known tasks, not undecided questions.
 
 ---
 
 ## Resolved Decisions
 
-**Q-1…Q-46 are resolved.** The full decision text, date and rationale
+**Q-1…Q-53 are resolved.** The full decision text, date and rationale
 for each live in `specifications/project-brief.md` §12, which is
 authoritative; they are **not** re-litigated or restated at length
 here. The index below exists so a reader can find the right row without
@@ -509,7 +544,7 @@ this master spec.
 | Q-1 | CLI engine owning deterministic mechanics + a thin Claude Code skill owning judgment; CLI first | brief §12 |
 | Q-2 | Packs live in `packs/` in this repo, bundled into the published package | brief §12 |
 | Q-3 | Per-pack semver + a separate CLI semver; the manifest records both | brief §12 |
-| Q-4 | Packs are standalone but may share by explicit `shared/` reference; changing a shared file bumps every referencing pack | brief §12 |
+| Q-4 | Packs are standalone but may share by explicit `shared/` reference; changing a shared file bumps every referencing pack — **superseded for v1.0 by Q-48, which removes the mechanism; the model returns whole in v1.1** | brief §12 |
 | Q-5 | `contribute` emits a patch against `packs/<name>/` — **deferred to v1.1 by Q-42** | brief §12 |
 | Q-6 | v1.0 does not improve pack content; cross-pollination lands in the first post-v1.0 bump | brief §12 |
 | Q-7 | `CLAUDE.md` is generated with pack-owned marked regions — **amended by Q-45 to inert anchors only** | brief §12 |
@@ -523,7 +558,7 @@ this master spec.
 | Q-12 | A project holds exactly one pack | brief §12 |
 | Q-13 | The format can express content varying by an init answer with no new grammar — conditional selection plus `{{harness:param.<id>}}` | this document (closed by `F1-ADR-001`) |
 | Q-14 | `init --adopt` ships at v1.0 — **superseded by Q-44, which drops it** | brief §12 |
-| Q-15 | F1 owns both the logic and the surface of Q-4's shared-file bump rule; CI enforces | this document (closed by `F1-ADR-001`) |
+| Q-15 | F1 owns both the logic and the surface of Q-4's shared-file bump rule; CI enforces — **inert at v1.0: Q-48 leaves no bump rule to own** | this document (closed by `F1-ADR-001`) |
 | Q-16 | Published as `@lintel/harness`; binary `lintel-harness`; Node >= 22 | brief §12 |
 | Q-17 | Three scaffolds at v1.0 — `backend-azure`, `backend-aws`, `writing-workstream`; `frontend` and `app` defer | brief §12 |
 | Q-18 | `.harness/base/` is committed, with a generated `.gitattributes` — **void: Q-43 deletes `.harness/base/` entirely** | F1 §Resolved Decisions |
@@ -535,28 +570,39 @@ this master spec.
 | Q-24 | One `pack.json`; there is no separate `apply.json` | F1 §Resolved Decisions |
 | Q-25 | A file the pack no longer ships is reported as orphaned, never deleted — **a v1.1 `update` concern** | F1 §Resolved Decisions |
 | Q-26 | Normalization before hashing covers BOM and line endings only, not trailing whitespace | F1 §Resolved Decisions |
-| Q-27 | A shared component declares its own multi-destination mappings; a referencing pack inherits and may remap — **no v1.0 consumer under Q-28** | F1 §Resolved Decisions |
+| Q-27 | A shared component declares its own multi-destination mappings; a referencing pack inherits and may remap — **inert at v1.0: Q-48 removes the mechanism, so there is no component and no `mappings`** | F1 §Resolved Decisions |
 | Q-28 | `shared/presentation` defers to v1.1; no pack references it at v1.0 | brief §12 |
 | Q-29 | Authoring `planning` does not violate Q-6 — Q-6 constrains changing existing packs, not adding one | brief §12 |
-| Q-30 | `writing` ships no default permission set and no hook; part 8 is declared `absent` with that reason | F5 §Open Questions (default adopted) |
-| Q-31 | `writing` migrates its one existing template into a pack-level `templates/` folder; part 3 is recorded as thin | F5 §Open Questions (default adopted) |
-| Q-32 | `planning`'s bet status vocabulary ships marked **provisional**, alongside its provisional role set | F5 §Open Questions (default adopted) |
+| Q-30 | `writing` ships no default permission set and no hook; part 8 is declared `absent` with that reason | F5 §Resolved Decisions (default adopted) |
+| Q-31 | `writing` migrates its one existing template into a pack-level `templates/` folder; part 3 is recorded as thin. **Q-51 adds exactly two recipe-scaffolding templates on top, which do not count toward part 3** | F5 §Resolved Decisions (default adopted) |
+| Q-32 | `planning`'s bet status vocabulary ships marked **provisional**, alongside its provisional role set | F5 §Resolved Decisions (default adopted) |
 | Q-33 | The dogfooding site for `packs/planning` is chosen when the pack is authored, not now; the risk is recorded | brief §12 |
-| Q-34 | `shared/targets` does not change at v1.0; `planning` expresses its non-delegable gate as an abort criterion | F5 §Open Questions (default adopted) |
+| Q-34 | Nothing outside `planning` changes at v1.0; `planning` expresses its non-delegable gate as an abort criterion inside its **own** targets copy. Q-48 removed the shared component the question was about | F5 §Resolved Decisions |
 | Q-35 | The `US-N` counter is reconciled by the earlier feature in build order keeping its block; later blocks renumber at the merge | this document · F5 §Resolved Decisions |
-| Q-36 | `coding` does not gain a brief template at v1.0; logged against `coding@1.1` | F5 §Open Questions (default adopted) |
+| Q-36 | `coding` does not gain a brief template at v1.0; logged against `coding@1.1` | F5 §Resolved Decisions (default adopted) |
 | Q-37 | The anatomy declaration is validated by the CLI, with a three-value `status` enum and per-status diagnostics | this document · F1 §User Stories |
 | Q-38 | A pack's document templates are copied into the applied project — **superseded by Q-46; under the phase model they stay in the payload** | brief §12 |
 | Q-39 | **Applying a pack is two phases** — a verbatim payload copy into `.harness/pack/`, then a pack-specific application | brief §12 · `general/pack-application.md` |
 | Q-40 | **Phase 2 is a declarative recipe over a fixed primitive set**, applied automatically by the CLI, and a pure function of (payload, answers) | brief §12 · `general/pack-application.md` |
 | Q-41 | **Phase 2 reads the phase-1 copy in the project**, not the bundle; the payload is not user-editable between phases at v1.0 | brief §12 |
 | Q-42 | **`update`, `status` and `contribute` defer to v1.1.** F3 and F4 leave v1.0; G3, S3 and R4 defer with them; S7 weakens to apply-only | brief §12 |
-| Q-43 | **A minimal manifest ships**: pack, pack version, CLI version, answers, scaffolds. No per-file hash list, no `.harness/base/` | brief §12 |
+| Q-43 | **A minimal manifest ships**: pack, pack version, CLI version, answers, scaffolds. No per-file hash list, no `.harness/base/` — **amended by Q-52, which adds a sixth key, `payloadDigest`** | brief §12 |
 | Q-44 | **`init --adopt` is dropped.** Supersedes Q-14 | brief §12 |
 | Q-45 | **Marked regions are not implemented at v1.0** — inert anchors only. Amends Q-7 and Q-10 | brief §12 |
 | Q-46 | **Manual bootstrap prose is deleted from the pack sources**, because the recipe encodes it. Supersedes Q-38 | brief §12 |
+| Q-47 | **A pack's document templates and reference docs stay in the payload** at `.harness/pack/` and are not copied into the project tree. **Properly supersedes Q-38**, whose answer is reversed | brief §12 |
+| Q-48 | **The `shared/` mechanism does not ship at v1.0.** No shared tree, no `component.json`, no digest pin, no bump rule, no CI enforcement; `targets` ships as `coding`-local content. Deferred to v1.1 with Q-28. **Supersedes Q-4 for v1.0**, and Q-15 and Q-27 go inert with it | brief §12 |
+| Q-49 | **`planning` ships its own copy of the targets contract**, tuned to bets. Its part 9 stays `present` and F5's US-27 keeps a vehicle. Accepted cost: two copies that will drift, booked in F5 as a named v1.1 reconciliation task | brief §12 · F5 §Flows |
+| Q-50 | **Every folder an apply creates carries a README** — `README.md` for `coding`/`planning`, `index.md` for `writing`; **`.claude/` and `.harness/` excluded** as tool-owned. No folder is ever empty, so **no `mkdir` primitive and no `.gitkeep`** | brief §12 |
+| Q-51 | **The `writing` extraction may author the `index` and `home` templates the source lacks**, recorded as **recipe scaffolding rather than content**. Everything else extracts faithfully | brief §12 |
+| Q-52 | **The manifest records a `payloadDigest`** — one tree digest over `.harness/pack/`. **Amends Q-43**; it is a single digest, not the per-file hash list Q-43 rejected, and it is what makes `verify`'s recomputation an assertion rather than a tautology | brief §12 |
+| Q-53 | **F1 owns `lintel-harness verify`**, alongside `validate` and `pack info`. The v1.0 command surface is four commands, and this document's list must include `verify` | brief §12 |
 
-**Counters.** Q-1…Q-46 allocated, next free **Q-47**. US-1…US-29
-allocated, next free **US-30** — this master spec owns no user stories;
-they live in the feature specs. Filenames are feature-prefixed; task
-IDs use Scheme A (`T-XXYY`, epic-derived).
+**Counters.** Q-1…Q-53 allocated and all resolved, next free **Q-54**.
+US-1…US-38 allocated, next free **US-39** — this master spec owns no
+user stories and no acceptance criteria; both live in the feature specs.
+The live blocks are F1's US-1…US-4, US-6, US-8…US-10, US-13…US-16 and
+US-29…US-33, and F5's US-17…US-21, US-24…US-28 and US-34…US-38. Retired
+and never reused: **US-5, US-7, US-11, US-12** (F1) and **US-22, US-23**
+(F5, both with the `shared/` mechanism Q-48 removed). Filenames are
+feature-prefixed; task IDs use Scheme A (`T-XXYY`, epic-derived).
