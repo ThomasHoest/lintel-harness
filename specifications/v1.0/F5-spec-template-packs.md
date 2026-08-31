@@ -1,5 +1,5 @@
 # F5 — Template Packs Specification — Lintel Harness v1.0
-**Version:** 2.5
+**Version:** 2.6
 **Status:** Draft
 **Date:** 2026-08-31
 **Platform:** Pack content is plain files — Markdown, JSON, shell/PowerShell, Bicep, CDK TypeScript — bundled with the Node/TypeScript CLI and consumed by Claude Code's `.claude/` conventions. No runtime of its own.
@@ -23,6 +23,7 @@
 | **2.4** | **2026-08-31** | **C-40 reversal — `permissionMode: readonly` ships.** Edition 2.3 was written against a briefed reading of C-40 in which a pack-written `.claude/` file could declare **no** permission-bearing key, and it booked the removal of three `permissionMode: readonly` lines as declared difference class (d). **F1 v2.5 resolved C-40 the other way:** the pinned constant has three parts — grant keys, mode keys, and a **non-widening mode value set** — so a *restricting* value is permitted while a widening or unrecognised one is `E-CLAUDE-PERMISSION-MODE` (exit 2), and a mode key on a non-agent file is `E-CLAUDE-TOOL-GRANT`. `readonly` restricts. F1's positive assertion now **requires** those three lines present and disclosed, so removing them would have made the migrated pack fail it. Reversed here: the §Role-set rule restated to distinguish restricting from widening rather than forbidding the key; the consequence paragraph rewritten so the migration **ships the frontmatter unchanged**; US-24's class (d) deleted and the empty class relettered (d), with the check now rejecting **any** frontmatter difference, since the migration makes none. F1's new code is cited where 2.3 deliberately cited none. **No new question, no new story:** next free **Q-56** (Q-55 recorded `writing-guide/index.md`), next free **US-39**. |
 | **2.3** | **2026-08-31** | **Final Mode A fold — the F5 side of C-40, the widened reserved list confirmed, and C-46.** The final pass over F1 v2.4 / F5 v2.2 returned **`REVISE-SPEC`** with **3 HIGH, 3 MEDIUM, 4 LOW and no CRITICAL**, 36 of 38 conditions holding. **C-40's evidence lived partly here:** §Flows / *2. Role set* listed the agent frontmatter keys inline, `permissionMode` among them, which read as a menu of what a **pack** may declare. That list is now stated explicitly as **descriptive of the Claude Code runtime**, with what a pack-written `.claude/` file may declare deferred to F1, which is being amended so that such a file **may not declare any permission-bearing key** — tool grant or permission mode — and so that the pre-write disclosure prints the **whole frontmatter block**, not only `tools:`. **Consequence made explicit rather than left to the migration:** `coding`'s `architect.md`, `reviewer.md` and `securityreviewer.md` carry `permissionMode: readonly` in the source and **the migrated pack does not ship it**; US-24 gains it as **declared difference class (d)**, enumerated as exactly three lines in three named files, and the empty class renames to (e). Nothing is lost that was load-bearing — the pack's own `agents/README.md` already says the `tools:` whitelist is the real safety net, and those three agents omit `Write`/`Edit`/`Bash`. **No code is cited for the new rule**, deliberately: whether C-40 extends `E-CLAUDE-TOOL-GRANT` or adds one beside it is F1's, and F1 remains the only catalogue. **The widened reserved-destination list is confirmed against this spec and nothing contradicts it** — US-21 gains an acceptance criterion saying so, naming `azure-pipelines.yml` because the pack ships an **Azure** scaffold: `backend-azure`'s entire write set is `infrastructure/backend-deploy/` and it ships **no CI or pipeline file of any kind**, as do `backend-aws` and `writing-workstream`. **C-46:** §NFR *Recipe purity* named two inputs where F1 names three; it now reads *(payload, parameter answers, scaffold selection)* and restates plan-time rendering (C-23). **No new question, no new story, no new error code:** next free **Q-56**, next free story id **US-39**. |
 | **2.5** | **2026-08-31** | **Pack-reconciliation pass — `planning` gains `background/`, and all three packs gain a project brief.** The packs moved ahead of this document; this row brings the document back to them, and adds no new mechanism. **(1)** **Every pack now renders a project brief out of its payload** — `coding` to `specifications/project-brief.md`, `writing` and now `planning` to `project-brief.md` at the applied root — and the three are deliberately different documents. `planning`'s `templates/` is therefore **five**, not four, restated in the payload inventory, the 7b table, the comparison matrix and part 3, whose "five" heading had already been changed while its table still listed four. **(2)** **`planning` gains `background/`**, the raw material its brief is distilled from: `background/` plus `{company,strategy,products,market,performance,constraints,capacity}/`, each placed by a new **unconditional** `rename` out of `applied-readmes/`, which grows from 3 payload files to **11**. The mapping is stated where the pack consumes it — `constraints/` → the brief's constraint-floor section, the `constraintFloor` calibration itself and horizon determinants **L** and **I**; `market/` → **S**; `products/` + `performance/` → **U** and the current-portfolio section; `capacity/` → absorption capacity, the input the gate is checked against; `strategy/` → vision and what the portfolio decides; `company/` → the company profile. **(3) Counts corrected against the live recipe.** `planning`'s `recipe.json` is **23 steps**, not the 14 rows the 7b table carried — it was already one out of step before this change — and the table is rebuilt one row per step, in recipe order. The apply creates **11** folders, not 3, each taking `<dir>/README.md`; **both calibration branches produce the identical folder set and 32 applied paths each**, and **only the two calibration copies are `when`-gated**. That last fact is now stated as the *reason* the folder sets match, in the §Flows paragraph that previously said "all three of its folder-README steps are unconditional"; the same-branch rule it states is unchanged and still correct. The applied-tree listings for `planning` and `writing` were closed listings missing this content and are extended. **(4) US-28's line budget is raised, deliberately: 120 → 160 lines per pack README, ten → twenty lines for the produced-tree block, with §NFR *Legibility* moved with it so the two do not disagree.** `packs/planning/README.md` was already 125 lines with a 15-line block *before* this change and is now **148** with **18**; `writing` is **150** with **15**; `coding` is **95**. The cap is restated as a **legibility budget** — it exists so a newcomer reads the page in one sitting, and it is raised when a pack's real content outgrows it, never met by deleting substance. A pack that genuinely does more earns more lines; a number that forces content out is the wrong constraint, and this is recorded so the raise reads as a decision rather than a slipped limit. **No new question, no new story, no new error code:** F1 remains the only catalogue and none is cited that it does not carry; next free **Q-62** (Q-56, Q-60 and Q-61 are open), next free story id **US-39**. |
+| **2.6** | **2026-08-31** | **Q-60 fold — the `defect`/`notice` split, and what each pack emits by design.** F1 v2.6 classifies every `W-` code once: a **`defect`** is author-fixable, a **`notice`** reports a declared state the pack intends. **`--strict` promotes defects only, and a notice is never fatal under any flag.** F1 owns the catalogue and the classes; this spec cites them and invents none. Three consequences land here. **(1) G5.11 and every criterion asserting `validate --all --strict` exits `0` are restated against the split** rather than against a bare warning-free state — the goal is now *no `defect`-class finding over any bundled pack*, which is a stronger claim than the old wording could support and a true one, which the old wording was not. **(2) The notices each pack emits are stated per pack, as properties rather than exemptions.** `planning` emits **`W-ANATOMY-PROVISIONAL`** — part 2's role set is genuinely unwritten and the pack says so with a note — and **`W-HOOK-SCRIPT-INERT`** — its kill-criteria guard is inert *because* no pack may register an agent hook at v1.0. Both are **correct output from a correct pack**, not tolerated noise, and both still print on every run. `coding` and `writing` emit no notice at v1.0. **(3) `coding` gains `applied-readmes/infrastructure.md`.** F1 US-16 step 12 quantifies over **proper** directory prefixes, so the intermediate `infrastructure/` is a directory a backend combination creates and no step wrote it a README — a real `defect`, fixed rather than reclassified. Each backend scaffold gains a **third** step placing it, in the same `when` branch that creates the directory; `applied-readmes/` grows from **five** payload files to **six**, and `coding`'s recipe from 19 declared steps to **21**. The two backend scaffolds are alternatives in one category, so only one ever runs and the shared destination is no collision. The base-combination count of **23** phase-2 files is unchanged — the sixth README is scaffold-only. **`provenance` is now a defined `pack.json` field** in F1 US-1, so §NFR *Provenance* is satisfiable without tripping F1's unknown-top-level-key warning, which is `defect` class. **No new question, no new story, no new error code:** Q-60 is resolved; **Q-56 and Q-61 remain open**; next free **Q-62**; next free story id **US-39**. |
 
 ---
 
@@ -183,7 +184,7 @@ Only settled decisions. Everything unsettled is in **Open Questions**.
 | Sharing between packs | **None at v1.0.** The `shared/` mechanism does not ship: no shared tree, no `component.json`, no `shared` array, no digest pin, no bump rule. Every pack is self-contained | Q-48 — with `presentation` deferred, `shared/` had one consumer, which is indistinguishable from pack-local content. Q-4's story lands whole in v1.1 |
 | The targets contract | **Two pack-local copies.** `coding` carries it as ordinary pack content; `planning` carries **its own copy**, tuned to bets rather than code, so its part 9 stays `present` and US-27's ABORT keeps a vehicle | Q-49 — follows from Q-48. **Accepted cost, owned here:** the two copies will drift before v1.1 reconciles them, so §Flows books the merge as a **named v1.1 task** rather than a discovery |
 | Presentation | **Deferred to v1.1, and referenced by no pack at v1.0** | Q-28 — F5 could not source its contents; shipping an unspecified component referenced by all three packs is worse than shipping none |
-| Folder READMEs | **Every folder an apply creates carries a README**, whose basename each pack **declares** in `pack.json` as **`folderReadme`** — `writing` declares `index.md`; `coding` and `planning` omit the key and take the `README.md` default. **`.claude/` and `.harness/` are excluded** as tool-owned. Consequence: **no applied folder is ever empty**, so there is no eighth `mkdir` primitive and no `.gitkeep`. **The rule is checked**, not merely stated: F1 US-16 **step 12** reports `W-FOLDER-README-MISSING` per parameter combination, which is why a conditional folder needs its README in the **same `when` branch** | Q-50 — the placeholder becomes useful content, and the empty-directory problem is dissolved rather than solved. `coding` gains five (`AgentTeams/`, `specifications/general/`, `specifications/v1.0/`, `targets/`, `copy/`), `planning` gains **eleven** (`portfolio/`, `portfolio/bets/`, `targets/`, `background/` and `background/`'s seven subfolders — `company/`, `strategy/`, `products/`, `market/`, `performance/`, `constraints/`, `capacity/`), all from unconditional steps, `writing` already had the convention |
+| Folder READMEs | **Every folder an apply creates carries a README**, whose basename each pack **declares** in `pack.json` as **`folderReadme`** — `writing` declares `index.md`; `coding` and `planning` omit the key and take the `README.md` default. **`.claude/` and `.harness/` are excluded** as tool-owned. Consequence: **no applied folder is ever empty**, so there is no eighth `mkdir` primitive and no `.gitkeep`. **The rule is checked**, not merely stated: F1 US-16 **step 12** reports `W-FOLDER-README-MISSING` per parameter combination, which is why a conditional folder needs its README in the **same `when` branch** | Q-50 — the placeholder becomes useful content, and the empty-directory problem is dissolved rather than solved. `coding` gains five unconditionally (`AgentTeams/`, `specifications/general/`, `specifications/v1.0/`, `targets/`, `copy/`) **plus a sixth, `infrastructure/`, from inside whichever backend scaffold is selected** (Q-60 — the intermediate directory step 12 quantifies over and no step wrote), `planning` gains **eleven** (`portfolio/`, `portfolio/bets/`, `targets/`, `background/` and `background/`'s seven subfolders — `company/`, `strategy/`, `products/`, `market/`, `performance/`, `constraints/`, `capacity/`), all from unconditional steps, `writing` already had the convention |
 | Migration fidelity | `coding` and `writing` migrate **faithfully**, modulo the Q-46 deletions, which are enumerated; `planning` is **authored** | Q-6 keeps S6 verifiable; Q-29 confirms authoring `planning` is not a boundary violation |
 | `planning` framing | Portfolio and roadmap management as a decision loop: `intake → discovery → prioritize → commit → deliver → learn`, non-delegable absorption/security gate between deliver and learn, horizon-setting first-class inside commit | Q-11 — the spine is evidenced research output, not a process invented to fill a template |
 | `planning` parameterisation | Calibrated at init by `constraintFloor`, values `high-floor` \| `near-zero-floor`, expressed as recipe **`when` conditions over `calibrations/<name>/`** | Q-11 + Q-13 — contingency is the research's central finding; the recipe's `when` is the mechanism, and `calibrations/<name>/` is a pack-authoring convention over it, not a format feature |
@@ -244,9 +245,17 @@ Each is assessable yes/no when F5 is done.
   gaps honestly, and says what its recipe produces, so the completeness
   picture is legible without reading this spec (G6).
 - **G5.11** — `lintel-harness validate --all --strict` exits `0` over the
-  three bundled packs, so **every folder each recipe creates carries its
-  declared folder README in every parameter combination** (F1 US-16 step
-  12) rather than only in the combination someone happened to try.
+  three bundled packs. Under F1 v2.6's `defect`/`notice` split (Q-60)
+  that means **no bundled pack produces a single `defect`-class
+  finding** — in particular, **every folder each recipe creates carries
+  its declared folder README in every parameter combination** (F1 US-16
+  step 12) rather than only in the combination someone happened to try,
+  and no rendered link dangles. It does **not** mean the run is silent:
+  `planning` emits two **`notice`**-class findings on every run by
+  design, `--strict` does not promote them, and they are printed. The
+  goal is checkable as stated: run `validate --all --strict`, require
+  exit `0`, and require `--json` to report no finding with
+  `"class": "defect"`.
 
 ---
 
@@ -321,9 +330,14 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   `specifications/general/README.md`, `specifications/v1.0/README.md`,
   `targets/README.md` and `copy/README.md` all exist, each written by a
   `rename` step out of the payload's `applied-readmes/`.
-  `specifications/README.md` and, with a backend scaffold,
-  `infrastructure/backend-deploy/README.md` already come from elsewhere
-  in the recipe. `.claude/` and `.harness/` are **excluded** as
+  `specifications/README.md` already comes from elsewhere in the recipe.
+  **With a backend scaffold, two more exist and both come from inside
+  that scaffold's own steps:** `infrastructure/backend-deploy/README.md`,
+  stripped from the scaffold's `README.template.md`, and
+  `infrastructure/README.md`, renamed from
+  `applied-readmes/infrastructure.md` by the scaffold's third step
+  (Q-60). Without a backend scaffold neither directory exists and neither
+  README is written. `.claude/` and `.harness/` are **excluded** as
   tool-owned, and there is **no `.harness/README.md`**.
 - **The applied tree contains no `.claude/settings.json`.** No v1.0 pack
   writes one: `merge-json` does not ship (Q-54), so the pack owns no
@@ -461,6 +475,19 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   reason, and part 3 `present` with its single template named.
 - `planning` reports nine parts, with part 2 `provisional` and its note
   naming the EM-portfolio gap.
+- **`planning` emits exactly two diagnostics, both `notice` class, and
+  both are properties of the pack rather than exemptions from a rule**
+  (F1 §Error States, Q-60): **`W-ANATOMY-PROVISIONAL`** for part 2,
+  because the role set is genuinely unwritten and the pack declares it
+  with a note; and **`W-HOOK-SCRIPT-INERT`** for
+  `.claude/hooks/kill-criteria-guard.sh`, because the script is inert
+  *precisely because* no pack may register an agent hook at v1.0. Neither
+  is promoted by `--strict` and neither can be, so
+  `validate packs/planning --all --strict` exits `0` while still printing
+  both. **`coding` and `writing` emit no notice at v1.0.** A test may
+  assert the whole claim: `validate --all --strict --json` exits `0` and
+  reports exactly two findings, both `"class": "notice"` and both against
+  `planning`.
 - A pack whose `pack.json` omits any of the nine parts fails validation
   with `E-ANATOMY-MISSING` (F1 §Error States, exit 2), and
   `lintel-harness init` refuses to apply it.
@@ -544,7 +571,8 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   named by file and heading; (b) an added `pack.json`, `recipe.json` or
   `applied-readmes/` file; (c) the declared restructure —
   `infrastructure/backend-deploy/` → `scaffolds/backend-azure/`, and the
-  `/target` command moving into `commands/`; (d) nothing else. **The
+  `/target` command moving into `commands/`; (d) **the brief wire-up**,
+  enumerated below; (e) nothing else. **The
   migration makes no frontmatter change at all** — `permissionMode:
   readonly` ships unchanged on `architect.md`, `reviewer.md` and
   `securityreviewer.md`, because `readonly` restricts rather than
@@ -553,8 +581,29 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   lift it into, so the check expects `targets/` and `target-reviewer.md`
   exactly where the source commit has them; their absence is a migration
   bug, not a declared restructure.
-- Class (d) is empty. Any difference the check cannot place in (a), (b)
-  or (c) fails the check — **including any frontmatter difference**,
+- **Class (d) — the brief wire-up — is enumerated, not open.** For
+  `coding` it is exactly five files: `agents/specwriter.md`,
+  `agents/researcher.md`, `agents/architect.md`,
+  `agent-teams/Specify.md` and `specifications/README.md`, each gaining
+  a reference to `specifications/project-brief.md` in a read-first list.
+  For `writing` it is exactly six agent prompts — `outliner.md`,
+  `writer.md`, `critic.md`, `researcher.md`, `scout.md`, `editor.md` —
+  each gaining a reference to the applied-root `project-brief.md`, plus
+  the standing-instruction bullet in `CLAUDE.md.template`.
+- **Why this is a declared class and not a fidelity breach.** The brief
+  did not exist in either source project, so a reference to it *cannot*
+  migrate — it can only be added. A pack that renders a brief no agent
+  is told to read ships a document nobody opens, which is the failure
+  this class exists to prevent. Every edit is additive and minimal: a
+  line in a read-first list, never a rewrite of a prompt's substance.
+- **Known structural limit, recorded rather than worked around.**
+  `writing`'s `scout.md` declares no `Read` tool, so it cannot open the
+  brief at all. Its edit states that dependency honestly — the scope
+  boundary must arrive in the invocation — rather than instructing it to
+  read a file it cannot reach. Granting `Read` would be a frontmatter
+  change, which no class permits.
+- Class (e) is empty. Any difference the check cannot place in (a), (b),
+  (c) or (d) fails the check — **including any frontmatter difference**,
   since the migration makes none.
 - The Q-46 deletion list is exhaustive and enumerated in §Flows, so the
   check compares against a list rather than a judgement.
@@ -604,6 +653,14 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   the produced project's `CLAUDE.md`. `lintel-harness validate` says the
   same about the script with `W-HOOK-SCRIPT-INERT` (F1 §Error States),
   and `pack info` lists it as inert.
+- **That diagnostic is `notice` class and is correct output, not a
+  tolerated failure** (Q-60). The script is inert **because of** the
+  rule that no pack may register an agent hook at v1.0, so there is
+  nothing an author could change to clear the finding short of deleting
+  content the pack means to ship for v1.1 to register. `--strict` does
+  not promote it and no flag may be added that would, so this pack
+  passes `validate --all --strict` **while still printing the warning on
+  every run** — which is the point: the shortfall stays visible.
 - **No `pack.json` declares any owned settings key, and none can:**
   `merge-json` does not ship at v1.0 (Q-54), so there is no route by
   which any pack — this one included — writes `.claude/settings.json`.
@@ -806,7 +863,7 @@ diagnostics, they have no code, and they do not belong in F1's catalogue.
 | `pack.json` omits one of the nine anatomy parts | `E-ANATOMY-MISSING` | 2 |
 | Part declared `absent` with no reason | `E-ANATOMY-NO-REASON` | 2 |
 | Part declared `provisional` with no note | `E-ANATOMY-NO-NOTE` | 2 |
-| A well-formed `provisional` part, at init or `pack info` | `W-ANATOMY-PROVISIONAL` | unchanged |
+| A well-formed `provisional` part, at init or `pack info` | `W-ANATOMY-PROVISIONAL` | unchanged — **`notice`** class (Q-60), so `--strict` never promotes it. `planning` part 2 emits it by design |
 | A well-formed `absent` part, at init | `W-ANATOMY-ABSENT` | unchanged |
 | `init planning` non-interactively with no calibration | `E-PARAM-MISSING` | 1 |
 | Unknown calibration name | `E-PARAM-INVALID` | 1 |
@@ -825,8 +882,8 @@ diagnostics, they have no code, and they do not belong in F1's catalogue.
 | Two recipe steps write the same destination | `E-MAP-COLLISION` | 2 |
 | Pack's `minCliVersion` exceeds the installed CLI | `E-PACK-CLI-TOO-OLD` | 1 |
 | `init` in a directory that already has a manifest | `E-ALREADY-APPLIED` | 1 |
-| Inert guard script present, registered by nothing | `W-HOOK-SCRIPT-INERT` | unchanged |
-| A folder a recipe creates receives no `folderReadme` in the parameter combination that creates it | `W-FOLDER-README-MISSING` | unchanged; **1 under `--strict`**, which is what this repo's CI runs |
+| Inert guard script present, registered by nothing | `W-HOOK-SCRIPT-INERT` | unchanged — **`notice`** class (Q-60), so `--strict` never promotes it. `planning`'s guard script emits it by design |
+| A folder a recipe creates receives no `folderReadme` in the parameter combination that creates it | `W-FOLDER-README-MISSING` | unchanged; **1 under `--strict`**, which is what this repo's CI runs — it is **`defect`** class (Q-60), and no bundled pack may produce one |
 
 **The recipe-validation gap is closed.** An earlier draft of this section
 flagged that F1's catalogue carried no code for an invalid
@@ -939,7 +996,9 @@ Two things follow, both v1.0 facts:
   **≤ 60 files** with no scaffold selected and **≤ 200** with every
   scaffold a pack offers. Concretely at v1.0: `coding` phase 1 copies
   ~60 files and phase 2 writes **23 files and no empty directory** — the
-  **18** working files plus the five folder READMEs Q-50 requires.
+  **18** working files plus the five **unconditional** folder READMEs
+  Q-50 requires. A backend scaffold adds its own files plus
+  `infrastructure/README.md` (Q-60) on top of this base count.
   (The count was 24 until Q-54 removed `.claude/settings.json`, which
   the old arithmetic carried as one of the working files.)
 - **No empty directories, in any pack.** Under Q-50 every folder an apply
@@ -1049,10 +1108,17 @@ Two things follow, both v1.0 facts:
   enumerated bootstrap sections, and zero dangling cross-references to
   them. Grep-checkable.
 - **Provenance:** each `pack.json` records what the pack was derived
-  from — for `coding` and `writing`, a source path plus commit; for
-  `planning`, `base-deck-v2.1.md` plus
+  from in its **`provenance`** key — for `coding` and `writing`, a source
+  path plus commit; for `planning`, `base-deck-v2.1.md` plus
   `specifications/v1.0/research-planning-pack-framing.md` — so a later
-  source revision can be diffed against what shipped.
+  source revision can be diffed against what shipped. **`provenance` is a
+  defined optional field of the format** (F1 US-1 and §F1.3, Q-60): a
+  string or an object of strings, declared and never interpreted. It was
+  defined there because until F1 v2.6 it was an *unknown* top-level key,
+  so every bundled pack tripped F1's unknown-key warning — which is
+  **`defect`** class — for doing exactly what this NFR requires. A test
+  may assert this by validating all three packs and requiring no
+  unknown-key finding.
 
 **Anatomy and legibility**
 
@@ -1075,7 +1141,21 @@ Two things follow, both v1.0 facts:
   Because the basename is a `pack.json` field and the check is F1 US-16
   step 12, this is mechanically checkable rather than editorial, and any
   `W-FOLDER-README-MISSING` finding over a bundled pack is a release
-  blocker.
+  blocker. `W-FOLDER-README-MISSING` is **`defect`** class (F1 §Error
+  States, Q-60), which is what makes it a blocker: `--strict` promotes it
+  and CI fails. The finding that proved this was `coding`'s intermediate
+  `infrastructure/`, fixed by the sixth `applied-readmes/` file rather
+  than reclassified.
+- **Notices are expected output, not tolerated noise** (Q-60).
+  `--all --strict` exiting `0` is a claim about **`defect`**-class
+  findings only. `planning` emits two **`notice`**-class findings on
+  every run — `W-ANATOMY-PROVISIONAL` for part 2 and
+  `W-HOOK-SCRIPT-INERT` for its guard script — and both are correct
+  reports of states this spec **requires** the pack to be in, so a run
+  that did *not* report them would mean the pack had changed. `coding`
+  and `writing` emit none at v1.0. Checkable in one run: `validate --all
+  --strict --json` exits `0`, reports exactly two findings, both
+  `"class": "notice"`, both against `planning`.
 - **Legibility:** each pack README **≤ 160 lines** — a legibility budget,
   raised when a pack's real content outgrows it rather than met by
   deleting substance (US-28) — naming all nine
@@ -1310,17 +1390,34 @@ process README, `conventions.md`, 11 document templates, and two
 **`applied-readmes/` is part of the payload and is stated here because an
 earlier draft of this spec omitted it while it already existed on disk.**
 It holds the Q-50 folder READMEs — one per folder the recipe creates that
-does not otherwise receive one — and it contains **exactly five files**:
+does not otherwise receive one — and it contains **exactly six files**,
+**five placed unconditionally by the base recipe and one placed by each
+backend scaffold**:
 
-| Payload file | Renamed to |
-|---|---|
-| `applied-readmes/agentteams.md` | `AgentTeams/README.md` |
-| `applied-readmes/specifications-general.md` | `specifications/general/README.md` |
-| `applied-readmes/specifications-version.md` | `specifications/v1.0/README.md` |
-| `applied-readmes/targets.md` | `targets/README.md` |
-| `applied-readmes/copy.md` | `copy/README.md` |
+| Payload file | Renamed to | Placed by |
+|---|---|---|
+| `applied-readmes/agentteams.md` | `AgentTeams/README.md` | base recipe, unconditional |
+| `applied-readmes/specifications-general.md` | `specifications/general/README.md` | base recipe, unconditional |
+| `applied-readmes/specifications-version.md` | `specifications/v1.0/README.md` | base recipe, unconditional |
+| `applied-readmes/targets.md` | `targets/README.md` | base recipe, unconditional |
+| `applied-readmes/copy.md` | `copy/README.md` | base recipe, unconditional |
+| `applied-readmes/infrastructure.md` | `infrastructure/README.md` | **each backend scaffold's third step** — `backend-azure` **or** `backend-aws`, never both (Q-60) |
 
-There is **no sixth file**. A `harness.md` targeting `.harness/README.md`
+**The sixth file is Q-60's, and it closes a real gap.** F1 US-16 step 12
+quantifies over the **proper** directory prefixes of a combination's
+applied paths, so `infrastructure/backend-deploy/main.bicep` implies two
+directories: `infrastructure/backend-deploy/`, whose README the scaffold
+already strips out of its own `README.template.md`, and the intermediate
+**`infrastructure/`**, which nothing wrote into. Every backend
+combination therefore reported `W-FOLDER-README-MISSING` — a
+**`defect`**-class finding and a correct one. It is placed **inside each
+scaffold** rather than once unconditionally, because an unconditional
+step would create `infrastructure/` in the base combination, which
+selects no backend and needs no such directory. The two scaffolds share a
+category and are mutually exclusive, so at most one of the two `rename`
+steps ever runs and the shared destination is not `E-MAP-COLLISION`.
+
+There is **no seventh file**. A `harness.md` targeting `.harness/README.md`
 existed in an earlier pass and has been **deleted**: Q-50 excludes
 `.harness/` as tool-owned, and a recipe step may never write under
 `.harness/` in any case, because that is where the payload phase 2 is
@@ -1329,7 +1426,7 @@ reading from lives.
 Five items do not exist in the source tree today and are **new
 authoring** for the migration: `pack.json`, `recipe.json`, `commands/`
 (the `/target` command currently lives in this repo's `.claude/commands/`),
-`applied-readmes/` (the five Q-50 folder READMEs) and `scaffolds/`
+`applied-readmes/` (the six Q-50 folder READMEs) and `scaffolds/`
 (today's `infrastructure/backend-deploy/` becomes
 `scaffolds/backend-azure/`).
 
@@ -1352,7 +1449,13 @@ authoring** for the migration: `pack.json`, `recipe.json`, `commands/`
 | Path fix | `rewrite-path` | `targets/Run.md`, `.claude/commands/target.md` | `template/targets/…` → `.harness/pack/targets/…` |
 | Answers | `substitute` | project name and stack into the above | — |
 | Onboarding | `generate` | `CLAUDE.md.template` + answers | `CLAUDE.md`, with inert anchors (Q-45) |
-| Backend | `copy` + `strip-suffix`, `when scaffold` | `scaffolds/backend-azure/**` **or** `scaffolds/backend-aws/**` | `infrastructure/backend-deploy/` — **including that folder's own `README.md`, from inside the selected scaffold**, and with `"executable": true` on the four scripts (below) |
+| Backend | `strip-suffix` ×2, `when scaffold` | `scaffolds/backend-azure/**` **or** `scaffolds/backend-aws/**` | `infrastructure/backend-deploy/` — **including that folder's own `README.md`, from inside the selected scaffold**, and with `"executable": true` on the four scripts (below). Two steps, because `executable` is a property of a step (C-38) |
+| Folder README | `rename`, `when scaffold` | `applied-readmes/infrastructure.md` | `infrastructure/README.md` — **inside each backend scaffold**, the third step of each, covering the intermediate directory step 12 quantifies over (Q-60) |
+
+**Twenty-one declared steps**: **fifteen** in the base recipe — the
+fifteen rows above down to *Onboarding* — plus **three** in each of the
+two backend scaffolds, of which at most one scaffold ever runs. F1 §F1.3
+works the same recipe against the same count and the bound of 256.
 
 **Applied tree:**
 
@@ -1367,8 +1470,9 @@ authoring** for the migration: `pack.json`, `recipe.json`, `commands/`
 ├── targets/{README.md, Run.md}
 ├── copy/{README.md, tone-of-voice.md}
 ├── CLAUDE.md
-└── infrastructure/backend-deploy/     only with a backend scaffold
-                                       four scripts land 0755, the rest 0644
+└── infrastructure/                    only with a backend scaffold
+    ├── README.md                      from applied-readmes/infrastructure.md
+    └── backend-deploy/                four scripts land 0755, the rest 0644
 ```
 
 **`coding` is the one v1.0 pack that ships executables, and it declares
@@ -1393,7 +1497,10 @@ real consumer beats leaving it specified and dormant. See §NFR
 base recipe only.
 
 **23 files, and not one empty directory.** The **18** working files plus
-the five folder READMEs. `.claude/` and `.harness/` carry no pack-written
+the five **unconditional** folder READMEs. The sixth,
+`infrastructure/README.md`, is placed only by a backend scaffold and is
+outside this base-combination count, like the scaffold's own files
+(Q-60). `.claude/` and `.harness/` carry no pack-written
 README — both are tool-owned and excluded by Q-50 — and in particular
 **there is no `.harness/README.md`**, because C-5 forbids any recipe step
 writing under `.harness/` and Q-50 does not carve a hole in it.
@@ -1412,19 +1519,24 @@ placeholder in an acceptance criterion.
 **`coding` omits `folderReadme`, so its declared basename is
 `README.md`** — which is why every folder-README row above ends
 `/README.md`. **The five unconditional folder READMEs are unconditional
-steps, and the one conditional folder's README is conditional in the same
-branch.** F1 US-16 step 12 checks the rule **per parameter combination**,
+steps, and the two conditional folders' READMEs are conditional in the
+same branch.** F1 US-16 step 12 checks the rule **per parameter combination**,
 so this is a requirement on the recipe and not a convention:
 
 | Folder | Created by | Its `README.md` comes from | Same branch? |
 |---|---|---|---|
 | `AgentTeams/`, `specifications/general/`, `specifications/v1.0/`, `targets/`, `copy/` | unconditional steps | the five unconditional `applied-readmes/` renames | yes — both unconditional |
 | `specifications/` | the `specifications/README.template.md` strip-suffix | the same step | yes — the README *is* what creates the folder |
+| `infrastructure/` | `when scaffold=backend-azure` **or** `when scaffold=backend-aws` — it is a **proper prefix** of the scaffold's own paths, created implicitly | **`applied-readmes/infrastructure.md`, renamed by the same scaffold's third step** | yes — the `rename` sits inside the scaffold, so the directory and its README appear and disappear together (Q-60) |
 | `infrastructure/backend-deploy/` | `when scaffold=backend-azure` **or** `when scaffold=backend-aws` | **`scaffolds/backend-<x>/README.template.md`, inside that same scaffold's steps** | yes — each backend scaffold ships and strips its own README |
 
 **Both backend scaffolds must therefore ship a `README.template.md`**, and
 `backend-aws` — which is authored rather than migrated (Q-8a) — must
-include one. A backend scaffold that created
+include one. **Both must also place `applied-readmes/infrastructure.md`**
+as their third step, for the intermediate `infrastructure/` directory
+(Q-60); a scaffold that shipped the deeper README and omitted the
+shallower one would still report `W-FOLDER-README-MISSING`, which is what
+happened through F5 v2.5. A backend scaffold that created
 `infrastructure/backend-deploy/` without a README in its own branch would
 be reported by `validate` as `W-FOLDER-README-MISSING` for exactly the
 combinations that select it, and would fail `validate --all --strict` in
@@ -1709,7 +1821,7 @@ everything that describes what the thing *is*.
 
 **(b) Structural additions.** `pack.json`, `recipe.json`, `commands/`
 (the `/target` command moves in from this repo's `.claude/commands/`),
-`applied-readmes/` (the five Q-50 folder READMEs), and
+`applied-readmes/` (the six Q-50 folder READMEs), and
 `scaffolds/backend-azure/` (from `infrastructure/backend-deploy/`) plus
 `scaffolds/backend-aws/` (to author).
 
@@ -1846,7 +1958,9 @@ and `init writing --scaffold writing-workstream` must each be
 self-consistent; a recipe that is only correct for their union does not
 pass. This is checkable: `validate packs/writing --strict` must exit `0`,
 and the two-combination case is the smallest test that catches a
-mis-branched index step.
+mis-branched index step. `writing` emits **no** diagnostic of either
+class at v1.0 — no `defect` and no `notice` — so its clean run is silent
+as well as green (Q-60).
 
 #### 1. Process — nine stages in two strict sequences
 
@@ -2242,7 +2356,11 @@ satisfied trivially — but it is satisfied by that property, not by
 accident, and a future calibration that added a folder would have to add
 its README in the same branch. F1 US-16 step 12 evaluates both
 combinations independently, so `validate packs/planning --strict` exits
-`0` only if each calibration is self-consistent on its own.
+`0` only if each calibration is self-consistent on its own. It **does**
+exit `0` at v1.0: both calibrations are self-consistent, and the pack's
+two remaining diagnostics — `W-ANATOMY-PROVISIONAL` and
+`W-HOOK-SCRIPT-INERT` — are **`notice`** class, which `--strict` never
+promotes (Q-60).
 
 **Calibration is this pack's defining property and the only case in the
 product of pack content varying by an init answer.**
@@ -2289,7 +2407,13 @@ research's instruction is binding: *settle roles at spec time and do not
 overclaim.*
 
 Six candidate roles, all shipped **marked provisional in the pack
-itself**, and declared `provisional` with a note in `pack.json`:
+itself**, and declared `provisional` with a note in `pack.json`. That
+declaration makes `validate`, `init` and `pack info` print
+**`W-ANATOMY-PROVISIONAL`** on every run — a **`notice`** (Q-60),
+because it reports a state this spec **requires** the pack to be in, and
+therefore never promoted by `--strict`. A run that stopped reporting it
+would mean the role set had been settled and part 2 restated as
+`present`:
 
 | Role | Phase | Proposed write boundary |
 |---|---|---|
@@ -2630,15 +2754,17 @@ looks runnable but is not.
 
 ## Open Questions
 
-**None.** `Q-1`…`Q-54` are **all resolved** — see the brief §12, which is
-authoritative, together with the rows below and in *Resolved Decisions*.
-Every question this spec carried at version 2.0 has closed, including the
-three it raised (Q-49, Q-50, Q-51), and **Q-54 — which drops `merge-json`
-from v1.0 — is resolved in the brief and folded into this version.**
-**The next free ID is Q-55.** Question
+**None in F5.** `Q-1`…`Q-55` and `Q-57`…`Q-60` are **resolved** — see the
+brief §12, which is authoritative, together with the rows below and in
+*Resolved Decisions*. **Q-56 and Q-61 remain open**, and neither is
+F5's. Every question this spec carried at version 2.0 has closed,
+including the three it raised (Q-49, Q-50, Q-51); **Q-54 — which drops
+`merge-json` from v1.0 — is resolved in the brief and folded at version
+2.1**, and **Q-60 — the `defect`/`notice` split — is folded at this
+version**. **The next free ID is Q-62.** Question
 IDs are unique across the whole project, not per document; cross-feature
 questions belong in the master spec, and a question raised from here takes
-Q-55 and is recorded in the document that raises it.
+Q-62 and is recorded in the document that raises it.
 
 | # | Question | Owner | Status |
 |---|---|---|---|
@@ -2676,8 +2802,9 @@ acceptance criteria.
 | Q-32 | Is `planning`'s bet status vocabulary settled? | **Ships marked provisional — default adopted.** `proposed \| committed \| held-at-gate \| killed \| absorbed` is inferred from the process rather than sourced, so it ships flagged as such in the pack alongside the provisional role set, and is revisited after the first dogfood project. It does not change part 2's declared `provisional` status or this spec's counted NFR. | 2026-08-31 |
 | Q-34 | Should the targets contract learn to express "a phase the envelope may never enter"? | **Not at v1.0 — and the question's premise is gone.** Q-48 removed the shared component there was to teach, so nothing outside `planning` changes. `planning` expresses the constraint inside **its own** copy of the contract (Q-49): clearing or waiving the absorption gate is an abort criterion in its target template, and its `target-reviewer` returns `NEEDS-CORRECTION` for any target whose success criteria require passing the gate. Generalising it is v1.1 work, carried by task **v1.1-T1**. | 2026-08-31 |
 | Q-36 | Does `coding` gain a document-kit brief template at v1.0? | **No — default adopted.** Q-6 forbids content changes during a faithful migration, so the gap is logged against `coding@1.1`. `specifications/project-brief.template.md` already exists as a *project* artefact the recipe copies out, which is a different thing and does not close the kit gap. | 2026-08-31 |
+| Q-60 | *(Raised against F1, restated here because two of its three consequences are pack content.)* Can `validate --all --strict` exit `0` for all three bundled packs, when two of `planning`'s findings are deliberate design decisions? | **Yes — warnings split into two classes** (F1 v2.6 §Error States). A **`defect`** is author-fixable; a **`notice`** reports a declared state the pack intends. **`--strict` promotes defects only, and a notice is never fatal under any flag.** F1 classifies every code; this spec cites and invents none. **F5-side consequences, in full: (1)** `planning`'s **`W-ANATOMY-PROVISIONAL`** and **`W-HOOK-SCRIPT-INERT`** are **`notice`** class — the role set is genuinely unwritten and declared with a note, and the guard script is inert *because* no pack may register an agent hook at v1.0 — so both are correct output from a correct pack, both still print on every run, and neither blocks CI. `coding` and `writing` emit no notice. **(2)** `coding`'s intermediate **`infrastructure/`** was a real `defect`: F1 US-16 step 12 quantifies over **proper** directory prefixes and no step wrote that directory a README. Fixed rather than reclassified — `applied-readmes/` grows to **six** files and each backend scaffold gains a **third** step placing `applied-readmes/infrastructure.md`, taking `coding`'s recipe from 19 declared steps to **21**. The two scaffolds are mutually exclusive, so only one ever runs. **(3)** **`provenance` becomes a defined `pack.json` field** (F1 US-1), so §NFR *Provenance* is satisfiable without every bundled pack tripping F1's unknown-top-level-key warning, which is `defect` class. G5.11 and §NFR *Folder READMEs* are restated against the split. | 2026-08-31 |
 | Q-49 | Does `packs/planning/` declare the shared targets component at v1.0, and if not, where does its part 9 come from? | **`planning` ships its own copy of the targets contract**, tuned to bets rather than code (brief §12). Q-48 removed the mechanism the question assumed, so there was nothing to declare. Part 9 stays **`present`** and US-27's absorption-gate ABORT keeps a vehicle. **Accepted cost, and this spec assigns it an owner:** two copies of the contract now exist and will drift — the exact duplication Q-4 was written to prevent — so reconciling them is booked as **v1.1-T1**, owned by the architect, in §Flows / *The targets contract*. | 2026-08-31 |
-| Q-50 | How does a recipe create an empty directory? | **It does not have to — the premise is dissolved, not the problem solved** (brief §12). Every folder an apply creates carries a README: `README.md` for `coding` and `planning`, `index.md` for `writing`, with **`.claude/` and `.harness/` excluded as tool-owned**. So no folder is ever empty, and there is **no eighth `mkdir` primitive, no `skeleton/` tree and no `.gitkeep`**. The proposed `mkdir` is withdrawn: `F1-ADR-001` §3.3 records that its entire output is invisible to `verify` and uncommittable by git, so an applied tree using it would not survive a clone. `coding` gains five folder READMEs from `applied-readmes/`; `planning` gains **eleven** — `portfolio/`, `portfolio/bets/`, `targets/`, `background/` and `background/`'s seven subfolders (`company/`, `strategy/`, `products/`, `market/`, `performance/`, `constraints/`, `capacity/`), every one of them from an unconditional `rename`; `writing` already had the convention. | 2026-08-31 |
+| Q-50 | How does a recipe create an empty directory? | **It does not have to — the premise is dissolved, not the problem solved** (brief §12). Every folder an apply creates carries a README: `README.md` for `coding` and `planning`, `index.md` for `writing`, with **`.claude/` and `.harness/` excluded as tool-owned**. So no folder is ever empty, and there is **no eighth `mkdir` primitive, no `skeleton/` tree and no `.gitkeep`**. The proposed `mkdir` is withdrawn: `F1-ADR-001` §3.3 records that its entire output is invisible to `verify` and uncommittable by git, so an applied tree using it would not survive a clone. `coding` gains **six** folder READMEs from `applied-readmes/` — five unconditional, plus `infrastructure/` from inside each backend scaffold, added by Q-60; `planning` gains **eleven** — `portfolio/`, `portfolio/bets/`, `targets/`, `background/` and `background/`'s seven subfolders (`company/`, `strategy/`, `products/`, `market/`, `performance/`, `constraints/`, `capacity/`), every one of them from an unconditional `rename`; `writing` already had the convention. | 2026-08-31 |
 | Q-51 | May the `writing` extraction author the templates its recipe needs? | **Yes, and exactly two** (brief §12). `index.template.md` and `home.template.md` are authored and recorded in the extraction record as **recipe scaffolding rather than content** — without them the recipe cannot render `Home.md` or a per-folder `index.md`, and the pack would ship a convention it cannot execute. Everything else stays faithful: the one real `post` template migrates as it is, and the writing guide keeps its **four files under their existing names**, `.template`-suffixed only where the recipe strips a suffix. Part 3 stays thin. | 2026-08-31 |
 | Q-54 | *(Raised by the Mode A re-review, not by F5 — restated here because it removes content this spec carried.)* Does `merge-json` ship at v1.0? | **No — six primitives, not seven** (brief §12). `merge-json` is deferred to v1.1 with the whole settings story: the ownable-key allowlist, the destination policy, the leaf-only rule, the agreement gate and the security disclosure are **removed rather than repaired**. The trigger was this spec: its three "Settings" steps in `coding`, `writing` and `planning` were **never valid recipes** — not one named a `from`, not one named a single owned key, and no pack's payload inventory holds a settings source file — so once they were deleted `merge-json` had **no v1.0 consumer** while carrying the format's largest attack surface. Consequences folded here: no pack writes `.claude/settings.json`, owns a settings key or ships a default permission set; `E-MERGE-JSON-*`, `E-OWNEDKEY-*` and `E-SETTINGS-*` leave F1's catalogue and every citation of them leaves this spec; `coding`'s phase-2 count drops to **23**; and R5 gains a **fourth** recorded shortfall. **Bonus, and it is not small:** `merge-json` was the only primitive taking a fourth input — the destination's pre-existing content — so the *Recipe purity* NFR is now true **without exception**. | 2026-08-31 |
 | Q-35 | How is the project-monotonic `US-N` counter reconciled across parallel feature specs? | **Reconciled by the 2026-08-30 consistency pass.** F1 keeps US-1…US-16 (earlier in build order) and later gained US-29; F5's block was renumbered to US-17…US-28. Standing rule for later parallel passes: the earlier feature in build order keeps its block, later blocks are renumbered at the merge, and the counter table is updated before either spec reaches `Accepted`. **Applied again in this rewrite:** US-23 is retired rather than reused, and new stories were allocated from US-34. **Applied again at the ADR-001 fold:** US-22 is retired with the `shared/` mechanism it asserted (Q-48), its id is not reused, and no replacement story is allocated — what it protected is now task **v1.1-T1**. F5's live block is US-17…US-21, US-24…US-28, US-34…US-38; F1 holds US-1…US-4, US-6, US-8…US-10, US-13…US-16 and US-29…US-33; **next free id US-39**. | 2026-08-30 |
