@@ -381,7 +381,9 @@ The `Specify.md` run is **incomplete**.
 - **`general/system-architecture.md` and `general/technology-choices.md`
   are required and unwritten.** The two-phase model changed the system's
   shape after F1 and ADR-001 were drafted.
-- **Six open questions** — Q-48…Q-53, in `specifications/project-brief.md` §9.
+- ~~Six open questions.~~ **All resolved** (Q-48…Q-53, 2026-08-31).
+  **F1 needs a small fold**: the manifest gains a payload digest (Q-52),
+  making it six keys, and `verify` is confirmed F1-owned (Q-53).
 - **Five decisions were never formally closed** — Q-30, Q-31, Q-32,
   Q-34, Q-36 are "open with a stated default" and the default was
   adopted in practice. Q-36 is contradicted by the shipped brief
@@ -389,7 +391,7 @@ The `Specify.md` run is **incomplete**.
 
 ### Counters
 
-Q-1…Q-47 resolved, Q-48…Q-53 open, next free **Q-54**.
+Q-1…Q-53 all resolved, next free **Q-54**.
 User stories: F1 holds US-1…US-4, US-6, US-8…US-10, US-13…US-16,
 US-29…US-33; F5 holds US-17…US-22, US-24…US-28, US-34…US-38. Next free
 **US-39**. Retired, never reusable: **US-5, US-7, US-11, US-12** (F1),
