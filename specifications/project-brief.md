@@ -313,12 +313,19 @@ spec.
 
 ## 9. Open questions
 
+Six open after the two-phase rewrite. None blocks the ADR; all block
+implementation.
 
-| # | Question | Notes |
-|---|---|---|
-| Q-48 | **Does the `shared/` mechanism ship at v1.0 at all?** | Surfaced by the master-spec rewrite. Q-4 makes `shared/` load-bearing and F1 specifies `component.json` multi-destination mappings, a digest-pinned reference, the bump rule (changing a shared file bumps every referencing pack) and CI enforcement for it. But Q-28 defers `shared/presentation`, leaving `shared/targets` referenced by **`coding` alone** — one consumer, which is indistinguishable from pack-local content. So a whole specified mechanism, plus its enforcement, may ship with nothing to enforce against. Options: build it as specified; ship `targets` as coding-local content and defer `shared/` wholesale to v1.1 alongside `presentation`; or keep the declaration but drop the bump-rule enforcement until a second consumer exists. |
+| # | Question | Raised in | Notes |
+|---|---|---|---|
+| Q-48 | **Does the `shared/` mechanism ship at v1.0 at all?** | brief | Q-4 makes it load-bearing, but Q-28 defers `shared/presentation`, leaving `shared/targets` with **one** consumer — indistinguishable from pack-local content. F1 has already **removed `shared/` from the format** on that basis. If this resolves the other way, F1's retired US-7 returns under a new id. |
+| Q-49 | **What vehicle gives `planning` its part 9 autonomy contract?** | F5 | `pack-inventory.md` asserts three things that cannot all hold: no pack references `shared/`; planning's part 9 is present "via `shared/targets`"; planning's trees contain no `targets/`. US-27's absorption-gate ABORT needs a vehicle. Default assumed: planning declares it too — the alternative makes three `absent` parts and breaks the counted NFR. Interacts with Q-48. |
+| Q-50 | **How are empty directories created?** | F5 | No primitive makes one, yet `specifications/general/`, `specifications/v1.0/`, `sources/inbox/` and `portfolio/bets/` are all "created empty". **F1 answers it without an eighth primitive**: the pack ships a `skeleton/` placeholder tree placed by an ordinary `copy` step. That works but pushes authoring onto F5. Decide between skeleton and a `mkdir` primitive. |
+| Q-51 | **May the `writing` extraction author templates the source lacks?** | F5 | The source has **one** template and a four-file guide under its own names. `index`/`home` templates are arguably recipe scaffolding the recipe cannot work without — but authoring them is content change inside a migration Q-6 calls faithful. |
+| Q-52 | **Does the manifest need a payload digest?** | F1 | Q-43 removed `pack.integrity`, so recomputation *trusts* `.harness/pack/` and `verify` cannot distinguish "the tree drifted" from "the payload was edited". Bounded at v1.0 since nothing merges; the first thing v1.1's `update` must close. C-11's concern returning. |
+| Q-53 | **Which feature owns `lintel-harness verify`?** | F1 | F1 introduced the command — asked how determinism is checked, a command is the only honest answer — and assumes it owns it alongside `validate` and `pack info`. The master spec's v1.0 command list needs it added or moved. |
 
-Q-1…Q-47 are resolved — see §12. Next free ID is **Q-49**.
+Q-1…Q-47 are resolved — see §12. Next free ID is **Q-54**.
 
 ---
 

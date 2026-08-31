@@ -368,8 +368,29 @@ The six that were escalated from the spec run were decided on
 
 ### Still to run before implementation
 
-The `Specify.md` run is **incomplete**. ADR-001 is `PROCEED`, but the
-security re-review has not run since the remediation was folded in —
-the last recorded verdict is `REVISE-SPEC` — and no epics-and-tasks
-document exists. **A fresh `SECURITY-PROCEED` is required before any
-code is written.** F2, F3, F4 and F6 have stubs only.
+The `Specify.md` run is **incomplete**.
+
+- **ADR-001 is stale.** It still asserts `PROCEED` for the pre-Q-39
+  model — declarative mappings, `.harness/base/`, marked regions,
+  `--adopt`. It must be rewritten against the two-phase model.
+- **Security verdict is `REVISE-SPEC`.** The remediation was folded in,
+  but no fresh `SECURITY-PROCEED` has been issued. Required before any
+  code is written.
+- **No epics-and-tasks document exists.**
+- **F2 and F6 have no feature spec.** Only F1 and F5 are written.
+- **`general/system-architecture.md` and `general/technology-choices.md`
+  are required and unwritten.** The two-phase model changed the system's
+  shape after F1 and ADR-001 were drafted.
+- **Six open questions** — Q-48…Q-53, in `specifications/project-brief.md` §9.
+- **Five decisions were never formally closed** — Q-30, Q-31, Q-32,
+  Q-34, Q-36 are "open with a stated default" and the default was
+  adopted in practice. Q-36 is contradicted by the shipped brief
+  template.
+
+### Counters
+
+Q-1…Q-47 resolved, Q-48…Q-53 open, next free **Q-54**.
+User stories: F1 holds US-1…US-4, US-6, US-8…US-10, US-13…US-16,
+US-29…US-33; F5 holds US-17…US-22, US-24…US-28, US-34…US-38. Next free
+**US-39**. Retired, never reusable: **US-5, US-7, US-11, US-12** (F1),
+**US-23** (F5).
