@@ -343,19 +343,26 @@ already fixed — that fixup is logged as step 6 of the manual apply.
 
 ## Open decisions (for Thomas)
 
-**None open.** Q-1…Q-12 were resolved on 2026-08-30 and are recorded in
-the brief's Resolved Decisions table with rationale; the architecture
-summary is above. The v1.0 spec set is unblocked.
+**None.** Q-1…Q-38 are resolved and recorded in the brief's Resolved
+Decisions table with rationale. Next free id is **Q-39**.
 
-Two decisions are easy to get wrong later, so they are restated here:
+The six that were escalated from the spec run were decided on
+2026-08-31:
 
-- **A project holds exactly one pack** (Q-12). A user needing two ways
-  of working runs two projects side by side. Nothing in the manifest,
-  `CLAUDE.md` regions or `update` supports composition, by design.
-- **The `planning` pack is authored from the portfolio-roadmap-deck
-  workstream as a knowledge base** (Q-11) — mined for the loop, the
-  absorption gate, the horizon determinants, the template fields and
-  the two calibration poles. It is **not** a reuse of the writing pack,
-  and it carries **no dependency** on that project. Take the process and
-  the templates, which a critic pass found sound; not the surrounding
-  claims, which are still being verified.
+| # | Decision |
+|---|---|
+| Q-14 | **`init --adopt` ships** — hashes an existing tree, writes a manifest, seeds `.harness/base/` from the pack's rendered output. Meets S7 without discarding this repo's deliberate README rewrites |
+| Q-16 | Published as **`@lintel/harness`**, binary **`lintel-harness`**, **Node >= 22** (corrected from the ADR's assumed >= 20; Node 20 left LTS in April 2026) |
+| Q-17 | **Three scaffolds**: `backend-azure`, `backend-aws`, `writing-workstream`. `frontend` and `app` defer to v1.1 |
+| Q-28 | **`shared/presentation` defers to v1.1** — no pack references it at v1.0 |
+| Q-29 | **No boundary violation** — Q-6 constrains changing existing packs, not adding one |
+| Q-33 | **Planning's dogfooding site is chosen when the pack is authored.** Recorded risk: a pack is only as good as the work it has carried |
+| Q-38 | **Document templates stay copied** into applied projects — repo noise accepted for self-describing projects; identical copies never produce merge conflicts |
+
+### Still to run before implementation
+
+The `Specify.md` run is **incomplete**. ADR-001 is `PROCEED`, but the
+security re-review has not run since the remediation was folded in —
+the last recorded verdict is `REVISE-SPEC` — and no epics-and-tasks
+document exists. **A fresh `SECURITY-PROCEED` is required before any
+code is written.** F2, F3, F4 and F6 have stubs only.
