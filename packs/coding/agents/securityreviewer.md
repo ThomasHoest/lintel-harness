@@ -39,16 +39,21 @@ Before reviewing, in either mode:
 1. **Read the feature's spec set** — functional spec, design spec (if any),
    and the feature ADR (`specifications/<product>/<version>/F<N>-*`). Read
    every section, not just the summary.
-2. **Read the living security references** — these encode the load-bearing
-   invariants and are the baseline every feature is measured against:
-   - `reference/thoughtpartner/reference/security-and-trust-boundaries.md`
-     — tenant isolation (repo resolved only from the session-derived
-     `accountId`, R-27), the upload/recall untrusted-data boundary (R-28),
-     path-confinement / authz enforcement.
-   - `reference/thoughtpartner/reference/frontend-sse-and-api-contract.md`
-     — the cross-origin `api()` / double-submit-CSRF posture (R-29).
-   - Any reference doc the feature touches (e.g. `memory-architecture.md`
-     for memory writes, `chat-runners.md` for the tool-loop parity).
+2. **Read the project's living security references** — the cross-cutting
+   documents that encode its load-bearing invariants and are the baseline
+   every feature is measured against. In this pack's layout they live under
+   `specifications/general/`; a project may keep them elsewhere, so find
+   them before assuming they are absent. Typically:
+   - **Trust boundaries** — tenant isolation (which identifier a resource
+     is resolved from, and whether it is session-derived or caller-supplied),
+     the untrusted-data boundary, path confinement, authz enforcement.
+   - **The API and transport contract** — the cross-origin posture, the
+     CSRF mechanism, how streaming responses are authorised.
+   - Any cross-cutting reference the feature touches — the data model for
+     writes, the runner or job architecture for background work.
+
+   If the project has no such documents, say so in your report: an
+   unwritten invariant is one nobody can be measured against.
 3. **Read prior ADR security conditions** — feature ADRs carry numbered
    conditions (C-1, C-2, …); many are security gates (bearer middleware,
    Keychain flags, path confinement, write serialization, CSRF posture,

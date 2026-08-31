@@ -15,8 +15,8 @@ codebase. It bundles the five ingredients that survive across projects:
 
 Applying the pack places each piece where it belongs; nothing here is copied
 or renamed by hand. Filenames marked `.template.<ext>` are the ones an apply
-strips and fills; `{{PLACEHOLDER}}` tokens that are not `{{harness:…}}` are
-left verbatim for a human or an agent to fill in.
+strips and fills. A `{{PLACEHOLDER}}` token carrying no reserved prefix is
+left verbatim, for a human or an agent to fill in.
 
 ---
 

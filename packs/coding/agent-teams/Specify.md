@@ -10,7 +10,7 @@ Copywriter (conditional), Architect, SecurityReviewer. The lead applies
 the coordination rules below.
 
 All artifacts land under `specifications/<version>/` using the
-filename conventions in `specifications/conventions.md`. Each
+filename conventions in `.harness/pack/specifications/conventions.md`. Each
 teammate posts an entry on the shared task list on start and on
 completion.
 
@@ -48,7 +48,7 @@ Read first:
 - The researcher's findings (if any).
 - The existing specs in `specifications/` (read 2–3 to match format
   and detail level).
-- `CLAUDE.md` and `specifications/conventions.md` — naming,
+- `CLAUDE.md` and `.harness/pack/specifications/conventions.md` — naming,
   numbering, section structure must match exactly.
 - Prior ADRs under `specifications/<version>/` — do not re-litigate
   resolved decisions; reference them.

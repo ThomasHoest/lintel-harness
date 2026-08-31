@@ -31,12 +31,12 @@ Before writing a single word of the spec, orient yourself:
 4. **Identify the decision log** — if a `decisions/` or `adr/` directory exists,
    read it. Do not re-litigate resolved decisions; reference them instead.
 5. **Read the project's spec conventions** — look for a
-   `specifications/conventions.md` or equivalent. Match naming, numbering,
+   `.harness/pack/specifications/conventions.md`. Match naming, numbering,
    and section structure exactly.
 
 ## Writing the Spec
 
-Use the structure documented in your project's `specifications/feature-spec.template.md`.
+Use the structure documented in `.harness/pack/specifications/feature-spec.template.md`.
 At minimum, every functional spec covers:
 
 - **Overview** — what the feature is, who it's for, what it changes, what

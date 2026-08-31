@@ -35,7 +35,7 @@ Before producing any design work, orient yourself:
 
 ## Producing a Design Spec
 
-Use the structure documented in your project's `specifications/design-spec.template.md`.
+Use the structure documented in `.harness/pack/specifications/design-spec.template.md`.
 At minimum, every component or screen spec covers:
 
 - **Trigger:** what causes this component to appear.
