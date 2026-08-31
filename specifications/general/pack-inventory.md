@@ -56,7 +56,7 @@ the two paths above.
 
 ## `packs/coding` — 1.0.0
 
-Gated spec process. 40 files today.
+Gated spec process. 46 files today.
 
 ```
 packs/coding/
@@ -100,6 +100,13 @@ packs/coding/
 │   └── target.template.md                 P1   copied per goal by the user
 ├── copy/
 │   └── tone-of-voice.template.md          P2   → copy/tone-of-voice.md (strip-suffix)
+├── applied-readmes/                       P2   one per created folder (Q-50)
+│   ├── harness.md                         P2   → .harness/README.md
+│   ├── agentteams.md                      P2   → AgentTeams/README.md
+│   ├── specifications-general.md          P2   → specifications/general/README.md
+│   ├── specifications-version.md          P2   → specifications/v1.0/README.md
+│   ├── targets.md                         P2   → targets/README.md
+│   └── copy.md                            P2   → copy/README.md
 ├── commands/
 │   └── target.md                          P2   → .claude/commands/ · /target
 └── scaffolds/
@@ -226,6 +233,11 @@ parallelization rules, no auto-chaining) · 6 guidelines **strong** ·
 7 scaffolding `present` · 8 automations **absent** · 9 autonomy
 **absent**.
 
+**Folder READMEs (Q-50).** `writing` needs none added — it already
+carries an `index.md` in every folder plus `Home.md`. Authoring the
+`index` and `home` templates the recipe renders them from is permitted
+as recipe scaffolding (Q-51).
+
 **Source accuracy.** Corrected 2026-08-31 against the real project: the
 writing guide is **four files under their existing names**, not two
 `.template.md` files, and there is exactly **one** template
@@ -285,6 +297,8 @@ packs/planning/
 │   └── hooks/
 │       └── kill-criteria-guard.sh   INERT 0644 — registered by nothing at v1.0
 ├── portfolio/
+│   ├── README.md              what a bet is, and the loop it moves through
+│   ├── bets/README.md         how /bet creates one; kill criteria before start
 │   ├── register.md            every active bet, its phase and its horizon
 │   ├── bets/<slug>/
 │   │   ├── brief.md           from the opportunity/bet brief template
