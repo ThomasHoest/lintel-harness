@@ -12,6 +12,7 @@ is here.
 
 | Path | Holds |
 |---|---|
+| `project-brief.md` | The product brief. Everything else is downstream of it |
 | `<Project>Specification-X.Y.md` | Master spec — one per version |
 | `general/` | Cross-cutting reference specs, version-spanning |
 | `vX.Y/` | Everything scoped to one version. Frozen once shipped |

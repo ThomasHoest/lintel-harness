@@ -30,7 +30,7 @@ All three declare `minCliVersion: 1.0.0`. No pack references
 
 ## `packs/coding` — 1.0.0
 
-Gated spec process. 39 files today.
+Gated spec process. 40 files today.
 
 ```
 packs/coding/
@@ -57,6 +57,7 @@ packs/coding/
 ├── specifications/                        P1   reference + templates, stays in payload
 │   ├── README.md                          P1   the gated process + folder structure
 │   ├── README.template.md                 P2   → specifications/README.md (project index)
+│   ├── project-brief.template.md          P2   → specifications/project-brief.md (user fills)
 │   ├── conventions.md                     P1   naming, numbering, ownership
 │   ├── master-spec.template.md            P1
 │   ├── feature-spec.template.md           P1

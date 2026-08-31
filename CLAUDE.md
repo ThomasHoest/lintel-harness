@@ -26,7 +26,7 @@ the target project plus a manifest (pack, version, per-file hash), so a
 later `update` can be computed rather than guessed.
 
 **Status: pre-spec, but unblocked.** The product brief
-(`specifications/lintel-harness-brief.md`) is **Draft**. No
+(`specifications/project-brief.md`) is **Draft**. No
 specification set exists yet, no code is written, and the repo has **no
 commits**. Q-1…Q-10 were resolved on 2026-08-30 (see the brief's
 Resolved Decisions table). **One question remains open — Q-11**, the
@@ -62,7 +62,7 @@ Never make one thinking you are making the other.
 ├── .harness/
 │   └── pack/                    ← (to be created) phase-1 payload copy
 ├── specifications/
-│   ├── lintel-harness-brief.md  ← product brief
+│   ├── project-brief.md  ← product brief
 │   └── v1.0/                    ← master spec, F1, F5, ADR-001, research
 ├── copy/
 │   └── tone-of-voice.md         ← phase-2 artifact; still unfilled

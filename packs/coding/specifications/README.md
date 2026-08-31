@@ -16,6 +16,7 @@ it: the master spec, one folder per version, and one `general/` folder.
 ```
 specifications/
 ├── README.md                        ← project-local index (what lives where)
+├── project-brief.md                 ← the brief every other doc is downstream of
 ├── <Project>Specification-1.0.md    ← master spec, one per version
 ├── general/                         ← CROSS-CUTTING reference specs
 │   ├── system-architecture.md       ← required
@@ -55,6 +56,7 @@ structure below, edit it for your context.
 
 | File | Purpose |
 |---|---|
+| `project-brief.md` | The product brief — purpose, problem, goals, requirements, success criteria, resolved decisions. Version-spanning; everything else is downstream of it |
 | `{{Project}}Specification-X.Y.md` | Master version index — version-level context + a one-paragraph stub per feature with links |
 | `spec-<topic>.md` | Full feature spec — all detail for one feature lives here |
 | `design-spec-<topic>.md` | UI/UX spec — screens, components, tokens, motion, accessibility |
@@ -88,11 +90,16 @@ must know, and state which decisions the document is downstream of.
 ## Document flow
 
 ```
-research → spec → design-spec → ADR → epics-and-tasks → implementation
+brief → research → spec → design-spec → ADR → epics-and-tasks → implementation
 ```
 
 The arrows are gates, not suggestions:
 
+0. **Brief** comes before everything. It states what the product is,
+   what it must do, and which decisions are already made. Research and
+   specs cite it; when the brief and a spec disagree, the brief wins and
+   the spec is what gets fixed. A brief with unresolved blocking
+   questions is not ready to specify against.
 1. **Research** runs first for anything unfamiliar (new API, new
    library, new platform constraint). Output: a structured findings
    doc with sources and a recommended approach.

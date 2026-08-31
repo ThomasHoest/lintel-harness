@@ -5,7 +5,7 @@
 **Platform:** Node ≥ 20 / TypeScript CLI, published as an npm package (`npx`-runnable). Pack content is Markdown, shell, PowerShell and Bicep; `pack.json` and the manifest are JSON. No UI.
 **Design spec:** n/a (no UI)
 **ADR:** `F1-ADR-001-pack-format-and-manifest.md` — **PROCEED**. It settles six F1↔F5 contract conflicts and closes Q-13, Q-15 and Q-18…Q-27. Where this spec and the ADR disagree, the ADR wins.
-**References:** `specifications/lintel-harness-brief.md` (§3.3, §6 R1–R6, §7, §12 Q-1…Q-12), `CLAUDE.md` (§Decided architecture, §The core abstraction, §Dogfooding), `specifications/conventions.md`, `specifications/v1.0/research-planning-pack-framing.md`, `template/` (the coding pack source)
+**References:** `specifications/project-brief.md` (§3.3, §6 R1–R6, §7, §12 Q-1…Q-12), `CLAUDE.md` (§Decided architecture, §The core abstraction, §Dogfooding), `specifications/conventions.md`, `specifications/v1.0/research-planning-pack-framing.md`, `template/` (the coding pack source)
 
 **Amendment history**
 
@@ -2245,7 +2245,7 @@ each keeps the ID it was raised under. Q-27 was raised in F5 but is a
 decision about F1's shared-component mechanism, so it is recorded here,
 where the mechanism lives; F5's Open Questions table points at this row.
 The settled inputs upstream of all of them are Q-1…Q-12 in
-`specifications/lintel-harness-brief.md` §12.
+`specifications/project-brief.md` §12.
 
 | # | Question | Decision | Date |
 |---|---|---|---|

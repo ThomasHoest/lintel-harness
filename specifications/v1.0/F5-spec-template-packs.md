@@ -5,7 +5,7 @@
 **Platform:** Pack content is plain files — Markdown, JSON, shell/PowerShell, Bicep, CDK TypeScript — bundled with the Node/TypeScript CLI and consumed by Claude Code's `.claude/` conventions. No runtime of its own.
 **Design spec:** n/a (no UI)
 **ADR:** {{`F5-ADR-NNN-template-packs.md` — filled in by the architect after this spec is reviewed}}
-**References:** `specifications/lintel-harness-brief.md` (§3, §6 R1/R2/R5/R6, §12 Q-1…Q-12), `CLAUDE.md`, `specifications/v1.0/research-planning-pack-framing.md`, `specifications/conventions.md`, `F1-spec-pack-format-and-manifest.md`, `template/` (the coding pack source), `/Users/mrandersen/Projects/AIImpactOnOrganizationsAndLeadership/` (the writing pack source)
+**References:** `specifications/project-brief.md` (§3, §6 R1/R2/R5/R6, §12 Q-1…Q-12), `CLAUDE.md`, `specifications/v1.0/research-planning-pack-framing.md`, `specifications/conventions.md`, `F1-spec-pack-format-and-manifest.md`, `template/` (the coding pack source), `/Users/mrandersen/Projects/AIImpactOnOrganizationsAndLeadership/` (the writing pack source)
 
 **Amendment history**
 

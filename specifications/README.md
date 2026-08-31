@@ -12,7 +12,7 @@ is here.
 
 | Path | Holds |
 |---|---|
-| `lintel-harness-brief.md` | The product brief. **Q-1…Q-46 resolved**, with rationale |
+| `project-brief.md` | The product brief. **Q-1…Q-46 resolved**, with rationale |
 | `general/` | Cross-cutting reference specs, version-spanning |
 | `v1.0/` | Everything scoped to v1.0 |
 

@@ -3,7 +3,7 @@
 **Status:** Draft — **amended 2026-08-30 (security remediation pass)**
 **Date:** 2026-08-30
 **Deciders:** `architect` (this ADR) · escalations to Thomas Andersen
-**Refs:** `F1-spec-pack-format-and-manifest.md`, `F5-spec-template-packs.md`, `LintelHarnessSpecification-1.0.md` (Q-13…Q-17), `specifications/lintel-harness-brief.md` §7 §12 (Q-1…Q-12), `CLAUDE.md` (§Decided architecture, §Dogfooding), `specifications/conventions.md` §ADR shape · **security review of 2026-08-30** (Mode A over F1 + this ADR: `REVISE-SPEC`, S-1…S-14, conditions C-1…C-18 — dispositioned in §8)
+**Refs:** `F1-spec-pack-format-and-manifest.md`, `F5-spec-template-packs.md`, `LintelHarnessSpecification-1.0.md` (Q-13…Q-17), `specifications/project-brief.md` §7 §12 (Q-1…Q-12), `CLAUDE.md` (§Decided architecture, §Dogfooding), `specifications/conventions.md` §ADR shape · **security review of 2026-08-30** (Mode A over F1 + this ADR: `REVISE-SPEC`, S-1…S-14, conditions C-1…C-18 — dispositioned in §8)
 
 **Template deviation, declared:** this is a feature-scoped ADR
 (`adr-feature.template.md`) that additionally carries the **file-level

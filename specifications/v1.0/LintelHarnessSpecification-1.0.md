@@ -3,7 +3,7 @@
 **Status:** Draft
 **Date:** 2026-08-30
 **Platform:** Node.js + TypeScript CLI published to npm and invoked as `harness` / `npx harness`, plus a thin Claude Code skill under `.claude/skills/`. Packs are plain files bundled into the published package — no network fetch at init. Node LTS floor not yet fixed (Q-16).
-**References:** `specifications/lintel-harness-brief.md` (Draft, 2026-08-30) · `CLAUDE.md` · `specifications/v1.0/research-planning-pack-framing.md` · `specifications/conventions.md` · `specifications/README.md`
+**References:** `specifications/project-brief.md` (Draft, 2026-08-30) · `CLAUDE.md` · `specifications/v1.0/research-planning-pack-framing.md` · `specifications/conventions.md` · `specifications/README.md`
 
 **Amendment history**
 
@@ -492,7 +492,7 @@ unique and recorded what was already written. What it reconciled:
 
 Q-1…Q-12 were resolved on 2026-08-30 **before** this spec was written
 and are recorded in full, with rationale, in
-`specifications/lintel-harness-brief.md` §12. They are not re-litigated
+`specifications/project-brief.md` §12. They are not re-litigated
 or restated here — the Technical Context table above cites them per row.
 The index below exists so a reader can find the right row of the brief
 without reading all of it.
