@@ -2802,7 +2802,55 @@ change to the quantifier is visibly a change to the condition.
 
 ## 10. Verdict
 
-**Verdict: `REVISE SPEC`.**
+> ### FINAL — set 2026-08-31, superseding everything below in this section
+>
+> **Architectural verdict: `PROCEED`.**
+>
+> Every precondition this section set has been met and exceeded. §6.1
+> changes 17–27 are folded (**F1 v2.5**, which also carries C-39, C-40,
+> C-41, C-43, C-45 and C-48); §6.2 is folded (**F5 v2.4**); §6.3 and
+> §6.5 are folded across the master spec, `pack-application.md` and
+> `pack-inventory.md`. The architectural delta this section names — *every
+> destination control is evaluated over the set of applied paths a step
+> writes, not over the step's `to` field* — holds, and F1 v2.5
+> generalised it further: **a reserved name is reserved at every segment;
+> `.harness/` is the only location entry in the document.**
+>
+> ### The security position is separate, and it is not a clearance
+>
+> **No `SECURITY-PROCEED` verdict exists. None is claimed. This
+> architectural `PROCEED` is not one, and must not be read as one.**
+>
+> The security gate is **closed by decision** after four Mode A rounds,
+> not by a passing verdict. The trajectory:
+>
+> | Round | Against | Result |
+> |---|---|---|
+> | 1 | F1 v1.0 | `REVISE-SPEC` — 2 CRITICAL, 4 HIGH · C-1…C-18 |
+> | 2 | F1 v2.2 | `REVISE-SPEC` — 2 CRITICAL, 3 HIGH · **six conditions found lapsed** · C-19…C-30 |
+> | 3 | F1 v2.3 | `REVISE-SPEC` — **0 CRITICAL**, 2 HIGH · 24/31 holding · C-31…C-38 |
+> | 4 | F1 v2.4 | `REVISE-SPEC` — **0 CRITICAL**, 3 HIGH · **36/38 holding** · C-39…C-48 |
+>
+> Round 4's HIGHs and MEDIUMs are folded. **C-47 and the LOW residue are
+> accepted for v1.0** with their requirements and tests already written.
+>
+> **Why stopping here is a judgement and not a pass.** Every finding in
+> rounds 3 and 4 concerned the membership or the quantifier of a
+> **denylist**, which §NFR *Bounded capability* now concedes is
+> incomplete by construction. There is no round at which a reviewer runs
+> out of destinations to name. The two structural defects round 4 found —
+> a rule that did not reach phase 1, and a pin narrower than the property
+> it implemented — are closed; what remains is enumeration.
+>
+> **An implementer must read `§F1.9`'s known limits and v1.1 obligations
+> as part of the contract, not as commentary.**
+
+---
+
+*Everything below is the verdict history of earlier passes, retained as
+the record of how the design moved. It is superseded by the block above.*
+
+**Verdict (2026-08-31, superseded): `REVISE SPEC`.**
 
 **Not narrowed. The previous edition of this section said "narrowed to
 one item, which this pass created", and that judgement was made against a

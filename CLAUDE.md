@@ -366,28 +366,39 @@ The six that were escalated from the spec run were decided on
 | Q-33 | **Planning's dogfooding site is chosen when the pack is authored.** Recorded risk: a pack is only as good as the work it has carried |
 | Q-38 | **Document templates stay copied** into applied projects — repo noise accepted for self-describing projects; identical copies never produce merge conflicts |
 
-### Still to run before implementation
+### Status of the spec set
 
-The `Specify.md` run is **incomplete**.
+**F1 and F5 are spec-complete. ADR-001 carries an architectural
+`PROCEED`.** Q-1…Q-55 are all resolved.
 
-- **ADR-001 is stale.** It still asserts `PROCEED` for the pre-Q-39
-  model — declarative mappings, `.harness/base/`, marked regions,
-  `--adopt`. It must be rewritten against the two-phase model.
-- **Security verdict is `REVISE-SPEC`.** The remediation was folded in,
-  but no fresh `SECURITY-PROCEED` has been issued. Required before any
-  code is written.
-- **No epics-and-tasks document exists.**
+**The security gate is closed by decision, not by a passing verdict.**
+Four Mode A rounds ran: 2 CRITICAL → 2 CRITICAL → 0 CRITICAL/2 HIGH →
+0 CRITICAL/3 HIGH, with conditions holding 24/31 → 36/38. Round 4's
+HIGHs and MEDIUMs are folded into F1 v2.5 and F5 v2.4; C-47 and the LOW
+residue are accepted with their requirements and tests recorded. **No
+`SECURITY-PROCEED` exists.** Every round-3 and round-4 finding concerned
+the membership or quantifier of a denylist that the spec itself concedes
+is incomplete by construction — stopping is a judgement about
+diminishing returns, and should be read as one.
+
+**`§F1.9`'s known limits and v1.1 obligations are part of the contract.**
+
+### Genuinely outstanding before code
+
+- **No epics-and-tasks document** for F1 or F5.
 - **F2 and F6 have no feature spec.** Only F1 and F5 are written.
 - **`general/system-architecture.md` and `general/technology-choices.md`
   are required and unwritten.** The two-phase model changed the system's
-  shape after F1 and ADR-001 were drafted.
-- ~~Six open questions.~~ **All resolved** (Q-48…Q-53, 2026-08-31).
-  **F1 needs a small fold**: the manifest gains a payload digest (Q-52),
-  making it six keys, and `verify` is confirmed F1-owned (Q-53).
-- **Five decisions were never formally closed** — Q-30, Q-31, Q-32,
-  Q-34, Q-36 are "open with a stated default" and the default was
-  adopted in practice. Q-36 is contradicted by the shipped brief
-  template.
+  shape after F1 and the ADR were first drafted, so the architecture doc
+  has never described the current design.
+- **Pack content lags the spec.** `packs/coding/` has no `pack.json`,
+  no `recipe.json` and no `commands/` directory; `infrastructure/
+  backend-deploy/` has not become `scaffolds/backend-azure/`; and only
+  one template carries a `{{harness:` token where F1 asserts five
+  substitution targets. F1's US-16 positive assertion is what will catch
+  this.
+- **`.harness/pack/` does not exist**, so S7 is unmet — this repo is not
+  yet produced by its own tool.
 
 ### Counters
 
