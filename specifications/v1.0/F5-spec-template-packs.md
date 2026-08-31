@@ -1,5 +1,5 @@
 # F5 — Template Packs Specification — Lintel Harness v1.0
-**Version:** 2.1
+**Version:** 2.2
 **Status:** Draft
 **Date:** 2026-08-31
 **Platform:** Pack content is plain files — Markdown, JSON, shell/PowerShell, Bicep, CDK TypeScript — bundled with the Node/TypeScript CLI and consumed by Claude Code's `.claude/` conventions. No runtime of its own.
@@ -19,6 +19,7 @@
 | **2.0** | **2026-08-31** | **`F1-ADR-001` fold (`REVISE SPEC`, §6.2's nine changes), plus Q-48…Q-53.** **The `shared/` mechanism is removed from this spec entirely (Q-48)** — no `shared/` tree, no `component.json`, no declared references, no digest pin and no bump rule at v1.0. `targets` ships as `coding`-local content and `planning` ships **its own copy** (Q-49), whose duplication is recorded here as a **named v1.1 reconciliation task**. **`E-SHARED-UNDECLARED` and `E-SHARED-STALE` are deleted** — neither exists in F1's catalogue, which this spec calls the only one. The "gap flagged, not filled" note on recipe validation is **deleted and the codes cited**: F1 carries `E-RECIPE-MISSING`, `-INVALID`, `-PRIMITIVE-UNKNOWN`, `-STEP-INVALID`, `-SOURCE-MISSING`, plus `E-PAYLOAD-PATH-INVALID` and `E-MAP-RESERVED-DEST`. **Q-50 removes every empty directory**: `coding` gains five folder READMEs from `applied-readmes/` (now stated in the payload inventory and the recipe table) and `planning` gains three (`portfolio/`, `portfolio/bets/`, `targets/`), so the coding phase-2 count becomes **24 files and no empty directory**; there is no `mkdir` primitive and no `.gitkeep`. **US-22 is retired** with the mechanism it asserted. **Every question this spec carried closes**: Q-30, Q-31, Q-32, Q-34, Q-36, Q-49, Q-50 and Q-51 move to Resolved Decisions, so **F5 has no open questions**. Next free question id **Q-54**; next free story id **US-39**. |
 | **2.0** | **2026-08-31** | **`F1-ADR-001` §6.2 changes 10–11 folded — the Q-50 folder-README rule becomes a checked rule.** F1 v2.2 adds `validate` **step 12** (`W-FOLDER-README-MISSING`, a warning, fatal under `--strict`), run **per parameter combination**, and `pack.json` gains **`folderReadme`**. Two consequences land here. **(10)** `packs/writing/pack.json` **declares `"folderReadme": "index.md"`**, its existing Obsidian convention paired with `Home.md`; `coding` and `planning` omit the key and take the `README.md` default. **(11)** **Every folder a recipe creates must receive its folder README from a step in the same `when` branch as whatever creates the folder** — stated as a requirement on all three recipes and worked concretely for `coding`'s `backend-azure`/`backend-aws` scaffolds, `writing`'s per-workstream stage folders and `planning`'s two calibration branches. `W-FOLDER-README-MISSING` is added to the CLI-scenario table **by citation**; F1 remains the only catalogue. One goal added, **G5.11** (`validate --all --strict` exits `0` over the bundled packs), and one NFR under *Anatomy and legibility*. **No new code, no new story and no new question**: next free question id **Q-54**; next free story id **US-39**. |
 | **2.1** | **2026-08-31** | **`F1-ADR-001` Mode A re-review fold — §6.2 changes 12–16, as overridden by Q-54.** **`merge-json` is dropped from v1.0 (Q-54): six primitives, not seven.** The three `merge-json` "Settings" steps in `coding`, `writing` and `planning` are **deleted** — the architect established they were never valid recipes (no `from`, no owned key, no settings source file in any payload), so nothing is removed but placeholders. **`.claude/settings.json` leaves every produced-tree listing and every acceptance criterion**, including US-17 and US-18; US-18's *"contains no `hooks` key"* becomes the stronger, mechanically checkable *"the applied tree contains no `.claude/settings.json`"*. **Every reference to `E-OWNEDKEY-*`, `E-MERGE-JSON-*` and `E-SETTINGS-*` is deleted** — those codes no longer exist in F1's catalogue, which this spec calls the only one, so citing them was a contract break. **No pack ships a permission set, owns a settings key, or triggers a consent prompt at v1.0.** Restated and unchanged: **no pack registers an agent hook at v1.0**; `planning` still ships its inert `0644` guard script and the kill-criteria rule is still carried by `/bet`'s instruction and by `/review`. R5's shortfall record gains a **fourth** entry — no pack ships a default permission set either, deferred to v1.1 with `merge-json`. **C-12's lapse is repaired:** US-17 and §NFR *Payload fidelity* said phase 1 copies *"including modes"*, which is the opposite of the rule — **phase 1 writes every payload file `0644` and preserves no source mode** (F1 US-30). Counts corrected: `coding` phase 2 writes **23** files (18 working + 5 folder READMEs), not 24. Four F5-internal corrections from §6.2 change 16: US-34's provenance clause restated against §3.6 (source is a payload path, resolved at plan time, no execute-time read); `planning` gains the **`rewrite-path`** step its targets contract already required; the 7b summary-matrix cells restated for all three packs; and §Flows' *"which F1 must add"* on the recipe-schema code struck, because that gap closed. **Q-54 is indexed as resolved; next free question id Q-55; next free story id US-39. No story retired, no new code, no new question.** |
+| **2.2** | **2026-08-31** | **Mode A residue fold — C-35 and C-38.** Two documentation defects, one of which required a decision. **C-38 — the executable disagreement is settled, and `coding` ships executables.** F1 said every v1.0 pack ships no executable file; §NFR said *"no executable pack content outside a declared scaffold"*, which reads as the opposite. Decided in one direction: **`coding` declares `"executableRoots": ["infrastructure/backend-deploy/"]`** and its backend scaffold steps set **`"executable": true`** on `deploy.sh`, `deploy.ps1`, `setup-neon.sh` and `setup-neon.ps1`, which land **`0755`** and are enumerated in `init`'s pre-write disclosure. Those scripts are meant to be run, `0644` would force a `chmod` on every applied project, and giving C-12's apparatus a real consumer beats leaving it specified and dormant — the pattern Q-54 was the lesson about. Restated across §NFR *Content integrity*, US-21, `coding`'s 7b recipe row and applied tree, and the scaffold inventory. **The matching change lands in F1; this spec does not own it.** **C-35 — anatomy `paths` are payload-relative**, stated wherever the declaration is described (§What is in scope, US-20, §Flows / *The nine parts across the three packs*, §NFR *Anatomy completeness*), with `coding`'s `agent-teams/` → `AgentTeams/` rename given as the case that proves the payload and applied namespaces are different rather than usually-equal. Matching an applied path against an anatomy glob silently drops the two agent-team documents, which is C-35's root cause; F1 restates its substituted-answer classifier over applied paths. **No new question, no new story, no new error code:** next free question id **Q-55**, next free story id **US-39**. Codes cited are F1's existing `E-EXEC-ROOT-UNDECLARED`, `E-EXEC-DEST-FORBIDDEN` and `E-EXEC-TOO-MANY`. |
 
 ---
 
@@ -118,7 +119,9 @@ section first if you are here for the packs themselves.
 - The **scaffold inventory**: three scaffolds, which exist and which must
   be authored, and which are alternatives rather than peers.
 - Each pack's **`pack.json` anatomy declaration**: all nine parts named,
-  with a part that has no content declared `absent` with a reason.
+  with a part that has no content declared `absent` with a reason. Its
+  globs are **payload-relative** — see §Flows / *The nine parts across
+  the three packs*.
 
 ### What is NOT in scope
 
@@ -181,8 +184,9 @@ Only settled decisions. Everything unsettled is in **Open Questions**.
 | `planning` parameterisation | Calibrated at init by `constraintFloor`, values `high-floor` \| `near-zero-floor`, expressed as recipe **`when` conditions over `calibrations/<name>/`** | Q-11 + Q-13 — contingency is the research's central finding; the recipe's `when` is the mechanism, and `calibrations/<name>/` is a pack-authoring convention over it, not a format feature |
 | Scaffolds | **Three at v1.0**: `backend-azure`, `backend-aws`, `writing-workstream`. The two backend scaffolds are **alternatives within a category, not composable peers** — both write `infrastructure/backend-deploy/` | Q-17 + Q-8a. `frontend` and `app` defer to v1.1 |
 | Hooks | **No pack may register an agent hook at v1.0.** `planning` ships three slash commands plus one **inert** `0644` guard script | `F1-ADR-001` §7.2.5 — a hook's command string is a merge target with no re-consent surface |
+| Executables | **`coding` ships four, and only under a declared root.** `pack.json` declares `"executableRoots": ["infrastructure/backend-deploy/"]`; the backend scaffold steps set `"executable": true` on `deploy.sh`, `deploy.ps1`, `setup-neon.sh`, `setup-neon.ps1`, which land **`0755`** and are enumerated in `init`'s pre-write disclosure. `writing` and `planning` declare no root and ship none. Everything else any pack writes is `0644` | C-12 — the scripts are meant to be run, so `0644` would force a `chmod` on every applied project; and apparatus that is specified but has no consumer is the pattern Q-54 was the lesson about |
 | Regions | **None at v1.0.** The generated `CLAUDE.md` carries inert anchors as forward investment for v1.1's `update` | Q-45 — regions had two justifications and Q-39/Q-42 removed both |
-| Anatomy declaration | Every `pack.json` declares all nine parts with F1's three-value `status`; a part with no content is `absent` **with a reason**, a part that is inferred rather than sourced is `provisional` **with a note** | R2 — "a pack with a missing part is visibly incomplete rather than quietly deficient" |
+| Anatomy declaration | Every `pack.json` declares all nine parts with F1's three-value `status`; a part with no content is `absent` **with a reason**, a part that is inferred rather than sourced is `provisional` **with a note**. **Its `paths` globs are payload-relative** — they say where the pack keeps a part, never where an apply puts it | R2 — "a pack with a missing part is visibly incomplete rather than quietly deficient". The payload/applied split is C-35: `coding` declares `agent-teams/*.md` and applies to `AgentTeams/`, so matching applied paths against anatomy globs silently drops both agent-team documents |
 
 ---
 
@@ -457,6 +461,13 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   `lintel-harness init` refuses to apply it.
 - Across the three packs, exactly **two** parts are `absent` and exactly
   **one** is `provisional`. Checkable in one run.
+- **The report describes the pack, not an applied project.** Every
+  declared `paths` glob is **payload-relative** and is matched against
+  the pack directory. `pack info` answers "what does this pack contain?"
+  and says nothing about where a recipe puts it — `coding` declares its
+  coordination part as `agent-teams/*.md` and applies it to
+  `AgentTeams/`, and both statements are correct. See §Flows / *The nine
+  parts across the three packs*.
 
 ---
 
@@ -471,9 +482,23 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   `production.bicepparam`, `deploy.sh`, `deploy.ps1`, `setup-neon.sh`,
   `setup-neon.ps1` and a README — each with its `.template` suffix
   stripped by the recipe.
+- **The four scripts land executable.** `deploy.sh`, `deploy.ps1`,
+  `setup-neon.sh` and `setup-neon.ps1` are written **`0755`**; every
+  other file the scaffold places is `0644`. They are executable because
+  the recipe step that places them declares `"executable": true`, under
+  the `executableRoots` prefix `infrastructure/backend-deploy/` that
+  `coding`'s `pack.json` declares — not because a mode was preserved
+  from the payload, which phase 1 flattens to `0644` (F1 US-30).
+- **The four paths are disclosed before anything is written.**
+  `init`'s pre-write summary and `pack info` enumerate every `0755`
+  applied path verbatim, one per line (F1 US-3). A test may assert it by
+  running `init coding --scaffold backend-azure` and requiring all four
+  in the summary and mode `0755` on disk afterwards.
 - `lintel-harness init coding --scaffold backend-aws` produces
   `infrastructure/backend-deploy/` containing the CDK + Lambda
-  equivalent.
+  equivalent. Any script it ships executable lands under the **same**
+  declared root, is disclosed the same way, and counts against the same
+  per-apply cap of 32.
 - **`backend-azure` and `backend-aws` are alternatives, not composable
   peers.** Requesting both writes zero bytes and fails with
   `E-SCAFFOLD-EXCLUSIVE` (F1 §Error States), because both declare the
@@ -943,9 +968,40 @@ Two things follow, both v1.0 facts:
   tree to scan — Q-48.)
 - **Encoding:** every pack file is UTF-8 with LF line endings, so an
   applied tree hashes identically on macOS, Linux and Windows.
-- **No executable pack content outside a declared scaffold.** The one
-  script any pack ships to `.claude/` — `planning`'s guard — is written
-  `0644`.
+- **Executable pack content exists, and every path of it is declared,
+  bounded and disclosed.** `coding` declares
+  `"executableRoots": ["infrastructure/backend-deploy/"]` in `pack.json`,
+  and its backend scaffold steps set `"executable": true` on the four
+  scripts they place — `deploy.sh`, `deploy.ps1`, `setup-neon.sh`,
+  `setup-neon.ps1` — which land **`0755`**. They exist only when
+  `backend-azure` is selected, and they are enumerated verbatim in
+  `init`'s pre-write disclosure and in `pack info` (F1 US-3).
+  `backend-aws` is authored rather than migrated (Q-8a); any executable
+  it ships lands under the **same** declared root, is disclosed the same
+  way, and counts against the same cap. **No pack produces an executable
+  outside `infrastructure/backend-deploy/`**, and everything else any
+  pack writes is `0644`.
+- **Nothing else can become executable, by rule rather than by habit.**
+  `writing` and `planning` declare no `executableRoots` and ship no
+  executable file. `"executable": true` at a path outside every declared
+  root is `E-EXEC-ROOT-UNDECLARED`; a root resolving under `.claude/`,
+  `.git/`, `.hg/`, `.svn/` or `.harness/` is `E-EXEC-DEST-FORBIDDEN`,
+  checked at declaration and again per applied path; more than 32
+  executables in one apply is `E-EXEC-TOO-MANY` (all three F1
+  §Error States). So the one script `planning` places under `.claude/` —
+  its inert kill-criteria guard — is `0644` and **could not be
+  otherwise**: `.claude/` is a forbidden destination for the bit, quite
+  apart from `planning` declaring no root.
+- **This NFR was the opposite of this in edition 2.1** — *"no executable
+  pack content outside a declared scaffold"*, which reads as a
+  prohibition and contradicted F1's then-statement that every v1.0 pack
+  ships no executable file. Both halves are settled here in the same
+  direction: `coding` **does** ship executables, because those four
+  scripts are meant to be run and landing them `0644` forces every
+  operator to `chmod` before the scaffold works. Exercising C-12's
+  apparatus — roots, cap, `E-EXEC-DEST-FORBIDDEN`, the disclosure line —
+  against a real consumer is deliberate: specified-but-dormant security
+  machinery is the pattern Q-54 was the lesson about.
 
 **Migration**
 
@@ -971,7 +1027,12 @@ Two things follow, both v1.0 facts:
   **two** parts are `absent` (`writing` 8 and 9) and exactly **one** is
   `provisional` (`planning` 2). Because `status` is a schema field rather
   than prose, both counts are checkable by `lintel-harness validate --all`.
-  Any change to them is a spec change.
+  Any change to them is a spec change. **The check is entirely
+  payload-side:** every declared glob is matched against the pack
+  directory, never against an applied tree, so `validate` needs no
+  project and a rename in a recipe can never make a declared part look
+  empty. See §Flows / *The nine parts across the three packs* for the
+  namespace rule and for `coding`'s `agent-teams/` → `AgentTeams/` case.
 - **Folder READMEs:** `lintel-harness validate --all --strict` exits `0`
   over the three bundled packs, which means every folder each recipe
   creates — in **every** parameter combination, not merely in the one
@@ -1081,6 +1142,45 @@ The **declared** status in `pack.json` is one of `present`,
 `provisional`, `absent`. **`strong` and `weak` below are this spec's
 editorial reading within `present`** — they are not schema values, and
 nothing branches on them.
+
+**An anatomy part's `paths` globs are payload-relative, and that is a
+different namespace from the applied tree.** They are matched against
+`packs/<name>/**` — equivalently, against `.harness/pack/**` once the
+pack is applied — and they say **where the pack keeps** the content of a
+part. They do **not** say where an apply puts it. Where the content ends
+up is whatever the recipe's steps declare, and the recipe is free to
+move, rename or not copy it at all.
+
+`coding`'s part 5 is the case that proves the two namespaces are
+genuinely different, rather than usually-equal:
+
+| | Payload namespace | Applied namespace |
+|---|---|---|
+| What names it | `anatomy.coordination.paths` = `["agent-teams/*.md"]` | the recipe's Teams step |
+| Where the files are | `packs/coding/agent-teams/{Specify,Implement}.md`, and `.harness/pack/agent-teams/…` after phase 1 | `AgentTeams/{Specify,Implement}.md` |
+| Case and spelling | lowercase, hyphenated | PascalCase, no hyphen |
+
+The directory rename `agent-teams/` → `AgentTeams/` means **no applied
+path matches the anatomy glob**, and none is meant to. Three consequences
+follow, and all three are requirements rather than observations:
+
+1. **Never match applied paths against anatomy globs.** An implementer
+   who does silently gets an empty set for `coding`'s coordination part —
+   the two agent-team documents disappear from whatever the match was
+   feeding. This is the root cause of the C-35 finding: F1's classifier
+   for a substituted answer landing in agent-instruction content is
+   *stated* over the anatomy declaration but *enumerated* over applied
+   paths, and the two only meet if something translates between the
+   namespaces. **F1 restates that clause over applied paths; this spec
+   states the reason it had to.**
+2. **`E-ANATOMY-EMPTY` is a payload check.** It fires when a part's globs
+   match no file **in the pack**, which is decidable from the pack alone
+   and needs no apply — one reason `validate` needs no project.
+3. **A part can be `present` and still reach no applied path.** Parts 3
+   and 4 do exactly that under Q-47: the document templates and
+   `conventions.md` are declared, they exist, and the recipe copies
+   neither out. Declared content and copied-out content are independent
+   claims.
 
 | # | Part | `coding` | `writing` | `planning` |
 |---|---|---|---|---|
@@ -1215,7 +1315,7 @@ authoring** for the migration: `pack.json`, `recipe.json`, `commands/`
 | Path fix | `rewrite-path` | `targets/Run.md`, `.claude/commands/target.md` | `template/targets/…` → `.harness/pack/targets/…` |
 | Answers | `substitute` | project name and stack into the above | — |
 | Onboarding | `generate` | `CLAUDE.md.template` + answers | `CLAUDE.md`, with inert anchors (Q-45) |
-| Backend | `copy` + `strip-suffix`, `when scaffold` | `scaffolds/backend-azure/**` **or** `scaffolds/backend-aws/**` | `infrastructure/backend-deploy/` — **including that folder's own `README.md`, from inside the selected scaffold** |
+| Backend | `copy` + `strip-suffix`, `when scaffold` | `scaffolds/backend-azure/**` **or** `scaffolds/backend-aws/**` | `infrastructure/backend-deploy/` — **including that folder's own `README.md`, from inside the selected scaffold**, and with `"executable": true` on the four scripts (below) |
 
 **Applied tree:**
 
@@ -1231,7 +1331,29 @@ authoring** for the migration: `pack.json`, `recipe.json`, `commands/`
 ├── copy/{README.md, tone-of-voice.md}
 ├── CLAUDE.md
 └── infrastructure/backend-deploy/     only with a backend scaffold
+                                       four scripts land 0755, the rest 0644
 ```
+
+**`coding` is the one v1.0 pack that ships executables, and it declares
+them.** `pack.json` carries
+`"executableRoots": ["infrastructure/backend-deploy/"]`, and the backend
+scaffold's steps set `"executable": true` on `deploy.sh`, `deploy.ps1`,
+`setup-neon.sh` and `setup-neon.ps1`. Those four land **`0755`**;
+`main.bicep`, `production.bicepparam` and the folder's own `README.md`
+land `0644` alongside them. Without a backend scaffold the root is
+declared and nothing is under it, so the apply produces no executable at
+all; with `backend-aws` instead, any executable that scaffold ships lands
+under the same root. The four paths appear verbatim in `init`'s pre-write disclosure and
+in `pack info`, one per line (F1 US-3). This is the deliberate resolution
+of a disagreement between earlier editions of this spec and F1: the
+scripts are **meant to be run**, landing them `0644` would force a
+`chmod` on every applied project, and giving C-12's apparatus — declared
+roots, the cap of 32, `E-EXEC-DEST-FORBIDDEN`, the disclosure line — a
+real consumer beats leaving it specified and dormant. See §NFR
+*Content integrity*.
+
+**None of the four counts toward the file count below**, which covers the
+base recipe only.
 
 **23 files, and not one empty directory.** The **18** working files plus
 the five folder READMEs. `.claude/` and `.harness/` carry no pack-written
@@ -2330,9 +2452,14 @@ generator.
 
 | Scaffold | Pack | Category | Destination | Status |
 |---|---|---|---|---|
-| `backend-azure` — Azure SWA + Neon: `main.bicep`, `production.bicepparam`, `deploy.sh`/`.ps1`, `setup-neon.sh`/`.ps1`, README | `coding` | `backend` | `infrastructure/backend-deploy/` | **Exists** — migrates from `infrastructure/backend-deploy/` |
-| `backend-aws` — Lambda + CDK | `coding` | `backend` | `infrastructure/backend-deploy/` | **To author** (Q-8a) |
-| `writing-workstream` — the corpus and per-workstream stage folders, each with an `index.md` | `writing` | `workstream` | project root | **Exists** — extracts from the source project's shape |
+| `backend-azure` — Azure SWA + Neon: `main.bicep`, `production.bicepparam`, `deploy.sh`/`.ps1`, `setup-neon.sh`/`.ps1`, README. **The four scripts land `0755`**; everything else `0644` | `coding` | `backend` | `infrastructure/backend-deploy/` | **Exists** — migrates from `infrastructure/backend-deploy/` |
+| `backend-aws` — Lambda + CDK. Any executable it ships lands under the same declared root | `coding` | `backend` | `infrastructure/backend-deploy/` | **To author** (Q-8a) |
+| `writing-workstream` — the corpus and per-workstream stage folders, each with an `index.md`. No executable content | `writing` | `workstream` | project root | **Exists** — extracts from the source project's shape |
+
+**`infrastructure/backend-deploy/` is the only `executableRoots` prefix
+any v1.0 pack declares**, and `coding` is the only pack that declares one
+at all. Both backend scaffolds write into it, which is why one root
+covers whichever is selected; `writing` and `planning` declare none.
 
 **The two backend scaffolds are alternatives, not composable peers.**
 They share a category and a destination, so requesting both is a

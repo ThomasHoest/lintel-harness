@@ -1,6 +1,6 @@
 # ADR-001 — Pack format, recipe & manifest: a closed primitive set, a six-key manifest, and a pack that can only write text
 
-**Status:** Draft — **rewritten 2026-08-31 against the two-phase model (Q-39…Q-53)**, then **amended 2026-08-31** to apply the answered `.harness/README.md` escalation and to specify the Q-50 `validate` check, then **amended again 2026-08-31** to repair six conditions the rewrite silently lapsed and to fold the Mode A re-review's C-19…C-30
+**Status:** Draft — **rewritten 2026-08-31 against the two-phase model (Q-39…Q-53)**, then **amended 2026-08-31** to apply the answered `.harness/README.md` escalation and to specify the Q-50 `validate` check, then **amended again 2026-08-31** to repair six conditions the rewrite silently lapsed and to fold the Mode A re-review's C-19…C-30, then **amended 2026-08-31 by Q-54**, which **overturns §3.8** and voids every part of this ADR that reasons about `merge-json` — see *What Q-54 supersedes* immediately below the amendment history, and read it before §1
 **Date:** 2026-08-31 (supersedes the 2026-08-30 original in full)
 **Deciders:** `architect` (this ADR) · escalations to Thomas Andersen
 **Refs:** `specifications/general/pack-application.md` (**authoritative** — the two-phase model) · `specifications/general/pack-inventory.md` (**authoritative** — the three packs, source and applied trees) · `F1-spec-pack-format-and-manifest.md` **v2.1** (this ADR's §6.1 folded) · `F5-spec-template-packs.md` **v2.0, second pass** (§6.2 folded) · `LintelHarnessSpecification-1.0.md` · `specifications/project-brief.md` §12 (Q-1…Q-53, **all resolved, authoritative**) · `packs/coding/specifications/conventions.md` · **security review of 2026-08-30** (Mode A over F1 v1.0 + ADR-001 original: `REVISE-SPEC`, S-1…S-14, conditions C-1…C-18 — re-dispositioned in §8)
@@ -23,6 +23,57 @@ exception to "one page".
 | **2026-08-31** | **Two-phase rewrite** | **Written against Q-39…Q-53. The 2026-08-30 verdict does not transfer and is void.** The declarative `mappings` model, `.harness/base/`, the marked-region grammar, `source-only`/`applied-only`, `shared/` components, `--adopt` and the per-file-hash manifest are all **gone** — not deferred, removed. The apply becomes **two phases**: a verbatim payload copy to `.harness/pack/`, then a **declarative recipe** over seven closed primitives. The manifest becomes **six keys** (Q-43 as amended by Q-52). `verify` is F1's (Q-53). The file-level plan is **rebuilt**; 14 modules of the old plan are deleted and 13 are new. §7's security architecture is **carried forward and rescoped**, not rewritten: both CRITICALs were apply-time and survive intact. Verdict: **`REVISE SPEC`** — see §10. |
 | **2026-08-31** | **Mode A re-review folded: C-19…C-30, and six lapses admitted** | **The re-review verified the carried conditions against F1 v2.2's actual text rather than against §8's table and found C-1, C-2, C-5, C-8, C-12 and C-16 measurably lapsed — the rewrite re-opened the original CRITICAL S-1 through a route the first review never saw, because the seven-primitive set post-dates it.** Root cause, single and stateable: every settings control was quantified over a step's **`to`**, and two of the seven primitives have none. **The model moves from `to`-keyed to WRITTEN-PATH-keyed** (§7.2.0, C-19) — the destination policy, the reserved-destination denylist and the executable rules are all evaluated over each step's **write set**. `policyFor` resolves by `collisionKey` on every platform (C-20). The `merge-json` destination's prior content is named a **fourth input** and `verify` gains a `partial` state (C-22, §7.9). **F-5 is decided: phase 2 renders entirely at plan time** (C-23, §3.6). **F-10 is decided: accepted with reasoning AND enumerated in the disclosure** (C-28, §3.7). `Recipe.formatVersion` joins the closed enumeration (C-24); authored JSON rejects duplicate keys (C-25); phase 1 writes `0644` (C-26); `in` globs get a normative resolution rule (C-27); manifest read-back gets its own class-2 code (C-29); recipes get a 256-step inspectability bound (C-30). Four new codes, one new module, **no new US or Q id**. §8 is rewritten with `LAPSED-AND-NOW-REPAIRED` as a category. Verdict: **`REVISE SPEC`** — §10. |
 | **2026-08-31** | **Escalation answered: `.harness/README.md` is dropped** | §3.4's escalated branch was answered **option C**, recorded in `project-brief.md` §12 as an amendment to Q-50: **`.harness/` is excluded from the folder-README rule as tool-owned, exactly as `.claude/` is.** There is no `.harness/README.md`, no CLI write that produces one, and **C-5 is absolute with no carve-out** — which is what §7.1's own argument asked for, since `.harness/pack/` is phase 2's input. `packs/coding/applied-readmes/harness.md` is deleted from disk; the folder holds five files. §6.1 change 3 is withdrawn; §1, §3.4, §4, §5, §7.1, §8 (C-5), the interface contract and the file-level plan are amended. **New in the same pass:** `validate` gains a mechanical Q-50 check (`W-FOLDER-README-MISSING`, US-16 order step 12) and `pack.json` gains `folderReadme` — see §3.5 and §6.1 changes 12–16. **Verdict re-examined in §10 and it moves**: the three folds it blocked on are all landed and verified (F1 v2.1, F5 v2.0's second pass, the master spec's 1.0.0 fold), so it stands at **`REVISE SPEC` narrowed to §6.1 changes 12–16 and §6.2 changes 10–11 — the new `validate` check this pass added, and nothing else.** A Mode A re-review is still required before implementation, separately from this verdict. |
+| **2026-08-31** | **Q-54 overturns §3.8 — `merge-json` is dropped from v1.0** | **§3.8 chose option A — keep the seven-primitive set — and recorded option B, dropping `merge-json`, as available and rejected. The re-reviewer took B, and the brief §12 records it as Q-54.** §3.8 is **restated as overturned** with its original argument kept verbatim as history, because a reversal that hides what it reversed is worth less. The primitive set is **six**: `copy`, `rename`, `strip-suffix`, `rewrite-path`, `substitute`, `generate`. Everything in this ADR that reasons about `merge-json` is **superseded, not deleted**: the destination policy and `DestinationPolicy.allowedOps`, `ownedKeys` and the ownable-key allowlist, the leaf-only rule, `policyFor`, the consent gate and `ConsentInputs`, `E-OWNEDKEY-FORBIDDEN` / `E-SETTINGS-MODE-FORBIDDEN` / `E-SETTINGS-CONSENT-REQUIRED` / `E-SUBST-IN-SECURITY-KEY` / `E-MERGE-JSON-INVALID` / `E-HOOKS-NOT-SUPPORTED`, `verify`'s `partial` state, and N-6. **§6.1 change 27's fixture list is corrected** — it named `merge-json` and `ownedKeys` fixtures that cannot exist — and now points at F1 v2.3's restated table, which is the one of record. **The verdict does not move in this pass** and is not re-examined here: the fold into F1 and a further Mode A pass decide it. **No new question, no new story, no new error code:** next free question id **Q-55**, next free story id **US-39**. |
+
+---
+
+## What Q-54 supersedes — read this before §1
+
+**This ADR was written against a seven-primitive recipe set. The set is
+six.** `merge-json` is dropped from v1.0 by **Q-54** (brief §12,
+2026-08-31), which is the reviewer taking the option §3.8 recorded as
+available and then rejected. **Q-54 is authoritative over this document
+wherever the two disagree**, and F1 **v2.3** is the current statement of
+the format.
+
+Nothing below is deleted, because an architecture decision record that
+edits away the reasoning it was overruled on stops being a record. It is
+**marked** instead. Read every one of the following as *history —
+superseded 2026-08-31*, never as current design:
+
+| Construct in this ADR | Status under Q-54 | Where the current statement lives |
+|---|---|---|
+| The **seven**-primitive set and the seven-arm `RecipeStep` union (§1 item 1, §7.7, the interface contract) | **Six.** `merge-json` and its arm are gone | F1 v2.3 US-31, `general/pack-application.md` |
+| The **destination policy**, `DestinationPolicy`, `allowedOps`, the policy table and its fall-through row (§7.2) | **Removed, not repaired.** There is no destination policy at v1.0 | Q-54; F1 v2.3 US-3 stage 2 |
+| **`ownedKeys`**, the ownable-key allowlist, the security-relevant key classification, the leaf-only rule, `checkOwnedKey` | **Removed.** No pack owns a settings key | Q-54 |
+| **`policyFor`** and its `collisionKey` resolution (C-20) | **The function is gone; its `collisionKey` rule survives**, re-homed on the stage-2 denylist and on `E-TARGET-EXISTS` / `--force` / `preExisting` (N-5) | F1 v2.3 US-3, US-13 |
+| The **consent gate**, `ConsentInputs`, `--accept-permissions`, `--accept-hooks`, `SecurityDisclosure.settings` | **Removed. There is no consent surface at v1.0**, because there is nothing to consent to | Q-54; F1 v2.3 US-13 |
+| `E-MERGE-JSON-INVALID`, `E-OWNEDKEY-FORBIDDEN`, `E-SETTINGS-MODE-FORBIDDEN`, `E-SETTINGS-CONSENT-REQUIRED`, `E-SUBST-IN-SECURITY-KEY`, `E-HOOKS-NOT-SUPPORTED` | **Not in the catalogue.** Six codes removed, four added; the catalogue holds **76** | F1 v2.3 §Error States — **the only catalogue** |
+| `verify`'s **`partial`** state and the fourth-input narrowing (§7.9, C-22) | **Not applied, deliberately.** With `merge-json` gone the recomputation identity is exact at every applied path | F1 v2.3 §NFR, US-33 |
+| **N-6** — "`merge-json` has no v1.0 consumer" (§7.8) | **Closed by deletion.** The primitive with no consumer is not shipped | §3.8 as restated |
+| **§6.1 change 27's** fixture list, where it names `merge-json` / `ownedKeys` fixtures | **Corrected in place.** Those fixtures cannot exist | F1 v2.3 US-16's fixture table |
+| §9 item **10**'s obligation on "the first real pack to declare a settings `ownedKeys`" | **Superseded.** The v1.1 obligation is now on the settings capability's return, not on a pack | §9 item 10 as restated |
+
+**Three things Q-54 does *not* touch**, and they are the load-bearing
+half of this ADR: the **two-phase model**, the **six-key manifest**, and
+**C-19's written-path quantifier**. C-19 survives its own subject — the
+finding beneath it was that a rule quantified over `to` has two silent
+exemptions, because `rewrite-path` and `substitute` have no `to`, and
+that is **general**. The **write set** is therefore still a named concept
+and every destination rule is still quantified over it. It is what keeps
+`rewrite-path` and `substitute` out of `package.json` now that there is
+no `merge-json` to be the obvious route.
+
+**One thing that changed and is not a deletion:** the executable bit now
+has a **consumer**. `coding` declares
+`"executableRoots": ["infrastructure/backend-deploy/"]` and its backend
+scaffold sets `"executable": true` on `deploy.sh`, `deploy.ps1`,
+`setup-neon.sh` and `setup-neon.ps1`. §7.4's apparatus — declared roots,
+the cap of 32, `E-EXEC-DEST-FORBIDDEN`, the enumerated disclosure — is
+exercised rather than dormant, which is the correction §3.8's option-A
+argument most needed. Where §7.4 or §8 says or implies that no v1.0 pack
+ships an executable file, **that is superseded**: F5 §NFR *Content
+integrity* and F1 US-3 carry the current statement.
 
 ---
 
@@ -37,12 +88,17 @@ part of the frozen contract as the pipeline order:
    a verbatim copy of the pack directory to `.harness/pack/`, identical
    for every pack, reading no field of `pack.json` but the pack's
    location. Phase 2 is a per-pack **recipe** — an ordered list of steps
-   over a **closed** seven-primitive set (`copy`, `rename`,
-   `strip-suffix`, `rewrite-path`, `substitute`, `generate`,
-   `merge-json`) — run by the CLI, never by the user, reading only from
-   the phase-1 copy on disk. The set is closed by *type*: `RecipeStep` is
-   a seven-arm discriminated union and an `op` outside it is
-   `E-RECIPE-PRIMITIVE-UNKNOWN`, exit 2, before anything runs.
+   over a **closed** primitive set — run by the CLI, never by the user,
+   reading only from the phase-1 copy on disk. The set is closed by
+   *type*: `RecipeStep` is a discriminated union and an `op` outside it
+   is `E-RECIPE-PRIMITIVE-UNKNOWN`, exit 2, before anything runs.
+   **Superseded on the count only (Q-54): the set is SIX** — `copy`,
+   `rename`, `strip-suffix`, `rewrite-path`, `substitute`, `generate` —
+   and the union has six arms. This ADR was written with `merge-json` as
+   a seventh; everywhere below that says *seven-primitive* or
+   *seven-arm*, read **six**, and see *What Q-54 supersedes* above.
+   Nothing else in this item moves: closure by type, the code and the
+   exit class are unchanged, and closure is the property that mattered.
 
 2. **Two files, and no third concept.** `pack.json` declares identity,
    anatomy, parameters and scaffolds — what a human reads to choose a
@@ -143,6 +199,19 @@ These are not deferred. The concepts they implemented no longer exist.
 
 #### The v1.0 plan
 
+> **Superseded in part, 2026-08-31 (Q-54).** Three module rows below have
+> no subject and are **not built**:
+> `src/recipe/ops/merge-json.ts`, `src/security/destination-policy.ts`
+> (the ownable-key allowlist and policy table — the *reserved-destination
+> denylist* it also housed survives and moves to the confinement module),
+> and `src/security/consent.ts`'s **gate** (`renderDisclosure()` and the
+> `SecurityDisclosure` builder survive; there is nothing to gate on, so
+> `E-SETTINGS-CONSENT-REQUIRED` and the gate call in
+> `src/apply/execute.ts` come out). `src/verify/compare.ts` is
+> **two-state**, not four: no `partial`, no owned-key recomputation.
+> Everything else in the plan stands. **Count of record is F1 v2.3's**,
+> not this table's.
+
 | File | Action | Owner | Purpose |
 |---|---|---|---|
 | `package.json`, `tsconfig.json`, `vitest.config.ts` | New | F1 | `@lintel/harness`, bin `lintel-harness`, `engines.node >= 22` (Q-16) |
@@ -196,7 +265,7 @@ These are not deferred. The concepts they implemented no longer exist.
 | `src/verify/verify.ts` | **New** | F1 | Check `payloadDigest` **first, fail-closed**; then re-run phase 2 **entirely in memory** and compare to disk. `VerifyResult` |
 | `src/verify/compare.ts` | **New** | F1 | `match \| partial \| differs \| missing`; normalized comparison for text, raw for binary; the executable bit where the platform represents it. **SEC (C-22): at a `merge-json` destination the union is idempotent, so a whole-file comparison always agrees and a post-apply permission reads as `match`. Compare the recomputed OWNED KEYS instead — any mismatch is `differs`, all matching is `partial`, never `match`** |
 | `src/apply/plan-phase2.ts` | **New** | F1 | **SEC (C-23), §3.6.** Renders every phase-2 step at **plan** time from planner-held payload bytes into `PlannedFile.bytes`. `execute.ts` reads no payload file. Named as its own module so that "the executor re-reads the payload" is a change someone has to make on purpose |
-| `tests/fixtures/adversarial/` | **New** | F1 | **SEC. One fixture pack per closed attack, each asserted to fail with a named code — see §6.1 change 27.** The control that would have caught F-1 when a disposition table did not |
+| `tests/fixtures/adversarial/` | **New** | F1 | **SEC. One fixture pack per closed attack, each asserted to fail with a named code and exit class — the minimum set is F1 v2.3 US-16's table; see §6.1 change 27 for why this ADR no longer keeps a second copy of it.** The control that would have caught F-1 when a disposition table did not |
 | **security — carried forward** | | | |
 | `src/security/confine.ts` | Carried | F1 | **The only constructor of `AppliedPath`.** Anchored `to` grammar, NFC + case-fold `collisionKey`, resolve-and-`lstat` confinement, `confineAtWrite()`. C-4, C-6, C-14 |
 | `src/security/harness-paths.ts` | **New** | F1 | **The only constructor of `HarnessPath`** — the CLI's own writes under `.harness/`, and the list is **five and complete**: `pack/**`, `manifest.json`, `journal.json`, `journal.d/**`, `lock`. Derived from paths already proven grammar-clean, so confined by construction. Closes the typing hole phase 1 opened |
@@ -229,9 +298,17 @@ as an oversight:
   and no eighth op file of any name.** `ops/index.ts` is the closed
   registry and `RecipeStep` is the closed type; adding one is a change to
   both plus this ADR.
-- **There is no hook-registration path.** No `merge-json` step can own
-  `hooks`, enforced by `destination-policy.ts` rather than merely
-  unimplemented (§7.2.5).
+- **There is no hook-registration path**, and it is now stronger than
+  when this line was written. **Superseded 2026-08-31 (Q-54):** the line
+  read *"no `merge-json` step can own `hooks`, enforced by
+  `destination-policy.ts` rather than merely unimplemented"*. There is no
+  `merge-json` step, no `hooks` to own and no `destination-policy.ts`;
+  `.claude/settings.json` is a **reserved destination**, so no step of
+  any op reaches the file by any route. **A v1.1 reader must not read the
+  rule as redundant:** the hook exclusion was taken as a *format*
+  decision on grounds independent of `merge-json` (§7.2.5), and it is
+  only trivially true while nothing can write a settings file. It must be
+  re-established explicitly with the capability.
 
 ### Public interface contract
 
@@ -239,6 +316,18 @@ The shapes F2, F5 and the test writer compile or author against. No
 downstream feature may widen or narrow these without a superseding ADR.
 Types marked `// SEC` are load-bearing for §7 — narrowing one silently
 removes a control.
+
+> **Superseded in part, 2026-08-31 (Q-54) — a superseding decision, which
+> is the amendment this paragraph asks for.** `RecipeStep` has **six**
+> arms, not seven: the `merge-json` arm and its `ownedKeys` field are
+> gone. So are `DestinationPolicy`, `OwnedKey`, `policyFor`,
+> `checkOwnedKey`, `ConsentInputs`, `SecurityDisclosure.settings` and
+> `VerifyState`'s `partial`. Do **not** compile against them. F1 **v2.3**
+> is the contract of record; the shapes below are kept as the record of
+> what was decided and then overruled. **Everything not named in this box
+> stands unchanged** — the path brands (`AppliedPath`, `HarnessPath`,
+> `WritablePath`), `stepWriteSet()`, `collisionKey()`, the journal and
+> rollback types, and the planner/executor split.
 
 ```ts
 // ── path confinement ────────────────────────────────────────────────────
@@ -1264,7 +1353,61 @@ bundled packs on every run either fails the build or teaches the team to
 ignore `--strict`. A diagnostic that everything legitimate trips is not
 a diagnostic.
 
-### 3.8 Whether `merge-json` should ship at all at v1.0 — considered, and **rejected**, but the reviewer should know it was available
+### 3.8 Whether `merge-json` should ship at all at v1.0 — chosen A, **OVERTURNED by Q-54 on 2026-08-31: B was taken**
+
+> **Status: overturned.** This section chose **option A** — keep the
+> seven-primitive set. The re-reviewer took **option B**, and the
+> decision is recorded as **Q-54** in `project-brief.md` §12,
+> 2026-08-31. **`merge-json` is dropped from v1.0. The primitive set is
+> six.** The paragraphs after this box are the original argument,
+> **kept verbatim as history**, because this section explicitly invited
+> the reversal — *"if the review prefers B, say so and it is a small
+> change to make"* — and a record that deletes the argument it lost
+> leaves the next reader unable to see whether the reversal was
+> considered or merely convenient.
+
+**Why B won, in the reviewer's terms and not this section's.** Three
+reasons, in the order they carried weight:
+
+1. **No v1.0 consumer.** §6.2 change 12 removed the last `merge-json`
+   step from every bundled pack. All three were placeholders — none
+   named a `from`, none named an owned key, and no pack's payload holds
+   a settings source file — so what remained was the primitive carrying
+   the most security machinery in the format, exercised by nothing that
+   ships.
+2. **It was the target of both CRITICALs in the Mode A re-review**, of
+   both lapses of C-16, and of the rollback defect found in the same
+   pass. Deleting the surface is a stronger fix than repairing it, and
+   the repair was the larger change.
+3. **The purity claim comes back for free.** `merge-json` was the only
+   primitive taking a **fourth input** — its destination's pre-existing
+   content. Without it, Q-40's *"pure function of (payload, parameters)"*
+   and `verify`'s recomputation identity are true **as originally
+   written**, at every applied path. F-4 resolves with no change, and
+   C-22's narrowing (§7.9) is deliberately **not applied**.
+
+**Where each of option A's three grounds now stands, since they are the
+part a future reader will want tested rather than the part they will want
+re-read:**
+
+| A's ground for rejecting B | How it stands after Q-54 |
+|---|---|
+| *(i) it does not close the class it appears to — `rewrite-path` and `substitute` still reach `package.json`, so C-19's machinery is needed anyway* | **Correct, and it survives.** This is the one ground Q-54 does not overturn. C-19's write-set quantifier is kept in full and is now what keeps those two primitives out of the settings files and `package.json`, which join the stage-2 reserved-destination denylist. The machinery shrank; it did not vanish, exactly as A predicted |
+| *(ii) the seven-primitive set is recorded in brief §12 Q-40 and in `general/pack-application.md`, so changing the count is above this amendment's remit* | **Correct about the remit, and the remit was exercised.** The count was changed at the level that owns it: Q-40 carries an amendment note, Q-54 is a new row, and `pack-application.md` now reads six. A is not faulted for declining to make that change; it is superseded by the change being made |
+| *(iii) a format that cannot set `model` in `settings.json` will acquire that capability under time pressure in v1.1, and acquiring it after the apparatus was deleted is strictly worse than keeping apparatus that is specified, tested against fixtures and dormant* | **This is the ground that lost, and it lost on evidence rather than on preference.** Dormant apparatus is not free: it was where both CRITICALs landed, and neither the disposition table nor two review rounds caught the route into it, precisely because nothing shipping exercised it. The v1.1 risk A names is real and is **transferred, not dismissed** — it is now §9 item 10's obligation on the settings capability's *return*. The general lesson, and it is the one this ADR should be read for: **specified-but-dormant security machinery is a liability, not an option**, and the honest response to a capability with no consumer is to defer it with its controls, not to ship it unexercised |
+
+**The compensating control that A rested on is void as stated.** *"`merge-json`
+at a `.claude/settings*.json` destination is fixture-tested only"*
+cannot be true of a primitive that does not exist, and §6.1 change 27's
+fixture list is corrected accordingly. The fixtures that replaced it are
+better: they assert that **every route** to a settings file fails with
+`E-MAP-RESERVED-DEST`, which is a test of the rule rather than of one
+primitive's constraint.
+
+---
+
+**The original argument, kept as history. Superseded 2026-08-31 by Q-54.**
+
 
 §6.2 removes the last `merge-json` step from every v1.0 pack (change 12),
 which makes `merge-json` **the one primitive with no v1.0 consumer — and
@@ -1305,6 +1448,9 @@ record it.
 **Flagged for the re-reviewer explicitly:** if the review prefers B, say
 so and it is a small change to make — the fold is deletions. It is
 recorded as available rather than argued away.
+
+*(End of the original argument. The review did prefer B, said so, and the
+fold was deletions. Q-54.)*
 
 ---
 
@@ -1492,6 +1638,21 @@ Everything §10 now blocks on was created by the re-review.**
 
 ### 6.1 `F1-spec-pack-format-and-manifest.md` — fifteen changes folded (v2.1, v2.2), one withdrawn, **eleven new**
 
+> **Read against Q-54 before folding anything from this list.** F1 is at
+> **v2.3** and has folded 17–27 already, as amended by Q-54. Four rows
+> below instruct changes that are **void or altered** because their
+> subject no longer exists:
+>
+> | Row | Status under Q-54 |
+> |---|---|
+> | **6** — extend `E-MERGE-JSON-INVALID` to a malformed payload-side `from` | **VOID.** The code is removed from the catalogue |
+> | **17** — re-key the stage-2 denylist to the write set | **FOLDED, and it grew.** `.claude/settings.json`, `.claude/settings.local.json` and `package.json` are now *on* that denylist, which is what replaced the destination policy |
+> | **18** — US-6's op lockdown, `allowedOps` columns, the table-level forbidden floor | **VOID as written; its purpose is served by 17.** US-6 is **retired**: its subject is deleted. The hook rule and the inert-hook-script disclosure it also carried move into US-3, and must not be lost with it |
+> | **25** — strict duplicate-key JSON parsing | **FOLDED, minus its carve-out.** The exemption for a `merge-json` destination and its payload-side `from` has no subject |
+>
+> Row **27**'s fixture list is corrected in place. Every other row stands
+> as written.
+
 | # | Where | Change | Why |
 |---|---|---|---|
 | 1 | §Technical Context *Manifest content* · US-10 · §F1.4 · §F1.5 · §F1.8 · §F1.9 · §NFR *Hashing algorithm* · §Open Questions Q-52 | **The manifest is six keys, not five.** Add `payloadDigest: sha256-…` between `pack` and `parameters`; add it to the §F1.4 worked example and its field table (consumer: `verify`, v1.1 `update`); change "lets the manifest be five keys" and "Five keys" to six; change §NFR's "It is **not** used in the manifest" — SHA-256 now has a fourth use; **move Q-52 from Open Questions to Resolved**, citing the brief | Q-52 amends Q-43. F1 v2.0 predates it |
@@ -1530,7 +1691,7 @@ codes**: the catalogue goes from **78 rows to 82**.
 | **24** | **US-31** (F1:1390) · **§Error States** | Add the rule to US-31: *"`formatVersion` greater than the CLI's supported **recipe**-format version fails with `E-RECIPE-FORMAT-NEWER`; equal or lower proceeds"* — mirroring US-1's `pack.json` sentence at F1:270. **New catalogue row, exit 2:** `lintel-harness: {pack}'s recipe declares format version {declared}; this CLI supports {supported}.` / `  → Upgrade lintel-harness, or use a pack built for this version.` | **C-24.** Same shape and same class as `E-PACK-FORMAT-NEWER`, different file and different axis, so a different code |
 | **25** | **US-1** (F1:292-293) · **US-31** · **US-15** · **§Error States** | **Duplicate JSON keys are rejected in authored JSON.** `pack.json`, `recipe.json` and `.harness/manifest.json` are parsed by a reader that rejects a duplicate key **at any depth**. **New catalogue row, exit 2:** `E-JSON-DUPLICATE-KEY` — `lintel-harness: {file} declares "{key}" more than once (lines {first} and {second}).` / `  A duplicate key means the file a reviewer reads is not the file the CLI runs.` / `  → Remove the duplicate.` **Scope it explicitly:** not applied to a `merge-json` **destination** or its payload-side `from` — a duplicate there is `E-MERGE-JSON-INVALID`, exit 2, nothing written. **Also state:** a step's `op` is matched **literally** — no trimming, no case folding — so `"copy "` is `E-RECIPE-PRIMITIVE-UNKNOWN` | **C-25.** §7.0's threat model names the JSON diff review as the control that catches a bad grant; `JSON.parse` takes the last duplicate and a diff reader takes the first, so the pack reviews as one thing and executes as another. The scope carve-out matters: one of those files is the **user's own** |
 | **26** | **US-13** (F1:998-1003) · **US-3** (F1:470-476) | **`E-TARGET-EXISTS`, the `--force` byte-identity check and the journal's `preExisting` determination resolve by `collisionKey`**, not by exact string. State that the folding rule of US-3 applies to **step-vs-existing-file** comparison and not only to step-vs-step | **N-5 — found in this pass, not by the re-review, and it is C-20's defect one layer down.** On macOS or Windows a project holding `.claude/Settings.json` and a step writing `.claude/settings.json` are the same file: `E-TARGET-EXISTS` does not fire, the apply silently overwrites, the journal records `preExisting: false`, and **rollback deletes a user file it did not create** — which breaks C-13's stated invariant. Fixing `policyFor` without this leaves the class open |
-| **27** | **US-16** · **§NFR** *Testability*, or a new criterion on US-16 | **Require adversarial fixture packs.** A fixture directory of deliberately malicious packs, each asserted to fail with a **named code**, run by `validate` in CI alongside `--all --strict`. The minimum set is decided, not left to taste: `rewrite-path` into `.claude/settings.json`; `substitute` into it; `generate` with `to` set to it; `merge-json` to `.claude/Settings.json` claiming `hooks`; `ownedKeys: ["hooks"]`; `ownedKeys: ["scripts.postinstall"]` at an unnamed JSON destination; a duplicate `ownedKeys` key; `op: "copy "`; a recipe `formatVersion` of 999; 257 declared steps; an `in` glob naming `.harness/pack/**`; a `to` of `.harness/README.md`; a payload file shipped `0755` | **The process control, and the most important change in this list.** F-1 was reachable in **two recipe steps** and survived a full rewrite plus a disposition table that declared C-1 and C-2 satisfied. A fixture would have caught it on the first CI run. **No amount of table-reading did**, twice |
+| **27** | **US-16** · **§NFR** *Testability*, or a new criterion on US-16 | **Require adversarial fixture packs.** A fixture directory of deliberately malicious packs, each asserted to fail with a **named code** and a **named exit class** — not merely non-zero — run by `validate` in CI alongside `--all --strict`. **The minimum set is decided, not left to taste, and it is F1 v2.3 US-16's table, which is the list of record.** This cell no longer restates it. **Corrected 2026-08-31 (Q-54):** the list originally written here named four fixtures that **cannot exist** — `merge-json` to `.claude/Settings.json` claiming `hooks`, `ownedKeys: ["hooks"]`, `ownedKeys: ["scripts.postinstall"]` at an unnamed JSON destination, and a duplicate `ownedKeys` key — because the primitive, the field and the destination policy they exercise were all deleted. A fixture asserting a code the catalogue no longer holds fails for the wrong reason, which is the one thing this change exists to forbid. **What replaced them is stronger:** the settings class is now covered by five fixtures asserting that **every route** to `.claude/settings.json`, `.claude/settings.local.json` and `package.json` — a `to`, a case variant, a `generate`, a directory recursion that produces one without any step naming it, and an `in` glob — fails `E-MAP-RESERVED-DEST` at exit 2 with zero bytes. That tests the rule rather than one primitive's constraint on it. **Unchanged and still required from the original list:** `op: "copy "`; a recipe `formatVersion` of 999; 257 declared steps; an `in` glob naming `.harness/pack/**`; a `to` of `.harness/README.md`; a payload file shipped `0755`. **Added since:** a duplicate key in `pack.json`, a symlink in the pack, and the N-5 `collisionKey` case | **The process control, and the most important change in this list.** F-1 was reachable in **two recipe steps** and survived a full rewrite plus a disposition table that declared C-1 and C-2 satisfied. A fixture would have caught it on the first CI run. **No amount of table-reading did**, twice. The correction above is the same lesson one turn later: a fixture list maintained in **two** places drifts, so this one defers to F1's |
 
 ### 6.2 `F5-spec-template-packs.md` — eleven changes folded, **five new**
 
@@ -1558,7 +1719,7 @@ anchors in F5's own style (`§Flows / packs/coding/ / 7b`).
 
 | # | Where | Change | Severity |
 |---|---|---|---|
-| **12** | `coding` 7b recipe table **L1132** · `writing` 7b **L1486** · `planning` 7b **L1791** | **Delete all three `merge-json` settings steps.** No v1.0 pack writes `.claude/settings.json`. **They are not a capability being removed — they are placeholders that were never valid recipes:** not one names a `from`, not one names a single owned key, and no pack's payload inventory (L1078-1085, L1440-1442, L1751-1758) contains a settings source file, so each already fails F1's `E-RECIPE-SOURCE-MISSING` and `E-OWNEDKEY-FORBIDDEN`. F1 §F1.3's worked `packs/coding/recipe.json` — written later and canonical — has no settings step and **says so** at F1:1975-1980; F5's own precedence rule (L124-127) is *"where this spec and F1 could disagree, F1 wins"*; and `general/pack-inventory.md` L356 records the owned keys as **"Missing"**. **`merge-json` stays one of the seven** (US-34's list at L597-602 needs no change) — it becomes an unexercised primitive, which §3.8 argues for explicitly and N-6 flags to the re-reviewer | **Contract break — resolves the C-21 CRITICAL** |
+| **12** | `coding` 7b recipe table **L1132** · `writing` 7b **L1486** · `planning` 7b **L1791** | **Delete all three `merge-json` settings steps.** No v1.0 pack writes `.claude/settings.json`. **They are not a capability being removed — they are placeholders that were never valid recipes:** not one names a `from`, not one names a single owned key, and no pack's payload inventory (L1078-1085, L1440-1442, L1751-1758) contains a settings source file, so each already fails F1's `E-RECIPE-SOURCE-MISSING` and `E-OWNEDKEY-FORBIDDEN`. F1 §F1.3's worked `packs/coding/recipe.json` — written later and canonical — has no settings step and **says so** at F1:1975-1980; F5's own precedence rule (L124-127) is *"where this spec and F1 could disagree, F1 wins"*; and `general/pack-inventory.md` L356 records the owned keys as **"Missing"**. **`merge-json` stays one of the seven** (US-34's list at L597-602 needs no change) — it becomes an unexercised primitive, which §3.8 argues for explicitly and N-6 flags to the re-reviewer | **Contract break — resolves the C-21 CRITICAL**  **SUPERSEDED 2026-08-31 (Q-54) in its last clause only.** The three deletions stand and are folded into F5 v2.1. **`merge-json` does not stay one of the seven:** it is dropped, US-34's list is six, and it becomes no primitive at all rather than an unexercised one. §3.8's argument for shipping it unexercised is overturned; N-6 is closed by deletion. |
 | **13** | US-17 **L294** · US-18 **L356** · `coding` tree **L1139** · `writing` tree **L1495** · `planning` tree **L1801** | **Remove `.claude/settings.json` from every produced-tree listing and acceptance criterion.** US-18's criterion (*"contains no `hooks` key"*) presupposes the file and must be restated as **"the applied tree contains no `.claude/settings.json`; the pack owns no settings key at v1.0"** — which is the stronger assertion and is mechanically checkable | **Contract break** — the trees are acceptance criteria, so leaving them is a shipped test asserting the opposite of change 12 |
 | **14** | §NFR **L823** · `coding` **L1151** | **Correct the counts.** `coding` phase 2 writes **23** files, not 24: **18** working files plus the five Q-50 folder READMEs. Both numbers appear twice and both are arithmetic over the tree at L1137-1149, in which `settings.json` is one of the 19 | Medium — but it is the kind of stale count that later reads as evidence |
 | **15** | US-17 **L307-308** · §NFR *Payload fidelity* **L845-847** | **Delete "same modes" / "including modes".** Both state that `.harness/pack/` is byte-identical to the pack *"file-for-file including modes"*. **F1 says nothing about phase-1 modes, so F5 is currently the only document specifying them — and it specifies the wrong thing.** Replace with: **"byte-identical in content, file for file. Modes are not preserved: phase 1 writes every payload file `0644` and every directory `0755` (F1 US-30)."** Restate the fidelity test as content-only, which is what F1's own test at F1:1329-1333 already is | **Contract break — this is where C-12 lapsed.** Under F5's rule a `0755` source file lands `0755` under `.harness/`, which `E-EXEC-DEST-FORBIDDEN` forbids by name, with no root, no cap, no disclosure and no diagnostic. **Folding C-26 into F1 while F5 requires the opposite is precisely how the six lapses happened** |
@@ -1759,7 +1920,30 @@ fails `EEXIST` where `rename` would not), and re-hashes a destination the
 plan expects to exist. Any failure is `E-TARGET-RACE`, exit 2, journal
 intact.
 
-### 7.2 The settings and consent model — **the model moves in this pass**
+### 7.2 The settings and consent model — **SUPERSEDED BY Q-54, except §7.2.0's quantifier**
+
+> **Status: superseded 2026-08-31.** There is **no settings model and no
+> consent model at v1.0**. `merge-json` is dropped (Q-54), and with it
+> the destination policy, `DestinationPolicy.allowedOps`, `ownedKeys`,
+> the ownable-key allowlist, the leaf-only rule, `policyFor`, the
+> consent gate, `ConsentInputs`, `SecurityDisclosure.settings` and the
+> five error codes that served them. `.claude/settings.json`,
+> `.claude/settings.local.json` and any `package.json` are **reserved
+> destinations on the stage-2 denylist**, forbidden to every step by
+> every route, `E-MAP-RESERVED-DEST` — one rule replacing the whole of
+> the policy apparatus described below. **F1 v2.3 US-3 is the current
+> statement.** Everything from here to the end of §7.2 is **history**.
+>
+> **Two things in it survive and are current, and they are why it is
+> marked rather than cut.** (1) **§7.2.0's quantifier** — every
+> destination control is evaluated over a step's **write set**, not over
+> its `to` — is unchanged and load-bearing: `rewrite-path` and
+> `substitute` still have no `to`, and the denylist that replaced the
+> policy is quantified over write sets for exactly the reason given
+> below. (2) The **worked two-step bypass** below is still the clearest
+> statement of *why*, even though its first step no longer parses: read
+> it as the argument for the quantifier, not as a live attack.
+
 
 **7.2.0 Every settings control is evaluated over a step's WRITE SET, not
 over its `to`** (C-19). **This is the repair for the re-opened S-1 and it
@@ -2067,10 +2251,33 @@ preserving copy would make phase 1 carry a permission decision derived
 from the authoring machine's umask, which is precisely the class of
 input the rest of this architecture refuses.
 
-**It costs nothing.** A pack shipping an executable script has that
-script copied out by a recipe step into a declared `executableRoot` with
-`"executable": true`, and the mode is set **at the destination**. The
-payload copy's mode is never consulted by anything. F5's "including
+**It costs nothing, and this is no longer hypothetical.** A pack shipping
+an executable script has that script copied out by a recipe step into a
+declared `executableRoot` with `"executable": true`, and the mode is set
+**at the destination**. The payload copy's mode is never consulted by
+anything.
+
+> **Amended 2026-08-31 — the apparatus above has a consumer, and the
+> "no v1.0 pack ships an executable file" reading is superseded.**
+> `coding` declares
+> `"executableRoots": ["infrastructure/backend-deploy/"]`, and its
+> backend scaffold steps set `"executable": true` on `deploy.sh`,
+> `deploy.ps1`, `setup-neon.sh` and `setup-neon.ps1`, which land
+> **`0755`** and appear in the pre-write disclosure. Wherever this ADR
+> or §8's C-12 row says or implies that `executableRoots` is absent or
+> empty for every bundled pack, read it as **history**: F5 §NFR
+> *Content integrity* and F1 US-3 carry the current statement.
+>
+> **Why this matters here rather than only in F5.** Those scripts are
+> meant to be run, so `0644` would force a `chmod` on every applied
+> project — and every clause of C-12 is now exercised by something that
+> ships: a declared root, a cap consumed, `E-EXEC-DEST-FORBIDDEN`
+> checked per applied path, a disclosure line a user actually sees. That
+> is the correction §3.8's rejected argument most needed. **Specified
+> security machinery with no consumer is a liability, not an option** —
+> which is the whole lesson of Q-54, applied here in the opposite
+> direction: `merge-json` had no consumer and was deleted; the
+> executable bit has one and is kept. F5's "including
 modes" is therefore not a requirement being sacrificed — it is a
 requirement nothing needs, contradicting one that matters.
 
@@ -2299,6 +2506,8 @@ with one deliberate exception, marked, at the end:**
 
 ### 7.8 New surfaces for the Mode A re-review — N-5 and N-6 added in this pass
 
+> **N-6 is closed (Q-54, 2026-08-31): the surface it names is not shipped.** N-5 is **open and unaffected** — it has nothing to do with `merge-json`, it is the surface a reader should still act on, and F1 v2.3 folds its fix.
+
 Numbered `N-` to avoid colliding with the reviewer's `C-` namespace.
 
 | # | Surface | Why it is new |
@@ -2308,9 +2517,28 @@ Numbered `N-` to avoid colliding with the reviewer's `C-` namespace.
 | **N-3** | **The recipe as a declared program.** §7.7 lists its validation | The closed union plus the closed registry is the control. A re-review should test the boundary: an `op` of `"copy "` with a trailing space, a `when` with two keys, a step object with two `op` keys after a JSON duplicate-key parse |
 | **N-4** | **`payloadDigest` itself.** A new integrity claim in a manifest with no self-integrity | It binds the payload to the manifest, not the manifest to itself. Someone who edits both defeats it. Stated in §5; a re-review should decide whether that is acceptable given v1.0 never merges |
 | **N-5** | **`E-TARGET-EXISTS` and `--force` byte-identity compare a step's `to` against a pre-existing on-disk file by exact string.** *Found in this pass, by me, while specifying C-20 — and it is the same defect one layer down.* F1 defines `collisionKey` (NFC + case-fold) and scopes it to **step-vs-step** collision over the merged step set. Nothing folds a step's `to` against a path already on disk. So on macOS or Windows a project containing `.claude/Settings.json` and a step writing `.claude/settings.json` are **the same file**, `E-TARGET-EXISTS` (exit 1) does not fire, and the apply silently overwrites a file it believes it is creating — which also makes the journal record `preExisting: false` and rollback **delete** a user file it did not create, defeating C-13's invariant. **Fixing C-20 without this leaves the class open.** `E-TARGET-EXISTS`, the `--force` byte-identity check and the journal's `preExisting` determination all resolve by `collisionKey`. Folded as §6.1 change 26 |
-| **N-6** | **`merge-json` has no v1.0 consumer once §6.2 change 12 lands**, and it carries more security machinery than the other six primitives combined | §3.8 argues why it ships anyway and records that dropping it was available. The compensating control is the adversarial fixture packs (§6.1 change 27); the residual obligation is §9 item 10 — **the first real pack to declare a settings `ownedKeys` requires a fresh Mode A pass.** A re-review should confirm that fixtures are an acceptable substitute for a shipping consumer, or ask for B |
+| **N-6** | **`merge-json` has no v1.0 consumer once §6.2 change 12 lands**, and it carries more security machinery than the other six primitives combined | §3.8 argues why it ships anyway and records that dropping it was available. The compensating control is the adversarial fixture packs (§6.1 change 27); the residual obligation is §9 item 10 — **the first real pack to declare a settings `ownedKeys` requires a fresh Mode A pass.** A re-review should confirm that fixtures are an acceptable substitute for a shipping consumer, or ask for B  **CLOSED 2026-08-31 by Q-54, and the re-review asked for B.** The surface with no consumer is not shipped, so the residual obligation stated here — a fresh Mode A pass before the first real settings pack — is re-scoped in §9 item 10 onto the settings capability's *return* in v1.1, not onto a pack. |
 
-### 7.9 `verify`'s recomputation identity is not universal, and the exception is where the risk is (C-22)
+### 7.9 `verify`'s recomputation identity is not universal — **SUPERSEDED BY Q-54: it is universal**
+
+> **Status: superseded 2026-08-31.** The exception this section is about
+> **is a `merge-json` destination**, and there is no `merge-json`
+> (Q-54). No remaining primitive takes a fourth input, so `verify`'s
+> recomputation identity is **exact at every applied path**, Q-40's
+> purity claim is true as originally written, and F-4 resolves with no
+> change. **C-22's narrowing is deliberately NOT applied**, and
+> `verify`'s **`partial`** state does **not** ship: the report is
+> two-state. F1 v2.3 §NFR *Determinism* and US-33 are the current
+> statement.
+>
+> Kept as history for one reason a v1.1 reader needs: **this section is
+> the specification of what breaks the moment a primitive reads its
+> destination.** If the settings capability returns, the fourth input
+> returns with it, and this analysis — the idempotent-union blind spot
+> in particular, where `verify` reported a hand-added permission as
+> `match` — is what must be re-established before it ships, not
+> rediscovered.
+
 
 `verify` recomputes phase 2 and compares to disk. That identity is exact
 at every applied path **except a `merge-json` destination**, and the
@@ -2428,7 +2656,7 @@ would have caught it and no amount of table-reading did.
 | **C-9** substitution may not forge a marker | **HALF-SATISFIED · HALF-DEFERRED-TO-V1.1** | The **newline ban** is satisfied (§7.3, `E-SUBST-NEWLINE`) and is the sufficient condition. The **marker-lex half** and `E-REGION-TAMPERED` are removed with the region parser (Q-45) because the anchors are inert and a forged one hijacks nothing. **v1.1 obligation, named:** restore the lex check in the same change that makes `update` read anchors — not after it |
 | **C-10** integrity flags fail-closed on write paths | **RESCOPED** | Its subject was `--allow-stale-shared` over `shared[].integrity`; `shared/` leaves v1.0 (Q-48) and the flag does not exist. The **general rule survives** as `E-FLAG-NOT-PERMITTED`, exit 1: a read-only-command flag passed to a write command is refused, not ignored. §7.6 |
 | **C-11** integrity verified before a merge | **DEFERRED-TO-V1.1, PARTIALLY PRE-ANSWERED** | Its subject was `pack.integrity`, removed by Q-43. **Q-52's `payloadDigest` answers the half that matters most**: `verify` — and, later, `update` — can prove `.harness/pack/` is the payload this project recorded before trusting anything computed from it. The half that defers is "the *installed* pack claiming this name and version is the same build", which needs `update` to exist to have a consumer. **v1.1 obligation:** `update` checks `payloadDigest` **before** computing a merge base, and refuses on mismatch |
-| **C-12** `executable` inside declared roots only; never under `.claude/`/`.git/`/`.harness/`; enumerated | **LAPSED-AND-NOW-REPAIRED** | **How it lapsed:** every clause is written for a *recipe step* — a declared `to`, an `executable` field, a declared root, a cap of 32, a disclosure line. **Phase 1 is not a recipe step and has none of them.** F1 specifies phase 1's content fidelity exhaustively and is **silent on mode**, while F5 requires the payload byte-identical *"file-for-file including modes"*. Under that reading a `0755` source file lands `0755` under `.harness/` — forbidden by name by `E-EXEC-DEST-FORBIDDEN` — with no root declared, no cap consumed, no disclosure entry and no diagnostic, because none of those mechanisms is reachable from a phase that reads no declaration. `payloadDigest` is content-only, so `verify` is blind to it. **Repair (C-26):** §7.4 — **phase 1 writes every payload file `0644` and preserves no source mode**, directories `0755`. It costs nothing (a recipe step sets the mode at the destination, and nothing consults the payload's) and it keeps phase 1's strongest property: **it adds no decision surface**. **DELEGATED:** §6.1 change 22 and §6.2 change 15, which must *remove* F5's "including modes" |
+| **C-12** `executable` inside declared roots only; never under `.claude/`/`.git/`/`.harness/`; enumerated | **LAPSED-AND-NOW-REPAIRED** | **How it lapsed:** every clause is written for a *recipe step* — a declared `to`, an `executable` field, a declared root, a cap of 32, a disclosure line. **Phase 1 is not a recipe step and has none of them.** F1 specifies phase 1's content fidelity exhaustively and is **silent on mode**, while F5 requires the payload byte-identical *"file-for-file including modes"*. Under that reading a `0755` source file lands `0755` under `.harness/` — forbidden by name by `E-EXEC-DEST-FORBIDDEN` — with no root declared, no cap consumed, no disclosure entry and no diagnostic, because none of those mechanisms is reachable from a phase that reads no declaration. `payloadDigest` is content-only, so `verify` is blind to it. **Repair (C-26):** §7.4 — **phase 1 writes every payload file `0644` and preserves no source mode**, directories `0755`. It costs nothing (a recipe step sets the mode at the destination, and nothing consults the payload's) and it keeps phase 1's strongest property: **it adds no decision surface**. **DELEGATED:** §6.1 change 22 and §6.2 change 15, which must *remove* F5's "including modes"  **AMENDED 2026-08-31 — the condition now has a shipping subject.** `coding` declares `"executableRoots": ["infrastructure/backend-deploy/"]` and its backend scaffold sets `"executable": true` on `deploy.sh`, `deploy.ps1`, `setup-neon.sh`, `setup-neon.ps1`, which land `0755` and are enumerated in the pre-write disclosure. So every clause of C-12 — declared root, cap of 32, `E-EXEC-DEST-FORBIDDEN` per applied path, the disclosure line — is **exercised by a bundled pack** rather than satisfied vacuously, which is the strongest form of this disposition and the one a fixture can check end to end. `writing` and `planning` declare no root. **Any statement elsewhere in this ADR that no v1.0 pack ships an executable file is history.** See §7.4's amendment box. |
 | **C-13** journal records `preExisting` + pre-apply hash; rollback deletes only what it created | **SATISFIED-IN-ADR, EXTENDED** | §7.5 · `Journal` v2, `JournalEntry`, `.harness/journal.d/`, the five-case table, `RollbackResult.restored`. **Extension: phase-1 writes are journalled identically**, so a crashed payload copy rolls back like anything else. **Already carried** in F1 v2.0 US-13 and US-30 |
 | **C-14** branded `AppliedPath`; re-validate before each write; exclusive create; `E-TARGET-RACE` | **SATISFIED-IN-ADR, EXTENDED** | §7.1 stage 4 · the brand and `confineAtWrite()`. **Extension: `HarnessPath` and `WritablePath`** — without them the CLI's own `.harness/` writes have no type, and the compile-error property C-14 buys does not hold across phase 1. **DELEGATED:** F1 must name the type (§6.1 change 8). The 2026-08-30 honesty about the runtime half stands: the brand is excellent value, the TOCTOU re-check is defence-in-depth and is the first thing to cut if F2 overruns |
 | **C-15** credential-valued parameters forbidden absent `notASecret`; the manifest is repo-public | **SATISFIED-IN-ADR, message corrected** | §7.6 · `ParameterDecl.notASecret` · `src/security/secret-heuristic.ts`. The disclosure named `.harness/base/`, which no longer exists; it now names `.harness/manifest.json` **and `.harness/pack/`**, both committed. **Already carried** in F1 v2.0 US-8 and US-10 |
@@ -2448,10 +2676,10 @@ premise is partly wrong and the row says so — and in four places I go
 
 | C | Disposition | Where, and what was decided |
 |---|---|---|
-| **C-19** destination policy over **every applied path any primitive writes**, not over `to`; `allowedOps` admits only those ops **by any route**; `rewrite-path`/`substitute`/`generate` reaching a settings destination is `E-SETTINGS-MODE-FORBIDDEN`, exit 2, at validate | **SATISFIED-IN-ADR** · **the keystone of this pass** | §7.2.0 · `stepWriteSet()` in the contract · `DestinationPolicy.allowedOps: readonly RecipeOp[] \| null` · §7.7's validation table. The write set is a **pure function of the pack**, so the check needs no project and §7.7 property 2 survives. **↑ Beyond the condition:** the same re-keying is applied to §7.1 stage 2's denylist (C-5's repair) rather than to the settings policy alone, because a rule quantified over `to` is wrong everywhere it appears, and fixing one instance is how the gap re-forms. **DELEGATED:** §6.1 changes 17–20 |
-| **C-20** `policyFor` resolves by `collisionKey` (NFC + case-fold), not exact string, **on every platform** | **SATISFIED-IN-ADR** | §7.2.1 · `policyFor()`. **Evidence correction, in the condition's favour:** F1 does not say "exactly" — F1 says **nothing at all** about how a destination matches a row, which is worse, and this ADR's own contract said `matched exactly`. So the defect is half F1's silence and half mine. Resolution is by `collisionKey`, **unconditionally**, because `validate --all --strict` runs in **Linux CI** while the developer is on macOS or Windows: a platform-conditional policy means the pack CI pronounced valid is not the pack that runs. `policyFor` is **total** — the fall-through row means no destination is unpoliced. **↑ Beyond the condition:** N-5 extends the same folding to `E-TARGET-EXISTS`, `--force` byte-identity and the journal's `preExisting` determination, where the identical bug lets rollback **delete a user file it did not create** (C-13's invariant). Fixing `policyFor` alone leaves the class open |
-| **C-21** F5 enumerates every pack's `ownedKeys` and its classification; F1 §F1.3 and US-29 agree with F5 on whether any v1.0 pack writes settings | **SATISFIED-IN-ADR, by DELETION rather than enumeration — argued** | **Direction decided, and it is the opposite of the condition's literal wording.** F5 gives all three packs a `merge-json` settings step; **not one of them names a `from` or a single owned key**, and no pack's payload inventory contains a settings source file — so under F1's own `E-RECIPE-SOURCE-MISSING` and `E-OWNEDKEY-FORBIDDEN` **all three steps are already invalid recipes.** They are placeholders. Meanwhile F1 §F1.3's worked `packs/coding/recipe.json` — written later and canonical — carries **no settings step**, F5's own precedence rule says *"where this spec and F1 could disagree, F1 wins"*, and `general/pack-inventory.md` independently records the owned keys as **"Missing"**. So the enumeration branch requires **inventing a permission set no document asks for** to satisfy a consistency condition, which is the worst possible way to acquire one: if nobody can say which keys `coding` needs, `coding` needs none. **Decided: §6.2 change 12 deletes all three steps**, F1 needs no change and is already right, and the two documents agree totally rather than agreeing about a list. **The cost is real and is §3.8 / N-6:** `merge-json` ships with no v1.0 consumer, so it is **fixture-tested only** — §6.1 change 27 — and §9 item 10 requires a fresh Mode A pass before the first real settings pack ships |
-| **C-22** F1 states the `merge-json` destination's prior content is an input; narrows the determinism NFR and G-F1-4; specifies `verify`'s behaviour there rather than reporting `match` | **SATISFIED-IN-ADR** | §7.9. The prior content is named the **fourth input**, alongside payload, answers and scaffolds. **G-F1-4 needs no narrowing** — it already reads *"into two empty directories"* and is correct; what needs narrowing is F1's §NFR *Determinism*, its Introduction, its Technical Context row, US-31, **the master spec's NFR row and the brief's Q-40**, all of which state purity unqualified. **↑ Beyond the condition:** C-22 offers *"excluded, or a distinct state"*; §7.9 gives a distinct state **and a real check**. `VerifyState` gains **`partial`**, and at a `merge-json` destination `verify` recomputes each owned key from (payload, answers) — no new manifest key is needed, they are already recomputable — and deep-equal-checks it: any mismatch is `differs`, all matching is `partial`, never `match`, with `ownedKeysChecked` named in the report. Exclusion would have left the highest-risk destination unverified; this verifies **the pack's claim, exactly**, and says the rest is user-owned |
+| **C-19** destination policy over **every applied path any primitive writes**, not over `to`; `allowedOps` admits only those ops **by any route**; `rewrite-path`/`substitute`/`generate` reaching a settings destination is `E-SETTINGS-MODE-FORBIDDEN`, exit 2, at validate | **SATISFIED-IN-ADR** · **the keystone of this pass** | §7.2.0 · `stepWriteSet()` in the contract · `DestinationPolicy.allowedOps: readonly RecipeOp[] \| null` · §7.7's validation table. The write set is a **pure function of the pack**, so the check needs no project and §7.7 property 2 survives. **↑ Beyond the condition:** the same re-keying is applied to §7.1 stage 2's denylist (C-5's repair) rather than to the settings policy alone, because a rule quantified over `to` is wrong everywhere it appears, and fixing one instance is how the gap re-forms. **DELEGATED:** §6.1 changes 17–20  **SUPERSEDED IN PART, 2026-08-31 (Q-54): the condition's SUBJECT is gone, its QUANTIFIER is kept and is now the whole of it.** There is no destination policy, no `allowedOps` and no `E-SETTINGS-MODE-FORBIDDEN`; `.claude/settings.json`, `.claude/settings.local.json` and `package.json` are stage-2 reserved destinations instead. **What survives is the finding beneath the condition** — a rule quantified over `to` has two silent exemptions, because `rewrite-path` and `substitute` have no `to` — which is general, and is why the write set stays a named concept and every destination rule stays quantified over it. **v1.1 obligation:** a returning settings capability is policed over write sets, never over `to`. |
+| **C-20** `policyFor` resolves by `collisionKey` (NFC + case-fold), not exact string, **on every platform** | **SATISFIED-IN-ADR** | §7.2.1 · `policyFor()`. **Evidence correction, in the condition's favour:** F1 does not say "exactly" — F1 says **nothing at all** about how a destination matches a row, which is worse, and this ADR's own contract said `matched exactly`. So the defect is half F1's silence and half mine. Resolution is by `collisionKey`, **unconditionally**, because `validate --all --strict` runs in **Linux CI** while the developer is on macOS or Windows: a platform-conditional policy means the pack CI pronounced valid is not the pack that runs. `policyFor` is **total** — the fall-through row means no destination is unpoliced. **↑ Beyond the condition:** N-5 extends the same folding to `E-TARGET-EXISTS`, `--force` byte-identity and the journal's `preExisting` determination, where the identical bug lets rollback **delete a user file it did not create** (C-13's invariant). Fixing `policyFor` alone leaves the class open  **SUPERSEDED IN PART, 2026-08-31 (Q-54): `policyFor` does not exist; its RESOLUTION RULE does and is re-homed.** With no destination policy there is no function to make total. `collisionKey` matching — NFC-normalized then case-folded, unconditionally on every platform, for the CI-versus-developer reason argued here — is carried by the stage-2 denylist and by N-5's fix to `E-TARGET-EXISTS`, `--force` byte-identity and the journal's `preExisting`. **N-5 survives Q-54 entirely** and is the part of this row a reader should still act on. |
+| **C-21** F5 enumerates every pack's `ownedKeys` and its classification; F1 §F1.3 and US-29 agree with F5 on whether any v1.0 pack writes settings | **SATISFIED-IN-ADR, by DELETION rather than enumeration — argued** | **Direction decided, and it is the opposite of the condition's literal wording.** F5 gives all three packs a `merge-json` settings step; **not one of them names a `from` or a single owned key**, and no pack's payload inventory contains a settings source file — so under F1's own `E-RECIPE-SOURCE-MISSING` and `E-OWNEDKEY-FORBIDDEN` **all three steps are already invalid recipes.** They are placeholders. Meanwhile F1 §F1.3's worked `packs/coding/recipe.json` — written later and canonical — carries **no settings step**, F5's own precedence rule says *"where this spec and F1 could disagree, F1 wins"*, and `general/pack-inventory.md` independently records the owned keys as **"Missing"**. So the enumeration branch requires **inventing a permission set no document asks for** to satisfy a consistency condition, which is the worst possible way to acquire one: if nobody can say which keys `coding` needs, `coding` needs none. **Decided: §6.2 change 12 deletes all three steps**, F1 needs no change and is already right, and the two documents agree totally rather than agreeing about a list. **The cost is real and is §3.8 / N-6:** `merge-json` ships with no v1.0 consumer, so it is **fixture-tested only** — §6.1 change 27 — and §9 item 10 requires a fresh Mode A pass before the first real settings pack ships  **SUPERSEDED 2026-08-31 (Q-54), in the direction this row already chose and one step further.** The row decided deletion over enumeration and was right; Q-54 deletes the *primitive* as well, so there is no `ownedKeys` field for any pack to enumerate and the condition has no subject at all. `pack-inventory.md`'s **"Missing"** row — cited here as corroboration — is itself removed in the same pass, because it framed as *this repo's gap* what is the **specified state of every applied project**. The cost recorded at the end of this cell (`merge-json` shipping unexercised, fixture-tested only, §9 item 10) is **void**: nothing unexercised ships. |
+| **C-22** F1 states the `merge-json` destination's prior content is an input; narrows the determinism NFR and G-F1-4; specifies `verify`'s behaviour there rather than reporting `match` | **SATISFIED-IN-ADR** | §7.9. The prior content is named the **fourth input**, alongside payload, answers and scaffolds. **G-F1-4 needs no narrowing** — it already reads *"into two empty directories"* and is correct; what needs narrowing is F1's §NFR *Determinism*, its Introduction, its Technical Context row, US-31, **the master spec's NFR row and the brief's Q-40**, all of which state purity unqualified. **↑ Beyond the condition:** C-22 offers *"excluded, or a distinct state"*; §7.9 gives a distinct state **and a real check**. `VerifyState` gains **`partial`**, and at a `merge-json` destination `verify` recomputes each owned key from (payload, answers) — no new manifest key is needed, they are already recomputable — and deep-equal-checks it: any mismatch is `differs`, all matching is `partial`, never `match`, with `ownedKeysChecked` named in the report. Exclusion would have left the highest-risk destination unverified; this verifies **the pack's claim, exactly**, and says the rest is user-owned  **SUPERSEDED 2026-08-31 (Q-54), and the narrowing is deliberately NOT APPLIED.** The fourth input was `merge-json`'s destination, and there is no `merge-json`; `verify`'s recomputation identity is exact at every applied path, so F1's §NFR *Determinism*, its Introduction, its Technical Context row, US-31, the master spec's NFR row and the brief's Q-40 are **true as originally written** and are restated as holding without exception rather than narrowed. **`VerifyState` does not gain `partial`** — the report is two-state — and `ownedKeysChecked` does not exist. F-4 resolves for free. See §7.9's status box for what a v1.1 reader must re-establish if the capability returns. |
 | **C-23** F1 states unambiguously whether phase 2 renders from planner-held bytes or re-reads at execute time; if it re-reads, every read re-hashes against planned content, mismatch is `E-TARGET-RACE` | **SATISFIED-IN-ADR · the reviewer's reading CONFIRMED** | **§3.6, decided explicitly.** Phase 2 renders **entirely at plan time** from planner-resolved payload bytes; `executeApply` reads nothing from disk. `.harness/pack/` is phase 2's **logical** input and its **literal** input only at `verify`. Confirmed because the alternative contradicts four authoritative statements, three of them Q-41's own: Q-41's recorded consequence *"the user cannot adjust the payload before phase 2 runs"* (the execute-time window makes it false); Q-40's *"no environment reads"* (a filesystem read at step *n* is one, and is ordering-dependent); `pack-application.md`'s *"both phases … computed in memory"*; and US-30's digest-over-the-**planned**-set. **Cost stated:** F1's *"phase 1 streams file by file"* ends for the phase-2 **source** set, which must be held — not for the rest, which still streams. **US-30's proposed test is replaced**, because it passes under both readings and distinguishes nothing; the replacement mutates `.harness/pack/` between the phases and requires byte-identical output. **The re-read branch's price is recorded for v1.1** rather than dropped |
 | **C-24** `Recipe.formatVersion` added to the closed enumeration; a newer recipe format is exit 2, zero bytes | **SATISFIED-IN-ADR** | §7.6 — **seventh** behaviour-selecting position. New code **`E-RECIPE-FORMAT-NEWER`**, exit 2, distinct from `E-PACK-FORMAT-NEWER` because the file, the remedy and the version axis all differ. **DELEGATED:** §6.1 changes 23–24 |
 | **C-25** duplicate-key rejection for `pack.json`, `recipe.json`, manifest; `op` matched literally, no trimming or case folding | **SATISFIED-IN-ADR** | §7.6 · `parseStrictJson()` · new code **`E-JSON-DUPLICATE-KEY`**, exit 2, any depth, naming both line numbers. **The reasoning is the best thing in the re-review and is adopted rather than paraphrased:** §7.0's threat model rests on *"the review that would catch `"ownedKeys": ["hooks"]` is a JSON diff review"*, and `JSON.parse` takes the **last** duplicate while a human reading a diff takes the **first** — so the pack reviews as one thing and executes as another, voiding the control by name. **Cost named, not hidden:** Node has no duplicate-key option and a reviver never sees the collapsed key, so this is a hand-rolled token pass (`src/json/parse-strict.ts`) — the one stdlib call this ADR replaces rather than wraps. **Scoped, deliberately:** *not* applied to a `merge-json` destination or its payload `from`, one of which is the **user's own** file; a duplicate there is `E-MERGE-JSON-INVALID`, same fail-closed outcome, different remedy prose, per §7.6's own severity rule |
@@ -2541,16 +2769,28 @@ change to the quantifier is visibly a change to the condition.
    change 27. F-1 was reachable in **two recipe steps**; a fixture would
    have caught it on the first CI run, and two rounds of table-reading
    did not.
-10. **`merge-json` ships with no v1.0 consumer, and that is an
-    obligation, not a footnote.** §6.2 change 12 removes the last
-    settings step from every bundled pack, so the primitive carrying the
-    most security machinery in the format is exercised **only by
-    fixtures** (§3.8, N-6). **Named obligation: the first real pack to
-    declare a settings `ownedKeys` requires a fresh Mode A pass before
-    it ships**, because that pack is the first thing ever to run C-1,
-    C-2, C-8 and C-19 in anger. Dropping the primitive instead was
-    considered and rejected in §3.8, and is flagged as still available if
-    the re-review prefers it.
+10. **RE-SCOPED 2026-08-31 — the primitive was dropped instead, and the
+    obligation moves to v1.1's settings capability.** This item read:
+    *"`merge-json` ships with no v1.0 consumer, and that is an
+    obligation, not a footnote… the first real pack to declare a
+    settings `ownedKeys` requires a fresh Mode A pass before it ships…
+    dropping the primitive instead was considered and rejected in §3.8,
+    and is flagged as still available if the re-review prefers it."*
+    **The re-review preferred it.** Q-54 drops `merge-json`, so nothing
+    unexercised ships and there is no `ownedKeys` for a pack to declare.
+    **The obligation is not discharged, it is re-pointed:** the settings
+    capability returns in v1.1, and **whatever reintroduces it requires a
+    fresh Mode A pass covering the whole of it** — the primitive or its
+    successor, the ownable-key allowlist, the destination policy, the
+    consent surface and the `verify` behaviour of §7.9 — because at that
+    point C-1, C-2, C-8 and C-19 run in anger for the first time and
+    every one of them is being re-established from a document that
+    records them as superseded. **Two rules for that pass, learned
+    here:** re-establish the **hook exclusion** explicitly (it is
+    *trivially* true at v1.0 because nothing writes a settings file, and
+    trivially-true rules get dropped as redundant by whoever
+    reintroduces the capability), and quantify every destination control
+    over **write sets**, never over `to` (C-19).
 11. **§6.5's five out-of-scope corrections need an owner.** Two
     `general/` documents and two brief §12 rows now carry statements this
     pass falsifies or sharpens. The two brief rows — Q-40's purity claim
@@ -2576,7 +2816,10 @@ the settings op lockdown — are the S-1 repair itself.
 **What is settled, and I still do not expect it to move.** The two-phase
 model, the closed seven-primitive recipe, the six-key manifest, F1's
 ownership of `verify`, and the file-level plan and interface contract are
-unchanged in shape by this pass. **What moved is one thing, stated in one
+unchanged in shape by this pass. *[Amended 2026-08-31: **six**-primitive,
+per Q-54. The closure is what was settled and it held; the count did not.
+The verdict below is **not** re-examined in that pass — the fold into F1
+and a further Mode A pass decide it.]* **What moved is one thing, stated in one
 sentence:** *every destination control is evaluated over the set of
 applied paths a step writes, not over the step's `to` field.* That is
 §7.2.0, and it is the whole of the architectural delta.
@@ -2637,7 +2880,9 @@ The re-review should give particular attention to four things: **N-5**,
 which I found while specifying C-20 and which lets rollback delete a user
 file it did not create; **N-6 / §3.8**, where dropping `merge-json`
 entirely was available and was rejected — say so if you prefer it, the
-fold is deletions; **§3.6's cost**, where plan-time rendering ends
+fold is deletions *[**answered: the review preferred it.** Q-54 drops
+`merge-json`; §3.8 is overturned, N-6 is closed by deletion, and this
+item needs no further attention]*; **§3.6's cost**, where plan-time rendering ends
 phase 1's streaming for the phase-2 source set; and **§6.1 change 27's
 fixture list**, which is the process control and should be reviewed as
 one rather than as test scaffolding.

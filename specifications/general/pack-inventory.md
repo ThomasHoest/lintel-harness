@@ -1,7 +1,7 @@
 # Pack inventory — the three v1.0 packs
 
 **Status:** Draft · **Date:** 2026-08-31 · **Applies to:** v1.0
-**Decisions:** Q-9/Q-9a/Q-9b (three packs) · Q-11 (planning framing) · Q-17 (scaffolds) · Q-28 (presentation deferred) · Q-39/Q-40 (two-phase apply) · Q-46 (no bootstrap prose)
+**Decisions:** Q-9/Q-9a/Q-9b (three packs) · Q-11 (planning framing) · Q-17 (scaffolds) · Q-28 (presentation deferred) · Q-39/Q-40 (two-phase apply, **six** primitives) · Q-46 (no bootstrap prose) · Q-48/Q-49 (no `shared/`) · Q-50 (folder READMEs) · Q-54 (`merge-json` dropped; nothing writes `.claude/settings.json`)
 
 Cross-cutting reference. What each pack contains, file by file, and
 which apply phase each file belongs to. The authoritative *behaviour*
@@ -140,7 +140,16 @@ packs/coding/
 │                              conventions, with inert region anchors (Q-45)
 └── infrastructure/            only with --scaffold backend-azure|backend-aws
     └── backend-deploy/        Bicep + Neon, or CDK + Lambda
+                               deploy.sh/.ps1 + setup-neon.sh/.ps1 land 0755
 ```
+
+**The four backend scripts are the only executable files any v1.0 apply
+produces.** `coding`'s `pack.json` declares
+`"executableRoots": ["infrastructure/backend-deploy/"]` and the backend
+scaffold's steps carry `"executable": true`; every other file every pack
+writes is `0644`, and `writing` and `planning` declare no root at all.
+The four paths are enumerated in `init`'s pre-write disclosure. F5 §NFR
+*Content integrity* is authoritative.
 
 Filled targets and their work logs live in `targets/` alongside
 `Run.md`; the template they are copied from stays in the payload.
@@ -353,7 +362,20 @@ it has today against what `lintel-harness init coding` would produce:
 | `.harness/manifest.json` | **Missing** |
 | `AgentTeams/` | **Removed** — it is a phase-2 artifact and returns on apply |
 | `targets/Run.md` | **Removed** — same |
-| `.claude/settings.json` owned keys | **Missing** — no pack owns a security-relevant key at v1.0 |
+
+**`.claude/settings.json` is deliberately not in this table.** An earlier
+edition carried a row reading *"owned keys — **Missing**, no pack owns a
+security-relevant key at v1.0"*, which framed the absence as a gap this
+repo happens to have. It is not a gap. Under **Q-54** it is **the
+specified state of every applied project**: `merge-json` is dropped, no
+primitive can write a settings file, `.claude/settings.json` and
+`.claude/settings.local.json` are reserved destinations forbidden to
+every step by every route, and no pack owns a settings key or ships a
+default permission set. A properly applied project has no
+`.claude/settings.json` either, so this repo is not behind on it — there
+is nothing to close. R5's "sensible default permissions" is a real
+shortfall, recorded as such in F5's part 8, and it is v1.1 work, not
+dogfooding work.
 
 `AgentTeams/` and `targets/Run.md` were deleted when they were believed
 to be payload. Under Q-39 they are phase-2 artifacts, so they come back
