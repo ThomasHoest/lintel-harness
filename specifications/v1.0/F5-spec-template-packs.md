@@ -20,6 +20,7 @@
 | **2.0** | **2026-08-31** | **`F1-ADR-001` §6.2 changes 10–11 folded — the Q-50 folder-README rule becomes a checked rule.** F1 v2.2 adds `validate` **step 12** (`W-FOLDER-README-MISSING`, a warning, fatal under `--strict`), run **per parameter combination**, and `pack.json` gains **`folderReadme`**. Two consequences land here. **(10)** `packs/writing/pack.json` **declares `"folderReadme": "index.md"`**, its existing Obsidian convention paired with `Home.md`; `coding` and `planning` omit the key and take the `README.md` default. **(11)** **Every folder a recipe creates must receive its folder README from a step in the same `when` branch as whatever creates the folder** — stated as a requirement on all three recipes and worked concretely for `coding`'s `backend-azure`/`backend-aws` scaffolds, `writing`'s per-workstream stage folders and `planning`'s two calibration branches. `W-FOLDER-README-MISSING` is added to the CLI-scenario table **by citation**; F1 remains the only catalogue. One goal added, **G5.11** (`validate --all --strict` exits `0` over the bundled packs), and one NFR under *Anatomy and legibility*. **No new code, no new story and no new question**: next free question id **Q-54**; next free story id **US-39**. |
 | **2.1** | **2026-08-31** | **`F1-ADR-001` Mode A re-review fold — §6.2 changes 12–16, as overridden by Q-54.** **`merge-json` is dropped from v1.0 (Q-54): six primitives, not seven.** The three `merge-json` "Settings" steps in `coding`, `writing` and `planning` are **deleted** — the architect established they were never valid recipes (no `from`, no owned key, no settings source file in any payload), so nothing is removed but placeholders. **`.claude/settings.json` leaves every produced-tree listing and every acceptance criterion**, including US-17 and US-18; US-18's *"contains no `hooks` key"* becomes the stronger, mechanically checkable *"the applied tree contains no `.claude/settings.json`"*. **Every reference to `E-OWNEDKEY-*`, `E-MERGE-JSON-*` and `E-SETTINGS-*` is deleted** — those codes no longer exist in F1's catalogue, which this spec calls the only one, so citing them was a contract break. **No pack ships a permission set, owns a settings key, or triggers a consent prompt at v1.0.** Restated and unchanged: **no pack registers an agent hook at v1.0**; `planning` still ships its inert `0644` guard script and the kill-criteria rule is still carried by `/bet`'s instruction and by `/review`. R5's shortfall record gains a **fourth** entry — no pack ships a default permission set either, deferred to v1.1 with `merge-json`. **C-12's lapse is repaired:** US-17 and §NFR *Payload fidelity* said phase 1 copies *"including modes"*, which is the opposite of the rule — **phase 1 writes every payload file `0644` and preserves no source mode** (F1 US-30). Counts corrected: `coding` phase 2 writes **23** files (18 working + 5 folder READMEs), not 24. Four F5-internal corrections from §6.2 change 16: US-34's provenance clause restated against §3.6 (source is a payload path, resolved at plan time, no execute-time read); `planning` gains the **`rewrite-path`** step its targets contract already required; the 7b summary-matrix cells restated for all three packs; and §Flows' *"which F1 must add"* on the recipe-schema code struck, because that gap closed. **Q-54 is indexed as resolved; next free question id Q-55; next free story id US-39. No story retired, no new code, no new question.** |
 | **2.2** | **2026-08-31** | **Mode A residue fold — C-35 and C-38.** Two documentation defects, one of which required a decision. **C-38 — the executable disagreement is settled, and `coding` ships executables.** F1 said every v1.0 pack ships no executable file; §NFR said *"no executable pack content outside a declared scaffold"*, which reads as the opposite. Decided in one direction: **`coding` declares `"executableRoots": ["infrastructure/backend-deploy/"]`** and its backend scaffold steps set **`"executable": true`** on `deploy.sh`, `deploy.ps1`, `setup-neon.sh` and `setup-neon.ps1`, which land **`0755`** and are enumerated in `init`'s pre-write disclosure. Those scripts are meant to be run, `0644` would force a `chmod` on every applied project, and giving C-12's apparatus a real consumer beats leaving it specified and dormant — the pattern Q-54 was the lesson about. Restated across §NFR *Content integrity*, US-21, `coding`'s 7b recipe row and applied tree, and the scaffold inventory. **The matching change lands in F1; this spec does not own it.** **C-35 — anatomy `paths` are payload-relative**, stated wherever the declaration is described (§What is in scope, US-20, §Flows / *The nine parts across the three packs*, §NFR *Anatomy completeness*), with `coding`'s `agent-teams/` → `AgentTeams/` rename given as the case that proves the payload and applied namespaces are different rather than usually-equal. Matching an applied path against an anatomy glob silently drops the two agent-team documents, which is C-35's root cause; F1 restates its substituted-answer classifier over applied paths. **No new question, no new story, no new error code:** next free question id **Q-55**, next free story id **US-39**. Codes cited are F1's existing `E-EXEC-ROOT-UNDECLARED`, `E-EXEC-DEST-FORBIDDEN` and `E-EXEC-TOO-MANY`. |
+| **2.4** | **2026-08-31** | **C-40 reversal — `permissionMode: readonly` ships.** Edition 2.3 was written against a briefed reading of C-40 in which a pack-written `.claude/` file could declare **no** permission-bearing key, and it booked the removal of three `permissionMode: readonly` lines as declared difference class (d). **F1 v2.5 resolved C-40 the other way:** the pinned constant has three parts — grant keys, mode keys, and a **non-widening mode value set** — so a *restricting* value is permitted while a widening or unrecognised one is `E-CLAUDE-PERMISSION-MODE` (exit 2), and a mode key on a non-agent file is `E-CLAUDE-TOOL-GRANT`. `readonly` restricts. F1's positive assertion now **requires** those three lines present and disclosed, so removing them would have made the migrated pack fail it. Reversed here: the §Role-set rule restated to distinguish restricting from widening rather than forbidding the key; the consequence paragraph rewritten so the migration **ships the frontmatter unchanged**; US-24's class (d) deleted and the empty class relettered (d), with the check now rejecting **any** frontmatter difference, since the migration makes none. F1's new code is cited where 2.3 deliberately cited none. **No new question, no new story:** next free **Q-56** (Q-55 recorded `writing-guide/index.md`), next free **US-39**. |
 | **2.3** | **2026-08-31** | **Final Mode A fold — the F5 side of C-40, the widened reserved list confirmed, and C-46.** The final pass over F1 v2.4 / F5 v2.2 returned **`REVISE-SPEC`** with **3 HIGH, 3 MEDIUM, 4 LOW and no CRITICAL**, 36 of 38 conditions holding. **C-40's evidence lived partly here:** §Flows / *2. Role set* listed the agent frontmatter keys inline, `permissionMode` among them, which read as a menu of what a **pack** may declare. That list is now stated explicitly as **descriptive of the Claude Code runtime**, with what a pack-written `.claude/` file may declare deferred to F1, which is being amended so that such a file **may not declare any permission-bearing key** — tool grant or permission mode — and so that the pre-write disclosure prints the **whole frontmatter block**, not only `tools:`. **Consequence made explicit rather than left to the migration:** `coding`'s `architect.md`, `reviewer.md` and `securityreviewer.md` carry `permissionMode: readonly` in the source and **the migrated pack does not ship it**; US-24 gains it as **declared difference class (d)**, enumerated as exactly three lines in three named files, and the empty class renames to (e). Nothing is lost that was load-bearing — the pack's own `agents/README.md` already says the `tools:` whitelist is the real safety net, and those three agents omit `Write`/`Edit`/`Bash`. **No code is cited for the new rule**, deliberately: whether C-40 extends `E-CLAUDE-TOOL-GRANT` or adds one beside it is F1's, and F1 remains the only catalogue. **The widened reserved-destination list is confirmed against this spec and nothing contradicts it** — US-21 gains an acceptance criterion saying so, naming `azure-pipelines.yml` because the pack ships an **Azure** scaffold: `backend-azure`'s entire write set is `infrastructure/backend-deploy/` and it ships **no CI or pipeline file of any kind**, as do `backend-aws` and `writing-workstream`. **C-46:** §NFR *Recipe purity* named two inputs where F1 names three; it now reads *(payload, parameter answers, scaffold selection)* and restates plan-time rendering (C-23). **No new question, no new story, no new error code:** next free question id **Q-55**, next free story id **US-39**. |
 
 ---
@@ -542,20 +543,18 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   named by file and heading; (b) an added `pack.json`, `recipe.json` or
   `applied-readmes/` file; (c) the declared restructure —
   `infrastructure/backend-deploy/` → `scaffolds/backend-azure/`, and the
-  `/target` command moving into `commands/`; (d) **the removal of the
-  `permissionMode:` line from `architect.md`, `reviewer.md` and
-  `securityreviewer.md`** — a format requirement under C-40, enumerated
-  by file, and the only frontmatter change the migration makes;
-  (e) nothing else.
+  `/target` command moving into `commands/`; (d) nothing else. **The
+  migration makes no frontmatter change at all** — `permissionMode:
+  readonly` ships unchanged on `architect.md`, `reviewer.md` and
+  `securityreviewer.md`, because `readonly` restricts rather than
+  widens and F1 v2.5 requires it present and disclosed.
 - **`targets/` does not move.** Under Q-48 there is no `shared/` tree to
   lift it into, so the check expects `targets/` and `target-reviewer.md`
   exactly where the source commit has them; their absence is a migration
   bug, not a declared restructure.
-- Class (e) is empty. Any difference the check cannot place in (a), (b),
-  (c) or (d) fails the check.
-- **Class (d) is enumerated, not open.** It is exactly three lines in
-  three named files; a `permissionMode:` line surviving anywhere in the
-  migrated pack, or any other frontmatter difference, fails the check.
+- Class (d) is empty. Any difference the check cannot place in (a), (b)
+  or (c) fails the check — **including any frontmatter difference**,
+  since the migration makes none.
 - The Q-46 deletion list is exhaustive and enumerated in §Flows, so the
   check compares against a list rather than a judgement.
 
@@ -1485,29 +1484,41 @@ explicitly** (C-40). The keys the runtime reads on an agent file are
 `name`, `description`, `tools`, `model`, `permissionMode` and
 `maxTurns`. What a **pack-written** file under `.claude/` may *declare*
 is F1's rule, not F5's, and F1 is the only authority on it: **a
-pack-written `.claude/` file may not declare a permission-bearing key at
-all** — neither a tool grant nor a permission mode — and `init`'s
-pre-write disclosure prints the **whole frontmatter block** of every
-`.claude/` file a pack writes, not just its `tools:` line. Nothing in
-this spec states or implies that a pack may declare `permissionMode`;
-where an earlier edition listed the runtime's keys inline it read as a
-menu of what a pack may set, and it is not one.
+pack-written `.claude/` file may not declare a **tool grant** at all
+(`E-CLAUDE-TOOL-GRANT`), and may declare a **permission mode only where
+its value is in F1's pinned non-widening set** — a widening or
+unrecognised value is `E-CLAUDE-PERMISSION-MODE`, and a mode key on a
+non-agent file is `E-CLAUDE-TOOL-GRANT`. `init`'s pre-write disclosure
+prints the **whole frontmatter block** of every `.claude/` file a pack
+writes, not just its `tools:` line. Where an earlier edition listed the
+runtime's keys inline it read as a menu of what a pack may set, and it
+is not one — F1's rule governs, and it distinguishes *restricting* from
+*widening* rather than forbidding the key outright.
 
 **Consequence for `coding`, stated rather than left to the migration.**
 Three agents in the source tree — `architect.md`, `reviewer.md` and
-`securityreviewer.md` — carry `permissionMode: readonly` today. That key
-is permission-bearing, so **the migrated pack does not ship it**, and the
-migration record books its removal as a declared class rather than a
-faithfulness breach (Q-6 constrains content improvement; it does not
-license shipping a file F1's format rejects). **Nothing is lost that was
-load-bearing:** the pack's own `agents/README.md` already records that
-`permissionMode` is honoured by some harnesses and ignored by others and
-that *"the `tools:` whitelist is your real safety net"* — the three
-read-only agents omit `Write`, `Edit` and `Bash` from `tools:`, which is
-what actually holds. An agent's `tools:` list is a **restriction the
-runtime applies underneath a permission engine the pack cannot touch**,
-it is permitted, and it is disclosed verbatim with the rest of the
-block.
+`securityreviewer.md` — carry `permissionMode: readonly` today.
+`readonly` **restricts**; it is in F1's pinned non-widening set, so **the
+migrated pack ships it unchanged**, and F1's own positive assertion
+*requires* those three lines to be present and disclosed. There is no
+declared difference here and no faithfulness question: the migration
+copies the frontmatter as it stands.
+
+*(Corrected 2026-08-31. An earlier edition of this section was written
+against a briefed reading in which no permission-bearing key could ship
+at all, and booked the removal of those three lines as a declared
+difference class. F1 v2.5 resolved C-40 the other way — it distinguishes
+a restricting value from a widening one — so the removal would have made
+the migrated pack fail F1's assertion.)*
+
+The `tools:` whitelist remains the load-bearing control either way: the
+pack's own `agents/README.md` records that `permissionMode` is honoured
+by some harnesses and ignored by others and that *"the `tools:`
+whitelist is your real safety net"*, and the three read-only agents omit
+`Write`, `Edit` and `Bash`. An agent's `tools:` list is a **restriction
+the runtime applies underneath a permission engine the pack cannot
+touch**, it is permitted, and it is disclosed verbatim with the rest of
+the block.
 
 **No error code is cited here**, deliberately: the diagnostic for a
 pack-declared permission-bearing key is F1's, and whether C-40 extends

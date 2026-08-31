@@ -1762,7 +1762,7 @@ diagnostic.
   | Disclosure content | Status at v1.0 |
   |---|---|
   | **Every applied path the apply would write `0755`**, with the payload path it comes from, verbatim, one per line | **Kept** (C-12) |
-  | **Every file the pack ships under `.claude/hooks/`**, each stated plainly as inert — shipped, `0644`, registered by nothing | **Kept** (US-3) |
+  | **Every file the pack ships under a `hooks/` directory in **any** `.claude` tree**, each stated plainly as inert — shipped, `0644`, registered by nothing | **Kept, scoping made explicit at v2.5** (US-3, C-39). `.claude` is matched at any segment here for the same reason it is everywhere else in this document, and the `0644` is enforced by `E-EXEC-DEST-FORBIDDEN` at any segment too (C-39b) |
   | **Every applied path at which a parameter answer was substituted**, with the parameter id and the **value verbatim**, one per line, never summarised, never truncated, never counted | **Kept, and new at v2.3** (C-28, US-4). At v2.4 the classifier that fed it was restated over applied paths (C-35); **at v2.5 the classifier is deleted and the row is a total enumeration** — five applied paths for `coding`, not three (C-43) |
   | **Every pack-shipped `.claude/agents/*.md` and its whole frontmatter block**, verbatim, one per line — the applied path and the frontmatter exactly as the file declares it, never summarised, never truncated, never counted | **New at v2.4, widened at v2.5** (C-32b, C-40, US-3). Through v2.4 the row printed `tools:` alone, so `permissionMode` — which three `coding` agents declare — was invisible. **"Pack-shipped" is the union of two sets**: every `.claude/agents/*.md` in the write set, and every `.claude/agents/*.md` in the **phase-1 payload**, which lands inside the committed project at `.harness/pack/` (C-39c) |
   | Every value written under a security-relevant owned key | **Deleted** — no owned keys, no settings destination (Q-54) |
@@ -1799,8 +1799,9 @@ diagnostic.
   summary, `pack info` and `validate --json` — from that one builder, so
   the three cannot disagree. A test may assert the single-builder
   property structurally, and may assert the content by applying `coding`
-  and requiring the summary to name `CLAUDE.md` and the verbatim
-  `projectName` answer.
+  and requiring the summary to name **all five** applied paths at which a
+  parameter answer was substituted, each with the verbatim answer (C-43,
+  US-16).
 - Before writing, a **journal (version 2)** is written to
   `.harness/journal.json` and flushed. It records, per intended path: the
   hash this apply intends to write, **`preExisting`**, the **pre-apply
@@ -2244,7 +2245,8 @@ whose only evidence is a table row is a condition nobody has tested.
     bounded** — only a pinned non-widening value is permitted
     (`E-CLAUDE-PERMISSION-MODE` otherwise, US-3), because a mode key
     selects that engine's mode rather than running underneath it;
-  - **every file the pack ships under `.claude/hooks/`**, each stated
+  - **every file the pack ships under a `hooks/` directory in any
+    `.claude` tree** (C-39), each stated
     plainly as inert — shipped, `0644`, and registered by nothing at v1.0
     (US-3), so a reader is not misled into thinking it runs;
   - **every applied path at which a parameter answer is substituted**, in
@@ -2756,7 +2758,7 @@ change the exit code.
 | `E-VERIFY-MISMATCH` — the project differs from the recomputed applied tree | Exit 1. `lintel-harness: {n} of {total} applied paths do not match what this pack and these answers produce.` / `  {first ten paths, one per line, with "differs" or "missing"}` / `  → Inspect the differences, or re-apply into a fresh directory.` A `differs` is not necessarily a fault — a user may have edited a generated file deliberately — so this is exit 1 and never exit 2. |
 | `E-CLAUDE-TOOL-GRANT` — a file a pack places under a `.claude` segment declares a permission-bearing frontmatter key that it may not (US-3, US-30, US-31, C-32a, C-39c, C-40) | Exit 2. `lintel-harness: "{path}" declares a permission decision ("{key}", line {line}).` / `  A pack may not pre-authorize tools or select a permission mode for the project it is applied to. A command file's frontmatter is a permission declaration, and its !-prefixed lines execute shell under it.` / `  → Remove the key. A pack contributing permissions is deferred to v1.1 with the settings story.` **Zero bytes written.** Raised for a **grant key** on any pack-placed file under a `.claude` segment, and for a **mode key** on any such file that is **not** an agent file — a command or skill file has no business selecting a permission mode (C-40). **Two quantifiers, two steps, two disjoint sets** (C-39c): the **write set**, on **rendered** output, at US-16 **step 11** — rendered because a later `substitute` or `rewrite-path` can change the bytes the runtime reads — and the **phase-1 payload set**, on payload bytes, at US-16 **step 3**, because phase 1 copies verbatim and skips no payload file, so a `.claude/` subtree a pack merely *ships* lands live inside the committed project at `.harness/pack/.claude/`. Matched on **any segment** equal to `.claude`, not the first only (C-33's scoping). `{key}` comes from **one named constant pinning the key names the Claude Code runtime's current frontmatter contract uses for a permission decision** — **grant keys** (`allowed-tools` and its spellings) **and mode keys** (`permissionMode` and its spellings) — with the runtime version the pin was taken against recorded beside it; a key the runtime adds after the pin is not caught until the pin is updated, which §F1.9 records as a maintenance obligation. **Not raised for an agent file's `tools:` list, nor for an agent file's non-widening `permissionMode`**, both permitted and **disclosed** instead (US-13, C-32b, C-40); a widening or unrecognised mode value on an agent file is `E-CLAUDE-PERMISSION-MODE`. |
 | `E-CLAUDE-PERMISSION-MODE` — a pack-placed agent file under a `.claude` segment declares a `permissionMode` whose value is widening or unrecognised (US-3, US-30, US-31, C-40) | Exit 2. `lintel-harness: "{path}" selects permission mode "{value}" (line {line}).` / `  A pack may not widen the permission envelope of the project it is applied to, and lintel-harness will not guess at a mode it does not recognise.` / `  Permitted: {modes}` / `  → Use a mode that does not widen the envelope, or remove the key.` **Zero bytes written.** `{modes}` is the pinned **non-widening** value set held in the same named constant as the key names, with the runtime version the pin was taken against. **A distinct code from `E-CLAUDE-TOOL-GRANT` because the fault and the remedy differ**: there the key may not be declared at all, here the key is legitimate and the *value* is not — and the two messages must not be interchangeable, on this catalogue's own rule that a code is the stable contract. **Fail-closed on an unrecognised value**, which is US-1's rule for a value in a behaviour-selecting position applied to a foreign contract: refusing a legitimate new mode at `validate` time is visible, locatable and fixable in one constant, while accepting an unknown one is a silent widening. **Not raised for `tools:`**, which is a request made underneath the engine rather than a selection of its mode (C-32b) — the distinction v2.4 collapsed, and the reason `permissionMode: bypassPermissions` on an agent that also declared `Bash` was neither refused nor shown. |
-| `W-HOOK-SCRIPT-INERT` — the pack ships a file under `.claude/hooks/` | Warning. `lintel-harness: "{path}" is shipped as an ordinary file and is registered by nothing.` / `  No v1.0 mechanism registers a hook, so this script does not run until something registers it by hand.` Emitted by `validate` at US-16 **step 8**, and the same files are listed in the init summary and in `pack info` (US-3). |
+| `W-HOOK-SCRIPT-INERT` — the pack ships a file under a `hooks/` directory in any `.claude` tree | Warning. `lintel-harness: "{path}" is shipped as an ordinary file and is registered by nothing.` / `  No v1.0 mechanism registers a hook, so this script does not run until something registers it by hand.` Emitted by `validate` at US-16 **step 8**, and the same files are listed in the init summary and in `pack info` (US-3). **`.claude` is matched at any segment** (C-39), as it is in every other rule in this document; the file is `0644` by `E-EXEC-DEST-FORBIDDEN`, also at any segment (C-39b). |
 | `W-LINK-DANGLING` — a relative link or inline path reference in rendered output resolves to nothing the apply produces (US-16) | Warning. `lintel-harness: {path}:{line} refers to "{target}", which this pack does not produce.` / `  → Fix the reference, or add the file to the pack.` A reference into `.harness/pack/` that exists in the payload is correct and is not reported. |
 | `W-FOLDER-README-MISSING` — a directory the applied output implies, outside `.claude/` and `.harness/`, that receives no folder README in the parameter combination that creates it (US-16 step 12, Q-50) | **Warning**, exit unchanged; **exit 1 under `--strict`**. `lintel-harness: {pack} creates {dir} but writes no {basename} into it.` / `  combination: {combination}` / `  → Add a step producing {dir}{basename} in the same condition branch, or make {dir} unnecessary.` `{basename}` is `pack.json`'s `folderReadme` (default `README.md`, US-1); one diagnostic per directory per combination. **A warning and not an error, deliberately:** `validate` has no project root, so it cannot tell a directory this apply *creates* from one that already exists and is merely written into. The check over-approximates by construction, and an over-approximating check must not be fatal by code — a pack writing into a conventional pre-existing directory would otherwise be unshippable and the workaround would be the `.gitkeep`-shaped placeholder Q-50 exists to prevent. `--strict` makes it fatal where the over-approximation is known empty, which is this repo's CI. |
 | `E-CONTENT-TOO-LARGE` | Exit 2. `lintel-harness: "{path}" is {size}; the limit for a pack file is 4 MB.` |
@@ -2999,21 +3001,35 @@ change the exit code.
 
   **Three limits on that statement, stated because the previous version's
   fault was omitting them:**
-  1. **The last four routes are closed by a denylist, and a denylist is
-     incomplete by construction.** It closes what it names. It is not a
-     proof that nothing else executes what a pack writes, and no such
-     proof is offered.
+  1. **Every route but the first is closed by a denylist, and a denylist
+     is incomplete by construction.** It closes what it names. It is not
+     a proof that nothing else executes what a pack writes, and no such
+     proof is offered. **`.mcp.json` is the evidence rather than a
+     hypothetical** (C-41): it sat outside the list through v2.4, one
+     `copy` away, while the list's own category named exactly it.
   2. **A pack does place content an agent runtime reads and acts on.**
-     `.claude/agents/*.md` declare `tools:` — `coding`'s `implementer`
-     declares `Bash` — and `CLAUDE.md`, `AgentTeams/*.md` and the command
+     `.claude/agents/*.md` declare `tools:` — **two** of `coding`'s ten
+     declare `Bash` (`implementer`, `testwriter`) and `researcher`
+     declares `WebSearch, WebFetch`, **the only network capability any
+     v1.0 pack ships** (C-45) — and `CLAUDE.md`, `AgentTeams/*.md` and
+     the command
      files are instructions a model follows. None of it is a grant: the
      permission engine that decides what actually runs lives in
-     `.claude/settings.json`, which no pack can write. But it is not
+     `.claude/settings.json`, which no pack can write at any `.claude`
+     segment. But it is not
      nothing, and it is **disclosed verbatim** rather than claimed away
-     (US-13, C-28, C-32b).
+     (US-13, C-28, C-32b). **Note the distinction the network capability
+     draws**: §NFR *No network* is a property of the **CLI** — `init`,
+     `validate`, `verify` and `pack info` make no request — and it says
+     nothing about what the runtime does with content the pack placed.
+     The two claims are not the same claim, and stating one has never
+     implied the other.
   3. **The `.claude/` frontmatter rule is pinned against a contract this
-     document does not own.** If the runtime adds a permission-bearing
-     key, the pin must follow (§F1.9).
+     document does not own** — key names **and** the non-widening mode
+     values (C-40). If the runtime adds a permission-bearing key or a
+     mode, the pin must follow (§F1.9). The key half fails **open** if it
+     goes stale; the value half fails **closed**, which is why a value
+     pin is acceptable where a tool allowlist was not.
 
   What is invariant, testable and asserted without qualification: the
   primitive set is closed and matched literally; every applied path
@@ -3088,14 +3104,26 @@ project, no filesystem, so `validate` computes it in CI. It is computed
 **Two checks apply to every primitive in both tables and are stated once
 here rather than repeated six times.** (1) Every applied path in the
 step's write set passes the four-stage confinement gate of US-3,
-including the stage-2 denylist as extended at v2.4 (C-31, C-33).
+including the stage-2 denylist as extended at v2.4 and again at v2.5
+(C-31, C-33, C-39, C-41).
 (2) **Any rendered output the step produces at an applied path with a
-`.claude` segment is checked for a tool-permission frontmatter key**
-(`E-CLAUDE-TOOL-GRANT`, exit 2, C-32a), at US-16 step 11 where rendered
+`.claude` segment is checked for a permission-bearing frontmatter key**
+(`E-CLAUDE-TOOL-GRANT` and `E-CLAUDE-PERMISSION-MODE`, exit 2, C-32a,
+C-40), at US-16 step 11 where rendered
 bytes exist. The second is quantified over the write set for the same
 reason the first is: `rewrite-path` and `substitute` have no `to`, and a
 check written over `to` would exempt exactly the two primitives that
 change a file's bytes after it was placed.
+
+**A third check applies to no primitive at all, and that is why it is
+stated here** (C-39c). The **phase-1 payload set** is outside every
+quantifier in this table — it is not a step, it has no `to` and no write
+set — and it is where the same two codes fire a second time, on payload
+bytes, at US-16 step 3 (US-30). A `.claude/` subtree a pack ships but
+never copies out reaches the project all the same, at
+`.harness/pack/.claude/`, which is committed. Two disjoint sets, two
+quantifiers, one rule; widening the write set to cover the second would
+break the `AppliedPath`/`HarnessPath` separation C-14 rests on.
 
 **`merge-json` is not in either table** (Q-54). It was a seventh
 primitive taking `from`, `to` and `ownedKeys`, and it is deleted rather
@@ -3310,26 +3338,45 @@ simplification in this document.
 
 **Note what is *not* here, and note that it is now unwritable rather than
 merely unwritten.** There is no `settings.json` step, because there
-**cannot** be one: `.claude/settings.json` and
-`.claude/settings.local.json` are reserved destinations (US-3 stage 2),
-refused to every step by every route. The `coding` pack ships **no default
+**cannot** be one: `settings.json` and
+`settings.local.json` are reserved destinations under **any** `.claude`
+segment (US-3 stage 2, C-39a),
+refused to every step by every route — including
+`docs/.claude/settings.json`, which passed every stage through v2.4. The
+`coding` pack ships **no default
 permission set**, and no v1.0 pack can.
 
-**There is likewise no `.github/` step, no `package.json` step and no
-`Makefile` step** (C-31). A recipe that added
+**There is likewise no `.github/` step, no `.mcp.json` step, no
+`package.json` step and no
+`Makefile` step** (C-31, C-41). A recipe that added
 `{ "op": "copy", "from": "ci/", "to": ".github/workflows/" }` — two
 tokens away from the `agents/` step above — passed every stage through
 v2.3 and wrote a workflow that runs on the user's next push with
-`GITHUB_TOKEN`. Class 2 of the denylist now refuses it, along with
-`.vscode/`, `.idea/`, `node_modules/`, `.envrc`, `.npmrc`,
-`.yarnrc.yml`, `Makefile` and `justfile`. **And note what `coding` *does*
-write under `.claude/` and what it may not put there** (C-32): the two
+`GITHUB_TOKEN`. A recipe that added
+`{ "op": "copy", "from": "mcp/servers.json", "to": ".mcp.json" }` passed
+every stage through **v2.4**, and `.mcp.json` declares MCP servers as
+command lines the runtime launches — the same capability class, arriving
+through a file the spec set had never named. Class 2 of the denylist now
+refuses both, along with `.vscode`, `.idea`, `node_modules`,
+`.circleci`, `.devcontainer`, `.envrc`, `.npmrc`,
+`.yarnrc.yml`, `Makefile`, `GNUmakefile`, `justfile`, `.justfile`,
+`.gitlab-ci.yml`, `Jenkinsfile`, `azure-pipelines.yml` and
+`bitbucket-pipelines.yml` — **each at any segment or any depth**, so
+`docs/.github/workflows/ci.yml` and `pkg/node_modules/.bin/foo` are
+refused too (C-39d). **And note what `coding` *does*
+write under `.claude/` and what it may not put there** (C-32, C-40): the
+two
 `copy` steps place ten agent files and the pack's command files, which is
-the point of the pack — but no file they place may declare tool
-permissions in its frontmatter (`E-CLAUDE-TOOL-GRANT`), and the ten
-agents' `tools:` lists are **disclosed verbatim** before the apply
-writes anything. No bundled `coding` command declares `allowed-tools`,
-so the rule costs this recipe nothing; it is here so that the next
+the point of the pack — but no file they place may declare a permission
+decision in its frontmatter (`E-CLAUDE-TOOL-GRANT`), an agent file's
+`permissionMode` may take only a pinned non-widening value
+(`E-CLAUDE-PERMISSION-MODE`), and the ten
+agents' **whole frontmatter blocks** are **disclosed verbatim** before
+the apply
+writes anything — which is what makes the three `permissionMode: readonly`
+declarations visible. No bundled `coding` command declares
+`allowed-tools` and no bundled agent declares a widening mode,
+so the rules cost this recipe nothing; they are here so that the next
 recipe cannot.
 
 Through v2.2 this note said something weaker — that the destination
@@ -3511,6 +3558,12 @@ payload.
    │        every planned write carries WritablePath
    │                 (AppliedPath for phase 2, HarnessPath for phase 1
    │                  and for the CLI's own .harness/ writes)
+   │        US-16 checks 11–14 RUN HERE, over the ONE combination the
+   │                 answers select: E-SUBST-UNRESOLVED, E-SUBST-NEWLINE,
+   │                 E-ANCHOR-INVALID, E-CLAUDE-TOOL-GRANT and
+   │                 E-CLAUDE-PERMISSION-MODE (11), the folder-README
+   │                 warning (12), link integrity (13), and the
+   │                 disclosure build (14)
    │        the manifest, digest included, and the security disclosure
    │        are built here
    │        └─ any failure → exit 1 or 2, ZERO bytes
@@ -3553,6 +3606,23 @@ and must write zero bytes — including zero bytes of `.harness/`.
 payload copy, the payload digest that records it, **and every byte phase
 2 emits** (C-23). Steps 9 and 10 are writers, not readers: the plan is
 the only thing that read anything, and it read once.
+
+**Step 3 runs US-16 checks 1–10 and step 6 runs checks 11–14, and both
+halves are named because the second used to be missing** (C-48). Through
+v2.4 this diagram named checks 1–10 at step 3 and nothing at step 6,
+which left four codes with no stated place in an `init` —
+`E-CLAUDE-TOOL-GRANT`, `E-SUBST-UNRESOLVED`, `E-SUBST-NEWLINE` and
+`E-ANCHOR-INVALID` all live at check **11**, and each carries an "exit 2,
+zero bytes" contract that means nothing unless the check runs **before**
+the lock at step 7 and the first write at step 9. It does, and the
+diagram now says so. Two differences from `validate` are worth stating
+rather than inferring: `init` runs checks 11–14 over **the one
+combination the answers select**, not over every combination — the
+combinatorial sweep is `validate`'s job (US-16) — and check 12's
+`W-FOLDER-README-MISSING` is a warning here, non-fatal, exactly as it is
+there. Check 3's payload-set frontmatter check (C-39c) runs with the rest
+of checks 1–10 at step 3, before any answer is collected, because the
+payload does not vary by answer.
 
 The journal is the whole recovery story: its presence means step 9, 10
 or 11 did not finish, and its contents say exactly which paths were in
@@ -3684,7 +3754,7 @@ of rediscovering the finding.
 | C-2 consent gate on the plan, verbatim disclosure | **Half RESOLVED BY DELETION, half carried.** The **gate** is deleted with its only subject (Q-54): nothing an apply does at v1.0 requires consent, `ConsentInputs`, `--accept-permissions`, `--accept-hooks` and `E-SETTINGS-CONSENT-REQUIRED` are gone, and a gate that cannot fire is a claim rather than a control. **The verbatim enumeration is carried in full** — US-13's disclosure still names every `0755` path, every inert `.claude/hooks/` script, and now every agent-instruction substitution, one per line, never summarised, from one builder rendered by three surfaces. **v1.1 obligation, precisely:** the gate returns in the same change as the settings destination, positioned **between the plan and the lock**, writing **zero bytes** on refusal, with the absence of a consent input meaning *not granted* — a caller must not reach the permissive branch by forgetting a field — and both flag names re-reserved in US-8's list |
 | C-3 removal-honouring settings merge | **RESOLVED BY DELETION for now, and still a v1.1 obligation.** It existed to stop a *second* apply resurrecting a deleted permission; at v1.0 there is neither a second apply (Q-42) nor a settings merge (Q-54). **v1.1 obligation:** `update` may not union a security-relevant array without a `removed` set, and the manifest fields for it are additive optional keys that do not bump `manifestVersion` |
 | C-4 confinement by resolution, `realpath`, ancestor `lstat` | **Carried in full** — US-3 stage 3 |
-| C-5 reserved-destination denylist on the resolved path | **Carried, re-quantified and extended** — US-3 stage 2. Three changes at v2.3, and the first is a repair: the rule is quantified over **every applied path in every step's write set**, not over `to`, because `rewrite-path` and `substitute` have no `to` and the old quantifier therefore had two silent exemptions; **every `in`-matched path is re-checked** against it individually (C-27); and the denylist gains a **second class** — `.claude/settings.json`, `.claude/settings.local.json` and any `package.json`, matched by `collisionKey` — which is what makes "nothing writes settings at v1.0" a checked rule rather than an observation (Q-54). **Extended again at v2.4** (C-31, C-33): class 2 becomes a **declared, closed list** covering `.github/`, `.vscode/`, `.idea/` and `node_modules/` as first segments and `package.json`, `.envrc`, `.npmrc`, `.yarnrc.yml`, `Makefile` and `justfile` as basenames, and it is **named as a denylist and therefore incomplete by construction**; class 1's VCS names are reserved at **any** segment, not the first. The extension stands: a recipe step may never write under `.harness/`, **absolutely and with no carve-out**, because `.harness/` holds phase 2's own input. The CLI's own five `.harness/` writes are not recipe steps; they carry `HarnessPath` and are confined by construction, which is why the denylist can be absolute without deadlocking against the payload copier |
+| C-5 reserved-destination denylist on the resolved path | **Carried, re-quantified and extended** — US-3 stage 2. Three changes at v2.3, and the first is a repair: the rule is quantified over **every applied path in every step's write set**, not over `to`, because `rewrite-path` and `substitute` have no `to` and the old quantifier therefore had two silent exemptions; **every `in`-matched path is re-checked** against it individually (C-27); and the denylist gains a **second class** — `.claude/settings.json`, `.claude/settings.local.json` and any `package.json`, matched by `collisionKey` — which is what makes "nothing writes settings at v1.0" a checked rule rather than an observation (Q-54). **Extended again at v2.4** (C-31, C-33): class 2 becomes a **declared, closed list** covering `.github/`, `.vscode/`, `.idea/` and `node_modules/` as first segments and `package.json`, `.envrc`, `.npmrc`, `.yarnrc.yml`, `Makefile` and `justfile` as basenames, and it is **named as a denylist and therefore incomplete by construction**; class 1's VCS names are reserved at **any** segment, not the first. **Extended a third time at v2.5** (C-39a, C-39d, C-41), and this time the *quantifier* is what changed: **a reserved name is reserved at every segment and `.harness/` is the only location entry in the document**, so `.github`, `.vscode`, `.idea`, `node_modules`, `.circleci` and `.devcontainer` all move to any-segment, and `settings.json`/`settings.local.json` are reserved under **any `.claude` segment** rather than at two root-relative paths — without which §NFR *Bounded capability*'s load-bearing "nothing writes `.claude/settings.json`" clause was false as written. Membership grows by `.mcp.json`, `.gitlab-ci.yml`, `Jenkinsfile`, `azure-pipelines.yml`, `bitbucket-pipelines.yml`, `GNUmakefile` and `.justfile`. The extension stands: a recipe step may never write under `.harness/`, **absolutely and with no carve-out**, because `.harness/` holds phase 2's own input. The CLI's own five `.harness/` writes are not recipe steps; they carry `HarnessPath` and are confined by construction, which is why the denylist can be absolute without deadlocking against the payload copier |
 | C-6 anchored `to` grammar | **Carried in full** — US-3 stage 1, plus `E-PAYLOAD-PATH-INVALID` for payload paths |
 | C-7 parameter `pattern` / `maxLength`, JSON escaping | **Carried, one half RESOLVED BY DELETION.** `pattern` (anchored, ≤ 200 chars, no backreference, no lookaround) and `maxLength` (default 256, ceiling 4096, checked **first**) are carried in full — US-8 — and they are now load-bearing in a second place, since they are two of the three controls that make C-28's accepted agent-instruction boundary safe. The **JSON-escaping** half and the post-serialization deep-equal re-parse had `merge-json` as their only subject and go with it (Q-54): every phase-2 destination at v1.0 is a text file. **v1.1 obligation:** a returning JSON destination returns with **both** — the escaping *and* the deep-equal, which is the half that catches an injected value that still parses |
 | C-8 no substitution into a security-relevant owned key | **RESOLVED BY DELETION** (Q-54) — US-4. No pack writes a settings file (US-3 stage 2), so no substituted value can land under a security-relevant key and `E-SUBST-IN-SECURITY-KEY` had nothing left to fire on; a check that cannot fire is deleted rather than kept, because kept it reads as coverage. **The reasoning did not go with it**: C-8's principle — *a permission is a decision the pack author makes at authoring time, not one a user makes by typing a project name* — is now applied one boundary out, to agent-instruction content, where §US-4 states it, **accepts** it with three reasons, and **enumerates** it in the disclosure (C-28). **v1.1 obligation:** the rule and its code return in the same change as the settings destination |
@@ -3708,7 +3778,7 @@ of rediscovering the finding.
 | C-25 duplicate-key rejection for `pack.json`, `recipe.json` and the manifest; `op` matched literally | **Carried in full** — US-1, US-31, US-15, `E-JSON-DUPLICATE-KEY`. **The carve-out the condition asked for is gone with its subject**: it excluded a `merge-json` destination and its payload-side `from`, neither of which exists (Q-54), so the rule is now **total** over the three JSON documents the CLI parses — one of which is the user's own committed manifest, where it holds for the same reason it holds for a pack |
 | C-26 phase 1 writes every payload file 0644 and preserves no source mode | **Carried in full** — US-30, and see C-12 above. Directories `0755`. The non-cost is stated: a pack's executable is made executable by the step that copies it out, at the destination; nothing reads the payload copy's mode |
 | C-27 `in` globs resolve only against the plan's written-set; every `in`-matched path re-checked against the denylist | **Carried, and the premise is corrected on evidence rather than accepted whole.** F1 **already** pinned `rewrite-path` to *"applied paths that earlier steps have already written"* in three places, so `in: [".harness/pack/**"]` matched nothing and failed. The genuine residual was threefold and all three are fixed: `substitute`'s clause was weaker and rested on one §F1.2 table cell (the two clauses are now word-for-word identical); the rule was stated three times and normatively nowhere (it is now a single normative rule in US-4); and **no `in`-matched path was re-checked against the stage-2 denylist** (it now is, individually). The type system carries it independently — the written-set is `AppliedPath[]`, the payload is `HarnessPath` — which is two mechanisms for an invariant C-5 calls absolute |
-| C-28 the trust boundary for a substituted answer in agent-instruction content | **Carried in full, both branches** — US-4, US-13, US-29. The boundary is **stated** (such a value is content authored by the answering user, committed, and read as instructions by every later agent run in every clone, so the person who types it and the person whose agent reads it need not be the same); **accepted**, on three named grounds; **and enumerated anyway** in the disclosure, verbatim on C-2's terms. **Deliberately not gated** — a prompt firing on every apply of all three packs trains a user to accept without reading — and deliberately **not a `W-`**, because `--strict` runs in CI and a warning every legitimate pack trips is not a diagnostic. Silence would not have satisfied this, and silence is what v2.2 offered |
+| C-28 the trust boundary for a substituted answer in agent-instruction content | **Carried in full, both branches, and at v2.5 the enumeration becomes total** (C-43) — US-4, US-13, US-29. The boundary is **stated** (such a value is content authored by the answering user, committed, and read as instructions by every later agent run in every clone, so the person who types it and the person whose agent reads it need not be the same); **accepted**, on three named grounds; **and enumerated anyway** in the disclosure, verbatim on C-2's terms. **Deliberately not gated** — a prompt firing on every apply of all three packs trains a user to accept without reading — and deliberately **not a `W-`**, because `--strict` runs in CI and a warning every legitimate pack trips is not a diagnostic. Silence would not have satisfied this, and silence is what v2.2 offered |
 | C-29 a recorded answer failing on manifest read-back gets a distinct code, exit class 2 | **Carried in full** — US-8, US-15, US-33, `E-MANIFEST-ANSWER-INVALID`. F1 was violating its own severity rule here and can be cited against itself: *severity is a property of the code, not of the occasion*, while `E-PARAM-INVALID` carried both occasions at one class |
 | C-30 a bound on total recipe steps, distinct code, exit 2, raisable only by a superseding ADR | **Carried in full** — US-31, `E-RECIPE-TOO-MANY-STEPS`, **256** over the total declared count before `when` filtering. Recorded with the reviewer's reasoning rather than a paraphrase of it: **the bound is an inspectability control, not a DoS control.** §7.0 has no remote attacker and `E-PAYLOAD-TOO-LARGE` bounds the bytes; what the bound protects is the argument that rejected a script primitive — that `pack info` renders the complete list of what an apply will do — which an unbounded list degrades continuously while naming no point at which a reviewer should stop trusting it |
 
@@ -3720,13 +3790,34 @@ below are the F1-side findings and all are **folded at v2.4**.
 | Condition | Status at v1.0 |
 |---|---|
 | **C-31** (HIGH) reserved destination class 2 is a category named but enumerated at three members | **Carried in full — US-3 stage 2, §NFR, §F1.3, US-16.** Class 2 becomes a **declared, closed list**: first segment `.github/`, `.vscode/`, `.idea/`, `node_modules/`; basename `package.json`, `.envrc`, `.npmrc`, `.yarnrc.yml`, `Makefile`, `justfile`; plus the two settings files. Matched by `collisionKey`, quantified over the **write set** like every other stage-2 rule, `E-MAP-RESERVED-DEST`, exit 2. **It is stated as a denylist and therefore incomplete by construction**, and §NFR *Bounded capability* is **narrowed** — its claim that "there is no code execution path from a pack to the host at v1.0", asserted to be enforced clause by clause, was false as written, since a `copy` to `.github/workflows/` executes attacker-chosen code on the next push with `GITHUB_TOKEN`, strictly more capability than the `postinstall` route the clause list did name. Four adversarial fixtures, one per row of the finding, including a `strip-suffix` whose recursion *produces* `.github/workflows/x.yml` with no step naming it |
-| **C-32** (HIGH) `.claude/` is governed by three filenames; the permission-bearing content a pack writes there is neither constrained nor disclosed | **Carried in full, both clauses — US-3, US-13, US-29, US-16.** **(a)** A pack-written file under `.claude/` may not declare tool permissions in frontmatter: **`E-CLAUDE-TOOL-GRANT`**, exit 2, zero bytes, over the write set, on **rendered** content at US-16 step 11, matched on **any** `.claude` segment. Stated as the property *"a pack-written file under `.claude/` may not declare tool permissions"* with the key names **pinned against the runtime's current contract** in one named constant, rather than hard-coding a spelling, because the frontmatter contract belongs to the Claude Code runtime. Costs v1.0 nothing — no bundled command or skill uses `allowed-tools` — and defers the capability to v1.1 with the settings story on **Q-54's logic: delete the surface rather than police it**. **(b)** US-13's disclosure gains a **fourth row**: every pack-shipped `.claude/agents/*.md` and its `tools:` list, **verbatim, one per line**. Accepted-and-enumerated on **C-28's reasoning** — all three packs use it, forbidding it deletes the feature, and a subagent's tool list still runs under a permission engine the pack cannot touch. **Disclosed, not gated. This corrects an inversion of C-2's purpose:** US-13 enumerated every *inert* `.claude/hooks/` script and said nothing about a live tool declaration |
+| **C-32** (HIGH) `.claude/` is governed by three filenames; the permission-bearing content a pack writes there is neither constrained nor disclosed | **Carried in full, both clauses — US-3, US-13, US-29, US-16.** **(a)** A pack-written file under `.claude/` may not declare tool permissions in frontmatter: **`E-CLAUDE-TOOL-GRANT`**, exit 2, zero bytes, over the write set, on **rendered** content at US-16 step 11, matched on **any** `.claude` segment. Stated as the property *"a pack-written file under `.claude/` may not declare tool permissions"* with the key names **pinned against the runtime's current contract** in one named constant, rather than hard-coding a spelling, because the frontmatter contract belongs to the Claude Code runtime. Costs v1.0 nothing — no bundled command or skill uses `allowed-tools` — and defers the capability to v1.1 with the settings story on **Q-54's logic: delete the surface rather than police it**. **(b)** US-13's disclosure gains a **fourth row**: every pack-shipped `.claude/agents/*.md` and its `tools:` list, **verbatim, one per line**. Accepted-and-enumerated on **C-28's reasoning** — all three packs use it, forbidding it deletes the feature, and a subagent's tool list still runs under a permission engine the pack cannot touch. **Disclosed, not gated. This corrects an inversion of C-2's purpose:** US-13 enumerated every *inert* `.claude/hooks/` script and said nothing about a live tool declaration. **Both clauses are carried one step further at v2.5** — (a) gains the **phase-1 payload set** as a second quantifier (C-39c) and `permissionMode` as a second key family (C-40); (b) prints the **whole frontmatter block** rather than `tools:` alone (C-40) |
 | **C-33** (MEDIUM) `.git`/`.hg`/`.svn` reserved only as a FIRST segment | **Carried in full — US-3 stage 2, `E-EXEC-DEST-FORBIDDEN`.** All three are reserved at **any** segment, by `collisionKey`, so `docs/.git/config`, `docs/.git/hooks/pre-commit` and a `sub/.git` git-link are all refused; `E-EXEC-DEST-FORBIDDEN`'s forbidden-directory list, which had the identical scoping defect, is fixed the same way. **`.harness/` stays first-segment-only and the difference is stated**: `.git`, `.hg` and `.svn` name a real VCS directory *wherever they appear*, while `.harness/` names **one specific tree this CLI owns and constructs**, which is phase 2's input and which C-5 protects for that reason — a nested `docs/.harness/` is neither, and reserving it would forbid ordinary content for no gain. Reserve a *name* where the name means something; reserve a *location* where the location means something |
 | **C-34** (MEDIUM) two security-gating booleans sit outside the closed enumeration | **Carried in full — US-1, `E-UNKNOWN-VALUE`, US-16 steps 1 and 4.** Every boolean-typed field in `pack.json` and `recipe.json` must be a JSON boolean; anything else is `E-UNKNOWN-VALUE`, exit 2, zero bytes. The boolean-typed fields are **enumerated and closed at three**: `RecipeStep.executable`, `ParameterDecl.required`, `ParameterDecl.notASecret`. **The closed enumeration of behaviour-selecting positions stays closed at six** — this is a *typing* rule, not a seventh position, and the two are kept distinct deliberately. The finding beneath it is the one that matters: US-1's *"nothing else is one"* affirmatively **excluded** `executable` (which gates C-12) and `notASecret` (which disables C-15's ban), no rule said what a non-boolean did, and in JavaScript `"false"` is **truthy** — so both gates failed **open**. Two fixtures, one per field |
-| **C-35** (MEDIUM) C-28's classifier is stated over payload globs; the disclosure enumerates applied paths | **Carried in full — US-4, US-16.** The third clause is restated over applied paths: *"the applied path of any file whose payload source is matched by the `coordination` anatomy globs"*, and the classifier therefore **needs the placing step's source association, which the plan already carries** for every placing primitive — it does not re-glob the payload and does not invert an applied path back to a source. Without the restatement, `coding` — which declares `coordination: { "paths": ["agent-teams/*.md"] }`, a **payload** glob, while its applied paths are `AgentTeams/*.md` — silently omits both agent-team documents, and US-4's only stated test used `CLAUDE.md`, so the omission passed CI. **The test is strengthened in the same change**: applying `coding` must make `agentInstructionSubstitutions` name `AgentTeams/Specify.md` and `AgentTeams/Implement.md` as well as `CLAUDE.md` |
+| **C-35** (MEDIUM) C-28's classifier is stated over payload globs; the disclosure enumerates applied paths | **Carried in full — US-4, US-16.** The third clause is restated over applied paths: *"the applied path of any file whose payload source is matched by the `coordination` anatomy globs"*, and the classifier therefore **needs the placing step's source association, which the plan already carries** for every placing primitive — it does not re-glob the payload and does not invert an applied path back to a source. Without the restatement, `coding` — which declares `coordination: { "paths": ["agent-teams/*.md"] }`, a **payload** glob, while its applied paths are `AgentTeams/*.md` — silently omits both agent-team documents, and US-4's only stated test used `CLAUDE.md`, so the omission passed CI. **The test is strengthened in the same change**: applying `coding` must make `agentInstructionSubstitutions` name `AgentTeams/Specify.md` and `AgentTeams/Implement.md` as well as `CLAUDE.md`. **Superseded at v2.5 by C-43: the classifier is deleted rather than restated a third time**, because the restatement missed `specifications/README.md` and `specifications/project-brief.md` and the strengthened test passed without noticing |
 | **C-36** (LOW) `--force` byte-identical collision can silently rename the user's file | **Carried in full — US-13, §NFR *Rollback safety*, US-16.** When a `--force` byte-identical collision is matched by `collisionKey` but the on-disk basename differs from the planned one, the write is **skipped entirely** and the journal records the **on-disk** path. N-5's folding rule followed one step further: `rename(tmp, dest)` may replace the directory entry and change the stored basename, the bytes are unchanged so nothing detects it, and rollback row 3 says *leave untouched* and restores nothing. Fixture: the existing `.claude/Agents/README.md` case re-run with `--force` and identical bytes must leave the entry named `Agents` |
 | C-37 | **Not dispositioned here — it does not land on F1.** Recorded so the gap in the numbering is not read as an omission; it is owned by the F5 / ADR side of this pass |
 | **C-38** (LOW) F1 and F5 disagree on whether any v1.0 pack ships an executable | **Carried in full, both halves — US-3, §F1.3, US-31, US-32, §F1.2, `E-RECIPE-SOURCE-MISSING`.** The disagreement is resolved **in F5's direction**: `coding` **does** declare `executableRoots: ["infrastructure/backend-deploy/"]` and sets `"executable": true` on the backend scaffold script steps, because the deploy scripts are meant to be run — landing them `0644` forces a `chmod` — and because this **exercises C-12** rather than leaving the roots/cap/disclosure apparatus specified and dormant, which is the pattern Q-54 was the lesson about. Each backend scaffold becomes **two** steps with complementary `exclude` lists (`executable` is a property of a step), so `coding` declares **19** steps, not 17, and produces four `0755` paths and four disclosure lines. **Second half:** `generate`'s `template` had **no named source-missing code** — `E-RECIPE-SOURCE-MISSING` was written for `from` and §F1.2's `generate` row omitted source existence — and now gets it, at US-16 step 5, as the same code at a differently-named field |
+
+**Findings of the final 2026-08-31 Mode A pass over v2.4 — C-39…C-48.**
+The pass returned **`REVISE-SPEC`** with **no CRITICAL**: 3 HIGH, 3
+MEDIUM, 4 LOW, and **36 of the 38 prior conditions holding unchanged**.
+Its summary of the shape is worth keeping verbatim, because it is the
+lesson rather than the finding: *every HIGH is the same repair stopping
+one step short of the principle it established.* The rows below are the
+F1-side findings; all are folded at **v2.5** except **C-47**, which is
+**recorded as a known limit** by the pass's own disposition. **This is
+the last review-driven change to F1.**
+
+| Condition | Status at v1.0 |
+|---|---|
+| **C-39** (HIGH) `.claude/` is governed by four rules with three different quantifiers, and F1 asserts the premise that makes three of them wrong | **Carried in full, all four clauses — US-3 stages 2 and 4, US-30, §F1.2, §F1.3, §NFR, US-16.** F1 states **normatively, twice** that a non-root `.claude/` is live. **(a)** The settings reservation was **two exact root-relative paths**, so `docs/.claude/settings.json` passed every stage — falsifying §NFR *Bounded capability*'s load-bearing claim that "nothing writes `.claude/settings.json`, because it is a reserved destination for every step by every route", which is what the whole Q-54 deletion rests on. `settings.json` and `settings.local.json` are now reserved **under any `.claude` segment**. **(b)** `E-EXEC-DEST-FORBIDDEN` kept `.claude/` first-segment, so `docs/.claude/hooks/x.sh` could carry `0755`; it is scoped the same way the reserved list is. **(c)** `E-CLAUDE-TOOL-GRANT` was quantified over the **write set**, and **phase 1 is outside it** — a pack that merely *shipped* `.claude/commands/x.md` with `allowed-tools` landed it at `.harness/pack/.claude/commands/x.md`, inside the committed project, unchecked and undisclosed, with no recipe step naming it. The check gains the **phase-1 payload set** as a **second quantifier** — a `HarnessPath` write, so this is not a widening of the write set and the `AppliedPath`/`HarnessPath` separation C-14 rests on is untouched. The alternative — retracting the any-segment premise — is **rejected**, because the premise is asserted normatively and C-39a rests on it. **(d)** C-33's stated test is applied to **every** entry and the result stated per entry (US-3's scoping table): a reserved **name** is reserved at **every segment**, and **`.harness/` is the only location entry in this document.** `node_modules` moves because npm workspaces nest it and `verify`'s scan skips it at any depth; `.vscode`/`.idea` because a subfolder opened as a workspace root reads its own; `.github` on the argument that already put `.git` at any segment |
+| **C-40** (HIGH) the pin and the disclosure each cover one key; the bundled packs ship another | **Carried in full — US-3, US-13, US-29, US-16, `E-CLAUDE-PERMISSION-MODE`.** The property is *"a pack-written file under `.claude/` may not declare tool permissions"* and the pin was `allowed-tools` and its spellings — but agent frontmatter also carries **`permissionMode`**, which F5 lists as supported and which `packs/coding/agents/{architect,reviewer,securityreviewer}.md` declare as `readonly` **today**. So `permissionMode: bypassPermissions` on an agent that also declares `Bash` was **neither refused** (not on the pin) **nor shown** (row four printed `tools:` only) — falsifying C-32b's justification for disclosing rather than gating, since a mode key does not run *underneath* the permission engine, it **selects the engine's mode**; and `packs/coding/agents/README.md` says harnesses honouring the key exist. **The pin now covers every frontmatter key that expresses a permission decision**: grant keys, mode keys, and the pinned **non-widening** mode value set. A grant key anywhere under a `.claude` segment, or a mode key on a **non-agent** file, is `E-CLAUDE-TOOL-GRANT`; a **widening or unrecognised** mode value on an agent file is the new **`E-CLAUDE-PERMISSION-MODE`**, exit 2, zero bytes. **The value pin fails closed** — refusing a legitimate new mode at `validate` time is visible and fixable in one constant, while accepting an unknown one is a silent widening — which is why it is acceptable where an open tool namespace was not. **Disclosure row four prints the agent file's whole frontmatter block verbatim**, the cheapest correct form of "print every permission-bearing key", and the positive assertion requires `permissionMode: readonly` on the three agents that declare it |
+| **C-41** (HIGH) class 2 omits the execution route nearest the ones it names | **Carried in full — US-3 stage 2, §NFR, §F1.3, §F1.9 limit 8, US-16.** **`.mcp.json` appeared nowhere in the spec set**, declares MCP servers as **command lines the runtime launches**, is the sibling of `.claude/settings.json`, and was reachable in one `copy`. The class also closed GitHub Actions and no other CI provider while the bundled `coding` pack ships an **Azure** scaffold, and two named entries were under-spelled: GNU make prefers `GNUmakefile`, and `just` reads `.justfile` — which `collisionKey` case-folding does not cover, because the dotted form is a different name rather than a different case. Added by basename at any depth: `.mcp.json`, `.gitlab-ci.yml`, `Jenkinsfile`, `azure-pipelines.yml`, `bitbucket-pipelines.yml`, `GNUmakefile`, `.justfile`. Added by name: `.circleci`, `.devcontainer` — **at any segment, not the first**, because C-39d's sweep supersedes the first-segment placement the finding proposed and because a first-segment entry would re-create the defect C-39 exists to close. Each ships with its fixture in this change, per US-3's own obligation. **`.mcp.json` is recorded in §F1.9 limit 8's enumeration of what a pack gives up.** The denylist-is-incomplete framing is unchanged: this is not a claim of completeness, it is the members of a category the list already named |
+| **C-43** (MEDIUM) the C-28 classifier is closed at three clauses and misses two applied paths | **Carried by the reviewer's simpler option: the classifier is deleted — US-4, US-13, US-29, US-16.** `coding`'s `substitute` writes `projectName` into `specifications/README.md` and `specifications/project-brief.md`, and neither is caught: not root `CLAUDE.md`/`AGENTS.md`, no `.claude` segment, and their payload sources are matched by no `coordination` glob — clause 3 covered **one** anatomy part while `process` and `behaviouralGuidelines` are equally instruction-bearing. The disclosure named **3 of 5** and the v2.4-strengthened test passed without noticing: **C-35's shape, one clause over.** So `agentInstructionSubstitutions` now enumerates **every applied path at which the render resolved a `{{harness:param.<id>}}` token** — five for `coding` — computed from data the renderer already holds. **The classifier bought nothing a total enumeration does not, and it produced two findings in two versions.** The test fixes a **count**, a **membership** and an **exclusion** (`AgentTeams/README.md` is asserted absent), which is the only shape that fails when the rule is wrong |
+| C-42, C-44, C-46 | **Not dispositioned here — they do not land on F1.** Recorded so the gaps in the numbering are not read as omissions; they are owned by the F5 / ADR / `general/` side of this pass, exactly as C-37 was |
+| **C-45** (LOW, factual) the disclosed capability is understated | **Corrected — §F1.9 limit 13, US-3, US-13, US-16, US-29, §NFR.** `coding`'s ten agents declare `tools:` lists and **two** include `Bash` — `implementer` and `testwriter` — not one; and `researcher` additionally declares `WebSearch, WebFetch`, **the only network capability any v1.0 pack ships**, which limit 13 now names. The correction matters beyond the count: a disclosure limit that understates what is disclosed is the same failure mode as a disclosure that omits a row |
+| **C-47** (LOW) `AnatomyDecl.declaredBy` is a behaviour-selecting value outside every rule that governs one | **RECORDED, NOT FIXED — §F1.9 known limit 15.** `{ "declaredBy": "recipe" }` selects behaviour (US-2: the part's shape *is* the recipe's set of destinations) and is covered by neither US-1's closed six positions nor the boolean-typing rule, so **`"declaredBy": "payload"` is unhandled** — no rule says whether it is `E-UNKNOWN-VALUE`, an unknown key warning, or silently ignored. **No security gate rides on it**: `declaredBy` is valid only for `folderScaffolding`, feeds no destination rule, no confinement stage and no disclosure. Accepted for v1.0 with the requirement stated in limit 15, so a v1.1 adds the position rather than rediscovering the gap |
+| **C-48** (LOW) the lifecycle diagram omits the render-time checks | **Carried in full — §F1.6.** §F1.6 named US-16 checks 1–10 at step 3 and named nothing at step 6, so four codes had no stated place in an `init`: `E-CLAUDE-TOOL-GRANT`, `E-SUBST-UNRESOLVED`, `E-SUBST-NEWLINE` and `E-ANCHOR-INVALID` all live at check **11**, and each carries an "exit 2, zero bytes" contract that means nothing unless the check runs before the lock at step 7 and the first write at step 9. Step 6 now names checks **11–14**, over the one combination the answers select, with the two differences from `validate` stated rather than inferred |
 
 **Known limits of the v1.0 format**, recorded so F5 pays them knowingly
 rather than discovering them:
@@ -3775,15 +3866,26 @@ rather than discovering them:
    — which is deliberate work, not an accident, and v1.0 never merges
    against the manifest.
 8. **A pack cannot contribute project settings, and cannot ask for a
-   permission** (Q-54, extended by C-31 and C-32a). `.claude/settings.json`,
-   `.claude/settings.local.json`, `package.json`, `.envrc`, `.npmrc`,
-   `.yarnrc.yml`, `Makefile`, `justfile`, `.github/`, `.vscode/`,
-   `.idea/` and `node_modules/` are reserved destinations, and a
-   pack-written file under `.claude/` may not declare tool permissions in
+   permission** (Q-54, extended by C-31, C-32a, C-39, C-40 and C-41).
+   Reserved by **name at every segment**: `.github`, `.vscode`, `.idea`,
+   `node_modules`, `.circleci`, `.devcontainer`. Reserved by **basename
+   at any depth**: `package.json`, `.envrc`, `.npmrc`, `.yarnrc.yml`,
+   `Makefile`, `GNUmakefile`, `justfile`, `.justfile`, **`.mcp.json`**,
+   `.gitlab-ci.yml`, `Jenkinsfile`, `azure-pipelines.yml`,
+   `bitbucket-pipelines.yml`. Reserved **under any `.claude` segment**:
+   `settings.json`, `settings.local.json`. And a
+   pack-written **or pack-shipped** file under a `.claude` segment may
+   not declare a permission decision in
    frontmatter — so a pack cannot ship a default permission set, cannot
-   pre-authorize a tool for a command, cannot set `model` or
+   pre-authorize a tool for a command, cannot **select a permission
+   mode** for anything but a subagent and then only at a non-widening
+   value, cannot **declare an MCP server** — `.mcp.json` names command
+   lines the runtime launches, and this is the entry v2.5 adds because it
+   was the execution route nearest the ones the class already named
+   (C-41) — cannot set `model` or
    `outputStyle`, cannot add an `env` entry, cannot add an npm script,
-   cannot add a CI job and cannot add a `direnv` entry. **This is the
+   cannot add a CI job **on any provider named above** and cannot add a
+   `direnv` entry. **This is the
    sharpest capability the v1.0 format gives
    up, and it is given up on purpose**: R5's "sensible default
    permissions" waits for v1.1. The cost is bounded and known — no v1.0
@@ -3807,32 +3909,63 @@ rather than discovering them:
     that sentence is what stopped anyone extending the enumeration. The
     obligation this creates is procedural and is stated in US-3: an entry
     is added to the table and a fixture to US-16 **in the same change**.
+    **v2.5 is the evidence that the obligation is real rather than
+    formal** (C-41): `.mcp.json` — a file that declares MCP servers as
+    command lines the runtime launches, and the sibling of
+    `.claude/settings.json` — was absent from the whole spec set through
+    v2.4, one `copy` away, while class 2's own category named exactly it.
+    The list grew by seven basenames and two names in one pass. It will
+    grow again.
 11. **A pack cannot contribute a permission by any route, including the
-    one it is supposed to write to** (C-32a). `.claude/commands/*.md`
+    one it is supposed to write to and the one it merely ships**
+    (C-32a, C-39c, C-40). `.claude/commands/*.md`
     frontmatter is the second door on the settings story, and it is shut
-    for the same reason and until the same version. Cost at v1.0: zero —
-    no bundled command or skill declares `allowed-tools`.
+    for the same reason and until the same version; **a `.claude/`
+    subtree in the payload is the third**, shut at v2.5 by the same rule
+    at a second quantifier, because phase 1 copies it verbatim into the
+    committed project; and **`permissionMode` is the fourth**, bounded to
+    a pinned non-widening value. Cost at v1.0: zero —
+    no bundled command or skill declares `allowed-tools`, no bundled
+    agent declares a widening mode, and no v1.0 pack ships a `.claude/`
+    directory in its payload.
 12. **The `.claude/` frontmatter rule is pinned against a contract this
-    document does not own** (C-32a). The key names that express *"declares
-    tool permissions"* belong to the Claude Code runtime and move
-    independently of this spec. The CLI holds them in one named constant
+    document does not own** (C-32a, C-40). The key names that express
+    *"declares a permission decision"* — **grant keys and mode keys** —
+    and the **non-widening mode values** belong to the Claude Code
+    runtime and move
+    independently of this spec. The CLI holds all three in one named
+    constant
     with the runtime version the pin was taken against, so the staleness
-    is visible and locatable — but a permission-bearing key the runtime
-    adds after the pin is taken **is not caught until the pin is
-    updated**. That is a maintenance obligation on this document, not a
+    is visible and locatable. **The two halves fail in opposite
+    directions and that is deliberate:** a permission-bearing **key** the
+    runtime adds after the pin is taken **is not caught until the pin is
+    updated**, while an unrecognised **value** is refused. Fail-open on
+    the key half is the residual limit; it is
+    a maintenance obligation on this document, not a
     property of the format, and it is stated rather than hidden behind a
     hard-coded spelling that would have the same weakness and nowhere to
     record it.
-13. **A pack's agent files declare tools, and that is disclosed rather
-    than bounded** (C-32b). `coding`'s ten agents declare `tools:`
-    lists, one of which includes `Bash`. Nothing in the format limits
-    what a pack may put there; what the format guarantees is that the
+13. **A pack's agent files declare tools and a permission mode, and the
+    tools half is disclosed rather than bounded** (C-32b, C-40, C-45).
+    `coding`'s ten agents declare `tools:`
+    lists; **two of them — `implementer` and `testwriter` — include
+    `Bash`**, and `researcher` declares **`WebSearch, WebFetch`, the only
+    network capability any v1.0 pack ships**. Nothing in the format
+    limits
+    what a pack may put in a `tools:` list; what the format guarantees is
+    that the
     list runs underneath a permission engine the pack cannot write to
-    (US-3 stage 2) and that every line of it is shown to the adopter
+    (US-3 stage 2, at **any** `.claude` segment) and that every line of
+    the file's frontmatter is shown to the adopter
     before the apply writes anything. That is the same
     enumerate-don't-gate trade C-12 makes for the executable bit and
     C-28 makes for a substituted answer, and it is a real limit, not a
-    control.
+    control. **`permissionMode` is the exception to the trade** and is
+    bounded rather than merely disclosed (C-40), because it selects that
+    permission engine's mode instead of running underneath it. **Read
+    limit 13 against §NFR *No network*, which is a claim about the CLI
+    and not about the runtime**: the CLI makes no request, and a pack
+    ships an agent that can.
 14. **A scaffold that needs a mixed executable/non-executable directory
     must express it as two steps with complementary `exclude` lists**
     (C-38, §F1.3). `executable` is a property of a step, so a single
@@ -3843,6 +3976,33 @@ rather than discovering them:
     The link check and the folder-README check catch the cases that
     matter for the two v1.0 backend scaffolds; the general case is a
     pack-authoring discipline problem.
+15. **`AnatomyDecl.declaredBy` is a behaviour-selecting value that no
+    rule governs, and `"declaredBy": "payload"` is unhandled** (C-47,
+    **recorded, not fixed, and accepted for v1.0**). US-2 gives each
+    anatomy key a content source of `{ "paths": [...] }` **or**
+    `{ "declaredBy": "recipe" }`, valid only for `folderScaffolding`,
+    whose shape *is* the recipe's set of destinations — so the value
+    `"recipe"` **selects behaviour**. It is covered by neither US-1's
+    closed enumeration of six behaviour-selecting positions nor the
+    boolean-typing rule, so **no rule in this document says what
+    `"declaredBy": "payload"` does**: whether it is `E-UNKNOWN-VALUE`
+    exit 2, an ignored unknown key, or silently accepted. **The
+    requirement, stated so a v1.1 implements it rather than
+    rediscovering it:** `AnatomyDecl.declaredBy` becomes the **seventh**
+    behaviour-selecting position in US-1's enumeration, matched
+    literally against the closed set `{ "recipe" }`, anything else
+    `E-UNKNOWN-VALUE`, exit 2, zero bytes — and the enumeration's count
+    moves from six to seven in the same change, because a closed
+    enumeration whose count is not updated is the defect C-24 and C-34
+    both found. **Why it is accepted rather than folded now: no security
+    gate rides on it.** `declaredBy` is valid on one anatomy key, feeds
+    no destination rule, no confinement stage, no executable rule and no
+    disclosure; a pack declaring an unrecognised value gets an anatomy
+    part that reports oddly and nothing else. Every other fail-closed
+    lapse this document has folded — `Recipe.formatVersion` (C-24), the
+    two booleans (C-34) — gated a security control, and this one does
+    not. It is recorded here rather than in Open Questions because it is
+    **decided**, not pending an answer.
 
 **v1.1 obligations created or restated by this version.** Collected in
 one place because the failure mode this amendment exists to correct is an
@@ -3861,9 +4021,11 @@ obligation recorded only inside a row nobody re-reads:
 | 9 | F1's pack-content policy stays **a single callable gate** so `contribute` routes through it rather than holding a second copy (C-18) | Two copies of a policy diverge, and the second copy is the one nobody reviews |
 | 10 | If execute-time payload reads are ever wanted, **every read re-hashes against the planned content and a mismatch is `E-TARGET-RACE`** (C-23) | This is the price of the reading v2.3 ruled out, recorded so it is inherited rather than argued again |
 | 11 | Every new destination rule, closed enumeration or fail-closed parse ships **with its adversarial fixture pack**, in the same change (US-16) | This is the control that would have caught the finding two rounds of table-reading did not |
-| 12 | The version that lets a pack contribute permissions must cover **both doors in the same change** — `.claude/settings.json` **and** `.claude/` frontmatter tool declarations (`E-CLAUDE-TOOL-GRANT`, C-32a) | They are one capability wearing two file formats. Reinstating the settings destination while leaving the frontmatter rule in place would be coherent; reinstating it and quietly dropping the frontmatter rule as "already covered" would reopen the route with no gate at all |
-| 13 | The pinned frontmatter key names are **re-checked against the Claude Code runtime's contract at every release**, and the pinned runtime version is updated with them (C-32a) | A pin is a control only while it is current. A key the runtime adds after the pin is not caught, and the failure is silent |
-| 14 | Reserved-destination class 2 is **reviewed as a denylist, not read as a closed proof** (C-31) | The v2.3 failure was not a missing entry, it was an absolute claim resting on a three-item list. Whoever adds the next capability must ask what *else* executes what a pack writes, and add the entry and its fixture together |
+| 12 | The version that lets a pack contribute permissions must cover **all four doors in the same change** — `.claude/settings.json` **at any `.claude` segment**, `.claude/` frontmatter **grant** keys, `.claude/` frontmatter **mode** keys, and the same rules over the **phase-1 payload set** (`E-CLAUDE-TOOL-GRANT`, `E-CLAUDE-PERMISSION-MODE`, C-32a, C-39a, C-39c, C-40) | They are one capability wearing four file shapes. Reinstating the settings destination while leaving the frontmatter rules in place would be coherent; reinstating it and quietly dropping one of them as "already covered" would reopen the route with no gate at all. v2.4 shipped exactly that mistake three times over — two of the four doors were open while the document claimed the capability was closed |
+| 13 | The pinned frontmatter constant — **grant keys, mode keys and the non-widening mode value set** — is **re-checked against the Claude Code runtime's contract at every release**, and the pinned runtime version is updated with it (C-32a, C-40) | A pin is a control only while it is current, and the two halves fail in opposite directions: a **key** the runtime adds after the pin is not caught and the failure is **silent**, while a **value** it adds is refused and the failure is **loud**. Both need the same review; only one of them will announce itself |
+| 14 | Reserved-destination class 2 is **reviewed as a denylist, not read as a closed proof** (C-31, C-41) | The v2.3 failure was not a missing entry, it was an absolute claim resting on a three-item list. Whoever adds the next capability must ask what *else* executes what a pack writes, and add the entry and its fixture together. v2.5 added `.mcp.json` — the sibling of `.claude/settings.json` — which is what a *second* pass over the same list found |
+| 15 | **A rule stated as a property must be quantified over every set the property is true of, and the sets must be named** (C-39) | Every HIGH of the final pass was one quantifier short of a principle the same version had established. A rule quantified over `to` exempted two primitives (C-19); over the write set, it exempted phase 1 (C-39c); scoped to a first segment, it exempted every nested tree the document itself said was live (C-39a, C-39b, C-39d). The repair is not a longer list, it is stating the quantifier next to the property and naming the sets it ranges over |
+| 16 | **`AnatomyDecl.declaredBy` becomes US-1's seventh behaviour-selecting position, and the enumeration's count moves with it** (C-47, §F1.9 limit 15) | It is a behaviour-selecting value no rule governs, accepted at v1.0 only because no security gate rides on it. A v1.1 that adds an anatomy source shape inherits an unhandled value, and a closed enumeration whose count is not updated in the same change is the defect C-24 and C-34 both found |
 
 ---
 
@@ -3886,7 +4048,24 @@ denylist is a closed list with a stated obligation to grow (US-3,
 does**, with the recipe, the roots, the counts and the disclosure worked
 in §F1.3. C-32's frontmatter pin is likewise a maintenance obligation
 (§F1.9 obligation 13), not an open question: the rule is stated as a
-property and the pin is where the mutable part lives. Question IDs are
+property and the pin is where the mutable part lives.
+
+**v2.5 opens none either, and one of its findings is explicitly recorded
+rather than asked.** C-47 — *what does `"declaredBy": "payload"` do?* —
+is the kind that would ordinarily open a question, and it is **decided
+instead**: **accepted as known limit 15**, with the requirement a v1.1
+must implement written out in full and carried into obligation 16. It is
+not pending an answer; it is a gap this version chose not to close
+because no security gate rides on it, and saying so in a numbered limit
+is stronger than parking it in a question nobody re-reads. C-40's
+non-widening mode value set could likewise have been asked as *"which
+permission modes may a pack select?"*; it is **answered here** — the
+pinned set at the pinned runtime version, fail-closed on anything else.
+C-41's list could have been asked as *"what else does a runtime
+launch?"*; it is **answered as far as this document has looked**, with
+the denylist framing and the standing obligation (§F1.9 limit 10,
+obligation 14) saying plainly that the answer is not complete. Question
+IDs are
 unique across the whole project, and a question raised during this
 specification takes the next free id: **Q-55**.
 
