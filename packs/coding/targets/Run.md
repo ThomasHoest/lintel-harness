@@ -15,7 +15,8 @@ stops runaways)
 ================================================================
 
 Read the target file end to end, plus `template/targets/README.md` and
-`target.template.md`. Then validate it yourself even if a human signed off:
+`template/targets/target.template.md`. Then validate it yourself even if a
+human signed off:
 
 - **Criteria are verifiable + complete.** Every Success criterion has a
   concrete check (command / threshold / yes-no), and together they truly mean

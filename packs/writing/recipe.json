@@ -1,0 +1,35 @@
+{
+  "formatVersion": 1,
+  "steps": [
+    { "op": "copy", "from": "agents/", "to": ".claude/agents/" },
+
+    { "op": "strip-suffix", "from": "writing-guide/", "to": "writing-guide/",
+      "suffix": ".template" },
+
+    { "op": "rename", "from": "templates/index.template.md",
+                      "to":   "writing-guide/index.md" },
+    { "op": "rename", "from": "templates/home.template.md",
+                      "to":   "Home.md" },
+
+    { "op": "substitute", "in": ["writing-guide/*.md", "Home.md"] },
+
+    { "op": "generate", "template": "CLAUDE.md.template", "to": "CLAUDE.md",
+      "anchors": ["overview", "voice", "layout", "workflow", "coordination",
+                  "standing-instructions"] }
+  ],
+
+  "scaffolds": {
+    "writing-workstream": [
+      { "op": "copy", "from": "scaffolds/writing-workstream/sources/",
+        "to": "sources/" },
+      { "op": "copy", "from": "scaffolds/writing-workstream/analyses/",
+        "to": "analyses/" },
+      { "op": "copy", "from": "scaffolds/writing-workstream/notes/",
+        "to": "notes/" },
+      { "op": "copy", "from": "scaffolds/writing-workstream/tasks/",
+        "to": "tasks/" },
+      { "op": "copy", "from": "scaffolds/writing-workstream/workstreams/",
+        "to": "workstreams/" }
+    ]
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "formatVersion": 1,
+  "steps": [
+    { "op": "copy", "from": "agents/",      "to": ".claude/agents/",
+      "exclude": ["README.md"] },
+    { "op": "copy", "from": "commands/",    "to": ".claude/commands/" },
+    { "op": "copy", "from": "agent-teams/", "to": "AgentTeams/",
+      "exclude": ["README.md"] },
+    { "op": "copy", "from": "targets/Run.md", "to": "targets/Run.md" },
+
+    { "op": "strip-suffix", "from": "copy/", "to": "copy/", "suffix": ".template" },
+    { "op": "rename", "from": "specifications/README.template.md",
+                      "to":   "specifications/README.md" },
+    { "op": "rename", "from": "specifications/project-brief.template.md",
+                      "to":   "specifications/project-brief.md" },
+
+    { "op": "rename", "from": "applied-readmes/agentteams.md",
+                      "to":   "AgentTeams/README.md" },
+    { "op": "rename", "from": "applied-readmes/specifications-general.md",
+                      "to":   "specifications/general/README.md" },
+    { "op": "rename", "from": "applied-readmes/specifications-version.md",
+                      "to":   "specifications/v1.0/README.md" },
+    { "op": "rename", "from": "applied-readmes/targets.md",
+                      "to":   "targets/README.md" },
+    { "op": "rename", "from": "applied-readmes/copy.md",
+                      "to":   "copy/README.md" },
+
+    { "op": "rewrite-path",
+      "in": ["targets/Run.md", ".claude/commands/target.md"],
+      "find": "template/targets/", "replace": ".harness/pack/targets/" },
+
+    { "op": "substitute",
+      "in": ["specifications/README.md", "specifications/project-brief.md",
+             "AgentTeams/*.md"] },
+
+    { "op": "generate", "template": "CLAUDE.md.template", "to": "CLAUDE.md",
+      "anchors": ["overview", "layout", "process", "agents",
+                  "conventions", "targets"] }
+  ],
+
+  "scaffolds": {
+    "backend-azure": [
+      { "op": "strip-suffix", "from": "scaffolds/backend-azure/",
+        "to": "infrastructure/backend-deploy/", "suffix": ".template",
+        "exclude": ["*.sh.template", "*.ps1.template"] },
+      { "op": "strip-suffix", "from": "scaffolds/backend-azure/",
+        "to": "infrastructure/backend-deploy/", "suffix": ".template",
+        "exclude": ["*.bicep.template", "*.bicepparam.template",
+                    "README.template.md"],
+        "executable": true }
+    ],
+    "backend-aws": [
+      { "op": "strip-suffix", "from": "scaffolds/backend-aws/",
+        "to": "infrastructure/backend-deploy/", "suffix": ".template",
+        "exclude": ["*.sh.template", "*.ps1.template"] },
+      { "op": "strip-suffix", "from": "scaffolds/backend-aws/",
+        "to": "infrastructure/backend-deploy/", "suffix": ".template",
+        "exclude": ["*.ts.template", "*.json.template",
+                    "README.template.md"],
+        "executable": true }
+    ]
+  }
+}

@@ -1,14 +1,14 @@
-# Backend deploy template — Azure Static Web Apps + Neon Postgres
+# Backend deploy — Azure Static Web Apps + Neon Postgres
 
-A reusable provisioning kit for a Next.js (or any node) backend deployed
-to Azure Static Web Apps, with a Neon serverless Postgres database on
-the data side. Two named environments (production + staging) backed by
-two Neon branches.
+A provisioning kit for a Next.js (or any Node) backend deployed to Azure
+Static Web Apps, with a Neon serverless Postgres database on the data
+side. Two named environments (production + staging) backed by two Neon
+branches.
 
 Adopted from the Voxio telemetry backend. The shape is generic; only
 the resource names need editing for a new project.
 
-## What this template provisions
+## What this scaffold provisions
 
 - **Azure resource group** `rg-{{project}}-{{service}}`
 - **Azure Static Web App** `swa-{{project}}-{{service}}` (Standard tier)
@@ -28,15 +28,12 @@ updates whatever drifted.
 
 | File | Purpose |
 |---|---|
-| `main.bicep.template` | Bicep template — the SWA + appsettings resource graph |
-| `production.bicepparam.template` | Bicep param file that reads secrets from env vars |
-| `deploy.sh.template` | Bash provisioning script (macOS / Linux) |
-| `deploy.ps1.template` | PowerShell provisioning script (Windows) |
-| `setup-neon.sh.template` | Bash script that creates the Neon project + branches via REST |
-| `setup-neon.ps1.template` | PowerShell version using the `neonctl` CLI |
-
-Rename each file by dropping the `.template` suffix (e.g.
-`main.bicep.template` → `main.bicep`) before running.
+| `main.bicep` | Bicep template — the SWA + appsettings resource graph |
+| `production.bicepparam` | Bicep param file that reads secrets from env vars |
+| `deploy.sh` | Bash provisioning script (macOS / Linux) — executable |
+| `deploy.ps1` | PowerShell provisioning script (Windows) — executable |
+| `setup-neon.sh` | Bash script that creates the Neon project + branches via REST — executable |
+| `setup-neon.ps1` | PowerShell version using the `neonctl` CLI — executable |
 
 ---
 
@@ -56,41 +53,38 @@ You need:
 
 ## Provisioning order
 
-1. **Replace placeholders in every template.** The `{{...}}` tokens are
+1. **Replace the placeholders.** The `{{...}}` tokens in these files are
    meant to be edited. Most common ones:
    - `{{PROJECT_NAME}}` — short slug (e.g. `voxio`)
    - `{{SERVICE_NAME}}` — short slug (e.g. `telemetry`)
    - `{{AZURE_REGION}}` — default `westeurope`
    - `{{NEON_REGION}}` — default `aws-eu-central-1`
-2. **Rename `*.template` → real filenames**, e.g.:
-   ```
-   mv main.bicep.template main.bicep
-   mv production.bicepparam.template production.bicepparam
-   mv deploy.sh.template deploy.sh && chmod +x deploy.sh
-   mv setup-neon.sh.template setup-neon.sh && chmod +x setup-neon.sh
-   ```
-3. **Provision Neon** to get the connection strings:
+2. **Provision Neon** to get the connection strings:
    ```
    NEON_API_KEY=<key> NEON_ORG_ID=<org-id> ./setup-neon.sh
    ```
    The script prints `DATABASE_URL` and `STAGING_DATABASE_URL`. Set
    them as GitHub Actions secrets and as local env vars for the next
    step.
-4. **Provision the Azure SWA**:
+3. **Provision the Azure SWA**:
    ```
    DATABASE_URL=<...> TELEMETRY_API_KEY=<...> ./deploy.sh
    ```
    The script prints the SWA hostname and the
    `AZURE_STATIC_WEB_APPS_API_TOKEN`. Set the token as a GitHub Actions
    secret.
-5. **Run database migrations** on both branches:
+4. **Run database migrations** on both branches:
    ```
    DATABASE_URL=<prod-url> pnpm migrate:up
    DATABASE_URL=<staging-url> pnpm migrate:up
    ```
-6. **Push to `main`** to trigger the first CI deploy. (Your CI workflow
-   should live at `.github/workflows/backend-ci-cd.yml` — this template
-   does NOT provide one; see the existing Voxio workflow for a reference.)
+5. **Push to `main`** to trigger the first CI deploy.
+
+**This scaffold ships no CI pipeline, deliberately.** A pack may not write
+a pipeline file into your repository — that is a reserved destination,
+because a pipeline runs pack-authored code on your next push. Write your
+own workflow, in your CI provider's own directory, and have it deploy the
+built app to the SWA using `AZURE_STATIC_WEB_APPS_API_TOKEN`.
 
 ---
 
@@ -138,11 +132,13 @@ filled in.) The PowerShell equivalent uses `neonctl branches create`.
 
 The structure of the kit is independent of Azure + Neon. To adapt:
 
-- **AWS / GCP** — replace `main.bicep` with a Terraform / CDK / Pulumi
-  template that produces equivalent resources (an HTTPS-fronted Node
-  runtime + a secrets-friendly app-settings layer). The deploy script
-  shape (provision → print secrets → instruct GitHub secret setup)
-  stays the same.
+- **AWS** — the `backend-aws` scaffold in this pack is the Lambda + CDK
+  alternative; the two are alternatives, not peers, because both land
+  here. **GCP** — replace `main.bicep` with a Terraform / Pulumi template
+  that produces equivalent resources (an HTTPS-fronted Node runtime + a
+  secrets-friendly app-settings layer). The deploy script shape
+  (provision → print secrets → instruct CI secret setup) stays the
+  same.
 - **Different Postgres provider** (Supabase, PlanetScale PG, RDS) —
   replace `setup-neon.sh` with the provider's branch-or-project
   bootstrap. The contract you preserve is: hand back

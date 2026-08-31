@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# deploy.sh — synth and deploy the {{PROJECT_NAME}}-{{SERVICE_NAME}} stack.
+#
+# Replace every {{PLACEHOLDER}} before first use:
+#   {{PROJECT_NAME}}   — short slug (e.g. voxio)
+#   {{SERVICE_NAME}}   — short slug (e.g. telemetry)
+#
+# Usage:
+#   AWS_REGION=eu-west-1 DATABASE_URL=<...> ./deploy.sh [environment]
+#
+# Prerequisites, none of which this script installs:
+#   - AWS credentials on the shell (`aws sts get-caller-identity` works)
+#   - Node 22+ and the dependencies listed in README.md installed here
+#   - The target account/region bootstrapped for CDK (`npx cdk bootstrap`)
+#
+# Idempotent: re-running deploys the diff and nothing else.
+
+set -euo pipefail
+
+ENVIRONMENT="${1:-production}"
+PROJECT="{{PROJECT_NAME}}"
+SERVICE="{{SERVICE_NAME}}"
+STACK="${PROJECT}-${SERVICE}-${ENVIRONMENT}"
+
+die() { printf '%s\n' "error: $*" >&2; exit 1; }
+
+command -v npx >/dev/null 2>&1 || die "npx not found — install Node 22+."
+[ -f ./app.ts ]   || die "run this from the directory holding app.ts."
+[ -d ./node_modules ] || die "dependencies not installed — see README.md §What you must supply."
+
+aws sts get-caller-identity >/dev/null 2>&1 \
+  || die "no usable AWS credentials on this shell."
+
+REGION="${AWS_REGION:-${CDK_DEFAULT_REGION:-}}"
+[ -n "$REGION" ] || die "set AWS_REGION (or CDK_DEFAULT_REGION)."
+
+if [ -z "${DATABASE_URL:-}" ]; then
+  printf '%s\n' "warning: DATABASE_URL is unset; the function will report" \
+                "         database=unconfigured on /health." >&2
+fi
+
+printf '%s\n' "==> deploying ${STACK} to ${REGION}"
+
+# --require-approval is deliberately left at its default: a change that
+# widens IAM or security-group scope should stop and ask, even here.
+npx cdk deploy "$STACK" \
+  --context "environment=${ENVIRONMENT}" \
+  --outputs-file ./cdk-outputs.json
+
+URL="$(node -e "
+  const o = require('./cdk-outputs.json');
+  const s = o['${STACK}'] || {};
+  process.stdout.write(s.FunctionUrl || '');
+")"
+
+if [ -n "$URL" ]; then
+  printf '\n%s\n' "==> function URL: ${URL}"
+  printf '%s\n'   "    verify:       curl -sf \"${URL}health\""
+else
+  printf '\n%s\n' "==> deployed, but no FunctionUrl output was returned."
+fi
+
+printf '%s\n' \
+  "" \
+  "Next: set the base URL as a secret in your CI provider, and point" \
+  "your client at it. This scaffold ships no pipeline — see README.md."

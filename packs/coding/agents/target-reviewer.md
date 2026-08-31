@@ -8,7 +8,7 @@ description: >
   budget, and the commit + work-log plan are concrete. Produces a
   READY / NEEDS-CORRECTION verdict with specific fixes. Read-only — it does not
   edit the target or run it. Use before launching a target (see
-  template/targets/).
+  .harness/pack/targets/).
 tools: Read, Grep, Glob
 model: claude-sonnet-5
 maxTurns: 15
@@ -29,9 +29,9 @@ held to, not as a description of intent.
 
 ## Context Discovery
 
-1. **Read the rubric:** `template/targets/README.md` and
-   `template/targets/target.template.md` — the lifecycle and what a complete
-   target must contain.
+1. **Read the rubric:** `.harness/pack/targets/README.md` and
+   `.harness/pack/targets/target.template.md` — the lifecycle and what a
+   complete target must contain.
 2. **Read the target file** under review, end to end.
 3. **Read the project's reality** the criteria depend on: `CLAUDE.md` and the
    actual checks the criteria name (does `npm test` exist? does the bench/metric

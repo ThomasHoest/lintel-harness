@@ -35,8 +35,8 @@ resource swa 'Microsoft.Web/staticSites@2023-01-01' = {
     tier: 'Standard'
   }
   properties: {
-    // Workflow is managed in .github/workflows/backend-ci-cd.yml — do not
-    // let SWA generate its own.
+    // The deploy workflow is yours to write and lives in your CI
+    // provider's own directory — do not let SWA generate its own.
     buildProperties: {
       appLocation: 'backend'
       outputLocation: ''

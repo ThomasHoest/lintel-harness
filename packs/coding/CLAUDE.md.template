@@ -1,4 +1,4 @@
-# CLAUDE.md
+# CLAUDE.md — {{harness:param.projectName}}
 
 This file provides guidance to Claude Code (claude.ai/code) when working
 with code in this repository. Replace every `{{PLACEHOLDER}}` and delete
@@ -10,12 +10,20 @@ the leading `Template note` blocks before committing.
 
 ---
 
+<!-- harness:region id=overview -->
+
 ## Project overview
+
+**{{harness:param.projectName}}** — {{harness:param.stack}}
 
 {{ONE-PARAGRAPH PROJECT DESCRIPTION — what does this product do, for
 whom, on what platforms?}}
 
+<!-- harness:end -->
+
 ---
+
+<!-- harness:region id=layout -->
 
 ## {{PRIMARY MODULE — e.g. iOS, Web, CLI}} (`{{folder/}}`)
 
@@ -73,14 +81,19 @@ If not, delete this block.}}
 {{Path to the workflow file + one paragraph on the deploy flow.
 Mention which branches deploy where, and where secrets live.}}
 
+<!-- harness:end -->
+
 ---
+
+<!-- harness:region id=process -->
 
 ## Specification structure (`specifications/`)
 
 This project follows the spec process documented in
-`specifications/README.md` and `specifications/conventions.md`.
-See those files for document types, ownership rules, numbering
-conventions, and the canonical document flow:
+`.harness/pack/specifications/README.md` and
+`.harness/pack/specifications/conventions.md`, indexed for this project by
+`specifications/README.md`. See those files for document types, ownership
+rules, numbering conventions, and the canonical document flow:
 
 ```
 research → spec → design-spec → ADR → epics-and-tasks → implementation
@@ -90,10 +103,11 @@ Each gate must produce its artifact before the next begins. ADRs come
 in two flavours:
 
 - **Feature-scoped** (`ADR-NNN-<feature>.md`) — uses
-  `adr-feature.template.md`.
+  `.harness/pack/specifications/adr-feature.template.md`.
 - **Epic-scoped** (`ADR-EXX-<feature>.md`) — uses
-  `adr-epic.template.md`. Includes the file-level plan and public
-  interface contract that the implementer and testwriter work against.
+  `.harness/pack/specifications/adr-epic.template.md`. Includes the
+  file-level plan and public interface contract that the implementer and
+  testwriter work against.
 
 Status values across every spec doc: `Draft | In Review | Accepted |
 Superseded`. Open questions are numbered `Q-N` and keep that ID when
@@ -115,6 +129,41 @@ Current counter state (do not reuse these numbers):
 | File | Type | Feature |
 |---|---|---|
 
+<!-- harness:end -->
+
+---
+
+<!-- harness:region id=agents -->
+
+## Agents and agent teams
+
+Ten sub-agent definitions live in `.claude/agents/`. Spawn one by name;
+each has a non-overlapping write boundary, and `architect`, `reviewer` and
+`securityreviewer` are read-only.
+
+| Agent | Spawn it to |
+|---|---|
+| `researcher` | investigate an unfamiliar technology and return sourced findings |
+| `specwriter` | turn a brief into a functional specification |
+| `designer` | write the UI/UX design spec for a feature with an interface |
+| `copywriter` | write user-facing text against `copy/tone-of-voice.md` |
+| `architect` | validate a spec and produce the ADR that gates implementation |
+| `securityreviewer` | check security requirements at the ADR gate and the code at the review gate |
+| `implementer` | write code and unit tests from a spec plus a PROCEED-stamped ADR |
+| `testwriter` | write integration and acceptance tests against the spec |
+| `reviewer` | review code for quality, correctness and security |
+| `target-reviewer` | gate a target's readiness before an unsupervised run |
+
+Two team prompts wire them together: `AgentTeams/Specify.md` (brief → a
+PROCEED-stamped spec set) and `AgentTeams/Implement.md` (spec set →
+shipped code, one epic at a time). The intended flow is the first, then a
+human read, then the second.
+
+The file-ownership matrix each team enforces is in
+`.harness/pack/agents/README.md`.
+
+<!-- harness:end -->
+
 ---
 
 ## External APIs / integrations
@@ -132,26 +181,36 @@ agents reach for when implementing or debugging anything external.}}
 
 ---
 
+<!-- harness:region id=conventions -->
+
 ## Conventions enforced for agents
 
 {{Optional. Things you've explicitly told agents in this repo and don't
 want to repeat. Examples:}}
 
-- Do not commit secrets to `.env` — use the deploy scripts in
-  `infrastructure/`.
+- **Never commit a secret.** Credentials reach the app through
+  environment variables and the deploy scripts that read them.
 - Unit tests live alongside the code they cover (`{{path pattern}}`)
   and are owned by the `implementer` agent. Integration and
   acceptance tests live in a separate tree and are owned by the
-  `testwriter` agent — see `agents/README.md` for the file-ownership
-  matrix.
+  `testwriter` agent — see `.harness/pack/agents/README.md` for the
+  file-ownership matrix.
 - All cross-feature decisions are recorded as ADRs in
   `specifications/{{version}}/`. Use `ADR-NNN-<feature>.md` for
   feature-scoped ADRs and `ADR-EXX-<feature>.md` for epic-scoped ones.
+  A decision settled in chat and not written down does not exist.
+
+<!-- harness:end -->
+
+---
+
+<!-- harness:region id=targets -->
 
 ## Autonomous work — targets
 
-Long-running, unsupervised work uses a **target** (reference pack in
-`targets/`: `target.template.md`, `Run.md`, `README.md`): a well-defined,
+Long-running, unsupervised work uses a **target** (`targets/README.md`,
+`targets/Run.md`, and the blank contract at
+`.harness/pack/targets/target.template.md`): a well-defined,
 **measurable** goal the agent works toward on its own and stops at **SUCCESS**
 (every verifiable success criterion met) or **ABORT** (a stop condition fired) —
 no open-ended "improve X".
@@ -166,5 +225,6 @@ no open-ended "improve X".
 - **Instances:** filled targets and their work logs are project content — keep
   them in `targets/` (or `specifications/{{version}}/`), not `.claude/`.
 
-See `targets/README.md` for the lifecycle and the "adopting this in a new
-project" steps.
+See `targets/README.md` for the lifecycle.
+
+<!-- harness:end -->

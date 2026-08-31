@@ -5,8 +5,6 @@ for a particular shape of work. Each file is a complete seed prompt — paste
 it (or hand it to Claude Code as a kickoff message) and the lead Claude
 will spawn the right team of sub-agents.
 
-Copy this folder to `AgentTeams/` at the repo root of the new project.
-
 ```
 AgentTeams/
 ├── Specify.md      ← researcher + spec writer + designer + copywriter + architect

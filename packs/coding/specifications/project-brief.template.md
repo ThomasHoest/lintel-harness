@@ -1,4 +1,4 @@
-# {{Project}} — product brief
+# {{harness:param.projectName}} — product brief
 
 **Status:** {{Draft | In Review | Accepted | Superseded}}
 **Owner:** {{name}}

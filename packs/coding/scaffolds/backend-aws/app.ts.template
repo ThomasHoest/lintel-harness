@@ -1,0 +1,100 @@
+#!/usr/bin/env node
+// app.ts — CDK app entry for {{PROJECT_NAME}}-{{SERVICE_NAME}}.
+//
+// Replace every {{PLACEHOLDER}} before first synth:
+//   {{PROJECT_NAME}}   — short slug (e.g. voxio)
+//   {{SERVICE_NAME}}   — short slug (e.g. telemetry)
+//
+// One stack, one Lambda, one Function URL. That is the whole of it. The
+// things a real service also needs — a custom domain, an authorizer, a
+// VPC, a database — are NOT decided here; see README.md for why and for
+// where each one attaches.
+
+import 'source-map-support/register';
+import * as path from 'node:path';
+import * as cdk from 'aws-cdk-lib';
+import { Construct } from 'constructs';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import { NodejsFunction } from 'aws-cdk-lib/aws-lambda-nodejs';
+import * as logs from 'aws-cdk-lib/aws-logs';
+
+const PROJECT = '{{PROJECT_NAME}}';
+const SERVICE = '{{SERVICE_NAME}}';
+
+export interface BackendStackProps extends cdk.StackProps {
+  /** Deployed environment name — becomes part of every resource name. */
+  readonly environmentName: string;
+  /** Postgres connection string, passed in from the deploy environment. */
+  readonly databaseUrl?: string;
+}
+
+export class BackendStack extends cdk.Stack {
+  public readonly functionUrl: lambda.FunctionUrl;
+
+  constructor(scope: Construct, id: string, props: BackendStackProps) {
+    super(scope, id, props);
+
+    const fn = new NodejsFunction(this, 'ApiFunction', {
+      functionName: `${PROJECT}-${SERVICE}-${props.environmentName}`,
+      entry: path.join(__dirname, 'handler.ts'),
+      handler: 'handler',
+      runtime: lambda.Runtime.NODEJS_22_X,
+      architecture: lambda.Architecture.ARM_64,
+      memorySize: 512,
+      timeout: cdk.Duration.seconds(30),
+      logRetention: logs.RetentionDays.ONE_MONTH,
+      environment: {
+        NODE_OPTIONS: '--enable-source-maps',
+        ENVIRONMENT: props.environmentName,
+        // Empty rather than absent when unset, so the handler's
+        // "unconfigured" branch reports honestly instead of throwing.
+        DATABASE_URL: props.databaseUrl ?? '',
+      },
+      bundling: {
+        minify: true,
+        sourceMap: true,
+        // `pg` and friends bundle fine; add anything with a native
+        // binding to `nodeModules` instead of bundling it.
+        target: 'node22',
+      },
+    });
+
+    // A Function URL is the smallest thing that makes the Lambda
+    // reachable. AuthType.NONE means PUBLIC — see README.md §Auth before
+    // you deploy anything that is not a health check.
+    this.functionUrl = fn.addFunctionUrl({
+      authType: lambda.FunctionUrlAuthType.NONE,
+    });
+
+    new cdk.CfnOutput(this, 'FunctionUrl', {
+      value: this.functionUrl.url,
+      description: 'Base URL of the deployed API',
+    });
+    new cdk.CfnOutput(this, 'FunctionName', {
+      value: fn.functionName,
+      description: 'Lambda function name, for logs and manual invokes',
+    });
+  }
+}
+
+const app = new cdk.App();
+
+const environmentName = app.node.tryGetContext('environment') ?? 'production';
+
+new BackendStack(app, `${PROJECT}-${SERVICE}-${environmentName}`, {
+  environmentName,
+  databaseUrl: process.env.DATABASE_URL,
+  env: {
+    // Both come from the ambient AWS credentials, so one app definition
+    // deploys to whichever account the caller is authenticated against.
+    account: process.env.CDK_DEFAULT_ACCOUNT,
+    region: process.env.CDK_DEFAULT_REGION,
+  },
+  tags: {
+    project: PROJECT,
+    service: SERVICE,
+    environment: environmentName,
+  },
+});
+
+app.synth();

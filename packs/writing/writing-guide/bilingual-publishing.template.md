@@ -5,7 +5,7 @@ live, English as the site/reference translation). The aim is copy that is easy
 to **review, diff, and re-translate**, and a machine index the website can read.
 
 The core convention is project-agnostic; the last section notes the pieces that
-are specific to this project's site (Lintel).
+are specific to a given project's own site.
 
 ## One file per language
 
@@ -50,13 +50,14 @@ placeholder once it is live).
   translation is a fresh draft and picks up its own tells (stray em-dashes,
   rule-of-three, signposting).
 - Match the register in [tone-of-voice.md](tone-of-voice.md) in both languages;
-  a literal translation often reads stiffer than Thomas writes.
+  a literal translation often reads stiffer than {{harness:param.authorName}} writes.
 
-## Project-specific: the Lintel site index
+## Project-specific: the site index
 
-In this project the machine index is
-`workstreams/learning-journey/series.json`, read by the Lintel importer
-(`npm run sync-posts`). Point it at the files rather than inlining prose:
+{{SITE INDEX — if this project feeds a website, name the machine index and the
+importer that reads it. The project this guide grew from kept
+`workstreams/<name>/series.json` and ran a `sync-posts` script against it.}}
+Point it at the files rather than inlining prose:
 
 ```json
 "bodyFile": {
@@ -67,7 +68,7 @@ In this project the machine index is
 
 On publish, also set `status: "published"` and `linkedinUrl`. The importer takes
 only the prose after the first `---`, and errors if a body exists in one language
-but not the other — so add both files together. After editing the index, run
-`npm run sync-posts` in the lintel repo and commit the regenerated module. In
-another project, swap this section for whatever that project's site/index uses;
-the file convention above stays the same.
+but not the other — so add both files together. After editing the index, re-run
+the importer and commit whatever it regenerates. In another project, swap this
+section for whatever that project's site/index uses; the file convention above
+stays the same.

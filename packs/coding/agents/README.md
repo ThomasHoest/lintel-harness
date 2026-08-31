@@ -1,7 +1,7 @@
 # Agents
 
-Drop-in Claude Code sub-agent definitions, one per role. Copy this folder
-to `.claude/agents/` in the new repo's root so Claude Code can spawn them.
+Drop-in Claude Code sub-agent definitions, one per role. Applying the pack
+places them where Claude Code spawns them from:
 
 ```
 .claude/
@@ -40,8 +40,8 @@ tools, model, and permission mode; the body is the system prompt.
 
 > The **copywriter** is deliberately incomplete on its own: it carries the
 > web-copy craft but **not** the brand voice. It reads that from an external
-> **tone-of-voice guide** (see `template/copy/tone-of-voice.template.md`;
-> copy it to a product's copy area and fill in the voice + worked examples).
+> **tone-of-voice guide**. An applied project has one at `copy/tone-of-voice.md`,
+> waiting to have the voice and its worked examples filled in.
 > No guide → the copywriter halts and asks for one. This keeps one voice
 > document as the single source of truth across every surface.
 

@@ -1,0 +1,88 @@
+# Project: {{harness:param.projectName}}
+
+<!-- harness:region id=overview -->
+## What this project is
+{{harness:param.projectPurpose}}
+<!-- harness:end -->
+
+<!-- harness:region id=voice -->
+## Voice and style
+- Audience: <e.g., "informed non-specialists" or "domain experts">
+- Tone: <e.g., "skeptical and concrete," "warm and exploratory">
+- Length norms: <e.g., "blog posts run 1500–2500 words; sections under 400 words">
+- Citation style: <e.g., "parenthetical (Author Year), full bibliography at end">
+- **Voice samples:** representative writing samples live in {{VOICE SAMPLES FOLDER — point this at wherever this project keeps them}}. The writer must read 2–3 genre-matched samples before drafting. The editor must do a dedicated voice pass after the critic loop closes, again referencing samples in the matching genre.
+- **Canonical writing reference:** `/writing-guide/` holds the durable, evolving guidance — [`tone-of-voice.md`](writing-guide/tone-of-voice.md) (how {{harness:param.authorName}} writes), [`ai-tells.md`](writing-guide/ai-tells.md) (the screen that removes AI giveaways), and [`bilingual-publishing.md`](writing-guide/bilingual-publishing.md) (recording a finished post in two languages). Read it before drafting or reviewing any {{harness:param.authorName}}-facing text; run the AI-tells screen as a final pass before anything ships.
+
+## Words and patterns to avoid
+- Full list lives in [`/writing-guide/ai-tells.md`](writing-guide/ai-tells.md). Headlines: **em-dashes** (the #1 tell — comma/period/parens instead; softer in Danish), rule-of-three, "it's not just X, it's Y", signposting ("Importantly,", "Ultimately,"), corporate diction (delve, leverage, robust, seamless, unlock, foster, navigate), empty intensifiers (game-changing, cutting-edge), the summarising outro.
+- No headers shorter than two words.
+- No bullet lists where prose would do.
+<!-- harness:end -->
+
+<!-- harness:region id=layout -->
+## Where things live
+
+**Shared research corpus** (done once, feeds every workstream):
+- /sources/ — the corpus. Bibliography in /sources/bibliography.md.
+- /analyses/ — close readings, one file per source.
+- /notes/ — my notes and dictations.
+- /tasks/ — backlog, research agenda, and the good-practice register.
+
+**Workstreams** (each a deliverable tracked end-to-end; the *writing* stages live inside the workstream so one folder shows the whole thing):
+- /workstreams/ — registry of workstreams in /workstreams/index.md.
+- /workstreams/<name>/ — one folder per workstream, each with an `index.md` hub plus the writing stages:
+  - .../outlines/ — outline candidates and the chosen outline.
+  - .../drafts/ — versioned drafts, e.g. `intro-v1.0.md`, `intro-v1.1.md`.
+  - .../reviews/ — critic outputs.
+  - .../published/ — final versions.
+- A workstream may also hold planning docs (e.g. a communications strategy, a post template).
+
+The research phase always runs in the shared corpus; only outline → draft → review → published are per-workstream.
+<!-- harness:end -->
+
+<!-- harness:region id=workflow -->
+## Workflow
+
+The phases are strict. Do not skip phases or substitute one agent for another.
+
+1. **Research phase: scout → researcher → librarian → analyst.**
+   - For any new research subject, always start with **scout**. Never skip to analyst, writer, or any later phase before scout has produced a `/sources/_scouting/<topic>.md` file.
+   - Use **researcher** to fill the gaps scout identified, producing an annotated source list at `/sources/<topic>-sources.md`.
+   - Run **librarian** after each batch of new sources arrives — never let `/sources/inbox/` accumulate before moving to analysis.
+   - Use **analyst** only on sources scout or researcher have flagged as central. One source per invocation. Output goes to `/analyses/<source-slug>.md`.
+2. **Outlining: outliner produces 2–3 options, user picks.** Never proceed to drafting without a chosen outline saved in the workstream's `outlines/` (e.g. `/workstreams/<name>/outlines/`).
+3. **Drafting: writer drafts against the chosen outline.** Never invoke writer without an approved outline. Writer outputs to the workstream's `drafts/<piece>-v1.md`.
+4. **Review: critic reviews, writer revises (loop max twice).** Critic output goes to the workstream's `reviews/<piece>-v<n>.md`. After two revision loops, escalate to the user rather than continuing.
+5. **Polish: editor passes for line-level work only.** Editor never changes structure or argument. Invoked only after the critic loop is closed.
+6. **User does final read before the workstream's `published/`.** Never move a file into `published/` autonomously.
+<!-- harness:end -->
+
+<!-- harness:region id=coordination -->
+### Parallelization rules
+- **Scouts can run in parallel** when given multiple distinct research subjects. Spawn them in a single message.
+- **Analysts run serial.** Each analyst reads in the context of prior analyses; parallel runs lose that context.
+- **Never parallelize writer, critic, or editor** for the same piece.
+
+### Routing defaults
+- Prompts like "map the field," "what's been written about X," "new topic" → scout.
+- "Find sources on X," "annotated reading list" → researcher.
+- "Ingest these PDFs," "update the bibliography" → librarian.
+- "Close-read this source," "what does this paper argue" → analyst.
+- "Give me outline options" → outliner.
+- "Draft against the outline" → writer.
+- "Tear this draft apart," "review this draft" → critic.
+- "Polish," "line edit" → editor.
+
+### Chaining
+Do not auto-chain phases. After each agent reports back, stop and wait for user direction unless the user has explicitly asked for the full pipeline ("run the full research phase on X").
+<!-- harness:end -->
+
+<!-- harness:region id=standing-instructions -->
+## Standing instructions
+- Never invent sources. [NEEDS SOURCE] markers are fine; fabrication is not.
+- Always preserve prior drafts. Versioned filenames, not overwrites.
+- When in doubt about voice, re-read the workstream's `published/<best-recent-piece>.md` and match.
+- Every folder listed under "Where things live" contains an `index.md` with a short intro and a table of contents (file, description, created, updated). When adding a new file to a folder, append a row. When modifying a file, update its `Updated` date. Use ISO dates (YYYY-MM-DD).
+- `/Home.md` is the Obsidian vault map-of-content (the reader's front door). Keep it current: when a new area, source list, analysis, draft, or published piece is added — or the project's overall state changes materially — update the relevant links and the "You are here" snapshot (with its ISO date). It links to the per-folder `index.md` files, so it should stay a thin navigation layer, not duplicate their tables.
+<!-- harness:end -->

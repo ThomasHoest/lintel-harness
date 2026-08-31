@@ -1,0 +1,185 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working
+in this repository. This project's work **is** a portfolio: bets,
+reviews, horizons and intake. It is not a software project that happens
+to have a roadmap.
+
+<!-- harness:region id=overview -->
+## Project overview
+
+{{ONE PARAGRAPH — what portfolio is this? Which organisation or unit,
+what kind of bets, and who decides.}}
+
+**The calibration this project was initialised at is recorded in
+`calibration.md` at the repo root.** It set the cadence defaults, the
+horizon defaults and the absorption-gate coverage narrative in
+`portfolio/`. Do not delete that file; a later reader cannot otherwise
+tell which pole the defaults came from.
+
+Where things live:
+
+| Path | What it holds |
+|---|---|
+| `portfolio/register.md` | Every bet, its status, its phase and its horizon |
+| `portfolio/bets/<slug>/` | One folder per bet — brief, evidence notes, gate record, reviews |
+| `portfolio/horizons.md` | The computed horizon per programme, with its determinant |
+| `portfolio/cadence.md` | Review cadence defaults for this calibration |
+| `portfolio/absorption-gate.md` | How much of the gate this organisation's existing process already holds |
+| `portfolio/decisions.md` | What was killed, when, and why — the decision log |
+| `targets/` | Filled targets and their work logs, for unsupervised runs |
+| `.harness/pack/` | The pack's own reference material, read from here, never copied out |
+<!-- harness:end -->
+
+<!-- harness:region id=loop -->
+## The loop
+
+```
+intake → discovery → prioritize → commit → deliver → [ABSORPTION/SECURITY GATE] → learn
+   ↑                                                                                 │
+   └─────────────────────────────────────────────────────────────────────────────────┘
+```
+
+A **loop, not a pipeline**: `learn` feeds the next `intake`. Six phases,
+one artifact each.
+
+| Phase | Artifact | What must be true to leave it |
+|---|---|---|
+| Intake | An entry in `portfolio/register.md`, placed Now / Next / Later | The intake gate field is filled. An idea with no stated intake reason is not an entry |
+| Discovery | Evidence notes in the bet folder, plus a draft brief | Every load-bearing claim is classified frame / mechanism / vendor magnitude, with its source |
+| Prioritize | A ranked register, cut to **absorbable** capacity | The cut is to what can be absorbed, not to what could be started |
+| Commit | A committed brief **with kill criteria**, plus a horizon record | Kill criteria exist **before** delivery starts. The horizon is computed, not chosen |
+| Deliver | Milestone progress against the committed brief | Progress is against the brief as committed, not one that quietly moved |
+| **Gate** | A gate record: security review, V&V, maintenance capacity, review throughput | A `PASS` or `HOLD` token from a party that did not run deliver |
+| Learn | A roadmap review feeding the next intake | The kill-criteria check has run, and the review produced an intake consequence |
+
+**Horizon-setting lives inside commit** and is first-class:
+
+> `horizon ≈ max(longest-lead physical/regulatory constraint,
+> capital-commitment irreversibility)`, adjusted **up** when uncertainty
+> resolves slowly, **down** when competitive substitution is fast.
+
+Walk it with `/horizon`, which follows
+`.harness/pack/templates/horizon-decision-aid.md`. The full phase
+definitions are in `.harness/pack/process.md`.
+<!-- harness:end -->
+
+<!-- harness:region id=gate -->
+## The absorption / security gate — non-delegable
+
+Between `deliver` and `learn`. It asks whether the organisation can
+actually take on what was built, across four capacity questions: security
+review by someone who did not build it, verification and validation
+evidence, maintenance ownership after the bet closes, and review
+throughput on top of everything already in flight.
+
+**Three rules, and none of them varies by calibration:**
+
+- It **may not be cleared or waived by the party that ran `deliver`.**
+- It **may not run in parallel with `learn`.**
+- Its verdict is a **named token — `PASS` or `HOLD` — not prose.**
+
+**An unsupervised run may carry a bet up to the gate. It may never clear
+it.** Clearing or waiving the gate is an abort criterion in this
+project's target template. A run that reaches the gate stops, writes its
+final work-log entry, and hands back.
+
+How much of the gate this organisation already holds structurally is the
+one thing the calibration changes about it — read
+`portfolio/absorption-gate.md`.
+<!-- harness:end -->
+
+<!-- harness:region id=practices -->
+## The five practices
+
+Standing instructions. All five hold at both calibrations.
+
+1. **Concentrate the portfolio to absorbable capacity** — not to
+   available capacity, and not to what fits on a slide.
+2. **Set the horizon by the binding constraint**, not by the planning
+   calendar.
+3. **Match cadence to uncertainty resolution.** The calendar is a
+   backstop, not a trigger.
+4. **Keep the security gate non-delegable.**
+5. **Budget review capacity as a portfolio input** — review throughput
+   constrains how many bets can run.
+<!-- harness:end -->
+
+<!-- harness:region id=conventions -->
+## Conventions
+
+**Evidence discipline.** Classify every load-bearing claim as **frame**,
+**mechanism** or **vendor magnitude**, and label it before you use it. A
+frame is never evidence of a magnitude. **Vendor telemetry is never
+stacked as independent corroboration** — three vendor numbers pointing
+the same way are one interested source three times.
+
+**The claims ledger.** Every load-bearing claim in a brief or a review is
+recorded with its source and its class. A claim with no source is written
+`[NEEDS SOURCE]` and stays that way. **Never fabricate a citation.**
+
+**Kill criteria before the bet starts.** A brief without kill criteria is
+not committed, whatever its status says. They must be observable, dated
+or thresholded, and owned. `/bet` refuses to mark a bet committed while
+`Kill criteria` is empty or at its placeholder, and `/review` re-checks
+every bet it reviews. **That is the whole of the enforcement — it does
+not fire on the file write**, and a bet committed by hand-editing
+`brief.md` is not blocked. The guard script at
+`.claude/hooks/kill-criteria-guard.sh` is **inert**: registered by
+nothing, executed by nothing.
+
+**No drift substituting for decision.** A bet that crosses its kill
+criteria is killed, or explicitly re-committed with a dated rationale in
+`portfolio/decisions.md`. Silence is not a decision and "we kept going"
+is not a re-commitment.
+
+**Bet status vocabulary** (provisional):
+`proposed | committed | held-at-gate | killed | absorbed`.
+
+Full text: `.harness/pack/conventions.md` and
+`.harness/pack/coordination.md`.
+<!-- harness:end -->
+
+<!-- harness:region id=roles -->
+## Roles — provisional
+
+Six portfolio agents live in `.claude/agents/`: `portfolio-steward`,
+`discovery-lead`, `bet-framer`, `horizon-analyst`, `gate-reviewer` and
+`learning-synthesiser`. **They are provisional.** The phases, the gate,
+the templates and the horizon framework are evidenced; these role
+boundaries are inferred from the phases, and the source research flags
+engineering-manager portfolio responsibility as genuinely unwritten. Each
+file says so at the top. Treat the boundaries as a proposal and revise
+them against what this portfolio actually needs.
+
+Two things are **not** provisional: `gate-reviewer` must be a different
+party from whoever ran `deliver`, and the gate verdict must be a named
+token. Both follow from the process, not from the roles.
+
+`target-reviewer` is a seventh agent and is **not** provisional — it
+belongs to the targets contract below.
+
+**Commands:** `/bet` opens a brief, `/review` runs a roadmap review,
+`/horizon` walks the decision aid, `/target` runs an unsupervised target.
+<!-- harness:end -->
+
+<!-- harness:region id=targets -->
+## Autonomous work — targets
+
+Long-running unsupervised work uses a **target**: a measurable goal the
+agent works toward on its own, stopping at **SUCCESS** (every criterion
+verified) or **ABORT** (a stop condition fired). Never an open-ended
+"improve X".
+
+- **Launch:** `/target <target-file>`.
+- **Readiness gate:** the `target-reviewer` agent validates a filled
+  target and returns `READY` / `NEEDS-CORRECTION` before anything starts.
+- **The absorption gate is outside the envelope.** Clearing or waiving it
+  is an abort criterion, and `target-reviewer` returns
+  `NEEDS-CORRECTION` for any target whose success criteria can only be
+  met by passing it.
+- **Instances:** filled targets and their work logs are project content
+  and live in `targets/`.
+
+The way of working: `.harness/pack/targets/README.md`.
+<!-- harness:end -->

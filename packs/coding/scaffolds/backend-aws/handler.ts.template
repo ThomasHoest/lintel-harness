@@ -1,0 +1,41 @@
+// handler.ts — the Lambda entry point for {{PROJECT_NAME}}-{{SERVICE_NAME}}.
+//
+// Invoked through a Lambda Function URL, which delivers the API Gateway
+// v2 ("payload format 2.0") event shape. Keep this file thin: parse,
+// dispatch, serialise. Business logic belongs in modules this imports,
+// so it stays unit-testable without a Lambda runtime.
+
+import type {
+  APIGatewayProxyEventV2,
+  APIGatewayProxyResultV2,
+} from 'aws-lambda';
+
+const json = (statusCode: number, body: unknown): APIGatewayProxyResultV2 => ({
+  statusCode,
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify(body),
+});
+
+export const handler = async (
+  event: APIGatewayProxyEventV2,
+): Promise<APIGatewayProxyResultV2> => {
+  const method = event.requestContext.http.method;
+  const path = event.rawPath;
+
+  // Health check — the one route this scaffold implements, so that a
+  // fresh deploy is verifiable before you have written anything.
+  if (method === 'GET' && path === '/health') {
+    return json(200, {
+      status: 'ok',
+      service: '{{SERVICE_NAME}}',
+      // Set by the stack. Absent locally, which is deliberate: a missing
+      // DATABASE_URL should be visible, not silently defaulted.
+      database: process.env.DATABASE_URL ? 'configured' : 'unconfigured',
+    });
+  }
+
+  // {{Replace this with your routing. A switch on `${method} ${path}`,
+  // or hand off to a router — whatever the project already uses.}}
+
+  return json(404, { error: 'not_found', method, path });
+};

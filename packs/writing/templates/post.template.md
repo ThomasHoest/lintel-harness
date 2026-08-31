@@ -2,11 +2,11 @@
 
 Copy this file to `drafts/NN-<slug>.md` to start a post.
 
-**Division of labor (from Post 13 on):** the assistant fills **Metadata, Hook, Beat-by-beat, and a Key facts block** and stops. **The author writes the Draft (prose)** — the published voice must be the author's own. Then the two tweak it in conversation, with the author writing changes in (the intro-post feedback loop). The assistant does *not* draft post prose.
+**Division of labor:** the assistant fills **Metadata, Hook, Beat-by-beat, and a Key facts block** and stops. **The author writes the Draft (prose)** — the published voice must be the author's own. Then the two tweak it in conversation, with the author writing changes in (the intro-post feedback loop). The assistant does *not* draft post prose.
 
-**LinkedIn rules (every post):** stands alone (no references to the series or other posts) · hook ≤220 chars, personal, non-generic · an image (author in action, portrait) · publish Tue/Wed/Thu morning + engage · simple, pedagogical, insightful — don't over-complicate. Full playbook in `learning-journey-communications.md`.
+**LinkedIn rules (every post):** stands alone (no references to the series or other posts) · hook ≤220 chars, personal, non-generic · an image (author in action, portrait) · publish Tue/Wed/Thu morning + engage · simple, pedagogical, insightful — don't over-complicate. Full playbook in the workstream's own communications-strategy doc.
 
-**Language:** produce the **entire layup in Danish** — metadata, hook, beats, and key facts — so the author works the post without on-the-fly translating. (Wiki-links, file paths, and source citations keep their original form.)
+**Language:** produce the **entire layup in the publishing language** — metadata, hook, beats, and key facts — so the author works the post without on-the-fly translating. (Wiki-links, file paths, and source citations keep their original form.)
 
 ## Metadata
 
@@ -14,9 +14,9 @@ Copy this file to `drafts/NN-<slug>.md` to start a post.
 - **Target:** Week NN (YYYY-MM-DD)
 - **Pillar:** Leadership · Organizational learning · Engineering culture *(pick one primary; note a secondary if it applies)*
 - **Perspective / audience:** who this is for and the vantage it's told from (individual developer · team lead · engineering manager · senior leader / exec)
-- **Red-thread tie-in:** one line connecting it to the series promise (org + leadership, not just speed) — *for our tracking only; the published post must not reference the series or other posts (see LinkedIn rules).*
+- **Red-thread tie-in:** one line connecting it to the promise the series makes — *for our tracking only; the published post must not reference the series or other posts (see LinkedIn rules).*
 - **Image:** the visual — ideally the author in action, **portrait / vertical** orientation. *[author provides]*
-- **Backed by:** the corpus source(s) or note(s) this rests on — e.g. `[[../../../analyses/<file>|Author]]`, a `tasks/` idea, a Notes dictation, or the Area 11 register. *(Never invent evidence; if a claim has no source yet, mark it a personal observation or [NEEDS SOURCE].)*
+- **Backed by:** the corpus source(s) or note(s) this rests on — e.g. `[[../../../analyses/<file>|Author]]`, a `tasks/` idea, a notes dictation, or the good-practice register. *(Never invent evidence; if a claim has no source yet, mark it a personal observation or [NEEDS SOURCE].)*
 - **Status:** idea · drafting · feedback · ready · published
 
 ## Hook

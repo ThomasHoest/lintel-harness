@@ -1,4 +1,5 @@
-Create an agent team to take a feature brief through the entire spec
+Create an agent team for **{{harness:param.projectName}}** to take a feature
+brief through the entire spec
 phase: research (if needed), functional spec, design spec (if UI),
 copy deck (if user-facing text), Architecture Decision Record, and
 epics-and-tasks breakdown. Output: a complete, PROCEED-stamped spec set

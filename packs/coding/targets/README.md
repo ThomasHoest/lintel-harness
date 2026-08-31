@@ -11,13 +11,13 @@ The contract lives in one filled-in **`target.template.md`**. Nothing runs until
 that file is complete and has passed its **Readiness gate**.
 
 ```
-template/targets/
+.harness/pack/targets/
 ├── target.template.md   ← copy + fill in per goal; the run's contract
 ├── Run.md               ← kickoff prompt: gate → execute → verify → stop
 └── README.md            ← this file (how targets work + how to run one)
 ```
 
-The **`target-reviewer`** agent (`template/agents/target-reviewer.md`) is the
+The **`target-reviewer`** agent (`.claude/agents/target-reviewer.md`) is the
 independent Readiness gate — it validates a filled target and returns
 `READY` / `NEEDS-CORRECTION` before anything runs.
 
@@ -31,7 +31,8 @@ as a whole does **not** move there:
 |---|---|---|
 | Readiness-gate agent | `.claude/agents/target-reviewer.md` | Claude Code spawns it by name |
 | Launcher | `.claude/commands/target.md` → **`/target <file>`** | the slash command that runs a target |
-| Template · Run.md · this README | `template/targets/` (reference) | source/scaffolding, copied per-goal |
+| Template · this README | `.harness/pack/targets/` (reference) | source material, read in place |
+| `Run.md` | `targets/Run.md` | the kickoff prompt a run executes |
 | A **filled** target + its work log | project content — a top-level `targets/` folder (or `specifications/<area>/`) | it's a run instance, not a Claude Code construct |
 
 Launch a run with **`/target <path-to-target-file>`** (the command follows
@@ -56,7 +57,8 @@ the success check, you don't have a target yet — you have a conversation.
 
 ## Lifecycle
 
-1. **Author** — copy `target.template.md`, fill every section. The goal, the
+1. **Author** — copy `.harness/pack/targets/target.template.md` into the
+   project's `targets/` folder, fill every section. The goal, the
    verifiable success criteria, scope, the autonomy envelope, obstacle
    behavior, abort criteria, the commit plan, and the work-log path.
 2. **Review (Readiness gate)** — the **`target-reviewer`** agent (or a human)
@@ -140,34 +142,9 @@ Read the whole target first. Then operate by these rules for the entire run:
 
 A target is the **what + when-to-stop + how-autonomous** contract; it's
 orthogonal to **who** does the work. A target can be executed by the default
-agent or handed to an agent team (`../agent-teams/`). Where a spec (see
-`../specifications/`) says *what to build* and an ADR says *how it's shaped*, a
+agent or handed to an agent team (`AgentTeams/`). Where a spec (see
+`specifications/`) says *what to build* and an ADR says *how it's shaped*, a
 target says *what outcome to reach, how you'll know, and how far you may go on
 your own to get there*. Keep a target's success criteria tied to real project
 checks (tests, benches, lints, metrics) so "done" means the same thing to the
 agent and to you.
-
----
-
-## Adopting this in a new project
-
-Targets are part of the template pack, so a fresh repo gets them the same way it
-gets the agents and agent-teams — by copying the constructs into place:
-
-1. **Agent** — include `target-reviewer.md` when you copy `agents/` →
-   `.claude/agents/`.
-2. **Command** — copy `target.md` → `.claude/commands/`; that gives you
-   **`/target <file>`**.
-3. **Reference** — copy `target.template.md`, `Run.md`, and this `README.md`
-   into a `targets/` folder at the repo root (in this scaffolding repo they sit
-   under `template/targets/`; a product repo drops the `template/` prefix).
-4. **Fix the paths** — `Run.md` and `.claude/commands/target.md` reference
-   `template/targets/…`; in a product repo the reference lives at `targets/…`,
-   so update those two path references to match.
-5. **Author + run** — write a filled target as `targets/target-<slug>.md`
-   (work log alongside), get a `READY` from `target-reviewer`, then
-   `/target targets/target-<slug>.md`.
-6. **Document it** — the CLAUDE.md template (`CLAUDE.md.template`) already
-   carries a short "Targets" note so the generated repo's `CLAUDE.md` explains
-   the way of working to its agents. Keep it and point the paths at your repo.
-

@@ -44,8 +44,14 @@ current version.
 
 Recorded here so a reader does not have to infer them:
 
-- **Filenames** — {{harness:param.filenameVariant}}
-- **Task IDs** — {{harness:param.taskScheme}}
+- **Filenames** — the plain variant: `spec-<topic>.md`,
+  `design-spec-<topic>.md`, `research-<topic>.md`,
+  `epics-and-tasks-<topic>.md`. Switch to the feature-prefixed variant
+  (`F3-spec-<topic>.md`) if this folder grows past a handful of features —
+  and then use it for every feature, never a mix
+- **Task IDs** — scheme A, epic-derived: epics `E-N`, tasks `T-XXYY` where
+  `XX` is the owning epic. Scheme B (a flat `T-NNNN` counter) is the
+  alternative; pick one and record the last-used value in `CLAUDE.md`
 - **Status values** — `Draft | In Review | Accepted | Superseded`
 - **Open questions** — `Q-N`, keeping the ID into Resolved Decisions
 

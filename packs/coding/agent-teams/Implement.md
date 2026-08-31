@@ -1,4 +1,5 @@
-Create an agent team to implement an entire feature whose spec phase
+Create an agent team for **{{harness:param.projectName}}** to implement an
+entire feature whose spec phase
 is already complete — i.e. a functional spec, optional design spec,
 Architecture Decision Record (with file-level plan and interface
 contract), and an epics-and-tasks breakdown all exist and are

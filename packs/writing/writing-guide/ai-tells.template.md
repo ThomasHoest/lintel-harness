@@ -1,6 +1,6 @@
 # AI tells, the screen
 
-A final pass on any Thomas-facing draft (LinkedIn posts, the pitch deck, cover letters, outreach, mail replies) to remove the giveaways that make writing read as AI-generated, while keeping his voice. Apply it while drafting too, so the tells don't go in to begin with.
+A final pass on any {{harness:param.authorName}}-facing draft (LinkedIn posts, the pitch deck, cover letters, outreach, mail replies) to remove the giveaways that make writing read as AI-generated, while keeping his voice. Apply it while drafting too, so the tells don't go in to begin with.
 
 Target: natural human writing in his register (see [tone-of-voice.md](tone-of-voice.md)). Not tell-avoidance so aggressive that it becomes its own artifact. Judgement over checklist: it's the accumulation of tells that reads as machine-made, not one stray mark.
 
@@ -30,19 +30,19 @@ Target: natural human writing in his register (see [tone-of-voice.md](tone-of-vo
 
 ## Procedure
 
-1. Read once for **voice**: does it sound like Thomas? Flag what doesn't.
+1. Read once for **voice**: does it sound like {{harness:param.authorName}}? Flag what doesn't.
 2. **Punctuation** pass: hunt em-dashes first (the one non-negotiable for LinkedIn in English).
 3. **Structural cadence** pass: rule of three, "not just X but Y", signposting, uniform rhythm.
 4. **Diction** pass: the word and phrase list above.
 5. **Tone** pass: hype, frictionlessness, generic-where-specific.
 6. Rewrite flagged spans in his register. **Prefer cutting over rephrasing.**
 7. Read aloud mentally: if a person wouldn't say it in conversation, it stays flagged.
-8. Note any substantive change so Thomas can veto.
+8. Note any substantive change so {{harness:param.authorName}} can veto.
 
 ## Boundaries
 
 - Screen, don't ghost-write a new voice. Preserve his meaning and register.
-- The assistant edits; **Thomas sends and posts.**
+- The assistant edits; **{{harness:param.authorName}} sends and posts.**
 - These are heuristics, not laws.
 
 ## History
