@@ -1,10 +1,10 @@
 # Pack Format & Manifest Specification — Lintel Harness v1.0
-**Version:** 2.1
+**Version:** 2.2
 **Status:** Draft
 **Date:** 2026-08-31
 **Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/harness`, binary `lintel-harness` (Q-16). Pack content is Markdown, shell, PowerShell and Bicep; `pack.json`, `recipe.json` and the manifest are JSON. No UI.
 **Design spec:** n/a (no UI)
-**ADR:** `F1-ADR-001-pack-format-and-manifest.md`, **rewritten 2026-08-31 against the two-phase model** — verdict **`REVISE SPEC`**, whose F1-side change list (its §6.1, eleven changes) is folded into **this** version. The ADR is authoritative for the decisions it records; its **security conditions C-1…C-18** survive and are carried forward or explicitly deferred in this document.
+**ADR:** `F1-ADR-001-pack-format-and-manifest.md`, **rewritten 2026-08-31 against the two-phase model** — verdict **`REVISE SPEC`**, whose F1-side change list is its §6.1. **All of it is now folded**: changes 1, 2 and 4–11 at **v2.1**, change 3 **withdrawn** by the 2026-08-31 escalation answer and never applied, and changes **12–16 at this version, v2.2** (the `validate` Q-50 check of ADR §3.5, `pack.json`'s `folderReadme`, and `--strict` in CI). The ADR is authoritative for the decisions it records; its **security conditions C-1…C-18** survive and are carried forward or explicitly deferred in this document.
 **References:** `specifications/general/pack-application.md` (the two-phase model — authoritative), `specifications/general/pack-inventory.md` (the three packs, source and applied trees), `specifications/project-brief.md` §12 Q-1…Q-53 (**all resolved**), `packs/coding/specifications/conventions.md`, `packs/coding/` (the pack this format must carry)
 
 **Amendment history**
@@ -17,6 +17,7 @@
 | 1.0 | 2026-08-30 | **Security remediation pass.** Folds `F1-ADR-001` §7–§8 (C-1…C-18): confinement by resolution, the anchored `to` grammar, the reserved-destination denylist, the destination-keyed ownable allowlist, the hook exclusion, journal v2 and the five-case rollback table, the consent gate. |
 | 2.0 | 2026-08-31 | **Two-phase rewrite.** Folds Q-39…Q-47 and Q-16/Q-17. Apply becomes **two phases**: a verbatim payload copy to `.harness/pack/`, then a **declarative recipe** over seven primitives (US-30, US-31). The source→applied *mapping* model, the marked-region grammar, `source-only`/`applied-only`, `shared/` components, `.harness/base/` and the per-file hash list are **removed**; the manifest becomes minimal (Q-43); `--adopt` is dropped (Q-44); regions become **inert anchors only** (Q-45). `update`, `status` and `contribute` leave v1.0 (Q-42), taking C-3, C-9's region half, C-10/C-11's update paths and C-18 with them. **Retired: US-5, US-7, US-11, US-12.** New: US-30…US-33. 24 codes removed, 12 added, 1 renamed. |
 | **2.1** | **2026-08-31** | **ADR-001 fold (`REVISE SPEC`, §6.1's eleven changes), plus Q-48…Q-53.** The manifest becomes **six keys**: `payloadDigest`, a single tree digest over `.harness/pack/`, top-level between `pack` and `parameters` (Q-52), computed over **normalized** content and over the **planned** payload set. `verify` checks it **first and fail-closed** (US-33, §F1.8), which voids and deletes the old "what `verify` cannot tell you" limit. The `skeleton/specifications/` mechanism is **deleted** and replaced by five `rename` steps out of `packs/coding/applied-readmes/` (Q-50); `.harness/` is **excluded** from the folder-README rule as tool-owned, so **`.harness/README.md` does not exist** and C-5 stands absolute with no carve-out. CLI-owned writes are named: **`HarnessPath`**, with **`WritablePath = AppliedPath \| HarnessPath`** (C-14). Added `E-PAYLOAD-DIGEST-MISMATCH`; extended `E-MERGE-JSON-INVALID` to the payload-side `from`. Q-48, Q-52 and Q-53 move to Resolved; **F1 has no open questions**. Next free question id **Q-54**; next free story id **US-39**. |
+| **2.2** | **2026-08-31** | **ADR-001 §6.1 changes 12–16 folded — `validate` enforces Q-50 mechanically.** `validate` gains an ordered **step 12, folder READMEs**, between the per-combination render (11) and link integrity; **link integrity becomes 13 and disclosure 14**, so `validate` is a **14-step** runner and the order remains part of the contract. Step 12 runs **per parameter combination**: it takes the proper directory prefixes of that combination's applied paths, subtracts the project root and everything at or under `.claude/` and `.harness/`, and requires `<dir>/<folderReadme>` from the same combination. A gap is **`W-FOLDER-README-MISSING`** — a **warning**, exit 1 only under `--strict`, because without a project root the check cannot tell a directory an apply *creates* from one it merely *writes into* and therefore over-approximates by construction. US-16's CI criterion becomes **`validate --all --strict`**. `pack.json` gains optional **`folderReadme`** (one path segment, default `README.md`) in US-1 and §F1.3. US-3's suggested integration test is restated as **confirmation, not the only enforcement**. One code added; the catalogue holds **78**. No question opens: next free question id **Q-54**; next free story id **US-39**. |
 
 ---
 
@@ -179,7 +180,7 @@ Only settled decisions. Rows marked *(brief)* were settled in
 | Anatomy status | Three values per part: `present` (default) · `provisional` (needs a `note`) · `absent` (needs a `reason`) | *(`F1-ADR-001`, conflict 3)* F5 asserts provisional counts as an NFR, and free text cannot be counted |
 | Confinement | **By resolution, not by string.** The project root is resolved once with `realpath`; every applied path passes one gate and carries the branded type `AppliedPath` | *(`F1-ADR-001` §7.1, C-4/C-14)* Inspecting a declared string says nothing about the filesystem it will meet |
 | Path brands | **Two**, and the writer takes their union: `AppliedPath` (a recipe step's destination, the only output of the confinement gate) and **`HarnessPath`** (a CLI-owned write under `.harness/`). `WritablePath = AppliedPath \| HarnessPath` is what the journal, the atomic writer and rollback accept — nothing takes a bare `string` | *(`F1-ADR-001` §1 contract, C-14)* Phase 1 writes are journalled like any other write, but their destination is one the reserved-destination denylist forbids to a recipe step. With one brand the denylist deadlocks against the payload copier; with none, C-14's "a path that skipped the gate is a compile error" stops holding across phase 1 |
-| Folder READMEs | Every folder an apply creates carries a README (`README.md` for `coding` and `planning`, `index.md` for `writing`). **`.claude/` and `.harness/` are excluded — both tool-owned.** There is no `mkdir` primitive, no eighth primitive, no `skeleton/` tree and no `.gitkeep` | *(brief Q-50, as amended 2026-08-31)* A content decision with a format consequence: it makes the empty-directory premise false rather than solving it. `.harness/` is excluded on stronger grounds than `.claude/` — a user may edit an agent file, but `.harness/pack/` is phase 2's *input* and C-5 forbids any recipe step writing there |
+| Folder READMEs | Every folder an apply creates carries a README, whose basename the pack **declares** in `pack.json` as `folderReadme` — default `README.md`, which `coding` and `planning` take; `writing` declares `index.md`. **`.claude/` and `.harness/` are excluded — both tool-owned.** There is no `mkdir` primitive, no eighth primitive, no `skeleton/` tree and no `.gitkeep`. **`validate` checks the rule**, per parameter combination, at US-16 **step 12** (`W-FOLDER-README-MISSING`, a warning, fatal under `--strict`) | *(brief Q-50, as amended 2026-08-31)* A content decision with a format consequence: it makes the empty-directory premise false rather than solving it. `.harness/` is excluded on stronger grounds than `.claude/` — a user may edit an agent file, but `.harness/pack/` is phase 2's *input* and C-5 forbids any recipe step writing there |
 | v1.0 command surface | **Four commands.** `init` is F2's; **`validate`, `verify` and `pack info` are F1's** | *(brief Q-53)* All three read a pack or a manifest, write nothing, take no lock, and exist to make the format checkable. F2 owns the apply and nothing else |
 | Settings ownership | A **destination-keyed** allowlist decides what a `merge-json` step may own. **No pack may register an agent hook at v1.0**: `hooks` is outside the ownable set entirely | *(`F1-ADR-001` §7.2.1/§7.2.5, C-1)* An unconstrained `ownedKeys` made `permissions.allow` indistinguishable from `theme`. Hooks are excluded by *format* decision, not by consent design |
 
@@ -275,6 +276,19 @@ Q-42), **US-12** (merge base — Q-43). F5 holds **US-17…US-28** and
 - There is **no `contentRoot`**. Every pack-relative path in `pack.json`
   and `recipe.json` resolves against the pack directory itself, which is
   what phase 1 copies.
+- **`folderReadme` is optional and names the basename that satisfies the
+  Q-50 folder-README rule for this pack.** It is **exactly one path
+  segment**, subject to the same segment grammar as a step's `to` (US-3
+  stage 1): no `/`, no `..`, no backslash, no segment ending in `.` or
+  whitespace, NFC. A value that fails that grammar, or that contains a
+  separator, fails validation with `E-MAP-PATH-GRAMMAR`, exit 2. Absent,
+  it defaults to **`README.md`**; `coding` and `planning` omit the key,
+  and `writing` declares `"index.md"`. It is **declared, never sniffed** —
+  a check that accepted either basename could not report a missing one,
+  which is the fail-closed rule of this section applied to a content
+  convention. Its only consumer is US-16 **step 12**. A test may assert
+  the default by validating a pack that omits the key and requiring the
+  check to look for `README.md`.
 - Unknown top-level keys in `pack.json` are a validation **warning**, not
   an error, and are ignored at apply.
 - **The key/value asymmetry is normative and applies everywhere in the
@@ -402,9 +416,16 @@ Q-42), **US-12** (merge base — Q-43). F5 holds **US-17…US-28** and
   primitive, no `skeleton/` tree and no `.gitkeep`. A test may assert
   this by applying any v1.0 pack and requiring that every directory below
   the project root other than `.claude/` and `.harness/` contains the
-  pack's declared folder-README basename. The residual limit — a pack
-  that genuinely wants an empty folder cannot have one — is recorded in
-  §F1.9.
+  pack's declared folder-README basename. **That test stands, but it is
+  now confirmation rather than the only enforcement:** `validate` checks
+  the same rule statically at US-16 **step 12**, per parameter
+  combination and with no project, reporting `W-FOLDER-README-MISSING`.
+  The two see different things and both are worth keeping — the
+  integration test observes one applied tree and can tell a directory the
+  apply created from one that was already there, which is exactly what
+  step 12 cannot do and why step 12 is a warning. The residual limit — a
+  pack that genuinely wants an empty folder cannot have one — is recorded
+  in §F1.9.
 - Validation rejects any symlink anywhere in the pack
   (`E-SYMLINK-IN-PACK`).
 
@@ -1176,8 +1197,10 @@ against a future version fails loudly instead of silently doing nothing.
   11  per-combination render     + E-REWRITE-UNUSED, E-SUBST-UNRESOLVED,
                                    E-SUBST-IN-SECURITY-KEY, E-SUBST-NEWLINE,
                                    E-ANCHOR-INVALID, E-PARAM-COMBINATORICS
-  12  link integrity             (below)
-  13  disclosure                 build the security disclosure over all combinations
+  12  folder READMEs (Q-50)        W-FOLDER-README-MISSING, per parameter
+                                   combination (below)
+  13  link integrity             (below)
+  14  disclosure                 build the security disclosure over all combinations
   ```
 
 - **Stage 3 of US-3's confinement — resolution confinement — is not in
@@ -1186,6 +1209,42 @@ against a future version fails loudly instead of silently doing nothing.
   therefore validatable in CI without a target project, which is what
   makes the authoring-time checks the high-value half of the security
   model.
+- **Step 12 — folder READMEs (Q-50).** For **each parameter combination
+  separately**, `validate` takes the set of **proper directory prefixes**
+  of every applied path that combination writes, removes the project root
+  itself, and removes every prefix at or under `.claude/` or `.harness/`
+  — both tool-owned and both excluded from Q-50. For each surviving
+  directory `d` it requires the **same combination** to write the applied
+  path `d/<folderReadme>`, where `<folderReadme>` is the basename US-1
+  declares (default `README.md`). A directory with no such path is
+  `W-FOLDER-README-MISSING`: **one diagnostic per directory per
+  combination**, naming the directory, the expected basename and the
+  combination. The check needs the per-combination path set step 11
+  produces and needs no project, no filesystem and no target directory.
+- **It is computed per parameter combination and never over the merged
+  step set.** A step that creates a folder under one answer and a README
+  step gated on a *different* answer both appear in the merged set, which
+  would hide the gap; per combination the gap is visible. A test may
+  assert this with a pack declaring two scaffolds, the folder step in one
+  and its README step in the other, and require
+  `W-FOLDER-README-MISSING` for the combination that selects only the
+  first and no finding for the combination that selects both.
+- **Step 12 over-approximates by construction, which is why it is a
+  warning and not an error.** `validate` has no project root, so it
+  cannot distinguish *a directory this apply creates* — which Q-50
+  governs — from *a directory that already exists in the target project
+  and into which this apply merely writes*, which Q-50 does not. An
+  over-approximating check must not be fatal by code: a legitimate pack
+  writing into a conventional pre-existing directory would be
+  unshippable, and the remedy would be a `.gitkeep`-shaped placeholder,
+  which is precisely what Q-50 exists to prevent. `--strict` gives the
+  check teeth where the over-approximation is known to be empty — this
+  repo's CI over the three bundled packs — which is why the CI criterion
+  below is `--strict` and not bare `--all`.
+- **What step 12 does not do**, stated so it is not assumed: it does not
+  read what the folder README *says*, and it does not run at apply time.
+  Q-50 is a content convention; step 12 makes its shape checkable, not its
+  prose.
 - It additionally performs a **link-integrity check**: every relative
   Markdown link and inline path reference in the rendered applied output
   that points at a path inside the project must resolve either to a file
@@ -1197,8 +1256,15 @@ against a future version fails loudly instead of silently doing nothing.
 - Every check reports file and line where the concept has one.
 - Exit code is `0` with no findings, `1` with warnings only under
   `--strict`, `2` with any error.
-- `validate --all` is runnable in this repo's CI and passes for all three
-  v1.0 packs before release.
+- **`lintel-harness validate --all --strict` is runnable in this repo's
+  CI and exits `0` for all three v1.0 packs before release.** `--strict`
+  and not bare `--all`: every warning in this document is non-fatal by
+  code, so a bare `--all` would let `W-FOLDER-README-MISSING`,
+  `W-LINK-DANGLING` and `W-HOOK-SCRIPT-INERT` accumulate unnoticed. CI is
+  the one place where step 12's over-approximation is known to be empty,
+  so it is the one place the warning is made fatal. A test may assert
+  this by running the CI command against the bundled packs and requiring
+  exit `0`.
 
 ---
 
@@ -1556,6 +1622,7 @@ change the exit code.
 | `E-HOOKS-NOT-SUPPORTED` — `--accept-hooks` was passed | Exit 1. `lintel-harness: no pack may register an agent hook at v1.0, so there is nothing for --accept-hooks to accept.` / `  A pack may ship a script under .claude/hooks/, but nothing registers it and nothing runs it.` / `  → Remove --accept-hooks.` The flag is parsed and always fails deliberately: a flag that does not exist invites a workaround, and this one documents the boundary and reserves the name. |
 | `W-HOOK-SCRIPT-INERT` — the pack ships a file under `.claude/hooks/` | Warning. `lintel-harness: "{path}" is shipped as an ordinary file and is registered by nothing.` / `  No v1.0 mechanism registers a hook, so this script does not run until something registers it by hand.` Emitted by `validate`, and the same files are listed in the init summary and in `pack info`. |
 | `W-LINK-DANGLING` — a relative link or inline path reference in rendered output resolves to nothing the apply produces (US-16) | Warning. `lintel-harness: {path}:{line} refers to "{target}", which this pack does not produce.` / `  → Fix the reference, or add the file to the pack.` A reference into `.harness/pack/` that exists in the payload is correct and is not reported. |
+| `W-FOLDER-README-MISSING` — a directory the applied output implies, outside `.claude/` and `.harness/`, that receives no folder README in the parameter combination that creates it (US-16 step 12, Q-50) | **Warning**, exit unchanged; **exit 1 under `--strict`**. `lintel-harness: {pack} creates {dir} but writes no {basename} into it.` / `  combination: {combination}` / `  → Add a step producing {dir}{basename} in the same condition branch, or make {dir} unnecessary.` `{basename}` is `pack.json`'s `folderReadme` (default `README.md`, US-1); one diagnostic per directory per combination. **A warning and not an error, deliberately:** `validate` has no project root, so it cannot tell a directory this apply *creates* from one that already exists and is merely written into. The check over-approximates by construction, and an over-approximating check must not be fatal by code — a pack writing into a conventional pre-existing directory would otherwise be unshippable and the workaround would be the `.gitkeep`-shaped placeholder Q-50 exists to prevent. `--strict` makes it fatal where the over-approximation is known empty, which is this repo's CI. |
 | `E-CONTENT-TOO-LARGE` | Exit 2. `lintel-harness: "{path}" is {size}; the limit for a pack file is 4 MB.` |
 | `E-SYMLINK-IN-PACK` | Exit 2. `lintel-harness: "{path}" is a symbolic link. Pack content must be regular files.` |
 | `E-TRAVERSAL-LIMIT` — a directory walk exceeded its depth or entry cap | Exit 2. `lintel-harness: the walk of "{root}" exceeded the {limit} limit ({n}).` / `  Limits: depth 32, 10,000 entries per walk.` / `  → Narrow the content, or split the pack.` Applies identically to the phase-1 payload walk and the `verify` project scan, which share one bounded walk. |
@@ -1942,6 +2009,23 @@ same reasoning as `.claude/`, and C-5 forbids a recipe step writing there
 under any circumstance (US-3 stage 2). `applied-readmes/` itself stays in
 the payload like every other payload directory; only these five files are
 copied out of it, and each by an ordinary `rename`.
+
+**`coding`'s `pack.json` above omits `folderReadme`** and therefore takes
+the default `README.md`, which is why every applied path in the table
+ends `/README.md`. `planning` omits it too; `writing` declares
+`"folderReadme": "index.md"` (F5), and the key is one path segment under
+US-1's rule. **This table is what US-16 step 12 checks mechanically**:
+for every parameter combination, every directory the combination's
+applied paths imply, outside `.claude/` and `.harness/`, must receive
+`<dir>/README.md` from that same combination, or the combination reports
+`W-FOLDER-README-MISSING`. Note where that bites here:
+`infrastructure/backend-deploy/` exists only in the combinations that
+select a backend scaffold, and its README arrives from inside the
+selected scaffold's own steps — **same branch, same combination**. A
+scaffold that created the directory while the README came from an
+unconditional step would still pass; the reverse — an unconditional
+directory whose README is conditional — is the failure step 12 exists to
+find.
 
 ### F1.4 — The manifest, worked
 
