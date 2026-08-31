@@ -22,9 +22,11 @@ phase 2 also acts on.
 | `writing` | 1.0.0 | **To extract** | `AIImpactOnOrganizationsAndLeadership/` | Part 3 weak, parts 8 + 9 absent |
 | `planning` | 1.0.0 | **To author** | Portfolio-roadmap-deck research (knowledge base) | Part 2 provisional |
 
-All three declare `minCliVersion: 1.0.0`. No pack references
-`shared/` at v1.0 — `shared/targets` ships with `coding` only, and
-`shared/presentation` defers to v1.1 (Q-28).
+All three declare `minCliVersion: 1.0.0`. `shared/targets` is
+referenced by **`coding` only**; `shared/presentation` defers to v1.1
+(Q-28). That leaves the `shared/` mechanism with a single consumer at
+v1.0 — **see Q-48**, which asks whether it should ship at all in that
+state.
 
 ---
 
@@ -166,13 +168,14 @@ packs/writing/
 │   ├── writer.md                          P2   drafts against chosen outline
 │   ├── critic.md                          P2   adversarial review, max 2 loops
 │   └── editor.md                          P2   line-level only, after critic
-├── writing-guide/
-│   ├── voice.template.md                  P2   → voice guide (audience, tone, length)
-│   └── words-to-avoid.template.md         P2   → the explicit avoid list
+├── writing-guide/                         P2   → writing-guide/ · migrated verbatim
+│   ├── README.md                          P2   how the guide is used
+│   ├── tone-of-voice.md                   P2   audience, tone, length norms
+│   ├── ai-tells.md                        P2   the explicit avoid list
+│   └── bilingual-publishing.md            P2   locale handling
 ├── templates/
-│   ├── index.template.md                  P1   every folder carries one
-│   ├── home.template.md                   P1   Obsidian map-of-content
-│   └── post.template.md                   P1   the one real template that exists today
+│   └── post.template.md                   P1   the ONE template the source has
+│                                               (from workstreams/learning-journey/)
 └── scaffolds/
     └── writing-workstream/                P2   opt-in (Q-17)
         ├── sources/{_scouting,inbox}/     P2   shared corpus
@@ -192,6 +195,7 @@ packs/writing/
 │   ├── voice.md               ready to fill — audience, tone, length norms
 │   └── words-to-avoid.md      ready to fill — the explicit avoid list
 ├── Home.md                    map-of-content; the reader's front door
+│                              (no template in the source — see Q-51)
 ├── sources/                   only with --scaffold writing-workstream
 │   ├── _scouting/             scout output, one file per topic
 │   └── inbox/                 raw sources awaiting the librarian
@@ -221,6 +225,15 @@ never invent sources) · 5 coordination **strong** (routing table,
 parallelization rules, no auto-chaining) · 6 guidelines **strong** ·
 7 scaffolding `present` · 8 automations **absent** · 9 autonomy
 **absent**.
+
+**Source accuracy.** Corrected 2026-08-31 against the real project: the
+writing guide is **four files under their existing names**, not two
+`.template.md` files, and there is exactly **one** template
+(`post-template.md`), which is why part 3 rates weak. An earlier draft
+of this document invented `voice.template.md`, `words-to-avoid.template.md`,
+`index.template.md` and `home.template.md`. Whether the extraction may
+author the missing `index`/`home` templates — recipe scaffolding the
+recipe arguably cannot work without — is **Q-51**.
 
 **v1.0 boundary.** Faithful extraction only. Gaining targets is a
 post-v1.0 bump (Q-6); parts 3, 8 and 9 stay as they are.

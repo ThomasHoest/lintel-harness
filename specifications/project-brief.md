@@ -118,7 +118,7 @@ both get better at once.
 
 | # | Goal | Measure |
 |---|---|---|
-| G1 | Apply a template to a new project in one command, under a minute | `harness init <template>` produces a working project with zero manual path edits |
+| G1 | Apply a template to a new project in one command, under a minute | `lintel-harness init <template>` produces a working project with zero manual path edits |
 | G2 | Support multiple template *types* with genuinely different content | Coding and writing both ship at v1.0 from the same machinery |
 | G3 | Make templates updatable after they've been applied | An applied project can pull a newer template version and see exactly what changed |
 | G4 | Make improvements flow back | A fix found in a project has a defined route into the template pack |
@@ -137,7 +137,7 @@ Three things follow, and they are binding:
 
 1. **Manual first, then automate.** Anything the generator will do is
    done here by hand first, and what it cost is logged. That log is the
-   requirement list for `harness init` — see `CLAUDE.md` §Dogfooding for
+   requirement list for `lintel-harness init` — see `CLAUDE.md` §Dogfooding for
    the first one.
 2. **The pack is verified by use.** A pack instruction that doesn't
    survive contact with a real repo is a defect in the pack.
@@ -175,11 +175,11 @@ needs improvements discovered in one project to reach the others.
 
 | Use case | Today | With the harness |
 |---|---|---|
-| Start a new coding project | Copy `template/`, rename, fix paths, edit CLAUDE.md | `harness init coding` |
-| Start a writing project | Copy another project and delete its content | `harness init writing` |
-| Improve an agent prompt | Edit it in one project; other projects never learn | Edit the pack, `harness update` elsewhere |
+| Start a new coding project | Copy `template/`, rename, fix paths, edit CLAUDE.md | `lintel-harness init coding` |
+| Start a writing project | Copy another project and delete its content | `lintel-harness init writing` |
+| Improve an agent prompt | Edit it in one project; other projects never learn | Edit the pack, `lintel-harness update` elsewhere |
 | Add a new template type | No route — start from a blank folder | Fork the closest pack, edit the nine parts |
-| Audit a project's setup | Read every file and compare by eye | `harness status` reports pack, version, and drift |
+| Audit a project's setup | Read every file and compare by eye | `lintel-harness status` reports pack, version, and drift |
 
 **Secondary user: a small team adopting the way of working.** Drives
 the need for versioning and an honest drift report — not just a
@@ -227,7 +227,7 @@ Expanded from the source note; each maps to its originating bullet.
 - Packs are **versioned**.
 - An applied project records what it applied (pack, version, files) so
   a later update can be computed rather than guessed.
-- `harness update` shows a diff and merges, preserving local edits —
+- `lintel-harness update` shows a diff and merges, preserving local edits —
   the project owner is never forced to choose between an update and
   their customisations.
 - A **contribute-back path**: an improvement made in a project can be
@@ -263,7 +263,7 @@ Structural scaffolds, selectable at init and composable:
 - **writing workstream** — corpus + per-workstream stage folders.
 
 A project picks a template type *and* one or more scaffolds:
-`harness init coding --scaffold backend,frontend`.
+`lintel-harness init coding --scaffold backend,frontend`.
 
 ---
 
@@ -281,7 +281,7 @@ other. Three models:
 **Recommendation: managed apply.** The harness CLI writes real files
 into the project (so everything is local and editable), and records a
 manifest — pack name, version, and a hash per generated file. On
-`harness update`, files untouched since apply are replaced silently;
+`lintel-harness update`, files untouched since apply are replaced silently;
 files the project has edited produce a 3-way merge against the new pack
 version. This is the model scaffolding tools converge on, and it is the
 only one that satisfies both G1 and G3.
@@ -298,23 +298,27 @@ spec.
 - **S2** — A new writing project is set up the same way from the same
   machinery — proving the abstraction generalises beyond one type.
 - **S3** — A change made to a pack reaches an existing project via
-  `harness update`, with local customisations preserved.
-- **S4** — `harness status` correctly reports pack, version, and drift.
+  `lintel-harness update`, with local customisations preserved.
+- **S4** — `lintel-harness status` correctly reports pack, version, and drift.
 - **S5** — Adding a third template type requires no change to the
   harness core.
 - **S6** — The two existing templates are both migrated into packs;
   neither survives as a hand-copied folder.
-- **S7** — This repo is itself produced by `harness init coding` +
-  `harness update`, with no hand-applied files left. Until that holds,
-  the product has not shipped.
+- **S7** — This repo is itself produced by `lintel-harness init coding`,
+  with no hand-applied files left. Until that holds, the product has not
+  shipped. **Weakened by Q-42**: the original criterion also required
+  `lintel-harness update`, which defers to v1.1 with F3.
 
 ---
 
 ## 9. Open questions
 
 
-**None.** Q-1…Q-46 are all resolved — see §12. New questions raised
-during specification keep the next free ID (Q-47…).
+| # | Question | Notes |
+|---|---|---|
+| Q-48 | **Does the `shared/` mechanism ship at v1.0 at all?** | Surfaced by the master-spec rewrite. Q-4 makes `shared/` load-bearing and F1 specifies `component.json` multi-destination mappings, a digest-pinned reference, the bump rule (changing a shared file bumps every referencing pack) and CI enforcement for it. But Q-28 defers `shared/presentation`, leaving `shared/targets` referenced by **`coding` alone** — one consumer, which is indistinguishable from pack-local content. So a whole specified mechanism, plus its enforcement, may ship with nothing to enforce against. Options: build it as specified; ship `targets` as coding-local content and defer `shared/` wholesale to v1.1 alongside `presentation`; or keep the declaration but drop the bump-rule enforcement until a second consumer exists. |
+
+Q-1…Q-47 are resolved — see §12. Next free ID is **Q-49**.
 
 ---
 
@@ -348,10 +352,10 @@ during specification keep the next free ID (Q-47…).
 3. Migrate `template/` → `packs/coding/` and extract the writing
    template from `AIImpactOnOrganizationsAndLeadership/` →
    `packs/writing/`. Faithful migration only (Q-6).
-4. Add a **brief template** to the specifications kit — the pack has
-   templates for research, spec, design, ADR and epics, but not for the
-   brief that feeds them all. This document is the evidence and the
-   first draft of one.
+4. ~~Add a **brief template** to the specifications kit.~~ **Done**
+   (2026-08-31) — `packs/coding/specifications/project-brief.template.md`,
+   rendered by phase 2 into `specifications/project-brief.md`. Note this
+   overrides Q-36's adopted default of "no brief template at v1.0".
 5. Close the two outstanding dogfooding items now unblocked by Q-1:
    fill `copy/tone-of-voice.md`, and redraw `AgentTeams/Implement.md`'s
    file-ownership table against the Node/TypeScript CLI layout.
@@ -360,15 +364,27 @@ during specification keep the next free ID (Q-47…).
 
 ## 12. Resolved decisions
 
+> **Where the records live.** This table holds the decisions taken in
+> conversation. Some Q ids were raised and closed inside the spec set
+> instead, and are recorded there rather than here: **Q-13, Q-15** in
+> `v1.0/LintelHarnessSpecification-1.0.md`; **Q-18…Q-27** in
+> `v1.0/F1-spec-pack-format-and-manifest.md` (closed by `F1-ADR-001`);
+> **Q-35, Q-37** closed by the cross-document consistency pass.
+> **Q-30, Q-31, Q-32, Q-34, Q-36** were only ever "open with a stated
+> default" — the default was adopted in practice but never formally
+> closed anywhere. They should be closed explicitly before
+> implementation; Q-36 in particular is contradicted by §11 step 4,
+> which shipped a brief template.
+
 | # | Decision | Date | Rationale |
 |---|---|---|---|
 | Q-2 | **Packs live in `packs/` in this repo, published with the CLI.** `template/` becomes `packs/coding/`; the writing template is extracted to `packs/writing/`. Packs bundle into the published package, so `npx` needs no network fetch. | 2026-08-30 | One maintainer, two packs. A monorepo makes a CLI feature and the pack change that needs it a single atomic commit and a single release, and removes the CLI↔pack version-compatibility problem entirely. Independent pack versioning does not require repo separation — it lives in the manifest (Q-3). Revisit only if third-party packs become real. |
-| Q-3 | **Per-pack semver plus a separate CLI semver.** Each pack declares its version in `packs/<name>/pack.json` and a minimum CLI version; the CLI is versioned as the published package. The manifest records both. | 2026-08-30 | Makes `harness update` precise — "you applied coding@1.2.0, latest is coding@1.4.0" — with per-pack changelogs, and keeps a writing-only project from being told it is stale because the coding pack moved. Satisfies R1 (adding a pack never touches the core). A rolling, unversioned CLI was rejected: a CLI behaviour change could silently reinterpret an old manifest with no version to pin. |
+| Q-3 | **Per-pack semver plus a separate CLI semver.** Each pack declares its version in `packs/<name>/pack.json` and a minimum CLI version; the CLI is versioned as the published package. The manifest records both. | 2026-08-30 | Makes `lintel-harness update` precise — "you applied coding@1.2.0, latest is coding@1.4.0" — with per-pack changelogs, and keeps a writing-only project from being told it is stale because the coding pack moved. Satisfies R1 (adding a pack never touches the core). A rolling, unversioned CLI was rejected: a CLI behaviour change could silently reinterpret an old manifest with no version to pin. |
 | Q-4 | **Packs are standalone but may share by explicit reference.** A `shared/` tree sits alongside `packs/`; each pack lists the shared files it pulls in via `pack.json`. Nothing is inherited implicitly. **Rule:** changing a shared file requires bumping every pack that references it — the CLI should enforce or at least warn on this. First and clearest candidate: the targets way-of-working, which is domain-agnostic. | 2026-08-30 | R2's stated intent ("shared by explicit reference, not by accident"). Investigation showed the two packs overlap in *names* far more than *content* — their `researcher` agents and `conventions.md` files are genuinely different documents — so a shared base (rejected) would have coupled pack versions for almost no real reuse. Explicit reference fixes the one true duplicate without that coupling. |
-| Q-5 | **`harness contribute` emits a patch against the pack.** It diffs an applied copy against the pack version recorded in its manifest and produces a patch or branch against `packs/<name>/`. | 2026-08-30 | Closes G4's loop, and is cheap: it reuses the drift engine `harness status` already needs for S4 — the same comparison pointed the other way. Works from any project on the machine without opening this repo, so an improvement found in a writing project doesn't depend on remembering it later. |
-| Q-6 | **Cross-pollination is deferred out of v1.0** to the first post-v1.0 pack bump (`coding@1.1` / `writing@1.1`): writing gains the targets contract by referencing `shared/`, coding gains routing and parallelization rules. v1.0 migrates both packs **faithfully**. | 2026-08-30 | Two reasons. S6 stays verifiable — if pack content changes during migration, a difference cannot be attributed to a migration bug versus an intentional improvement. And the deferred bump becomes the first genuine acceptance test of `harness update` (S3): a real pack version flowing into already-applied projects, rather than a synthetic one. |
-| Q-7 | **The CLI generates `CLAUDE.md` with marked regions.** Pack-owned regions (spec process, agents, conventions, targets) are maintained by `harness update`; the surrounding project-owned prose is never touched. | 2026-08-30 | G1 ("zero manual edits") is not true if the highest-value agent-onboarding file is left hand-written, but a fully managed CLAUDE.md would conflict on nearly every update since it is the most project-edited file in any repo. The seam is evidence-backed, not guessed: this repo's own CLAUDE.md already divides cleanly into pack-derived sections and project-owned ones. **May also answer Q-10** — see that row. |
-| Q-8 | **Two backend scaffolds at v1.0:** the existing Azure SWA + Neon, plus one alternative (choice recorded in Q-8a). Scaffold selection is general, composable and opt-in — `harness init coding --scaffold backend,frontend`. | 2026-08-30 | A second implementation *proves* the scaffold interface is general rather than asserting it — the same argument that makes two packs a better test of the pack format than one. Applying the pack to this repo already showed scaffolds must be optional: the backend was skipped entirely because the harness has none. Accepted cost: this is pack-content work inside a release Q-6 otherwise reserved for the generator. |
+| Q-5 | **`lintel-harness contribute` emits a patch against the pack.** It diffs an applied copy against the pack version recorded in its manifest and produces a patch or branch against `packs/<name>/`. | 2026-08-30 | Closes G4's loop, and is cheap: it reuses the drift engine `lintel-harness status` already needs for S4 — the same comparison pointed the other way. Works from any project on the machine without opening this repo, so an improvement found in a writing project doesn't depend on remembering it later. |
+| Q-6 | **Cross-pollination is deferred out of v1.0** to the first post-v1.0 pack bump (`coding@1.1` / `writing@1.1`): writing gains the targets contract by referencing `shared/`, coding gains routing and parallelization rules. v1.0 migrates both packs **faithfully**. | 2026-08-30 | Two reasons. S6 stays verifiable — if pack content changes during migration, a difference cannot be attributed to a migration bug versus an intentional improvement. And the deferred bump becomes the first genuine acceptance test of `lintel-harness update` (S3): a real pack version flowing into already-applied projects, rather than a synthetic one. |
+| Q-7 | **The CLI generates `CLAUDE.md` with marked regions.** Pack-owned regions (spec process, agents, conventions, targets) are maintained by `lintel-harness update`; the surrounding project-owned prose is never touched. | 2026-08-30 | G1 ("zero manual edits") is not true if the highest-value agent-onboarding file is left hand-written, but a fully managed CLAUDE.md would conflict on nearly every update since it is the most project-edited file in any repo. The seam is evidence-backed, not guessed: this repo's own CLAUDE.md already divides cleanly into pack-derived sections and project-owned ones. **May also answer Q-10** — see that row. |
+| Q-8 | **Two backend scaffolds at v1.0:** the existing Azure SWA + Neon, plus one alternative (choice recorded in Q-8a). Scaffold selection is general, composable and opt-in — `lintel-harness init coding --scaffold backend,frontend`. | 2026-08-30 | A second implementation *proves* the scaffold interface is general rather than asserting it — the same argument that makes two packs a better test of the pack format than one. Applying the pack to this repo already showed scaffolds must be optional: the backend was skipped entirely because the harness has none. Accepted cost: this is pack-content work inside a release Q-6 otherwise reserved for the generator. |
 | Q-8a | **The second backend scaffold is AWS (Lambda + CDK).** | 2026-08-30 | Chosen for reach: the widest applicability if a project must land on AWS, and CDK is a genuine IaC alternative to Bicep. **Residual risk, accepted:** both scaffolds are then declarative-IaC in shape, so the scaffold interface could still bake in IaC assumptions that a platform-CLI target (Vercel, Fly) would break. Mitigation — during the spec, paper-check the interface against one non-IaC target without authoring it. It is also the heaviest of the four candidates to author and test; treat that as v1.0 scope risk. |
 | Q-9 | **Ship three packs at v1.0**: coding, writing, and a planning / product-direction pack. | 2026-08-30 | Generality proven by construction rather than argued. Two packs by one author risk a format overfit to shared habits; a third built against the same core is the real test of R1. |
 | Q-9a | **Pack 3 is a planning / product-direction pack** — product discovery extended with roadmap planning, version specifications and roadmap process outlines. Working title only; **framing is deliberately not settled** and needs research first (Q-11). | 2026-08-30 | Discovery alone rhymes too closely with the writing pack's gather-synthesise-decide shape. Adding roadmap and version-planning gives it a distinct spine and covers real recurring work that neither existing pack owns. Framing deferred rather than guessed — the spine determines the phases, artifacts and roles, so getting it wrong is expensive. |
@@ -376,7 +392,7 @@ during specification keep the next free ID (Q-47…).
 | Q-10 | **Marked regions everywhere.** `source-only` blocks are stripped when a file is applied; `applied-only` blocks are included only on apply. The same delimiter mechanism Q-7 chose for `CLAUDE.md`, generalised to any pack file. A whole-file mode in the manifest remains as the degenerate case. | 2026-08-30 | One concept instead of two, and it is the only option that expresses what actually happened: both stale READMEs were needed in the applied copy *with different content inside them*, so a whole-file mode could not have described the case, and parallel `README.pack.md` / `README.applied.md` files would reintroduce the drift this product exists to prevent. |
 | Q-11 | **The `planning` pack is framed as portfolio and roadmap management as a decision loop** — `intake → discovery → prioritize → commit → deliver → learn`, with a non-delegable absorption/security gate between deliver and learn, and horizon-setting as a first-class step inside commit. Calibrated at init by constraint floor. The **portfolio-roadmap-deck** workstream is the **knowledge base** the pack is authored from — mined for content, with no runtime or process dependency on it. | 2026-08-30 | The spine is evidenced research output rather than a process invented to fill a template: the loop, the gate, the four-determinant horizon framework, three drafted templates and two calibration poles all already exist. Rejected alternatives: *product discovery* (one phase of six, and its gather→synthesise→decide shape rhymes with the writing pack, testing generality weakly), *roadmap/version planning* (an add-on to `coding` rather than a peer), *portfolio governance/PMO* (built on the corpus's weakest, vendor-dominated evidence). Full working: `v1.0/research-planning-pack-framing.md`. |
 | Q-12 | **A project holds exactly one pack.** A user who needs two ways of working runs two projects side by side. | 2026-08-30 | Keeps the manifest, `CLAUDE.md` region ownership and `update` semantics single-owner, so no composition mechanism is needed in v1.0. Removes the file-collision and region-conflict class of problems entirely rather than solving it. |
-| Q-14 | **`harness init --adopt` ships at v1.0.** It hashes an existing hand-applied tree against the pack, writes a manifest, and seeds `.harness/base/` from the pack's rendered output for the recorded version. | 2026-08-31 | S7 makes "produced by the tool" a release gate, and no other option meets it without discarding work. Re-init would require `packs/coding` to reproduce this repo's two deliberate README rewrites byte-for-byte, or delete them — and those rewrites are arguably improvements the pack should absorb. Under adopt they surface as drift and flow back via `harness contribute` (Q-5). The seeded base is the pack's rendered output, which is the semantically correct merge base ("what the pack said" vs "what you have"), even though those exact bytes never sat on disk here. |
+| Q-14 | **`lintel-harness init --adopt` ships at v1.0.** It hashes an existing hand-applied tree against the pack, writes a manifest, and seeds `.harness/base/` from the pack's rendered output for the recorded version. | 2026-08-31 | S7 makes "produced by the tool" a release gate, and no other option meets it without discarding work. Re-init would require `packs/coding` to reproduce this repo's two deliberate README rewrites byte-for-byte, or delete them — and those rewrites are arguably improvements the pack should absorb. Under adopt they surface as drift and flow back via `lintel-harness contribute` (Q-5). The seeded base is the pack's rendered output, which is the semantically correct merge base ("what the pack said" vs "what you have"), even though those exact bytes never sat on disk here. |
 | Q-16 | **Published as `@lintel/harness`; binary `lintel-harness`; Node >= 22.** | 2026-08-31 | The binary matches the package name exactly, so there is nothing to remember and no PATH collision — `harness` alone is generic enough that a global install could not reliably claim it. Node floor corrected from the ADR's assumed >= 20: Node 20 left LTS maintenance in April 2026, so 22 is the current LTS line. |
 | Q-17 | **Three scaffolds at v1.0: `backend-azure`, `backend-aws`, `writing-workstream`.** `frontend` and `app` defer to v1.1. | 2026-08-31 | Resolves the master-spec/F5 contradiction by taking each document's better-evidenced half: `writing-workstream` stays (F5's US-18/US-25 depend on it, and it already exists as an extraction needing no authoring), while `frontend` and `app` defer (both would be authored from nothing, in a release Q-6 reserved for the generator). Keeps Q-8's second backend implementation, which is what proves the scaffold interface general rather than merely asserted; only `backend-aws` needs authoring. |
 | Q-38 | **A pack's document templates are copied into the applied project**, as today. | 2026-08-31 | Consistent with Q-7's managed-apply rationale: everything local, visible and editable, and a project readable without the CLI. The duplication is real — dogfooding showed 16 copied files, 12 byte-identical — but the merge cost is not: a file with no drift is replaced silently on update, so identical copies never produce conflicts. The cost is repo noise, accepted deliberately in exchange for self-describing projects. |
@@ -384,11 +400,12 @@ during specification keep the next free ID (Q-47…).
 | Q-29 | **No violation — Q-6's scope is clarified, not changed.** Q-6 constrains *changing existing* packs; it does not restrict *adding* one. `coding` and `writing` migrate faithfully; `planning` is net-new authoring, approved by Q-9. | 2026-08-31 | Q-6 exists to keep S6 verifiable — if content changes during a migration you cannot separate a migration bug from an intentional improvement. A net-new pack has no faithful baseline to violate, so the harm Q-6 guards against cannot arise. Recorded as a scope clarification so the apparent conflict does not resurface. |
 | Q-33 | **Deferred: the dogfooding site for `packs/planning` is chosen once the pack is authored**, not now. | 2026-08-31 | Avoids committing a project to a pack whose shape is still abstract. **Recorded risk:** the coding pack's own history shows a pack is only as good as the work it has actually carried, so authoring `planning` against no real use is the failure mode here. Revisit at the point the pack is authored, not after it ships. Candidates surfaced: the Lintel product portfolio (exercises the near-zero-floor calibration), the RAFAL build-or-shelve decision (exercises the bet brief and horizon framework), the consultancy diagnostic (would exercise the high-floor calibration). |
 | Q-39 | **Applying a pack is two phases.** *Phase 1* is a verbatim "dumb" copy of the pack folder into `.harness/pack/` — no transformation, no substitution, no renames, identical for every pack. *Phase 2* is the pack-specific application that copies out agents, commands, `CLAUDE.md`, the agent teams and `Run.md`, rewrites paths, and wires the project up to run. | 2026-08-31 | Matches what the manual apply actually did: steps 1–5 of `CLAUDE.md` §Dogfooding were a dumb copy, steps 6–9 were the tie-up. The single-phase model treated the second half as awkward exceptions to the first. Splitting them makes the generic half generic and the varying half explicitly per-pack. |
-| Q-40 | **Phase 2 is a declarative recipe over a fixed primitive set** (copy, rename, rewrite-path, generate, merge-json), not an arbitrary script. It is **applied automatically by the CLI**, never by the user. The recipe is a pure function of (payload, parameters) — no timestamps, no ordering dependence, no environment reads — so the applied tree is reproducible and verifiable. | 2026-08-31 | A real script makes a pack *code that executes on the user's machine*, which would void the entire security architecture: path confinement, the reserved-destination denylist and consent gating all depend on the apply plan being inspectable **before** anything runs. A recipe keeps per-pack variation while staying validatable, and determinism is what makes "applied correctly every time" a testable property rather than a hope. |
+| Q-40 | **Phase 2 is a declarative recipe over a fixed primitive set** (`copy`, `rename`, `strip-suffix`, `rewrite-path`, `substitute`, `generate`, `merge-json`), not an arbitrary script. It is **applied automatically by the CLI**, never by the user. The recipe is a pure function of (payload, parameters) — no timestamps, no ordering dependence, no environment reads — so the applied tree is reproducible and verifiable. | 2026-08-31 | A real script makes a pack *code that executes on the user's machine*, which would void the entire security architecture: path confinement, the reserved-destination denylist and consent gating all depend on the apply plan being inspectable **before** anything runs. A recipe keeps per-pack variation while staying validatable, and determinism is what makes "applied correctly every time" a testable property rather than a hope. |
 | Q-41 | **Phase 2 reads from the phase-1 copy in the project**, not from the bundled pack. The user cannot adjust the payload before phase 2 runs at v1.0. | 2026-08-31 | One source of truth for an apply, and it makes the applied result a function of what is on disk in the project. Deferring user-editable payload keeps v1.0 honest about determinism. |
 | Q-42 | **`update`, `status` and `contribute` are deferred to v1.1.** F3 and F4 leave v1.0. **G3, S3 and R4 defer with them**, and **S7 weakens** to "this repo is produced by `lintel-harness init coding`" — apply only. | 2026-08-31 | Get apply correct first. **Recorded consequence, deliberately accepted:** the brief opens by arguing copy-paste fails *because it cannot be updated*, and §7 chose managed apply to solve exactly that. v1.0 now answers only the first half of that problem. The manifest (Q-43) is what keeps v1.1 a addition rather than a retrofit. |
 | Q-43 | **A minimal manifest ships at v1.0**: pack name, pack version, CLI version, parameter answers, chosen scaffolds. **No per-file hash list, and no `.harness/base/` store.** | 2026-08-31 | With the pack local at `.harness/pack/` and a deterministic recipe (Q-40), the expected applied state is always recomputable from payload + recipe + recorded answers — so neither a hash list nor a cached base is needed to reconstruct it. `.harness/base/` existed only because a hash cannot be a merge base and the old pack version might be unavailable; under Q-39 neither holds. Removes the base store, its `.gitattributes` problem, the text-only restriction, and every condition attached to it. |
-| Q-44 | **`harness init --adopt` is dropped. Supersedes Q-14.** | 2026-08-31 | Adopt existed so a hand-applied repo could become manifest-tracked *and therefore updatable*; with Q-42 deferring update, status and contribute, it buys only bookkeeping. For this repo it is also unnecessary: under Q-46 the four diverged applied files cease to exist, so a clean `init` loses nothing. |
+| Q-44 | **`lintel-harness init --adopt` is dropped. Supersedes Q-14.** | 2026-08-31 | Adopt existed so a hand-applied repo could become manifest-tracked *and therefore updatable*; with Q-42 deferring update, status and contribute, it buys only bookkeeping. For this repo it is also unnecessary: under Q-46 the four diverged applied files cease to exist, so a clean `init` loses nothing. |
 | Q-45 | **Marked regions are not implemented at v1.0.** The generated `CLAUDE.md` emits **inert region anchors** for v1.1's `update` to find, but no region parser, region hashes, malformed-marker diagnostics or `E-REGION-TAMPERED` ship. **Amends Q-7 and Q-10.** | 2026-08-31 | Regions had two justifications and Q-39/Q-42 removed both: `update` was their consumer, and the source-only/applied-copy problem dissolved once phase 1 copies verbatim and rewrites nothing. Anchors are near-free now and expensive to retrofit, so they ship as forward investment. The single largest simplification in this pass. |
 | Q-46 | **Manual bootstrap prose is deleted from the pack sources**, because the recipe encodes it. The "copy this folder", "rename the template", "fix the paths" and "adopting this in a new project" sections come out of `packs/coding/**` entirely. **Supersedes Q-38 and closes the four diverged applied files.** | 2026-08-31 | Once the recipe runs automatically (Q-40), those instructions describe a manual procedure nobody will ever perform — dead content, not stale content. The four files that diverged on apply differed *only* in that prose, so they are not rewritten per project; the sections are removed from the pack and the applied copies cease to exist. The 9-step manual-apply log in `CLAUDE.md` §Dogfooding **is** the coding pack's recipe. |
+| Q-47 | **A pack's document templates and reference docs stay in the payload.** They live in `.harness/pack/` and are **not** copied into the project tree. **Properly supersedes Q-38**, whose answer ("keep copying them") is reversed. | 2026-08-31 | Direct instruction: *"all templates must be in the templates folder."* Under Q-39 the payload **is** that folder and it sits inside the project, so a project still has every template locally, browsable and offline — which was Q-38's entire rationale — without a second copy the tool must then keep in step. Q-46 was recorded as superseding Q-38 but its text is about deleting bootstrap prose, which is a different thing; this row states the actual supersession. |
 | Q-1 | **The harness is a CLI engine plus a thin Claude Code skill.** A Node/TypeScript CLI owns the deterministic mechanics — manifest, per-file hashing, drift detection, 3-way merge. A thin skill drives the CLI and handles the judgment steps: filling placeholders, adapting the generated `CLAUDE.md`, redrawing file-ownership tables for the actual layout. **Build the CLI first** — the manifest/merge is the load-bearing risk; the skill is a wrapper added on top. | 2026-08-30 | R4 needs determinism: hashing, drift and merge must be computed facts, not agent judgment, or S3/S4 vary run to run. But applying a pack is not purely mechanical — the placeholder and ownership-table work is genuine judgment a CLI could only stub out. Splitting on that seam puts each half where it is strongest. |
