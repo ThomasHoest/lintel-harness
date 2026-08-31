@@ -28,6 +28,30 @@ All three declare `minCliVersion: 1.0.0`. No pack references
 
 ---
 
+## What every applied project gets
+
+Independent of pack. Written by the CLI, not by a recipe.
+
+```
+<project>/
+├── .harness/
+│   ├── pack/            phase-1 payload — verbatim copy of the pack, untouched
+│   └── manifest.json    minimal (Q-43): pack name, version, CLI version,
+│                        parameter answers, chosen scaffolds. No file hashes,
+│                        no base store — applied state is recomputable
+└── …                    everything else is the pack's phase-2 recipe
+```
+
+`.harness/pack/` is the **only** copy of the pack's reference material
+in the project. Phase 2 reads from it (Q-41) and never duplicates it —
+document templates, conventions and process docs stay there rather than
+being copied out.
+
+Every applied tree below is what the recipe produces **in addition** to
+the two paths above.
+
+---
+
 ## `packs/coding` — 1.0.0
 
 Gated spec process. 40 files today.
@@ -81,6 +105,35 @@ packs/coding/
     └── backend-aws/                       P2   opt-in · Lambda + CDK (to author)
 ```
 
+### Applied structure
+
+```
+<project>/
+├── .claude/
+│   ├── agents/*.md            10 agents, spawnable by name
+│   ├── commands/target.md     /target <file> — launches an unsupervised run
+│   └── settings.json          merge-json, declared owned keys only
+├── AgentTeams/
+│   ├── Specify.md             research → spec → ADR → security → PROCEED
+│   └── Implement.md           implementer + testwriter + reviewer + security
+├── specifications/
+│   ├── README.md              generated index — what is here, conventions in force
+│   ├── project-brief.md       ready for the user to fill in
+│   ├── general/               created empty — cross-cutting reference specs
+│   └── v1.0/                  created empty — the first version's docs
+├── targets/
+│   └── Run.md                 kickoff prompt, paths rewritten to .harness/pack/
+├── copy/
+│   └── tone-of-voice.md       ready to fill; copywriter halts without it
+├── CLAUDE.md                  generated — project overview, process, agents,
+│                              conventions, with inert region anchors (Q-45)
+└── infrastructure/            only with --scaffold backend-azure|backend-aws
+    └── backend-deploy/        Bicep + Neon, or CDK + Lambda
+```
+
+Filled targets and their work logs live in `targets/` alongside
+`Run.md`; the template they are copied from stays in the payload.
+
 **Anatomy.** 1 process `present` · 2 roles `present` (10) · 3 templates
 `present` (11) · 4 conventions `present` · 5 coordination **weak** ·
 6 guidelines `present` · 7 scaffolding `present` · 8 automations
@@ -128,6 +181,39 @@ packs/writing/
         └── workstreams/<name>/            P2   outlines/ drafts/ reviews/ published/
 ```
 
+### Applied structure
+
+```
+<project>/
+├── .claude/
+│   └── agents/*.md            8 agents: scout, researcher, librarian, analyst,
+│                              outliner, writer, critic, editor
+├── writing-guide/
+│   ├── voice.md               ready to fill — audience, tone, length norms
+│   └── words-to-avoid.md      ready to fill — the explicit avoid list
+├── Home.md                    map-of-content; the reader's front door
+├── sources/                   only with --scaffold writing-workstream
+│   ├── _scouting/             scout output, one file per topic
+│   └── inbox/                 raw sources awaiting the librarian
+├── analyses/                  close readings, one file per source
+├── notes/                     the author's own notes and dictations
+├── tasks/                     backlog, research agenda, practice register
+├── workstreams/
+│   ├── index.md               the registry
+│   └── <name>/                one folder per deliverable
+│       ├── index.md           workstream hub
+│       ├── outlines/          candidates + the chosen outline
+│       ├── drafts/            versioned; never overwritten
+│       ├── reviews/           critic output
+│       └── published/         final; the user moves files here, never an agent
+└── CLAUDE.md                  generated — voice, the strict phase order,
+                               routing defaults, parallelization rules
+```
+
+Every folder above carries an `index.md` with a table of contents. That
+convention is enforced by prose at v1.0, not by a hook — part 8 is
+absent for this pack.
+
 **Anatomy.** 1 process `present` (9 stages, two sequences) · 2 roles
 `present` (8) · 3 templates **weak** — exactly one exists today, inside
 a workstream · 4 conventions `present` (index.md, versioned drafts,
@@ -173,6 +259,35 @@ packs/planning/
     └── horizon.md                         P2   /horizon · walks the decision aid
 ```
 
+### Applied structure
+
+```
+<project>/
+├── .claude/
+│   ├── agents/*.md            6 agents, all marked provisional
+│   ├── commands/
+│   │   ├── bet.md             /bet — opens a brief; refuses without kill criteria
+│   │   ├── review.md          /review — runs a roadmap review
+│   │   └── horizon.md         /horizon — walks the max() decision aid
+│   └── hooks/
+│       └── kill-criteria-guard.sh   INERT 0644 — registered by nothing at v1.0
+├── portfolio/
+│   ├── register.md            every active bet, its phase and its horizon
+│   ├── bets/<slug>/
+│   │   ├── brief.md           from the opportunity/bet brief template
+│   │   └── reviews/           one file per roadmap review of this bet
+│   ├── horizons.md            the computed horizon per programme + determinant
+│   └── decisions.md           decision log — what was killed, when, and why
+└── CLAUDE.md                  generated — the six-phase loop, the absorption
+                               gate, the five practices, calibrated content
+```
+
+The applied content **varies by the `constraintFloor` answer** — this is
+the only pack where an init parameter changes what is written, not just
+substituted values. `high-floor` yields long horizons and a gate partly
+held by existing V&V; `near-zero-floor` yields short adaptive horizons
+and a gate held only by policy.
+
 **Anatomy.** 1 process `present` (6 phases + absorption gate) ·
 2 roles **`provisional`** — the only provisional part in any pack; the
 research flags EM-portfolio responsibility as unwritten · 3 templates
@@ -186,6 +301,36 @@ at v1.0 · 9 autonomy `present` via `shared/targets`.
 **Calibration** is this pack's defining property and the only case of
 content varying by an init answer. `calibrations/<name>/` is a
 convention over the recipe's `when` condition, not special machinery.
+
+---
+
+## Dogfooding gap — this repo vs. a properly applied project
+
+This repo is mid-restructure: it was applied by hand under the old
+single-phase model, then partially unwound when Q-39 replaced it. What
+it has today against what `lintel-harness init coding` would produce:
+
+| Path | State |
+|---|---|
+| `.claude/agents/` (10) | **Present** |
+| `.claude/commands/target.md` | **Present** — repointed at `.harness/pack/targets/` |
+| `CLAUDE.md` | **Present** — hand-written, no region anchors yet |
+| `specifications/README.md`, `project-brief.md`, `general/`, `v1.0/` | **Present** |
+| `copy/tone-of-voice.md` | **Present**, still unfilled |
+| `.harness/pack/` | **Missing** — created when the recipe exists |
+| `.harness/manifest.json` | **Missing** |
+| `AgentTeams/` | **Removed** — it is a phase-2 artifact and returns on apply |
+| `targets/Run.md` | **Removed** — same |
+| `.claude/settings.json` owned keys | **Missing** — no pack owns a security-relevant key at v1.0 |
+
+`AgentTeams/` and `targets/Run.md` were deleted when they were believed
+to be payload. Under Q-39 they are phase-2 artifacts, so they come back
+the moment the recipe runs. Nothing was lost — the pack source holds
+both — but the deletion is why this tree does not currently match the
+applied shape above.
+
+The gap closes in one step: author `recipe.json` for `packs/coding`,
+then run the apply against this repo. That is S7.
 
 ---
 
