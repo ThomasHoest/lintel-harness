@@ -1,0 +1,83 @@
+#!/usr/bin/env bash
+# deploy.sh — provision or update the {{PROJECT_NAME}}-{{SERVICE_NAME}} SWA.
+#
+# Replace every {{PLACEHOLDER}} before first use:
+#   {{PROJECT_NAME}}   — short slug (e.g. voxio)
+#   {{SERVICE_NAME}}   — short slug (e.g. telemetry)
+#   {{AZURE_REGION}}   — default 'westeurope'
+#
+# Usage:
+#   DATABASE_URL=<...> API_KEY=<...> ./deploy.sh
+#
+# This creates one SWA resource. The staging named environment is
+# created automatically by the CI/CD workflow when deploying from the
+# develop branch.
+#
+# Prerequisites: Azure CLI logged in (`az login`) with Contributor on
+# the subscription. `jq` available on PATH.
+
+set -euo pipefail
+
+: "${DATABASE_URL:?Set DATABASE_URL before deploying}"
+: "${API_KEY:?Set API_KEY before deploying}"
+
+RESOURCE_GROUP="rg-{{PROJECT_NAME}}-{{SERVICE_NAME}}"
+LOCATION="{{AZURE_REGION}}"
+DEPLOYMENT_NAME="{{PROJECT_NAME}}-{{SERVICE_NAME}}-$(date +%Y%m%d%H%M%S)"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+echo "==> Deploying {{PROJECT_NAME}}-{{SERVICE_NAME}} backend"
+echo "    Resource group : ${RESOURCE_GROUP}"
+echo "    Location       : ${LOCATION}"
+
+# ---------------------------------------------------------------------------
+# Idempotent resource group
+# ---------------------------------------------------------------------------
+
+az group create \
+  --name "$RESOURCE_GROUP" \
+  --location "$LOCATION" \
+  --output none
+
+echo "==> Resource group ready."
+
+# ---------------------------------------------------------------------------
+# Bicep deployment
+# ---------------------------------------------------------------------------
+
+DEPLOY_OUTPUT=$(az deployment group create \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$DEPLOYMENT_NAME" \
+  --template-file "${SCRIPT_DIR}/main.bicep" \
+  --parameters "${SCRIPT_DIR}/production.bicepparam" \
+  --query "properties.outputs" \
+  --output json)
+
+HOSTNAME=$(echo "$DEPLOY_OUTPUT"        | jq -r '.hostname.value')
+DEPLOYMENT_TOKEN=$(echo "$DEPLOY_OUTPUT" | jq -r '.deploymentToken.value')
+
+# ---------------------------------------------------------------------------
+# Post-deploy instructions
+# ---------------------------------------------------------------------------
+
+echo ""
+echo "==> Deployment complete."
+echo ""
+echo "    SWA hostname : https://${HOSTNAME}"
+echo ""
+echo "    --- GitHub secrets to set ---"
+echo "    AZURE_STATIC_WEB_APPS_API_TOKEN = ${DEPLOYMENT_TOKEN}"
+echo "    DATABASE_URL                    = (already in your env)"
+echo "    STAGING_DATABASE_URL            = (already in your env)"
+echo ""
+echo "    --- Next steps ---"
+echo "    1. Set the GitHub secrets above in: Settings → Secrets → Actions"
+echo "    2. Run 'pnpm migrate:up' with DATABASE_URL to initialise the production schema."
+echo "    3. Run 'pnpm migrate:up' with STAGING_DATABASE_URL to initialise the staging schema."
+echo "    4. Push to main to trigger the first CI deploy."
+echo ""
+echo "    --- Staging DATABASE_URL override ---"
+echo "    Staging inherits production DATABASE_URL by default. To point it"
+echo "    at the Neon staging branch:"
+echo "    Azure portal → swa-{{PROJECT_NAME}}-{{SERVICE_NAME}} → Configuration → (select staging environment)"
+echo "    → Application settings → add DATABASE_URL = <STAGING_DATABASE_URL>"

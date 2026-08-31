@@ -1,0 +1,170 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working
+with code in this repository. Replace every `{{PLACEHOLDER}}` and delete
+the leading `Template note` blocks before committing.
+
+> **Template note** — `CLAUDE.md` is the most important onboarding document
+> for any agent you spawn. Keep it short, current, and accurate. Stale
+> CLAUDE.md is worse than no CLAUDE.md.
+
+---
+
+## Project overview
+
+{{ONE-PARAGRAPH PROJECT DESCRIPTION — what does this product do, for
+whom, on what platforms?}}
+
+---
+
+## {{PRIMARY MODULE — e.g. iOS, Web, CLI}} (`{{folder/}}`)
+
+{{One sentence on the entry point and how it's built. Mention any
+unusual build systems, codegen steps, or IDE-specific project-file
+formats (Nx, Turborepo, Xcode synchronized groups, etc.) so the agent
+doesn't try to edit files it shouldn't.}}
+
+### Folder structure
+
+```
+{{paste the actual top two levels of the source tree, with a one-line
+comment on the right of each file or folder describing its purpose.
+Keep this updated as the codebase evolves — this is what every agent
+reads first.}}
+```
+
+### Architecture
+
+- **`{{ComponentA}}`** — {{one-line responsibility + key methods/types}}
+- **`{{ComponentB}}`** — {{one-line responsibility}}
+- **`{{ComponentC}}`** — {{one-line responsibility}}
+
+### Platform-specific notes
+
+{{e.g. iOS Info.plist keys, required env vars, OS version target,
+language runtime, framework version. Anything an agent must know that
+isn't visible in the code.}}
+
+---
+
+## {{SECONDARY MODULE — e.g. backend, infrastructure}} (`{{folder/}}`)
+
+{{Same shape as above. Delete this whole block if the project is single-module.}}
+
+### Folder structure
+
+```
+{{tree}}
+```
+
+### Auth conventions
+
+{{Document every auth helper or middleware so agents do not confuse them.
+e.g. "requireApiKey reads x-api-key; requireAgentKey reads x-agent-key —
+do not swap them."}}
+
+### Key tables / data model
+
+{{If the project has a database: one bullet per table with its purpose.
+If not, delete this block.}}
+
+### CI/CD
+
+{{Path to the workflow file + one paragraph on the deploy flow.
+Mention which branches deploy where, and where secrets live.}}
+
+---
+
+## Specification structure (`specifications/`)
+
+This project follows the spec process documented in
+`specifications/README.md` and `specifications/conventions.md`.
+See those files for document types, ownership rules, numbering
+conventions, and the canonical document flow:
+
+```
+research → spec → design-spec → ADR → epics-and-tasks → implementation
+```
+
+Each gate must produce its artifact before the next begins. ADRs come
+in two flavours:
+
+- **Feature-scoped** (`ADR-NNN-<feature>.md`) — uses
+  `adr-feature.template.md`.
+- **Epic-scoped** (`ADR-EXX-<feature>.md`) — uses
+  `adr-epic.template.md`. Includes the file-level plan and public
+  interface contract that the implementer and testwriter work against.
+
+Status values across every spec doc: `Draft | In Review | Accepted |
+Superseded`. Open questions are numbered `Q-N` and keep that ID when
+they move to the Resolved Decisions table.
+
+Current counter state (do not reuse these numbers):
+
+| Counter | Last used | Notes |
+|---|---|---|
+| Epic | E-00 | — |
+| Task | T-0000 | — |
+| User story | US-00 | — |
+| ADR | ADR-000 | Epic-scoped ADRs use the `ADR-EXX` form and do not consume the feature-scoped counter |
+
+### Document inventory
+
+{{Auto-grow this table as new spec docs land. One row per file.}}
+
+| File | Type | Feature |
+|---|---|---|
+
+---
+
+## External APIs / integrations
+
+{{One short subsection per third-party API the project talks to. Include
+the base URL, auth model, and any non-obvious quirks. This is the section
+agents reach for when implementing or debugging anything external.}}
+
+### {{API name}}
+
+- Base URL: `{{https://...}}`
+- Auth: {{bearer / API key header / mTLS}}
+- Key endpoints: `{{...}}`
+- Quirks: {{e.g. metadata WS shape differs from REST}}
+
+---
+
+## Conventions enforced for agents
+
+{{Optional. Things you've explicitly told agents in this repo and don't
+want to repeat. Examples:}}
+
+- Do not commit secrets to `.env` — use the deploy scripts in
+  `infrastructure/`.
+- Unit tests live alongside the code they cover (`{{path pattern}}`)
+  and are owned by the `implementer` agent. Integration and
+  acceptance tests live in a separate tree and are owned by the
+  `testwriter` agent — see `agents/README.md` for the file-ownership
+  matrix.
+- All cross-feature decisions are recorded as ADRs in
+  `specifications/{{version}}/`. Use `ADR-NNN-<feature>.md` for
+  feature-scoped ADRs and `ADR-EXX-<feature>.md` for epic-scoped ones.
+
+## Autonomous work — targets
+
+Long-running, unsupervised work uses a **target** (reference pack in
+`targets/`: `target.template.md`, `Run.md`, `README.md`): a well-defined,
+**measurable** goal the agent works toward on its own and stops at **SUCCESS**
+(every verifiable success criterion met) or **ABORT** (a stop condition fired) —
+no open-ended "improve X".
+
+- **Launch:** `/target <target-file>` (`.claude/commands/target.md`, which
+  follows `targets/Run.md`).
+- **Readiness gate:** the `target-reviewer` agent (`.claude/agents/`) validates a
+  filled target — criteria verifiable + complete + not gameable, and the
+  permission/autonomy envelope sufficient to finish without asking — and returns
+  `READY` / `NEEDS-CORRECTION` **before** any work starts. No run starts on a
+  failed gate.
+- **Instances:** filled targets and their work logs are project content — keep
+  them in `targets/` (or `specifications/{{version}}/`), not `.claude/`.
+
+See `targets/README.md` for the lifecycle and the "adopting this in a new
+project" steps.

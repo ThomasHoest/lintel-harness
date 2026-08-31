@@ -1,0 +1,10 @@
+// production.bicepparam — secrets read from environment variables at deploy time.
+// Never hardcode values in this file.
+
+using './main.bicep'
+
+param databaseUrl = readEnvironmentVariable('DATABASE_URL')
+param apiKey      = readEnvironmentVariable('API_KEY')
+
+// Optional — set only during key rotation; leave blank otherwise.
+// param apiKeyPrevious = readEnvironmentVariable('API_KEY_PREVIOUS')

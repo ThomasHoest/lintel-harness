@@ -1,0 +1,74 @@
+// main.bicep — Azure Static Web App + appsettings for {{PROJECT_NAME}}-{{SERVICE_NAME}}
+//
+// Replace every {{PLACEHOLDER}} before deploying:
+//   {{PROJECT_NAME}}  — short slug, e.g. 'voxio'
+//   {{SERVICE_NAME}}  — short slug, e.g. 'telemetry'
+//
+// Secrets (databaseUrl, apiKey) are passed in via the bicepparam file,
+// which in turn reads them from environment variables — they are never
+// hardcoded.
+
+@description('Azure region')
+param location string = resourceGroup().location
+
+@description('Production database connection string')
+@secure()
+param databaseUrl string
+
+@description('API key (current)')
+@secure()
+param apiKey string
+
+@description('API key (previous — for zero-downtime rotation)')
+@secure()
+param apiKeyPrevious string = ''
+
+// ---------------------------------------------------------------------------
+// Azure Static Web App
+// ---------------------------------------------------------------------------
+
+resource swa 'Microsoft.Web/staticSites@2023-01-01' = {
+  name: 'swa-{{PROJECT_NAME}}-{{SERVICE_NAME}}'
+  location: location
+  sku: {
+    name: 'Standard'
+    tier: 'Standard'
+  }
+  properties: {
+    // Workflow is managed in .github/workflows/backend-ci-cd.yml — do not
+    // let SWA generate its own.
+    buildProperties: {
+      appLocation: 'backend'
+      outputLocation: ''
+      apiLocation: ''
+      skipGithubActionWorkflowGeneration: true
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Application settings (production — visible to all environments by default)
+// Staging DATABASE_URL override: Azure portal → SWA → Configuration →
+// select the staging environment → add DATABASE_URL pointing at the
+// Neon staging branch.
+// ---------------------------------------------------------------------------
+
+resource swaAppSettings 'Microsoft.Web/staticSites/config@2023-01-01' = {
+  parent: swa
+  name: 'appsettings'
+  properties: {
+    DATABASE_URL: databaseUrl
+    API_KEY: apiKey
+    API_KEY_PREVIOUS: apiKeyPrevious
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Outputs
+// ---------------------------------------------------------------------------
+
+@description('SWA hostname (no scheme) — e.g. polite-wave-12345.azurestaticapps.net')
+output hostname string = swa.properties.defaultHostname
+
+@description('Deployment token — set as AZURE_STATIC_WEB_APPS_API_TOKEN GitHub secret')
+output deploymentToken string = swa.listSecrets().properties.apiKey
