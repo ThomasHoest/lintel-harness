@@ -1,61 +1,144 @@
 {
   "formatVersion": 1,
   "steps": [
-    { "op": "copy", "from": "agents/", "to": ".claude/agents/",
-      "exclude": ["README.md"] },
-
-    { "op": "copy", "from": "commands/", "to": ".claude/commands/" },
-
-    { "op": "copy", "from": "hooks/kill-criteria-guard.sh",
-      "to": ".claude/hooks/kill-criteria-guard.sh" },
-
-    { "op": "copy", "from": "targets/Run.md", "to": "targets/Run.md" },
-
-    { "op": "copy", "from": "portfolio-seed/", "to": "portfolio/" },
-
-    { "op": "copy", "from": "calibrations/high-floor/", "to": "portfolio/",
-      "when": { "constraintFloor": "high-floor" } },
-
-    { "op": "copy", "from": "calibrations/near-zero-floor/", "to": "portfolio/",
-      "when": { "constraintFloor": "near-zero-floor" } },
-
-    { "op": "rename", "from": "applied-readmes/portfolio.md",
-                      "to":   "portfolio/README.md" },
-    { "op": "rename", "from": "applied-readmes/portfolio-bets.md",
-                      "to":   "portfolio/bets/README.md" },
-    { "op": "rename", "from": "applied-readmes/targets.md",
-                      "to":   "targets/README.md" },
-
-    { "op": "rename", "from": "applied-readmes/background.md",
-                      "to":   "background/README.md" },
-    { "op": "rename", "from": "applied-readmes/background-company.md",
-                      "to":   "background/company/README.md" },
-    { "op": "rename", "from": "applied-readmes/background-strategy.md",
-                      "to":   "background/strategy/README.md" },
-    { "op": "rename", "from": "applied-readmes/background-products.md",
-                      "to":   "background/products/README.md" },
-    { "op": "rename", "from": "applied-readmes/background-market.md",
-                      "to":   "background/market/README.md" },
-    { "op": "rename", "from": "applied-readmes/background-performance.md",
-                      "to":   "background/performance/README.md" },
-    { "op": "rename", "from": "applied-readmes/background-constraints.md",
-                      "to":   "background/constraints/README.md" },
-    { "op": "rename", "from": "applied-readmes/background-capacity.md",
-                      "to":   "background/capacity/README.md" },
-
-    { "op": "rename", "from": "calibration.template.md",
-                      "to":   "calibration.md" },
-    { "op": "rename", "from": "templates/project-brief.template.md",
-                      "to":   "project-brief.md" },
-
-    { "op": "rewrite-path",
-      "in": ["targets/Run.md", ".claude/commands/target.md"],
-      "find": "targets/", "replace": ".harness/pack/targets/" },
-
-    { "op": "substitute", "in": ["calibration.md"] },
-
-    { "op": "generate", "template": "CLAUDE.md.template", "to": "CLAUDE.md",
-      "anchors": ["overview", "loop", "gate", "practices",
-                  "conventions", "roles", "targets"] }
+    {
+      "op": "copy",
+      "from": "agents/",
+      "to": ".claude/agents/",
+      "exclude": [
+        "README.md"
+      ]
+    },
+    {
+      "op": "copy",
+      "from": "commands/",
+      "to": ".claude/commands/"
+    },
+    {
+      "op": "copy",
+      "from": "hooks/kill-criteria-guard.sh",
+      "to": ".claude/hooks/kill-criteria-guard.sh"
+    },
+    {
+      "op": "copy",
+      "from": "targets/Run.md",
+      "to": "targets/Run.md"
+    },
+    {
+      "op": "copy",
+      "from": "portfolio-seed/",
+      "to": "portfolio/"
+    },
+    {
+      "op": "copy",
+      "from": "calibrations/high-floor/",
+      "to": "portfolio/",
+      "when": {
+        "constraintFloor": "high-floor"
+      }
+    },
+    {
+      "op": "copy",
+      "from": "calibrations/near-zero-floor/",
+      "to": "portfolio/",
+      "when": {
+        "constraintFloor": "near-zero-floor"
+      }
+    },
+    {
+      "op": "rename",
+      "from": "applied-readmes/portfolio.md",
+      "to": "portfolio/README.md"
+    },
+    {
+      "op": "rename",
+      "from": "applied-readmes/portfolio-bets.md",
+      "to": "portfolio/bets/README.md"
+    },
+    {
+      "op": "rename",
+      "from": "applied-readmes/targets.md",
+      "to": "targets/README.md"
+    },
+    {
+      "op": "rename",
+      "from": "applied-readmes/background.md",
+      "to": "background/README.md"
+    },
+    {
+      "op": "rename",
+      "from": "applied-readmes/background-company.md",
+      "to": "background/company/README.md"
+    },
+    {
+      "op": "rename",
+      "from": "applied-readmes/background-strategy.md",
+      "to": "background/strategy/README.md"
+    },
+    {
+      "op": "rename",
+      "from": "applied-readmes/background-products.md",
+      "to": "background/products/README.md"
+    },
+    {
+      "op": "rename",
+      "from": "applied-readmes/background-market.md",
+      "to": "background/market/README.md"
+    },
+    {
+      "op": "rename",
+      "from": "applied-readmes/background-performance.md",
+      "to": "background/performance/README.md"
+    },
+    {
+      "op": "rename",
+      "from": "applied-readmes/background-constraints.md",
+      "to": "background/constraints/README.md"
+    },
+    {
+      "op": "rename",
+      "from": "applied-readmes/background-capacity.md",
+      "to": "background/capacity/README.md"
+    },
+    {
+      "op": "rename",
+      "from": "calibration.template.md",
+      "to": "calibration.md"
+    },
+    {
+      "op": "rename",
+      "from": "templates/project-brief.template.md",
+      "to": "project-brief.md"
+    },
+    {
+      "op": "rewrite-path",
+      "in": [
+        "targets/Run.md",
+        ".claude/commands/target.md"
+      ],
+      "find": "targets/",
+      "replace": ".harness/pack/targets/"
+    },
+    {
+      "op": "substitute",
+      "in": [
+        "calibration.md"
+      ]
+    },
+    {
+      "op": "generate",
+      "template": "CLAUDE.md.template",
+      "to": "CLAUDE.md",
+      "anchors": [
+        "overview",
+        "loop",
+        "gate",
+        "practices",
+        "conventions",
+        "roles",
+        "targets"
+      ],
+      "adaptExpected": true
+    }
   ]
 }
