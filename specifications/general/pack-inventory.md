@@ -38,7 +38,8 @@ Independent of pack. Written by the CLI, not by a recipe.
 <project>/
 ├── .harness/
 │   ├── pack/            phase-1 payload — verbatim copy of the pack, untouched
-│   └── manifest.json    minimal (Q-43): pack name, version, CLI version,
+│   │                    (no README — `.harness/` is tool-owned, Q-50)
+│   └── manifest.json    minimal (Q-43) + payload digest (Q-52): pack name, version, CLI version,
 │                        parameter answers, chosen scaffolds. No file hashes,
 │                        no base store — applied state is recomputable
 └── …                    everything else is the pack's phase-2 recipe
@@ -56,7 +57,7 @@ the two paths above.
 
 ## `packs/coding` — 1.0.0
 
-Gated spec process. 46 files today.
+Gated spec process. 45 files today.
 
 ```
 packs/coding/
@@ -101,7 +102,6 @@ packs/coding/
 ├── copy/
 │   └── tone-of-voice.template.md          P2   → copy/tone-of-voice.md (strip-suffix)
 ├── applied-readmes/                       P2   one per created folder (Q-50)
-│   ├── harness.md                         P2   → .harness/README.md
 │   ├── agentteams.md                      P2   → AgentTeams/README.md
 │   ├── specifications-general.md          P2   → specifications/general/README.md
 │   ├── specifications-version.md          P2   → specifications/v1.0/README.md

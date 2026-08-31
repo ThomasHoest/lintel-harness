@@ -1,16 +1,16 @@
-# ADR-001 — Pack format & manifest: one diagnostic vocabulary, one parameter mechanism, one merge base
+# ADR-001 — Pack format, recipe & manifest: a closed primitive set, a six-key manifest, and a pack that can only write text
 
-**Status:** Draft — **amended 2026-08-30 (security remediation pass)**
-**Date:** 2026-08-30
+**Status:** Draft — **rewritten 2026-08-31 against the two-phase model (Q-39…Q-53)**
+**Date:** 2026-08-31 (supersedes the 2026-08-30 original in full)
 **Deciders:** `architect` (this ADR) · escalations to Thomas Andersen
-**Refs:** `F1-spec-pack-format-and-manifest.md`, `F5-spec-template-packs.md`, `LintelHarnessSpecification-1.0.md` (Q-13…Q-17), `specifications/project-brief.md` §7 §12 (Q-1…Q-12), `CLAUDE.md` (§Decided architecture, §Dogfooding), `specifications/conventions.md` §ADR shape · **security review of 2026-08-30** (Mode A over F1 + this ADR: `REVISE-SPEC`, S-1…S-14, conditions C-1…C-18 — dispositioned in §8)
+**Refs:** `specifications/general/pack-application.md` (**authoritative** — the two-phase model) · `specifications/general/pack-inventory.md` (**authoritative** — the three packs, source and applied trees) · `F1-spec-pack-format-and-manifest.md` **v2.0** · `F5-spec-template-packs.md` **v2.0** · `LintelHarnessSpecification-1.0.md` · `specifications/project-brief.md` §12 (Q-1…Q-53, **all resolved, authoritative**) · `packs/coding/specifications/conventions.md` · **security review of 2026-08-30** (Mode A over F1 v1.0 + ADR-001 original: `REVISE-SPEC`, S-1…S-14, conditions C-1…C-18 — re-dispositioned in §8)
 
 **Template deviation, declared:** this is a feature-scoped ADR
 (`adr-feature.template.md`) that additionally carries the **file-level
 plan** and **public interface contract** sections of
-`adr-epic.template.md`. F1 is greenfield — there is no code — and every
-other feature compiles against what F1 exposes, so the contract has to be
-locked here or F2/F3/F4/F5 each invent their own. That is the same
+`adr-epic.template.md`. F1 is greenfield — there is no code — and F2, F5
+and F6 all compile against or author against what F1 exposes, so the
+contract is locked here or each of them invents its own. That is the same
 justification `conventions.md` §ADR shape gives for the security-review
 exception to "one page".
 
@@ -18,146 +18,243 @@ exception to "one page".
 
 | Date | Pass | Summary |
 |---|---|---|
-| 2026-08-30 | Initial | Settles six F1↔F5 contract conflicts; closes Q-13, Q-15, Q-18…Q-27. Verdict `PROCEED`. |
-| 2026-08-30 | **Security remediation** | Folds the SecurityReviewer's Mode A finding (**REVISE-SPEC**, 2 CRITICAL / 4 HIGH, conditions C-1…C-18) against F1 + this ADR. Adds **§7 Security architecture** (confinement, settings/consent, the hook decision, integrity and fail-closed defaults) and **§8 Security conditions**, which maps every condition to where it is satisfied. The Decision gains a fifth settled item; the file-level plan gains a `src/security/` group; the interface contract gains branded `AppliedPath`, `Journal` v2 with `preExisting`/`preHash`, constrained `ParameterDecl`, allowlisted `Mapping.ownedKeys`, `executableRoots`, and consent inputs. Five gaps the amendment pass found are decided in §7.8. Two of the reviewer's conditions are amended rather than adopted verbatim, argued in §8.2. |
+| 2026-08-30 | Initial | Settled six F1↔F5 contract conflicts; closed Q-13, Q-15, Q-18…Q-27. Verdict `PROCEED`. |
+| 2026-08-30 | Security remediation | Folded the Mode A finding (`REVISE-SPEC`, C-1…C-18). Added §7 Security architecture and §8 conditions. |
+| **2026-08-31** | **Two-phase rewrite** | **Written against Q-39…Q-53. The 2026-08-30 verdict does not transfer and is void.** The declarative `mappings` model, `.harness/base/`, the marked-region grammar, `source-only`/`applied-only`, `shared/` components, `--adopt` and the per-file-hash manifest are all **gone** — not deferred, removed. The apply becomes **two phases**: a verbatim payload copy to `.harness/pack/`, then a **declarative recipe** over seven closed primitives. The manifest becomes **six keys** (Q-43 as amended by Q-52). `verify` is F1's (Q-53). The file-level plan is **rebuilt**; 14 modules of the old plan are deleted and 13 are new. §7's security architecture is **carried forward and rescoped**, not rewritten: both CRITICALs were apply-time and survive intact. Verdict: **`REVISE SPEC`** — see §10. |
 
 ---
 
 ## 1. Decision
 
-F1 is built as a **pure planner plus a thin effectful executor**: a
-deterministic render pipeline that turns `(pack, answers, scaffolds)` into
-a complete in-memory `ApplyPlan` and writes nothing, and a journal-guarded
-executor that commits that plan atomically. Four contract-level ambiguities
-between F1 and F5 are closed here: (1) **one diagnostic vocabulary** — F1's
-coded taxonomy and its 0/1/2/3 exit-code classes are the only CLI error
-model, F1's table is the only message catalogue, and F5 owns user-facing
-strings only for text a *pack ships* (hooks, agent prompts); (2) **one
-parameter mechanism** — init parameters with an optional pack-declared CLI
-flag alias, so `--calibration helio` is `--set constraintFloor=helio`
-expressed as data in `pack.json`, not as pack-specific CLI code;
-(3) **a three-value anatomy status** — `present | provisional | absent`,
-replacing `declaredAbsent`; and (4) **`.harness/base/` is confirmed as the
-merge base** — the exact applied bytes, committed to VCS, protected by a
-generated `.harness/.gitattributes`. `harness pack info` is assigned to F1
-as a rendering of the validator's `PackReport`. Generated files carry **no
-timestamp at all**.
+F1 is built as a **pure planner plus a thin effectful executor**, and a
+pack is **a text-file distribution channel with a declared, closed
+procedure attached to it**. Five things are settled here and are as much
+part of the frozen contract as the pipeline order:
 
-The security remediation pass adds a fifth settled item, of the same
-contract weight as the other four: (5) **a pack is a text-file
-distribution channel and nothing else.** Confinement is by *resolution*,
-not by string inspection; the set of settings keys a pack may own is a
-CLI-owned allowlist keyed on the **destination**, not on the pack;
-security-relevant grants are enumerated verbatim and consented to before
-a byte is written; **no pack may register an agent hook at v1.0**; and
-every value in a behaviour-selecting position is fail-closed. The whole
-of that model is §7, and it is as much a part of the frozen contract as
-the pipeline order — because the alternative is that each of F2, F3, F4
-invents its own idea of what a pack is allowed to do to a machine.
+1. **The apply is two phases, and the seam is the contract.** Phase 1 is
+   a verbatim copy of the pack directory to `.harness/pack/`, identical
+   for every pack, reading no field of `pack.json` but the pack's
+   location. Phase 2 is a per-pack **recipe** — an ordered list of steps
+   over a **closed** seven-primitive set (`copy`, `rename`,
+   `strip-suffix`, `rewrite-path`, `substitute`, `generate`,
+   `merge-json`) — run by the CLI, never by the user, reading only from
+   the phase-1 copy on disk. The set is closed by *type*: `RecipeStep` is
+   a seven-arm discriminated union and an `op` outside it is
+   `E-RECIPE-PRIMITIVE-UNKNOWN`, exit 2, before anything runs.
+
+2. **Two files, and no third concept.** `pack.json` declares identity,
+   anatomy, parameters and scaffolds — what a human reads to choose a
+   pack. `recipe.json` declares the procedure — what only an apply reads.
+   There is **no `contentRoot`**, because phase 1 copies the folder.
+
+3. **The manifest is six keys**, not five: `manifestVersion`, `cli`,
+   `pack`, **`payloadDigest`**, `parameters`, `scaffolds`. Q-43 removed
+   the per-file hash list and `.harness/base/` because the applied tree
+   is recomputable; Q-52 puts back **one** hash — a single tree digest
+   over `.harness/pack/` — because the recomputation otherwise *trusts*
+   the payload, and a `verify` that cannot say which side moved is a
+   `verify` that reports a hand-edited payload as clean. One digest, one
+   tree walk, and determinism is untouched: the digest is a pure function
+   of the payload.
+
+4. **`verify` is F1's**, alongside `validate` and `pack info` (Q-53).
+   All three read a pack or a manifest, write nothing, take no lock, and
+   exist to make the format checkable. F2 owns the apply and nothing
+   else. The v1.0 command surface is therefore **four** commands, not
+   one.
+
+5. **A pack has no route to execute code on the user's machine, and that
+   is a property of the format rather than of the packs that happen to
+   ship.** Confinement is by *resolution*, not by string inspection; the
+   settings keys a pack may own are a CLI-owned allowlist keyed on the
+   **destination**; security-relevant grants are enumerated verbatim and
+   consented to before a byte is written; **no pack may register an agent
+   hook at v1.0** — `hooks` is outside the ownable set entirely, by format
+   decision rather than by consent design; and every value in a
+   behaviour-selecting position is fail-closed. That is §7, carried
+   forward from the 2026-08-30 remediation pass and rescoped where the
+   model moved under it.
+
+Two consequences of the settled model are recorded here because they
+change what F1 must specify and F1 v2.0 has not yet folded them:
+
+- **Q-50 dissolves the empty-directory problem rather than solving it.**
+  Every folder an apply creates carries a README (`README.md` for
+  `coding` and `planning`, `index.md` for `writing`; `.claude/`
+  excluded), so **no folder is ever empty**. There is **no `mkdir`
+  primitive**, no eighth primitive, no `skeleton/` tree and no
+  `.gitkeep`. Five of the coding pack's six new folder READMEs are
+  ordinary `rename` steps out of `packs/coding/applied-readmes/`, which
+  already exists on disk. F1 v2.0's `skeleton/specifications/` step and
+  its "an empty directory is not representable" known limit are
+  **superseded** and must come out.
+
+- **The sixth README collides with C-5, and the collision is decided
+  here.** `.harness/README.md` is a folder README Q-50 requires, and C-5
+  forbids any recipe step writing under `.harness/`. Neither yields.
+  **The CLI writes it**, from the fixed payload path
+  `applied-readmes/harness.md` when the pack ships one, as a CLI-owned
+  write confined by construction exactly as the manifest, journal and
+  lock are. C-5 stands unamended and gains one more named carve-out.
 
 ### File-level plan
 
-Greenfield TypeScript, ESM, Node ≥ 20, no runtime dependency outside
-Node stdlib for hashing, JSON and fs. Unit tests live alongside each module
-(`*.test.ts`, owned by `implementer`); the integration tree is
-`tests/` (owned by `testwriter`). **Owner** column: *F1* = built and
-tested under F1; *F1→F2* = F1 defines and ships it, F2 drives it from the
-`init` command. **Rows marked *Revised* were in the pre-amendment plan and
-change under §7**; the `src/security/` group is new in the security
-remediation pass.
+Greenfield TypeScript, ESM, **Node ≥ 22** (Q-16), no runtime dependency
+outside Node stdlib for hashing, JSON and fs. Published as
+`@lintel/harness`, binary `lintel-harness`. Unit tests live alongside
+each module (`*.test.ts`, owned by `implementer`); the integration tree
+is `tests/` (owned by `testwriter`).
+
+**Owner** column: *F1* = built and tested under F1; *F1→F2* = F1 defines
+and ships it, F2 drives it from the `init` command.
+
+#### Deleted from the pre-rewrite plan — 14 modules, and why
+
+These are not deferred. The concepts they implemented no longer exist.
+
+| Removed module | Because |
+|---|---|
+| `src/render/pipeline.ts` | The nine-step render pipeline is replaced by an ordered recipe; ordering authority moves to `recipe/plan-steps.ts` |
+| `src/render/resolve-mappings.ts` | There are no `mappings` (Q-40) |
+| `src/render/region-lexer.ts` · `region-parser.ts` · `region-apply.ts` | No region parser at v1.0 (Q-45). Anchors are inert text |
+| `src/render/contribute.ts` | Scaffold `contributes` existed only to append into a base-pack region (Q-45) |
+| `src/render/eol.ts` | Its job was the always-LF base copy; `.harness/base/` is gone (Q-43) |
+| `src/fs/base-store.ts` | No `.harness/base/`, no `.harness/.gitattributes` (Q-43) |
+| `src/manifest/drift.ts` | Drift reporting is F3 (Q-42) |
+| `src/pack/shared.ts` | No `shared/` mechanism at v1.0 (Q-48) |
+| `src/security/content-policy.ts` | Its consumer is `contribute` (Q-42). **The obligation survives — see C-18 in §8** |
+| `src/cli/commands/status.ts` · `update.ts` · `contribute.ts` | Never planned; named so their absence is deliberate rather than forgotten (Q-42) |
+
+#### The v1.0 plan
 
 | File | Action | Owner | Purpose |
 |---|---|---|---|
-| `package.json`, `tsconfig.json`, `vitest.config.ts` | New | F1 | Package `@lintel/harness`, bin `harness`, `engines.node >= 20` (Q-16 — provisional, see §6) |
-| `src/index.ts` | New | F1 | Library entry; re-exports exactly the public interface contract below |
-| `src/diag/codes.ts` | New | F1 | The single code taxonomy: `DiagnosticCode` union, severity, and the code→exit-class map |
-| `src/diag/catalogue.ts` | New | F1 | Code → message template. The only place user-facing CLI text exists |
+| `package.json`, `tsconfig.json`, `vitest.config.ts` | New | F1 | `@lintel/harness`, bin `lintel-harness`, `engines.node >= 22` (Q-16) |
+| `src/index.ts` | New | F1 | Library entry; re-exports exactly the interface contract below |
+| **diagnostics** | | | |
+| `src/diag/codes.ts` | New | F1 | The single code taxonomy: `DiagnosticCode` union, severity, code→exit-class map |
+| `src/diag/catalogue.ts` | New | F1 | Code → message template. **The only place user-facing CLI text exists** |
 | `src/diag/diagnostic.ts` | New | F1 | `Diagnostic`, `DiagnosticBag`, `exitCodeFor()` |
-| `src/cli/main.ts` | Revised | F1→F2 | argv dispatch, global flags, `Diagnostic[]` → stderr → process exit code. **`E-CLI-UNKNOWN-COMMAND` (§7.8.2)** |
-| `src/cli/flags.ts` | Revised | F1→F2 | `--set id=value`, pack-declared `flag` aliases, `--scaffold`, `--json`, `--strict`. **A per-command flag table (C-10), two-pass parse, and the four `E-CLI-*` fail-closed codes of §7.8.2** |
-| `src/cli/commands/validate.ts` | New | F1 | `harness validate <pack> \| --all` (US-16) |
-| `src/cli/commands/pack-info.ts` | New | F1 | `harness pack info <name>` — renders `PackReport` (conflict 6) |
-| `src/pack/types.ts` | New | F1 | `PackJson`, `Mapping`, `AnatomyDecl`, `ParameterDecl`, `ScaffoldDecl`, `SharedRef`, `ComponentJson` |
-| `src/pack/schema.ts` | Revised | F1 | Hand-rolled structural validator for `pack.json` / `component.json`; unknown **keys** → warning, unrecognised **values in a behaviour-selecting position** → `E-UNKNOWN-VALUE`, exit 2 (C-16). Adds `executableRoots`, `parameters[].pattern`/`maxLength`/`notASecret` |
-| `src/pack/load-pack.ts` | Revised | F1 | Resolve `packs/<name>/`, parse, resolve `shared` refs, splice component mappings. **Uses `fs/walk.ts`; component mappings and `remap` targets are confined exactly as a pack's own are** |
-| `src/pack/anatomy.ts` | Revised | F1 | Nine-part completeness, the three-value status, the report rows. **`E-ANATOMY-SOURCE-ON-ABSENT` (§7.8.3)** |
-| `src/pack/parameters.ts` | Revised | F1 | Declaration rules, **`pattern`/`maxLength` compilation and enforcement (C-7)**, answer resolution **at collect time and again on every re-read of a recorded answer**, flag-alias registration, combination enumeration (≤ 32) |
-| `src/pack/scaffolds.ts` | New | F1 | Selection by id, declared-order composition, static pairwise collision matrix |
-| `src/pack/shared.ts` | New | F1 | Component digest, `integrity` check, referencing-pack index for `E-SHARED-STALE` |
-| **`src/security/confine.ts`** | **New** | F1 | **The only constructor of `AppliedPath`.** Anchored `to` grammar (§7.1), NFC + case-fold collision keys, resolve-and-`lstat` confinement, `confineAtWrite()` for the pre-write re-check. C-4, C-6, C-14 |
-| **`src/security/destination-policy.ts`** | **New** | F1 | One table keyed by **destination**: the reserved-destination denylist, the sensitive-destination table, the `ownedKeys` allowlist and its security-relevant marks, the executable-root rules. C-1, C-5, C-12 |
-| **`src/security/consent.ts`** | **New** | F1→F2 | Builds `SecurityDisclosure` from a plan; `renderDisclosure()`; the gate that turns "no consent" into `E-SETTINGS-CONSENT-REQUIRED` before any write. C-2 |
-| **`src/security/secret-heuristic.ts`** | **New** | F1 | `E-PARAM-SECRET-SUSPECTED` at validate time; `W-ANSWER-LOOKS-SECRET` at answer time. C-15 |
-| **`src/security/content-policy.ts`** | **New** | F1→F4 | `checkContentPolicy()` — the single entry point through which `contribute` must route a candidate patch, so content moving *in* meets the identical validation set as content moving *out*. C-18 |
-| `src/render/pipeline.ts` | Revised | F1 | The nine ordered steps of §F1.1 — the single ordering authority; nothing else may reorder. Step 5 now takes the mapping's `mode` (§7.3) |
-| `src/render/resolve-mappings.ts` | Revised | F1 | Steps 1–2: `when` filter, directory recursion, rename, `stripTemplateSuffix`. **All path safety now delegates to `security/confine.ts`** and the step emits `AppliedPath`, never `string` |
-| `src/render/read-classify.ts` | New | F1 | Step 3: read bytes, binary detection (invalid UTF-8 or NUL in first 8 KB), BOM strip, EOL normalize |
-| `src/render/region-lexer.ts` | New | F1 | Marker scanning: three comment wrappers, sole-non-whitespace rule, Markdown fence tracking, 1-based lines |
-| `src/render/region-parser.ts` | New | F1 | Tokens → `RegionNode[]`; nesting, unterminated, orphan-end, unknown-directive diagnostics |
-| `src/render/region-apply.ts` | New | F1 | Step 4: resolve `if`, strip `source-only`, unwrap `applied-only`, retain `region` markers |
-| `src/render/substitute.ts` | Revised | F1 | Step 5: `{{harness:…}}` only, plus the `{{harness:lit:X}}` escape; every other `{{…}}` untouched. **Context-aware by target mode: JSON-string-escapes for `merge-json`; bans a value carrying a line break or lexing as a marker (C-7, C-9)** |
-| `src/render/rewrite.ts` | New | F1 | Step 6: literal find/replace over applied paths, with per-rule hit counting for `E-REWRITE-UNUSED` |
-| `src/render/contribute.ts` | New | F1 | Step 7: append scaffold contributions inside a named base-pack region, declared scaffold order |
-| `src/render/merge-json.ts` | Revised | F1 | `merge-json` mode: **allowlist and leaf-only enforcement**, owned-key merge, **removal-honouring array merge (§7.2.4)**, order-preserving serializer, per-owned-key hashes, **re-parse-and-deep-equal verification** |
-| `src/render/eol.ts` | New | F1 | Step 9 emit policy: applied EOL vs the always-LF base copy |
+| **CLI** | | | |
+| `src/cli/main.ts` | New | F1→F2 | argv dispatch over **four** commands — `init`, `validate`, `verify`, `pack` — `Diagnostic[]` → stderr → exit code. `E-CLI-UNKNOWN-COMMAND` |
+| `src/cli/flags.ts` | New | F1→F2 | Per-command flag table, **two-pass parse** (pack-declared aliases resolve in pass 2), `--set`, `--scaffold`, `--json`, `--strict`, the four `E-CLI-*` codes and `E-FLAG-NOT-PERMITTED` |
+| `src/cli/commands/validate.ts` | New | F1 | `lintel-harness validate <pack> \| --all` (US-16) |
+| `src/cli/commands/verify.ts` | **New** | F1 | `lintel-harness verify` (US-33, Q-53). Writes nothing, takes no lock |
+| `src/cli/commands/pack-info.ts` | New | F1 | `lintel-harness pack info <name>` — renders `PackReport` (US-29) |
+| **pack.json** | | | |
+| `src/pack/types.ts` | New | F1 | `PackJson`, `AnatomyDecl`, `ParameterDecl`, `ScaffoldDecl`. **No `Mapping`, no `SharedRef`, no `ComponentJson`** |
+| `src/pack/schema.ts` | New | F1 | Hand-rolled structural validator. Unknown **keys** → warning; unrecognised **values in a behaviour-selecting position** → `E-UNKNOWN-VALUE`, exit 2 (C-16) |
+| `src/pack/load-pack.ts` | New | F1 | Resolve `packs/<name>/`, parse `pack.json` and the declared `recipe`. Uses `fs/walk.ts`. Resolves **no** shared reference — there are none |
+| `src/pack/anatomy.ts` | New | F1 | Nine-part completeness, the three-value status, the report rows, `E-ANATOMY-SOURCE-ON-ABSENT` |
+| `src/pack/parameters.ts` | New | F1 | Declaration rules, `pattern`/`maxLength` compilation and enforcement (C-7), answer resolution **at collect time and again on every read-back from the manifest**, flag-alias registration, combination enumeration (≤ 32) |
+| `src/pack/scaffolds.ts` | New | F1 | Selection by id; **`category` exclusivity** (`E-SCAFFOLD-EXCLUSIVE`, Q-17); declared-order composition; the static pairwise collision matrix over differing categories |
+| **the recipe — new group, and the heart of the rewrite** | | | |
+| `src/recipe/types.ts` | **New** | F1 | `Recipe`, `RecipeStep` (the seven-arm discriminated union), `RECIPE_OPS` |
+| `src/recipe/schema.ts` | **New** | F1 | `recipe.json` validator. `E-RECIPE-INVALID`, `E-RECIPE-PRIMITIVE-UNKNOWN`, `E-RECIPE-STEP-INVALID`. **Fail-closed and total**: every step is narrowed to exactly one union arm or rejected |
+| `src/recipe/ops/index.ts` | **New** | F1 | The **closed registry**: the only place an `op` name maps to an implementation. A new primitive is a change here and in `types.ts`, deliberately |
+| `src/recipe/ops/copy.ts` | **New** | F1 | Directory recursion in **byte-ascending path order**, `exclude` globs, basename invariance for a file `from`, `executable` |
+| `src/recipe/ops/rename.ts` | **New** | F1 | One file in, one file out, basename may differ. Directory `from` → `E-RECIPE-STEP-INVALID` |
+| `src/recipe/ops/strip-suffix.ts` | **New** | F1 | Declared literal `suffix` (`^\.[a-z0-9-]{1,16}$`), no implicit `.template` |
+| `src/recipe/ops/rewrite-path.ts` | **New** | F1 | Literal find/replace over already-written applied text files, with hit counting for `E-REWRITE-UNUSED` |
+| `src/recipe/ops/substitute.ts` | **New** | F1 | `{{harness:…}}` only, plus the `{{harness:lit:X}}` escape, resolved once and never re-scanned. Every other `{{…}}` untouched. **Context-aware: JSON-string-escapes into a `merge-json` target; bans a line break in any substituted value (C-7, C-9)** |
+| `src/recipe/ops/generate.ts` | **New** | F1 | Render a payload template, substitute, then run `anchors.ts`'s assertion |
+| `src/recipe/ops/merge-json.ts` | **New** | F1 | Allowlist and leaf-only enforcement, owned-key merge, order-preserving serializer, **re-parse-and-deep-equal verification**. No removal-honouring merge at v1.0 (C-3 defers) |
+| `src/recipe/anchors.ts` | **New** | F1 | The **literal line count** of US-32 — not a parser, not a grammar. `E-ANCHOR-INVALID` |
+| `src/recipe/plan-steps.ts` | **New** | F1 | Merge base steps with each selected scaffold's steps in **`pack.json`-declared scaffold order**; `when` filtering; the edit-before-place ordering check |
+| `src/recipe/glob.ts` | **New** | F1 | The one bounded glob matcher, used by `exclude`, `in` and anatomy `paths` |
+| **phase 1 — the payload** | | | |
+| `src/payload/copy-payload.ts` | **New** | F1 | The verbatim copy. Raw bytes in, raw bytes out — no BOM handling, no EOL change, no suffix stripping. Journalled exactly as a phase-2 write is |
+| `src/payload/digest.ts` | **New** | F1 | **`payloadDigest` (Q-52).** One tree digest over the payload file set, per-file hash **normalized for text and raw for binary** — see §4 for why normalization is load-bearing here |
+| **hashing** | | | |
 | `src/hash/normalize.ts` | New | F1 | The one normalizer: BOM strip + `\r\n`/`\r` → `\n`. Nothing else (Q-26) |
-| `src/hash/sha256.ts` | New | F1 | `hashText`, `hashBytes` — lowercase 64-hex, `node:crypto` |
-| `src/hash/digest.ts` | New | F1 | Canonical tree digest, used by shared `integrity`, `pack.integrity` (Q-19) and manifest `integrity` |
-| `src/manifest/types.ts` | Revised | F1 | `PackManifest`, `FileEntry`, `RegionEntry`, `OwnedKeyEntry` — the last gaining `security`, `entries` and `removed` so C-3's honoured-removal set has somewhere to live |
-| `src/manifest/canonical-json.ts` | New | F1 | Stable stringify: fixed key order, 2-space, `\n`, sorted `files` — shared by writer and integrity |
-| `src/manifest/read.ts` | New | F1 | Parse, `manifestVersion` gate, integrity check, unknown-key capture (§F1.5) |
-| `src/manifest/write.ts` | New | F1 | `.bak` rotation, atomic write, byte-identical re-serialization |
-| `src/manifest/drift.ts` | Revised | F1 | `clean \| modified \| missing \| untracked`, per file, per region, per owned key. **A changed mode bit is `modified`, flagged `modeChanged` (C-12)**. Never writes |
-| `src/fs/project-paths.ts` | Revised | F1 | `.harness/` layout constants, POSIX + **NFC** normalization. Root-escape and symlink refusal **move to `security/confine.ts`**; this module keeps layout only |
-| `src/fs/atomic-write.ts` | Revised | F1 | temp-then-rename, mode bits, created-directory tracking, **exclusive-create semantics (§7.1.4) and `E-TARGET-RACE`** |
-| `src/fs/journal.ts` | Revised | F1 | `.harness/journal.json` **(version 2: `preExisting`, `preHash`, `preMode`, `backup`)** plus the `.harness/journal.d/` backup sidecar; write/read/remove; `E-JOURNAL-PRESENT` detection. C-13 |
-| `src/fs/base-store.ts` | New | F1 | `.harness/base/` read/write (LF), `.harness/.gitattributes` emission, `E-BASE-CORRUPT` / `E-BASE-MISSING` |
-| `src/fs/lock.ts` | Revised | F1 | Advisory `.harness/lock` carrying `{pid, host, startedAt, cli}`; exclusive-create acquire; the stale-lock rule of §7.6 |
-| `src/fs/walk.ts` | **New** | F1 | The one bounded, non-symlink-following directory walk. Depth and entry caps, skip list, `E-TRAVERSAL-LIMIT`. Used by both the `contentRoot` recursion and the `untracked` project scan. C-17 |
-| `src/apply/plan.ts` | Revised | F1 | `ApplyInputs` → `ApplyPlan`. Pure: reads, renders, validates, **builds `SecurityDisclosure`**, writes **nothing** |
-| `src/apply/execute.ts` | Revised | F1→F2 | **consent gate** → lock → journal → files → base → manifest → journal removal. The only writer. **Re-confines and re-`lstat`s immediately before each write (C-14)** |
-| `src/apply/rollback.ts` | Revised | F1→F2 | The four-case rule of §7.5: delete only what this apply created, restore only what it overwrote, and only where the on-disk bytes are still exactly what it wrote |
-| `src/validate/validate-pack.ts` | Revised | F1 | The ordered check runner of US-16 → `PackReport`, **with the §7 security checks joining the run at the positions given in §7.7** |
-| `src/validate/combinations.ts` | New | F1 | Per-parameter-combination render; the 32 cap; `parameterVaryingFiles` |
-| `src/validate/link-integrity.ts` | New | F1 | `W-LINK-DANGLING` over rendered output (US-16) |
-| `packs/`, `shared/` | New | F5 | Pack content. F1 ships no pack; `harness validate --all` is what binds them |
+| `src/hash/sha256.ts` | New | F1 | `hashText`, `hashBytes` — 64 lowercase hex, `node:crypto` |
+| `src/hash/digest.ts` | New | F1 | `treeDigest` — path-prefixed, `\n`-joined, byte-ascending. **One call site at v1.0**: `payload/digest.ts` |
+| **manifest** | | | |
+| `src/manifest/types.ts` | New | F1 | `PackManifest` — **six keys**. No `FileEntry`, no `RegionEntry`, no `OwnedKeyEntry` |
+| `src/manifest/canonical-json.ts` | New | F1 | Stable stringify: fixed key order, 2-space, `\n`. Byte-identical re-serialization |
+| `src/manifest/read.ts` | New | F1 | Parse, `manifestVersion` gate, unknown-key capture, answer re-validation |
+| `src/manifest/write.ts` | New | F1 | Atomic write, byte-identical output |
+| **verify** | | | |
+| `src/verify/verify.ts` | **New** | F1 | Check `payloadDigest` **first, fail-closed**; then re-run phase 2 **entirely in memory** and compare to disk. `VerifyResult` |
+| `src/verify/compare.ts` | **New** | F1 | `match \| differs \| missing`; normalized comparison for text, raw for binary; the executable bit where the platform represents it |
+| **security — carried forward** | | | |
+| `src/security/confine.ts` | Carried | F1 | **The only constructor of `AppliedPath`.** Anchored `to` grammar, NFC + case-fold `collisionKey`, resolve-and-`lstat` confinement, `confineAtWrite()`. C-4, C-6, C-14 |
+| `src/security/harness-paths.ts` | **New** | F1 | **The only constructor of `HarnessPath`** — the CLI's own writes under `.harness/` (`pack/**`, `manifest.json`, `journal.json`, `journal.d/**`, `lock`, `README.md`). Derived from paths already proven grammar-clean, so confined by construction. Closes the typing hole phase 1 opened |
+| `src/security/destination-policy.ts` | Carried | F1 | One table keyed by **destination**: the reserved-destination denylist (**extended: no recipe step writes under `.harness/`**), the `ownedKeys` allowlist and its security-relevant marks, the executable-root rules. C-1, C-5, C-12 |
+| `src/security/consent.ts` | Carried | F1→F2 | Builds `SecurityDisclosure` from a plan; `renderDisclosure()`; the gate that turns "no consent" into `E-SETTINGS-CONSENT-REQUIRED` before any write and **before the lock**. C-2 |
+| `src/security/secret-heuristic.ts` | Carried | F1 | `E-PARAM-SECRET-SUSPECTED` at validate time; `W-ANSWER-LOOKS-SECRET` at answer time. C-15 |
+| **filesystem** | | | |
+| `src/fs/project-paths.ts` | Revised | F1 | `.harness/` layout constants, POSIX + NFC normalization. All path safety lives in `security/` |
+| `src/fs/atomic-write.ts` | Carried | F1 | temp-then-rename, mode bits, created-directory tracking, **exclusive-create semantics and `E-TARGET-RACE`** (C-14) |
+| `src/fs/journal.ts` | Revised | F1 | `.harness/journal.json` **v2** (`preExisting`, `preHash`, `preMode`, `backup`) plus `.harness/journal.d/`. **Now covers phase-1 writes too.** C-13 |
+| `src/fs/lock.ts` | Carried | F1 | Advisory `.harness/lock` with `{pid, host, startedAt, cli}`; exclusive-create acquire; the three-condition stale rule |
+| `src/fs/walk.ts` | Carried | F1 | The one bounded, non-symlink-following walk. Depth 32, 10 000 entries, skip list, `E-TRAVERSAL-LIMIT`. **Two call sites**: the phase-1 payload walk and the `verify` project scan. C-17 |
+| **apply** | | | |
+| `src/apply/plan.ts` | Revised | F1 | `ApplyInputs` → `ApplyPlan`. Pure: plans **both phases**, computes `payloadDigest` and the manifest, builds `SecurityDisclosure`, writes **nothing** |
+| `src/apply/execute.ts` | Revised | F1→F2 | consent gate → lock → journal → **phase 1** → **phase 2** → `.harness/README.md` → manifest → journal removal. The only writer. Re-confines immediately before each write (C-14) |
+| `src/apply/rollback.ts` | Revised | F1→F2 | The five-case rule of §7.5, now covering phase-1 paths |
+| **validate** | | | |
+| `src/validate/validate-pack.ts` | Revised | F1 | The 13-step ordered check runner of F1 US-16 → `PackReport` |
+| `src/validate/combinations.ts` | Carried | F1 | Per-parameter-combination render; the 32 cap; `parameterVaryingSteps` |
+| `src/validate/link-integrity.ts` | Revised | F1 | `W-LINK-DANGLING`, **payload-aware**: a reference into `.harness/pack/` that exists in the payload is correct and is not reported |
+| `packs/` | New | F5 | Pack content. F1 ships no pack; `lintel-harness validate --all` is what binds them. **No `shared/` tree at v1.0** (Q-48) |
 
-Two files are deliberately absent. There is no `src/cli/commands/init.ts`
-— `init` is F2's CLI surface over `plan.ts` + `execute.ts`. There is no
-`apply.json` (Q-24): one `pack.json`.
+Three absences are deliberate and named, because an unnamed absence reads
+as an oversight:
 
-A third is deliberately absent and worth naming, because its absence is
-the hook decision made structural: **there is no `src/render/hooks.ts`
-and no `hooks` mapping mode.** A pack has no route by which to register
-an agent hook, and the absence is enforced by `destination-policy.ts`
-rather than merely unimplemented — see §7.2.5.
+- **There is no `src/cli/commands/init.ts`.** `init` is F2's CLI surface
+  over `plan.ts` + `execute.ts`.
+- **There is no `src/recipe/ops/exec.ts`, `script.ts` or `shell.ts`,
+  and no eighth op file of any name.** `ops/index.ts` is the closed
+  registry and `RecipeStep` is the closed type; adding one is a change to
+  both plus this ADR.
+- **There is no hook-registration path.** No `merge-json` step can own
+  `hooks`, enforced by `destination-policy.ts` rather than merely
+  unimplemented (§7.2.5).
 
 ### Public interface contract
 
-The shapes F2, F3, F4 and the test writer compile against. No downstream
-feature may widen or narrow these without a superseding ADR. Types marked
-`// SEC` were added or changed by the security remediation pass and are
-load-bearing for §7 — narrowing one silently removes a control.
+The shapes F2, F5 and the test writer compile or author against. No
+downstream feature may widen or narrow these without a superseding ADR.
+Types marked `// SEC` are load-bearing for §7 — narrowing one silently
+removes a control.
 
 ```ts
 // ── path confinement ────────────────────────────────────────────────────
 // SEC (C-14). A nominal brand. The ONLY way to obtain an AppliedPath is
-// confinePath(); no cast, no assertion, no `as AppliedPath` anywhere in
-// the tree outside src/security/confine.ts. Every write-side API takes
-// AppliedPath, never string, so "we forgot to validate this one" is a
-// compile error rather than a CVE.
+// confinePath(); no cast, no `as AppliedPath` anywhere outside
+// src/security/confine.ts. Every recipe-side writer takes AppliedPath,
+// never string, so "we forgot to validate this one" is a compile error.
 declare const AppliedPathBrand: unique symbol;
 export type AppliedPath = string & {
   readonly [AppliedPathBrand]: 'AppliedPath';
 };
+
+// SEC. NEW at v2. The CLI's own writes under .harness/ — the phase-1
+// payload, the manifest, the journal, journal.d/, the lock and
+// .harness/README.md — are NOT recipe steps and do not consult the
+// reserved-destination denylist (which forbids .harness/ outright).
+// They are confined by CONSTRUCTION: derived from a payload-relative
+// path already proven free of '..', of a leading separator and of every
+// other construct the grammar rejects. Giving them their own brand is
+// what stops the denylist deadlocking against the payload copier, and
+// what stops a recipe step reaching a writer that accepts .harness/.
+declare const HarnessPathBrand: unique symbol;
+export type HarnessPath = string & {
+  readonly [HarnessPathBrand]: 'HarnessPath';
+};
+
+/** Anything the executor may write. The journal, atomic-write and
+ *  rollback take this; nothing else does. */
+export type WritablePath = AppliedPath | HarnessPath;
 
 export interface ConfineContext {
   /** realpath() of the project root, resolved ONCE per run. */
   resolvedRoot: string;
   /** realpath() of the directory the CLI itself is installed in. */
   cliInstallDir: string;
-  /** 'declared'  — grammar + denylist only, no filesystem (validate time)
-   *  'resolved'  — grammar + denylist + ancestor lstat + descendant proof */
+  /** 'declared' — grammar + denylist only, no filesystem (validate time)
+   *  'resolved' — grammar + denylist + ancestor lstat + descendant proof */
   stage: 'declared' | 'resolved';
 }
 
@@ -170,11 +267,18 @@ export function confinePath(
 /** The NFC + case-folded key two applied paths collide on (§7.1.1). */
 export function collisionKey(p: AppliedPath): string;
 
-/** Re-run immediately before each write (C-14). Returns the open file
- *  descriptor of an exclusively-created temp file, or a diagnostic. */
+/** SEC (C-14). Re-run immediately before each write. Returns the fd of
+ *  an exclusively-created temp file, or a diagnostic. */
 export function confineAtWrite(
-  p: AppliedPath, ctx: ConfineContext,
+  p: WritablePath, ctx: ConfineContext,
 ): Promise<{ fd: number } | { diagnostic: Diagnostic }>;
+
+/** SEC. The only constructor of HarnessPath. `rel` must already satisfy
+ *  the payload path grammar; violations are E-PAYLOAD-PATH-INVALID. */
+export function harnessPath(
+  kind: 'payload' | 'manifest' | 'journal' | 'journalBackup' | 'lock' | 'readme',
+  rel?: string,
+): HarnessPath;
 
 // ── diagnostics ─────────────────────────────────────────────────────────
 export type Severity = 'error' | 'warning';
@@ -183,10 +287,11 @@ export type ExitCode = 0 | 1 | 2 | 3;
 
 export interface Diagnostic {
   code: DiagnosticCode;
-  severity: Severity;
-  message: string;                 // rendered from the catalogue
-  path?: string;                   // POSIX, pack- or project-relative
-  line?: number;                   // 1-based
+  severity: Severity;                // a property of the CODE, never of the occasion
+  message: string;                   // rendered from the catalogue
+  path?: string;                     // POSIX, pack- or project-relative
+  line?: number;                     // 1-based
+  step?: number;                     // recipe step index, where the concept applies
   data?: Record<string, string | number | readonly string[]>;
 }
 export function exitCodeFor(ds: readonly Diagnostic[]): ExitCode;
@@ -198,54 +303,164 @@ export type AnatomyPartId =
   | 'autonomyContract';
 
 export type AnatomyStatus = 'present' | 'provisional' | 'absent';
+
+/** No `{ ref: 'shared:…' }` arm — there is no shared/ at v1.0 (Q-48).
+ *  `declaredBy: 'recipe'` is valid only for folderScaffolding, whose
+ *  shape IS the recipe's set of destinations. */
 export type AnatomySource =
-  | { paths: string[] }                       // globs under contentRoot
-  | { ref: `shared:${string}` }
-  | { declaredBy: 'mappings' };               // folderScaffolding only
+  | { paths: readonly string[] }              // globs relative to the pack dir
+  | { declaredBy: 'recipe' };
 
 export type AnatomyDecl =
   | (AnatomySource & { status?: 'present';     note?: string })
   | (AnatomySource & { status:  'provisional'; note: string })
   | { status: 'absent'; reason: string };
 
-export type FileMode = 'managed' | 'regions' | 'once' | 'merge-json';
+export interface ParameterDecl {
+  id: string;                        // ^[a-zA-Z][a-zA-Z0-9]{0,31}$
+  prompt: string;
+  type: 'string' | 'enum' | 'boolean';
+  values?: readonly string[];        // required when type === 'enum'
+  default?: string | boolean;
+  required?: boolean;                // default false
+  flag?: string;                     // kebab-case CLI alias, e.g. 'calibration'
+  /** SEC (C-7). REQUIRED when type === 'string'. Anchored regex source
+   *  (begins ^, ends $), <= 200 chars, no backreference, no lookaround.
+   *  Recommended conservative default, WRITTEN OUT by the author rather
+   *  than inherited silently:  "^[\\p{L}\\p{N} ._-]{1,64}$"  with u.
+   *  Absent → E-PARAM-NO-PATTERN. Forbidden on 'enum' and 'boolean'. */
+  pattern?: string;
+  /** SEC (C-7). type 'string' only. Default 256, hard ceiling 4096.
+   *  Checked BEFORE `pattern` runs, so pattern evaluation is bounded and
+   *  catastrophic backtracking is not reachable. */
+  maxLength?: number;
+  /** SEC (C-15). Explicit acknowledgement that a parameter tripping the
+   *  credential heuristic is not in fact a credential. Without it,
+   *  E-PARAM-SECRET-SUSPECTED, exit 2, at validate time. */
+  notASecret?: boolean;
+}
 
-// SEC (C-1). The ownable roots for a SENSITIVE destination. Keyed on the
-// destination, never on the pack, so adding a pack still requires no core
-// change (S5). Any dotted path whose first segment is not in this union —
-// and, for a security-relevant root, any path that is not one of its
-// declared leaves — is E-OWNEDKEY-FORBIDDEN at validate time.
+export interface ScaffoldDecl {
+  id: string;                        // ^[a-z][a-z0-9-]{0,31}$
+  description: string;
+  /** Q-17. Two scaffolds sharing a category are ALTERNATIVES; selecting
+   *  both is E-SCAFFOLD-EXCLUSIVE, exit 1. Absent ⇒ composable with
+   *  everything. `backend-azure` and `backend-aws` share "backend";
+   *  `writing-workstream` declares none. Steps live in recipe.json under
+   *  scaffolds.<id> — a ScaffoldDecl carries NO steps. */
+  category?: string;
+  parameters?: readonly ParameterDecl[];
+}
+
+export interface PackJson {
+  formatVersion: number;
+  name: string;                      // ^[a-z][a-z0-9-]{1,31}$, equals the directory name
+  version: string;                   // semver
+  title: string;
+  minCliVersion: string;             // semver
+  /** Pack-relative path to the recipe; defaults to 'recipe.json'. */
+  recipe?: string;
+  anatomy: Record<AnatomyPartId, AnatomyDecl>;
+  parameters?: readonly ParameterDecl[];
+  scaffolds?: readonly ScaffoldDecl[];
+  /** SEC (C-12). Applied-path prefixes, each ending '/', inside which a
+   *  step may set executable: true. Absent or empty ⇒ the pack ships no
+   *  executable, which is the default and every v1.0 pack. Each root is
+   *  subject to the same grammar and denylist as a step's `to`. */
+  executableRoots?: readonly string[];
+  provenance?: { source?: string; commit?: string; notes?: string };
+  // NO contentRoot — phase 1 copies the folder (Q-39).
+  // NO mappings   — phase 2 is a recipe (Q-40).
+  // NO shared     — no shared/ mechanism at v1.0 (Q-48).
+}
+
+// ── recipe.json — the closed primitive set ──────────────────────────────
+export const RECIPE_OPS = [
+  'copy', 'rename', 'strip-suffix', 'rewrite-path',
+  'substitute', 'generate', 'merge-json',
+] as const;
+export type RecipeOp = (typeof RECIPE_OPS)[number];
+
+/** Exactly one key. No boolean operators, no negation, no second key —
+ *  a compound `when` is E-RECIPE-STEP-INVALID (Q-20, restated). */
+export type StepWhen = Readonly<Record<string, string>>;
+
+interface StepBase { when?: StepWhen }
+
+export interface CopyStep extends StepBase {
+  op: 'copy'; from: string; to: string;
+  exclude?: readonly string[];       // globs relative to `from`
+  executable?: boolean;              // SEC (C-12)
+}
+export interface RenameStep extends StepBase {
+  op: 'rename'; from: string; to: string;   // one file; basename may differ
+}
+export interface StripSuffixStep extends StepBase {
+  op: 'strip-suffix'; from: string; to: string;
+  suffix: string;                    // ^\.[a-z0-9-]{1,16}$ — no implicit default
+  exclude?: readonly string[];
+  executable?: boolean;              // SEC (C-12)
+}
+export interface RewritePathStep extends StepBase {
+  op: 'rewrite-path';
+  in: readonly string[];             // globs over APPLIED paths already written
+  find: string;                      // LITERAL, never a regex, no line break
+  replace: string;                   // LITERAL, no line break
+}
+export interface SubstituteStep extends StepBase {
+  op: 'substitute';
+  in: readonly string[];             // globs over APPLIED paths already written
+  tokens?: readonly string[];        // allowlist of resolvable token bodies
+}
+export interface GenerateStep extends StepBase {
+  op: 'generate';
+  template: string;                  // payload path
+  to: string;
+  anchors: readonly string[];        // ^[a-z][a-z0-9-]{0,31}$ — INERT (Q-45)
+}
+export interface MergeJsonStep extends StepBase {
+  op: 'merge-json'; from: string; to: string;
+  /** SEC (C-1). The VALIDATED shape. The raw parse yields string[]; the
+   *  schema promotes each entry via checkOwnedKey() against
+   *  policyFor(to), or fails E-OWNEDKEY-FORBIDDEN at validate time.
+   *  Nothing downstream ever sees an unvalidated key. */
+  ownedKeys: readonly OwnedKey[];
+}
+
+export type RecipeStep =
+  | CopyStep | RenameStep | StripSuffixStep
+  | RewritePathStep | SubstituteStep | GenerateStep | MergeJsonStep;
+
+export interface Recipe {
+  formatVersion: number;
+  steps: readonly RecipeStep[];
+  /** scaffold id → its ordered steps. A key naming no declared scaffold,
+   *  or a declared scaffold with no key, is E-RECIPE-STEP-INVALID. */
+  scaffolds?: Readonly<Record<string, readonly RecipeStep[]>>;
+}
+
+// ── destination policy (C-1) ────────────────────────────────────────────
 export type ClaudeSettingsOwnableRoot =
   | 'permissions.allow' | 'permissions.deny' | 'permissions.ask'  // security-relevant
   | `env.${string}`                                               // security-relevant
   | 'model' | 'outputStyle';                                      // ordinary
 
-/** The runtime table `destination-policy.ts` exports and enforces. The
- *  static type below can only carry the closed case; the denylisted
- *  cases (`package.json` → scripts/bin/*Dependencies) and the
- *  "any dotted path" case are enforced at validate time, not by the
- *  type. `OwnedKey` is deliberately NOT narrowed to
- *  ClaudeSettingsOwnableRoot: a mapping's legal key set depends on its
- *  destination, which a mapping's own type cannot see. */
 export interface DestinationPolicy {
-  /** Applied paths this row governs, matched exactly. */
-  destinations: readonly string[];
-  /** null ⇒ any dotted path is ownable. */
-  ownable: readonly string[] | null;
-  /** Dotted-path prefixes that are never ownable at this destination. */
-  forbidden: readonly string[];
-  /** Ownable roots whose values must be disclosed and consented to. */
+  destinations: readonly string[];   // applied paths this row governs, matched exactly
+  ownable: readonly string[] | null; // null ⇒ any dotted path is ownable
+  forbidden: readonly string[];      // dotted-path prefixes never ownable here
   securityRelevant: readonly string[];
-  /** Modes permitted on this destination; [] ⇒ merge-json only. */
-  allowedModes: readonly FileMode[];
+  /** [] ⇒ merge-json ONLY. Any other primitive targeting such a
+   *  destination is E-SETTINGS-MODE-FORBIDDEN — otherwise a plain `copy`
+   *  is a trivial bypass of everything above. */
+  allowedOps: readonly RecipeOp[];
 }
 export function policyFor(dest: AppliedPath): DestinationPolicy;
 
 /** SEC (C-1). Branded exactly as AppliedPath is, and for the same
  *  reason: a dotted path becomes an OwnedKey only by passing
- *  checkOwnedKey() against the policy for its DESTINATION, so
- *  `merge-json.ts` cannot be handed a key nobody validated. Widening
- *  this to `string` re-opens S-1. */
+ *  checkOwnedKey() against the policy for its DESTINATION. Widening this
+ *  to `string` re-opens S-1. */
 declare const OwnedKeyBrand: unique symbol;
 export type OwnedKey = string & { readonly [OwnedKeyBrand]: 'OwnedKey' };
 
@@ -253,131 +468,29 @@ export function checkOwnedKey(
   dotted: string, dest: AppliedPath, packSourceJson: unknown,
 ): { key: OwnedKey; securityRelevant: boolean } | { diagnostic: Diagnostic };
 
-export interface Mapping {
-  from: string;                      // relative to contentRoot (or component root if `shared`)
-  to: string;                        // relative to project root; §7.1.1 grammar
-  shared?: string;                   // resolve `from` against this component
-  mode?: FileMode;                   // default 'managed'
-  regions?: string[];                // required for mode 'regions', ordered
-  /** SEC (C-1). Required for mode 'merge-json'. `Mapping` is the
-   *  *validated* shape; the raw parse yields string[], and schema.ts
-   *  promotes each entry via checkOwnedKey() against policyFor(to) or
-   *  fails with E-OWNEDKEY-FORBIDDEN. Nothing downstream sees an
-   *  unvalidated key. */
-  ownedKeys?: OwnedKey[];
-  stripTemplateSuffix?: boolean;     // default false
-  executable?: boolean;              // default false → 0644, true → 0755;
-                                     // permitted only under an executableRoots
-                                     // prefix, never under .claude/ .git/
-                                     // .hg/ .svn/ .harness/                    // SEC
-  when?: Record<string, string>;     // single-equality guard on recorded answers
-}
-
-export interface RewriteRule { in: string[]; find: string; replace: string }
-export interface RegionContribution { file: string; region: string; content: string }
-
-export interface ParameterDecl {
-  id: string;                        // ^[a-zA-Z][a-zA-Z0-9]{0,31}$
-  prompt: string;
-  type: 'string' | 'enum' | 'boolean';
-  values?: string[];                 // required when type === 'enum'
-  default?: string | boolean;
-  required?: boolean;                // default false
-  flag?: string;                     // kebab-case CLI alias, e.g. 'calibration'
-  /** SEC (C-7). REQUIRED when type === 'string'. An anchored regex source
-   *  (must begin ^ and end $), ≤ 200 chars, no backreference, no
-   *  lookaround. Recommended conservative default, which the author must
-   *  write out rather than inherit silently:
-   *    "^[\\p{L}\\p{N} ._-]{1,64}$"   with the u flag.
-   *  Absent → E-PARAM-NO-PATTERN; uncompilable or unanchored →
-   *  E-PARAM-PATTERN-INVALID. Meaningless (and forbidden) on 'enum'
-   *  and 'boolean', whose value set is already closed. */
-  pattern?: string;
-  /** SEC (C-7). Applies to type 'string'. Default 256. Hard ceiling 4096.
-   *  Checked BEFORE `pattern` is run, so pattern evaluation is bounded. */
-  maxLength?: number;
-  /** SEC (C-15). Explicit acknowledgement that a parameter whose id or
-   *  prompt trips the credential heuristic is not in fact a credential.
-   *  Without it, E-PARAM-SECRET-SUSPECTED, exit 2, at validate time. */
-  notASecret?: boolean;
-}
-
-export interface ScaffoldDecl {
-  id: string; description: string;
-  mappings: Mapping[];
-  parameters?: ParameterDecl[];
-  rewrites?: RewriteRule[];
-  contributes?: RegionContribution[];
-}
-
-export interface SharedRef {
-  ref: string; version: string; integrity: `sha256-${string}`;
-  remap?: Record<string, string>;    // component-relative `from` → applied `to`
-}
-
-export interface PackJson {
-  formatVersion: number; name: string; version: string; title: string;
-  minCliVersion: string; contentRoot: string;
-  anatomy: Record<AnatomyPartId, AnatomyDecl>;
-  mappings: Mapping[];
-  parameters?: ParameterDecl[];
-  shared?: SharedRef[];
-  rewrites?: RewriteRule[];
-  scaffolds?: ScaffoldDecl[];
-  /** SEC (C-12). Applied-path prefixes, each ending '/', inside which a
-   *  mapping may set executable: true. Absent or empty means the pack
-   *  ships no executable file, which is the common case and the default.
-   *  Each root is subject to the same §7.1 grammar and denylist as a
-   *  mapping `to`; a root under .claude/ .git/ .hg/ .svn/ .harness/ is
-   *  E-EXEC-DEST-FORBIDDEN at validate time. */
-  executableRoots?: string[];
-  provenance?: { source?: string; commit?: string; notes?: string };
-}
-
-export interface ComponentJson {
-  name: string; version: string; contentRoot: string;
-  mappings: Mapping[];               // the component's own destination map (Q-27)
-}
-
-// ── region grammar ──────────────────────────────────────────────────────
-export type RegionDirectiveKind =
-  | 'source-only' | 'applied-only' | 'region' | 'if' | 'end';
-
-export interface RegionDirective {
-  kind: RegionDirectiveKind;
-  line: number;                      // 1-based
-  wrapper: 'md' | 'hash' | 'slash';  // <!-- … -->  |  # …  |  // …
-  id?: string;                       // kind 'region'
-  param?: string; value?: string;    // kind 'if'
-  raw: string;
-}
-
-export interface RegionNode {
-  kind: Exclude<RegionDirectiveKind, 'end'>;
-  open: RegionDirective; close: RegionDirective;
-  bodyStart: number; bodyEnd: number;   // 1-based, exclusive of markers
-  children: RegionNode[];
-}
-export interface RegionParseResult {
-  nodes: RegionNode[]; diagnostics: Diagnostic[];
-}
-export function parseRegions(text: string, path: string): RegionParseResult;
-
 // ── hashing ─────────────────────────────────────────────────────────────
-export function normalizeText(bytes: Buffer): string;   // BOM strip + CRLF/CR → LF, nothing else
-export function hashText(text: string): string;         // 64 lowercase hex
+export function normalizeText(bytes: Buffer): string;  // BOM strip + CRLF/CR → LF, nothing else
+export function hashText(text: string): string;        // 64 lowercase hex
 export function hashBytes(bytes: Buffer): string;
 export function treeDigest(
   entries: ReadonlyArray<{ path: string; sha256: string }>,
-): `sha256-${string}`;                                   // path-prefixed, \n-joined, byte-ascending
+): `sha256-${string}`;                                  // path-prefixed, \n-joined, byte-ascending
 
-// ── security disclosure & consent ───────────────────────────────────────
-// SEC (C-2, C-12). Computed by the PURE planner, so `pack info`,
-// `validate --json` and `init`'s pre-write summary all render the SAME
-// structure — the same trick that keeps the anatomy report from forking.
+/** Q-52. ONE digest over the whole payload. Per-file hash is
+ *  hashText(normalizeText(bytes)) for text and hashBytes(bytes) for
+ *  binary — normalized, NOT raw, so a CRLF checkout on Windows does not
+ *  read as a tampered payload (see §4). Pure function of the payload,
+ *  so determinism is unaffected. */
+export function payloadDigest(
+  entries: ReadonlyArray<{ path: string; sha256: string }>,
+): `sha256-${string}`;
+
+// ── security disclosure & consent (C-2, C-12) ───────────────────────────
+// Computed by the PURE planner, so `pack info`, `validate --json` and
+// `init`'s pre-write summary render the SAME structure and cannot disagree.
 export interface SettingsGrant {
-  file: AppliedPath;          // e.g. '.claude/settings.json'
-  key: string;                // e.g. 'permissions.allow'
+  file: AppliedPath;
+  key: string;
   securityRelevant: boolean;
   action: 'add' | 'set';
   /** ONE value, verbatim, exactly the bytes that will be written.
@@ -387,9 +500,8 @@ export interface SettingsGrant {
 export interface SecurityDisclosure {
   settings: readonly SettingsGrant[];
   executables: ReadonlyArray<{ path: AppliedPath; source: string }>;
-  /** Files landing under .claude/hooks/ — shipped, 0644, and registered
-   *  by nothing at v1.0 (§7.2.5). Disclosed so the reader is not misled
-   *  into thinking they run. */
+  /** Files landing under .claude/hooks/ — shipped, 0644, registered by
+   *  nothing at v1.0. Disclosed so a reader is not misled. */
   inertHookScripts: readonly AppliedPath[];
   /** true iff any `settings` entry is securityRelevant. */
   requiresConsent: boolean;
@@ -397,12 +509,10 @@ export interface SecurityDisclosure {
 export function renderDisclosure(d: SecurityDisclosure): string;
 
 export interface ConsentInputs {
-  /** --accept-permissions. Blanket accept; the disclosure is still
-   *  printed, to stdout, so it lands in a CI log. */
-  acceptPermissions?: boolean;
-  /** --accept-hooks. Parsed and ALWAYS refused at v1.0 with
-   *  E-HOOKS-NOT-SUPPORTED, so a script written against a future
-   *  version fails loudly instead of silently doing nothing. */
+  acceptPermissions?: boolean;       // --accept-permissions
+  /** --accept-hooks. Parsed and ALWAYS refused with
+   *  E-HOOKS-NOT-SUPPORTED, so a script written against a future version
+   *  fails loudly instead of silently doing nothing. */
   acceptHooks?: boolean;
   /** Present only when a TTY is attached. Absent ⇒ non-interactive, and
    *  requiresConsent without acceptPermissions is
@@ -410,142 +520,96 @@ export interface ConsentInputs {
   prompt?: (d: SecurityDisclosure) => Promise<boolean>;
 }
 
-// ── contribute-side policy (C-18) ───────────────────────────────────────
-export interface ContentPolicyInput {
-  packDir: string;
-  /** The pack.json the patch would produce, if it touches it. */
-  packJsonAfter?: unknown;
-  files: ReadonlyArray<{
-    path: string;                 // pack-relative source path
-    text: string | null;          // null ⇒ binary
-    executable: boolean;
-  }>;
-}
-/** The identical validation set content moving OUT is subject to.
- *  F4 may not hold a second copy of any of these checks. */
-export function checkContentPolicy(
-  i: ContentPolicyInput,
-): readonly Diagnostic[];
-
 // ── validator result ────────────────────────────────────────────────────
 export interface AnatomyRow {
   part: AnatomyPartId;
-  status: AnatomyStatus | 'missing';   // 'missing' only for an invalid pack
+  status: AnatomyStatus | 'missing';   // 'missing' only for an INVALID pack
   note?: string; reason?: string; matched: number;
+}
+/** A recipe step as `pack info` renders it: <op>  <from> → <to>. */
+export interface StepSummary {
+  index: number; op: RecipeOp;
+  from: string | null; to: string | null;
+  scaffold: string | null;             // null ⇒ a base step
+  when: StepWhen | null;
 }
 export interface PackReport {
   pack: { name: string; version: string; title: string;
-          formatVersion: number; minCliVersion: string;
-          integrity: `sha256-${string}` };
-  anatomy: AnatomyRow[];               // exactly 9, in AnatomyPartId order
-  scaffolds: ReadonlyArray<{ id: string; description: string; files: number }>;
+          formatVersion: number; minCliVersion: string };
+  anatomy: readonly AnatomyRow[];       // exactly 9, in AnatomyPartId order
+  scaffolds: ReadonlyArray<{ id: string; category: string | null;
+                             description: string; steps: number }>;
   parameters: readonly ParameterDecl[];
-  shared: ReadonlyArray<{ ref: string; version: string;
-                          integrity: string; ok: boolean }>;
-  parameterVaryingFiles: readonly string[];   // applied paths whose bytes depend on an answer
-  /** SEC/§7.8.4. The region-granular form of the line above: a region
-   *  whose body differs across parameter combinations. F5's US-19 NFR
-   *  ("these things vary, those things are byte-identical") is asserted
-   *  at region granularity, and file granularity cannot express it when
-   *  one file legitimately carries both. */
-  parameterVaryingRegions: ReadonlyArray<{ path: string; region: string }>;
+  steps: readonly StepSummary[];        // the complete plan, before applying anything
+  /** Steps whose inclusion depends on an answer, and the applied paths
+   *  each would write — how a reader sees what --calibration changes. */
+  parameterVaryingSteps: ReadonlyArray<{ index: number; when: StepWhen;
+                                         writes: readonly string[] }>;
   combinations: number;
-  /** SEC (C-2, C-12). Every value the pack would write under a
-   *  security-relevant owned key, and every 0755 path, in any parameter
-   *  combination. `harness pack info` renders this before a user has
-   *  answered anything, which is the point: you see what a pack will
-   *  take before you decide to apply it. */
+  /** SEC (C-2, C-12). Every value under a security-relevant owned key
+   *  and every 0755 path, in ANY parameter combination. Empty for every
+   *  v1.0 pack — and `pack info` says so rather than printing nothing. */
   disclosure: SecurityDisclosure;
   diagnostics: readonly Diagnostic[];
   ok: boolean;
+  // NO `shared` array (Q-48). NO pack.integrity (Q-43).
+  // NO parameterVaryingRegions — there are no regions (Q-45).
 }
 export function validatePack(
-  packDir: string,
-  opts?: { allowStaleShared?: boolean; strict?: boolean },
+  packDir: string, opts?: { strict?: boolean },
 ): Promise<PackReport>;
-export function renderPackInfo(report: PackReport): string;   // `harness pack info`
+export function renderPackInfo(report: PackReport): string;
 
-// ── manifest ────────────────────────────────────────────────────────────
-export type TransformName =
-  | 'regions' | 'substitute' | 'rewrite' | 'contribute' | 'merge-json';
-export type FileOrigin = 'pack' | `shared:${string}` | `scaffold:${string}`;
-
-export interface RegionEntry   { id: string; sha256: string; orphaned?: boolean }
-
-export interface OwnedKeyEntry {
-  path: string; sha256: string;
-  /** SEC. True when this key is security-relevant at its destination
-   *  under §7.2.1. Recorded rather than re-derived, so a later CLI whose
-   *  allowlist has moved still knows what THIS apply treated as sensitive. */
-  security?: boolean;
-  /** SEC (C-3). Array-valued security-relevant keys only: the exact
-   *  entries this apply wrote, in written order. */
-  entries?: readonly string[];
-  /** SEC (C-3). Entries previously written (or previously recorded here)
-   *  that the user has since deleted. `update` must NOT re-add these.
-   *  Monotonic: an entry enters this set when it disappears from disk and
-   *  leaves it only when the user puts it back by hand. */
-  removed?: readonly string[];
-}
-
-export interface FileEntry {
-  path: string;                      // POSIX, NFC-normalized, project-relative, manifest key
-  source: string;                    // pack- or component-relative source path
-  origin: FileOrigin;
-  mode: FileMode;
-  sha256: string;
-  eol: 'lf' | 'crlf';
-  binary: boolean;
-  executable: boolean;
-  transforms: TransformName[];       // ordered, as applied
-  regions?: RegionEntry[];           // mode 'regions'
-  ownedKeys?: OwnedKeyEntry[];       // mode 'merge-json'
-}
-
+// ── manifest — SIX keys (Q-43 as amended by Q-52) ───────────────────────
 export interface PackManifest {
   manifestVersion: number;
-  generatedBy: { cli: string };
-  pack: { name: string; version: string; formatVersion: number;
-          integrity: `sha256-${string}` };
-  appliedAt: string;                 // RFC 3339 UTC — one of the only two timestamps
-  lastUpdatedAt: string;
-  parameters: Record<string, string | boolean>;   // every declared parameter, defaults included
-  scaffolds: string[];               // selected ids, pack-declared order
-  shared: Array<{ ref: string; version: string; integrity: string }>;
-  files: FileEntry[];                // sorted byte-ascending by path
-  integrity: `sha256-${string}`;     // over canonical form with `integrity` removed
-  /** Unknown keys read from a newer CLI's manifest, re-inlined verbatim on write. */
+  cli: string;
+  pack: { name: string; version: string; formatVersion: number };
+  /** Q-52. One tree digest over .harness/pack/. Serialized in THIS
+   *  position, between `pack` and `parameters`: it is a fact about the
+   *  payload this apply landed, not part of the pack's declared
+   *  identity, so it does not belong inside `pack`. */
+  payloadDigest: `sha256-${string}`;
+  /** EVERY declared parameter and its answer — defaults included, and
+   *  answers that selected nothing included, because a `when` must be
+   *  re-evaluated against the ORIGINAL answers. Committed and
+   *  repo-public by design (C-15). */
+  parameters: Readonly<Record<string, string | boolean>>;
+  scaffolds: readonly string[];      // selected ids, pack-declared order
+  /** Unknown keys read from a newer CLI's manifest, re-inlined verbatim
+   *  on write. Not a seventh declared key. */
   unknownKeys?: Record<string, unknown>;
+  // NO files[], NO regions, NO ownedKeys record, NO shared[],
+  // NO pack.integrity, NO appliedAt, NO manifest self-hash.
 }
 
 export function readManifest(projectRoot: string):
-  Promise<{ manifest: PackManifest | null; diagnostics: Diagnostic[] }>;
+  Promise<{ manifest: PackManifest | null; diagnostics: readonly Diagnostic[] }>;
 export function writeManifest(projectRoot: string, m: PackManifest): Promise<void>;
 export function canonicalJson(value: unknown): string;
 
-// ── drift ───────────────────────────────────────────────────────────────
-export type DriftState = 'clean' | 'modified' | 'missing' | 'untracked';
-export interface FileDrift {
-  path: string; state: DriftState;
-  /** SEC (C-12). The on-disk executable bit differs from FileEntry.
-   *  Sets `state` to 'modified' even when the content hash still matches
-   *  — an on-disk chmod is a change and drift must not be blind to it.
-   *  Always false on Windows, where the bit is not represented; §7.4
-   *  records that as the one place G-F1-7 genuinely differs by platform. */
-  modeChanged?: boolean;
-  regions?: ReadonlyArray<{ id: string; state: DriftState }>;
-  ownedKeys?: ReadonlyArray<{
-    path: string; state: DriftState;
-    /** SEC (C-3). Entries of a security-relevant array the user deleted. */
-    removedByUser?: readonly string[];
-  }>;
+// ── verify (US-33, Q-53) ────────────────────────────────────────────────
+export type VerifyState = 'match' | 'differs' | 'missing';
+export interface VerifyEntry {
+  path: AppliedPath;
+  state: VerifyState;
+  /** false on Windows, where the bit is not represented. The report says
+   *  so rather than implying a check ran. */
+  modeChecked: boolean;
 }
-export interface DriftReport {
-  files: FileDrift[]; manifestEdited: boolean; diagnostics: Diagnostic[];
+export interface VerifyResult {
+  /** Q-52. Checked FIRST and fail-closed: a mismatch makes the
+   *  recomputation meaningless, so `entries` is empty and
+   *  E-PAYLOAD-DIGEST-MISMATCH (exit 2) is the whole report. */
+  payload: { recorded: string; computed: string; ok: boolean };
+  entries: readonly VerifyEntry[];
+  checked: number; differing: number; missing: number;
+  diagnostics: readonly Diagnostic[];
+  ok: boolean;
 }
-export function scanDrift(
-  projectRoot: string, manifest: PackManifest,
-): Promise<DriftReport>;
+/** Reads .harness/manifest.json and .harness/pack/. Writes nothing,
+ *  ever — no lock, no journal. Needs no network and no bundled pack. */
+export function verifyProject(projectRoot: string): Promise<VerifyResult>;
 
 // ── apply ───────────────────────────────────────────────────────────────
 export interface ApplyInputs {
@@ -555,45 +619,45 @@ export interface ApplyInputs {
   scaffolds: readonly string[];
   cliVersion: string;
   force?: boolean;                   // byte-identical collisions only
-  /** SEC (C-2). Absent is equivalent to `{}`: non-interactive, no
-   *  blanket accept. A plan whose disclosure requiresConsent then fails
-   *  the gate, and executeApply refuses. Defaulting to "consent granted"
-   *  is not available anywhere in the API. */
+  /** SEC (C-2). Absent ≡ {}: non-interactive, no blanket accept. There
+   *  is NO value of ApplyInputs that means "consent granted by default";
+   *  a caller cannot reach the permissive branch by forgetting a field. */
   consent?: ConsentInputs;
 }
 export interface PlannedFile {
-  path: AppliedPath;                 // SEC (C-14) — never a bare string
+  path: WritablePath;                // SEC (C-14) — never a bare string
   bytes: Buffer;
-  baseBytes: Buffer | null;          // null for binary; LF-normalized otherwise
-  entry: FileEntry;
+  phase: 1 | 2;                      // phase 1 is journalled exactly as phase 2 is
+  executable: boolean;
   /** SEC (C-13). What planApply observed on disk, carried into the
    *  journal so rollback can tell "we created this" from "we overwrote
-   *  something that was already here". */
+   *  something already here". */
   preExisting: boolean;
   preHash: string | null;            // null iff !preExisting
   preMode: number | null;            // null iff !preExisting
 }
 export interface ApplyPlan {
-  files: PlannedFile[];
+  files: readonly PlannedFile[];     // BOTH phases, in write order
   manifest: PackManifest;
   report: PackReport;
-  /** SEC (C-2, C-12). The exact grants and 0755 paths THIS plan would
-   *  write, given THESE answers and scaffolds — narrower than the
-   *  report's all-combinations disclosure. This is what init prints. */
+  /** SEC. The grants and 0755 paths THIS plan would write, given THESE
+   *  answers and scaffolds — narrower than the report's
+   *  all-combinations disclosure. This is what init prints. */
   disclosure: SecurityDisclosure;
-  diagnostics: Diagnostic[];
+  diagnostics: readonly Diagnostic[];
   ok: boolean;
 }
 /** Pure: reads the pack and inspects the project; writes nothing, ever. */
 export function planApply(inputs: ApplyInputs): Promise<ApplyPlan>;
 
 // SEC (C-13). Version 2. Version 1 never shipped; a journal declaring
-// any other version is E-JOURNAL-UNREADABLE and is never guessed at.
+// any other version is E-JOURNAL-UNREADABLE, exit 2, and is never guessed.
 export interface JournalEntry {
-  path: AppliedPath;
+  path: WritablePath;
   sha256: string;                    // the hash this apply intended to write
+  phase: 1 | 2;
   preExisting: boolean;
-  preHash: string | null;            // pre-apply normalized hash
+  preHash: string | null;
   preMode: number | null;
   /** Path under .harness/journal.d/ holding the pre-apply bytes. Written
    *  BEFORE the overwrite, present iff preExisting && preHash !== sha256. */
@@ -601,16 +665,17 @@ export interface JournalEntry {
 }
 export interface Journal {
   version: 2; cli: string; startedAt: string;
-  entries: JournalEntry[];
-  createdDirs: string[];             // creation order; removed in reverse
+  entries: readonly JournalEntry[];
+  createdDirs: readonly string[];    // creation order; removed in reverse
 }
 export function executeApply(plan: ApplyPlan, projectRoot: string):
-  Promise<{ written: number; diagnostics: Diagnostic[] }>;
+  Promise<{ written: number; diagnostics: readonly Diagnostic[] }>;
+
 export interface RollbackResult {
-  deleted: string[];                 // created by this apply, still ours
-  restored: string[];                // SEC (C-13) — overwritten, put back
-  kept: string[];                    // changed since the crash; left alone
-  diagnostics: Diagnostic[];
+  deleted: readonly string[];        // created by this apply, still ours
+  restored: readonly string[];       // SEC (C-13) — overwritten, put back
+  kept: readonly string[];           // changed since the crash; left alone
+  diagnostics: readonly Diagnostic[];
 }
 export function rollback(projectRoot: string): Promise<RollbackResult>;
 ```
@@ -621,1155 +686,825 @@ export function rollback(projectRoot: string): Promise<RollbackResult>;
 
 **Prior decisions and constraints:**
 
-- **Managed apply (brief §7, RESOLVED).** Real files plus a manifest of
-  pack, version and per-file hash. The manifest is load-bearing; this ADR
-  may not weaken what it carries.
-- **CLI owns determinism, the skill owns judgment (Q-1).** Every mechanism
-  chosen here must be computable. Nothing in the pipeline may depend on
-  agent judgment, or S3/S4 vary run to run.
-- **Packs are bundled, one per project, shared by explicit reference
-  (Q-2, Q-12, Q-4).** No registry, no composition arbitration, no implicit
-  inheritance — and the Q-4 bump rule must be *enforceable*, not advisory.
-- **Marked regions everywhere (Q-7, Q-10).** Forced by the two stale
-  READMEs in `CLAUDE.md` §Dogfooding: one source file must render two ways.
-  A whole-file mode cannot express it and parallel files re-drift.
-- **The manual-apply log is the requirement list (CLAUDE.md §Dogfooding).**
-  Nine rows: directory map, map-with-rename, filename transform, map into
-  `.claude/`, three in-content path rewrites, two self-describing READMEs.
-  A format that cannot express all of them has failed on the only evidence
-  that exists.
+- **The apply is two phases (Q-39).** Phase 1 is a verbatim copy to
+  `.harness/pack/`; phase 2 is the per-pack tie-up. This is not a
+  refactor of the old model — it is a different model, and it deletes
+  the problem the old one was built around. The nine-step manual-apply
+  log in `CLAUDE.md` §Dogfooding splits cleanly along it: steps 1–5 were
+  a dumb copy, steps 6–9 were the tie-up.
+- **Phase 2 is a recipe, not a script (Q-40).** A script would make a
+  pack *code that executes on the user's machine*, which voids the whole
+  of §7: path confinement, the reserved-destination denylist and consent
+  gating all depend on the plan being inspectable **before** anything
+  runs. This constraint is upstream of every design choice below.
+- **Phase 2 reads the phase-1 copy (Q-41), and templates stay in it
+  (Q-47).** One source of truth per apply; the payload is inside the
+  project, so a project has every template locally without a second copy
+  the tool must keep in step.
+- **v1.0 is F1, F2, F5, F6 (Q-42).** `update`, `status` and `contribute`
+  defer to v1.1; `--adopt` is dropped (Q-44). Everything that existed
+  only to serve drift detection, 3-way merge or contribute is **removed
+  from the format**, not disabled in place.
+- **The manifest is minimal (Q-43) plus a payload digest (Q-52).** Q-43's
+  argument is that the applied tree is recomputable, so a hash list and a
+  cached base are redundant. Q-52 is the correction to that argument: the
+  recomputation *trusts* the payload, so one digest over it is what makes
+  the recomputation an assertion rather than a tautology.
+- **No marked regions (Q-45).** Regions had two justifications and
+  Q-39/Q-42 removed both: `update` was their consumer, and the
+  source-only/applied-copy problem dissolved once phase 1 copies verbatim
+  and Q-46 deletes the bootstrap prose that made two READMEs describe
+  their own copying. Anchors ship inert.
+- **No `shared/` at v1.0 (Q-48), and `planning` ships its own targets
+  copy (Q-49).** With `presentation` deferred, `shared/` had one
+  consumer, which is indistinguishable from pack-local content. The
+  accepted cost is two copies of the targets contract that will drift
+  before v1.1 reconciles them.
+- **Every folder an apply creates carries a README (Q-50).** This is a
+  content decision with a format consequence: **it removes the need for
+  an eighth primitive.** F5 raised the empty-directory question and
+  proposed `mkdir`; Q-50 answers it by making the premise false.
+- **F1 owns `verify` (Q-53).** It owns `validate` and `pack info` for the
+  same reason: all three read a pack or a manifest, write nothing, and
+  exist to make the format checkable.
 - **S5 — adding a pack requires no core change.** `planning` is authored
-  against an already-frozen F1. Any mechanism that needs pack-specific code
-  in the CLI falsifies S5 before it is tested. This is the single strongest
-  constraint on the calibration decision.
-- **F5 is the crux.** F5 asserts calibration is the planning pack's central
-  property and instructs that *if the format cannot express it, change the
-  format rather than flatten the pack* (Q-13). F1 must therefore answer
-  Q-13 with a mechanism, not a deferral.
-- **Eight F1↔F5 contradictions** were found by the 2026-08-30 consistency
-  pass. Six are contract-level and are settled below; two are product
-  scope and are escalated in §6.
+  against an already-frozen F1. Any mechanism needing pack-specific code
+  in the CLI falsifies S5 before it is tested. This is still the
+  strongest constraint on the calibration decision, and the recipe's
+  `when` is still the answer.
+- **The Mode A security review's verdict of record is `REVISE-SPEC`.**
+  Its remediation was folded into F1 v1.0 and into this ADR's original
+  §7; both CRITICALs were apply-time and survive the model change intact.
+  **No fresh `SECURITY-PROCEED` has been issued against the rewritten
+  specs**, and the two-phase model changed the surface under review.
 
 ---
 
 ## 3. Options considered
 
-### 3.1 Error model (conflict 4)
+The original ADR's six conflicts (error model, calibration surface,
+anatomy states, merge base, `pack info` ownership, shared mappings) are
+either settled and unchanged, or void with the model. Three of them are
+re-argued here because the model moved under them; the other three stand
+as decided on 2026-08-30 and are recorded in §6.2.
 
-- **A — F1's coded taxonomy, F1's exit classes, F1's catalogue (chosen).**
-  Every diagnostic has a stable `E-`/`W-` code; exit classes are
-  `0` success, `1` user-correctable, `2` pack/manifest integrity,
-  `3` internal. Message text lives in one catalogue module.
-  *Advantages:* F6 and CI branch on a code, never on prose; one place to
-  change wording. *Disadvantages:* F5's twelve verbatim strings must be
-  struck and re-pointed at codes.
-- **B — F5's uncoded prose, exit codes 0–4.** *Advantages:* the strings
-  read better as written. *Disadvantages:* the two documents disagree on
-  the exit code for the same scenario (unknown scaffold 1 vs 2; already
-  applied 1 vs 4); a scenario with no code cannot be asserted in a test
-  without string matching; and `1 = user error` collapses into
-  `1 = anatomy error`, which is an author error.
-- **C — codes plus a per-scenario exit code.** Rejected: an exit code per
-  scenario is a number nobody can remember and a contract nobody can keep
-  stable across releases.
+### 3.1 The shape of phase 2 (Q-40, restated as an architecture choice)
 
-### 3.2 Calibration surface (conflicts 5, Q-13)
+- **A — a closed primitive set expressed as a discriminated union
+  (chosen).** Seven arms, one registry, exhaustiveness checked by the
+  compiler. *Advantages:* a pack can only do what the primitives allow;
+  the complete effect of an apply is renderable by `pack info` before it
+  runs; adding a step type is a visible change to the CLI and to this
+  ADR. *Disadvantages:* a genuinely novel pack need is a CLI release, not
+  a pack release.
+- **B — a script primitive, or an `exec` escape hatch.** *Advantages:*
+  no primitive is ever missing. *Disadvantages:* voids §7 entirely. Every
+  control in this ADR depends on the plan being inspectable before
+  execution, and a script is not inspectable. Rejected as
+  incompatible with the decision, not merely as worse.
+- **C — an open primitive set with a capability declaration.** *Rejected:*
+  it is B with paperwork. The reviewer's threat model (§7.0) is that
+  `validate` is what pronounces a pack well-formed and that pronouncement
+  outlives "packs are bundled"; a declared capability is a thing a pack
+  author writes, and the whole point of the allowlist model is that what
+  a pack may do is decided by the CLI, not by the pack.
 
-- **A — one parameter mechanism, with a pack-declared flag alias
-  (chosen).** `parameters[].flag: "calibration"` makes
-  `--calibration helio` an alias for `--set constraintFloor=helio`,
-  registered from `pack.json` data. Content varies by `when` mappings and
-  `if` regions, exactly as F1 §US-8 already specifies.
-  *Advantages:* F5 gets its literal CLI surface; the CLI contains zero
-  knowledge of `planning`, so S5 survives; the calibration record file is
-  a normal file holding `{{harness:param.constraintFloor}}`.
-  *Disadvantages:* one more optional key, and one more validation (alias
-  collision with a global flag).
-- **B — a dedicated `--calibration` flag in the CLI.** *Advantages:*
-  nothing to declare. *Disadvantages:* hard-codes one pack's vocabulary
-  into the core and falsifies S5 in the one release that is supposed to
-  test it; a fourth pack with a different axis needs another flag.
-- **C — `--set` only.** *Advantages:* smallest surface.
-  *Disadvantages:* F5's US-19 acceptance criteria are written against
-  `--calibration`, and the most important init answer in the product would
-  be the least discoverable.
+### 3.2 What the manifest carries about the payload (Q-52)
 
-### 3.3 Anatomy states (conflict 3)
+- **A — one tree digest, `payloadDigest`, a sixth top-level key
+  (chosen).** *Advantages:* closes the one honest gap in Q-43's argument
+  for a cost of one field and one tree walk; lets `verify` distinguish
+  "the applied tree drifted" from "the payload was edited"; covers
+  `recipe.json` too, since the recipe is in the payload, so a hand-edited
+  recipe is detected by the same check; pre-answers the payload half of
+  C-11 before v1.1 needs it. *Disadvantages:* the manifest is no longer
+  purely a record of *inputs the user chose* — it now also records an
+  observation. That is a real conceptual cost and it is worth naming.
+- **B — no digest; state the limitation in `verify`'s output** (F1
+  v2.0's current position, and Q-43's original). *Advantages:* the
+  manifest stays five keys and purely declarative. *Disadvantages:*
+  `verify` reports a hand-edited payload as `match`, which is the exact
+  failure mode `verify` exists to catch. Q-52 supersedes it.
+- **C — the per-file hash list Q-43 rejected.** *Rejected again*, and for
+  Q-43's reason: it duplicates what recomputation already says, and it
+  goes stale against a recipe change in a way a single digest cannot.
+- **D — `pack.payloadDigest`, nested inside the `pack` object** (F1
+  v2.0's Q-52 row proposes this). *Rejected:* `pack` holds what the
+  pack **declared** — name, version, formatVersion, all read out of
+  `pack.json`. The digest is what this apply **observed**. Mixing the two
+  makes `pack` a heterogeneous object and makes "the manifest records the
+  inputs" harder to state truthfully. Top-level, between `pack` and
+  `parameters`.
 
-- **A — a `status` enum `present | provisional | absent` (chosen).**
-  Retires `declaredAbsent`. `provisional` requires a non-empty `note` and
-  a content source; `absent` requires a `reason` and forbids one.
-  *Advantages:* one axis, three values, one report; F5's NFR ("exactly two
-  absent, exactly one provisional") becomes mechanically checkable.
-  *Disadvantages:* F1 §US-2 and its error rows change.
-- **B — keep two states, express provisional as free text.** *Advantages:*
-  no schema change. *Disadvantages:* F5 asserts the provisional count as
-  an NFR; free text cannot be counted, so the NFR would be unverifiable.
-- **C — a per-part quality grade (strong/adequate/weak/absent).** Rejected:
-  F5's table already grades in prose; a grade is editorial judgment and
-  does not belong in a machine-validated schema.
+### 3.3 The empty-directory problem (Q-50 vs F5's proposed `mkdir`)
 
-### 3.4 Merge base (validation of F1's `.harness/base/`)
+- **A — every created folder carries a README; no eighth primitive
+  (chosen, Q-50).** *Advantages:* the placeholder becomes useful content;
+  five of the six coding READMEs are ordinary `rename` steps out of
+  `applied-readmes/`, which already exists in the pack; the primitive set
+  stays at seven, which is the number `pack info`, `E-RECIPE-PRIMITIVE-
+  UNKNOWN` and this ADR's whole "enumerable capability" argument are
+  written against. *Disadvantages:* a pack that genuinely wants an empty
+  folder cannot have one. No v1.0 pack does.
+- **B — an eighth `mkdir` primitive** (F5's Q-50 default). *Advantages:*
+  direct. *Disadvantages:* it buys a capability nothing needs once Q-50
+  lands, and it is a primitive whose entire output is invisible to
+  `verify`'s file comparison and uncommittable by git — so a pack using
+  it would produce an applied tree that does not survive a clone. That
+  last point is decisive and is why B is worse than it looks.
+- **C — a `skeleton/` tree of placeholder files** (F1 v2.0's current
+  worked recipe, §F1.3 step 8). *Rejected:* it is A with worse content.
+  Git cannot commit an empty directory, so a skeleton needs placeholder
+  files anyway; Q-50 makes those files say something. **F1's `skeleton/`
+  step must be replaced.**
 
-- **A — cache the exact applied bytes locally, committed (chosen, Q-18).**
-  *Advantages:* a hash cannot be a merge base — a 3-way merge needs base
-  *content*; local bytes make F3/F4 offline, exact, and independent of
-  which pack version is installed; a teammate who clones can merge.
-  *Disadvantages:* doubles the pack's footprint in the repo and adds diff
-  noise, mitigated by a generated `.harness/.gitattributes`.
-- **B — re-render the old pack version on demand.** *Advantages:* no
-  stored bytes. *Disadvantages:* requires the old pack to still be
-  installed, which Q-2's single-bundled-version model guarantees it is
-  not — the base would silently become "the current pack", which is a
-  merge that lies.
-- **C — use git history as the base.** Rejected: assumes the project is a
-  git repo and that the apply commit is identifiable; false for a
-  non-git project and unreliable after a squash.
+### 3.4 `.harness/README.md` — Q-50 against C-5
 
-### 3.5 `harness pack info` ownership (conflict 6)
-
-- **A — F1 owns it as a rendering of `PackReport` (chosen).** *Advantages:*
-  every field it prints is F1 schema and the validator already computes
-  them; one anatomy-report code path. *Disadvantages:* F1 grows a second
-  user-facing command.
-- **B — F2 owns it.** *Advantages:* sits beside `init`, which is where a
-  user browsing packs would look. *Disadvantages:* forks the anatomy
-  report between two features, which is exactly how the two documents
-  disagreed in the first place.
-- **C — reject it; `harness validate --json` serves.** Rejected: F5's
-  US-20/21/22 have acceptance criteria on it, and an author-facing
-  validator is the wrong thing to point a chooser at.
-
-### 3.6 Shared multi-destination mapping (Q-27)
-
-- **A — the component declares its own `mappings`; a pack referencing it
-  inherits them, with optional `remap` (chosen).** *Advantages:*
-  `shared/targets` reaching `targets/`, `.claude/agents/` and
-  `.claude/commands/` is one declaration per pack, and the destination map
-  itself stops being a duplicate — which is the whole point of Q-4.
-  *Disadvantages:* mapping resolution now has two sources; collisions are
-  caught by the existing `E-MAP-COLLISION` check.
-- **B — every referencing pack repeats five mapping lines.** Rejected: the
-  duplication Q-4 exists to remove would reappear in the mechanism Q-4
-  chose to remove it, and `coding` and `planning` could drift apart on
-  where a shared file lands.
+- **A — the CLI writes it, from a fixed payload path (chosen).**
+  `applied-readmes/harness.md`, if the pack ships it, is rendered by the
+  CLI to `.harness/README.md` immediately before the manifest — a
+  CLI-owned write carrying `HarnessPath`, confined by construction,
+  exactly like the manifest. *Advantages:* C-5 stands **unamended** — "a
+  recipe step may never write under `.harness/`" remains absolute, which
+  is the property that keeps the payload it is reading from immutable
+  during phase 2. *Disadvantages:* one more CLI-owned write; it is not
+  produced by the recipe, so `verify` does not recompute it (see §5).
+- **B — carve a hole in the denylist for `.harness/README.md`.**
+  *Rejected:* a denylist with an exception is a denylist an implementer
+  gets wrong, and the exception would be a recipe-declared `to` — which
+  means the grammar, the collision check and the resolution gate all have
+  to reason about a path inside the tree phase 2 is reading. Not worth
+  one README.
+- **C — drop `.harness/README.md`; treat `.harness/` as tool-owned like
+  `.claude/`.** *Genuinely arguable*, and Q-50 already excludes `.claude/`
+  on exactly that reasoning. Rejected on reader value: `.claude/` is a
+  runtime convention a reader can look up, whereas `.harness/` is this
+  product's own invention and the folder that holds the single largest
+  thing an apply writes. A newcomer opening it deserves a sentence. **If
+  Thomas prefers C the cost is one deleted file and one deleted CLI
+  write; nothing else in this ADR moves.**
 
 ---
 
 ## 4. Rationale
 
-The chosen options all fall out of one constraint: **F1 is frozen before
-the pack that stresses it is authored**, so anything pack-specific in the
-core is a defect that S5 is designed to expose. That decides the
-calibration surface (data in `pack.json`, not a flag in the CLI), it
-decides who owns `pack info` (whoever owns the schema it prints), and it
-decides the shared destination map (declared once, by the thing being
-shared). The error model follows from the other half of Q-1: the CLI's job
-is to produce *computed facts* for F6 and CI to branch on, and a fact you
-have to regex out of prose is not one — so codes are the contract and text
-is a rendering, with the two documents' overlapping strings resolved in
-favour of the document that has codes. The merge base survives scrutiny
-for a blunt reason: Q-2 bundles exactly one pack version with the CLI, so
-the "old version" a 3-way merge needs has no other place to live; caching
-the applied bytes is not an optimisation, it is the only way `update`
-can be correct offline. And the three-value anatomy status is simply what
-F5 already asserts as a countable NFR — a spec that promises "exactly one
-provisional part" needs a field to count.
+Every choice above falls out of one constraint and one correction.
+
+The constraint is **Q-40**: phase 2 must be inspectable before it runs,
+because that is what the entire security architecture stands on. That
+decides the discriminated union over a registry lookup (exhaustiveness is
+a compile-time property, and `E-RECIPE-PRIMITIVE-UNKNOWN` is what
+protects it at the boundary), it decides that `pack info` renders the
+complete step list rather than a summary, and it decides that a
+"capability" a pack could declare is not an option — what a pack may do
+is a property the CLI owns, in the same way and for the same reason that
+what a pack may *own* in a settings file is a property of the
+**destination** rather than of the pack. The two are the same decision
+applied to two surfaces, and keeping them the same shape is what makes S5
+survive: adding `planning` touches no table.
+
+The correction is **Q-52**, and it is worth being precise about what it
+corrects. Q-43's argument is sound as far as it goes:
+`expected = phase2(payload, recipe, answers, scaffolds)`, and every input
+is local and committed, so a hash list is redundant. But the argument
+proves the applied tree matches *the payload on disk*, not *the pack that
+shipped* — and `verify`'s job is the second thing. One digest closes the
+gap, and it is the smallest possible closure: not per-file, not
+per-region, not an integrity field on the pack, just one hash over one
+tree. It also happens to cover `recipe.json`, since the recipe lives in
+the payload, so a hand-edited recipe is caught by the same check without
+a second mechanism.
+
+**The digest must be over normalized content, and this is load-bearing
+rather than a detail.** Phase 1 copies raw bytes, so a naive digest would
+be over raw bytes — and a Windows clone with `core.autocrlf` rewrites
+those bytes on checkout, making `verify` report a tampered payload on
+every Windows machine. That is the same failure the deleted
+`.harness/.gitattributes` existed to prevent, arriving by a different
+door. Normalizing (BOM strip, CRLF→LF, and nothing else — Q-26) makes the
+digest survive a checkout, at the cost of not detecting a pure
+line-ending edit of the payload. That trade is already made everywhere
+else in the product and it should be made the same way here.
+
+The `.harness/README.md` decision is smaller but the reasoning is the
+same shape: when a content decision (Q-50) collides with a security
+invariant (C-5), move the work to the side that already has the
+capability rather than weakening the invariant. The CLI already writes
+five things under `.harness/`; a sixth costs nothing. A denylist hole
+costs the reader's ability to state C-5 in one sentence.
 
 ---
 
 ## 5. Consequences
 
-- **Unblocks F2 immediately.** `planApply` / `executeApply` / `rollback`
-  and the diagnostic taxonomy are the whole of F2's substrate; F2 adds an
-  argv surface and interactive prompting and nothing else.
-- **Unblocks the test writer now.** The interface contract above is
-  complete enough to write acceptance tests against before any
-  implementation exists — which is the point of locking it here.
-- **Unblocks F5's authoring.** Calibration is expressible today:
-  `packs/planning/calibrations/<name>/` selected by `when` mappings, with
-  `harness validate --json` emitting `parameterVaryingFiles` so F5's
-  "calibration isolation" NFR and its "declared calibration-varying file
-  list" are one mechanically-checked artifact rather than two hand-kept
-  lists.
-- **Constrains F3.** `update` may only read state through `PackManifest`,
-  `DriftReport` and `.harness/base/`. It may not re-derive an applied file
-  set from the tree, and it must re-evaluate `when`/`if` against the
-  *recorded* answers.
-- **Costs F5 a rewrite of its Error States table.** Twelve rows are
-  re-pointed at F1 codes; three rows (kill-criteria hook, absorption-gate
-  ABORT, `copywriter` halt) stay verbatim in F5 because they are text a
-  *pack ships*, not CLI diagnostics.
-- **Costs F5 its date field.** No generated file carries a timestamp, so
-  `CLAUDE.md`'s header date ships as the literal `{{YYYY-MM-DD}}`
-  placeholder the coding pack's own header convention already uses, filled
-  by the human or by F6. A generated date would make two applies of the
-  same pack produce different hashes and break G-F1-6 (zero-byte re-init),
-  G-F1-7 (identical hashes across platforms) and F5's own G5.3 faithfulness
-  check simultaneously.
-- **Makes recalibration cheap later at no cost now.** Q-21 stays **No** for
-  v1.0, but because the renderer is parameterized by an `ApplyInputs` value
-  object rather than reading answers back out of the manifest, a v1.1
-  `recalibrate` is "render with new answers, 3-way merge against
-  `.harness/base/`" — F3's engine with a different input, no format change.
-  The same holds for Q-22 (scaffold set is a field of `ApplyInputs`).
-- **Adds a small generated file.** `harness init` writes
-  `.harness/.gitattributes` (`base/** -text -diff`, `manifest.json text
-  eol=lf`). Without it a Windows clone with `core.autocrlf=true` rewrites
-  the base copies and every base read fails `E-BASE-CORRUPT` — the merge
-  base would be broken by the version-control system it was committed to
-  survive.
-- **What gets harder.** Every diagnostic must be registered in one
-  catalogue before it can be thrown, so adding an error is a two-file
-  change. `merge-json` needs an order-preserving JSON serializer, which is
-  more work than `JSON.stringify` and is the one place F1 can plausibly
-  overrun (Q-23's fallback, if it does: write-if-absent, and record the
-  shortfall against R5).
+**What this unblocks:**
 
-*Added by the security remediation pass:*
+- **F2 immediately.** `planApply` / `executeApply` / `rollback` and the
+  diagnostic taxonomy are the whole of F2's substrate. F2 adds an argv
+  surface for `init`, interactive prompting and the consent UX, and
+  nothing else. F2's requirement list is already written: it is the
+  nine-step manual-apply log.
+- **The test writer now.** The contract above is complete enough to write
+  acceptance tests against before implementation exists, which is the
+  point of locking it here. The two highest-value tests are stated
+  directly by the model: apply twice into two empty directories and
+  byte-compare recursively with no exclusions; and make the bundled pack
+  unreadable between the phases and require the apply to complete (which
+  is Q-41 made checkable).
+- **F5's authoring**, once F5 is folded (§6). Calibration is expressible
+  today by conditional steps, and `PackReport.parameterVaryingSteps` is
+  the mechanically-checked form of F5's "declared calibration-varying"
+  assertion.
 
-- **The security model is dormant at v1.0, and that is correct.** After
-  §7.2.5 and the F1.2 correction of §8.3, **no v1.0 pack registers a
-  hook, and no v1.0 pack owns a security-relevant settings key** — so
-  the consent gate never fires for `coding`, `writing` or `planning`, and
-  `harness init` stays non-interactive-clean. The apparatus is not a
-  feature; it is a **format constraint**, and its value is that
-  `harness validate` refuses a pack that would grant itself permissions
-  before that pack can exist. One allowlist table and one disclosure
-  renderer is the cheapest honest answer to S-1, and "dormant but
-  enforced" is the state we want.
-- **Costs F5 its enforcement hook.** `planning`'s kill-criteria guard is
-  no longer enforced at v1.0 (§7.2.5). Part 8 becomes three slash
-  commands plus one inert, documented script, joining the two shortfalls
-  F5 already records for `coding` and `writing` — which makes "no pack
-  ships an enforcing hook at v1.0" a **product finding recorded against
-  R5**, and a sharper one than either row F5 has today.
-- **Costs F1 a bounded walk and a branded string.** Every directory
-  traversal goes through `fs/walk.ts` and every write-side path is
-  `AppliedPath`. The second is the load-bearing one: it converts "someone
-  forgot to validate this path" from a security defect discoverable only
-  by review into a **compile error**. It costs one `unique symbol` and a
-  discipline that no file outside `security/confine.ts` may cast to it.
-- **Constrains F4 harder than F3.** `contribute` is the reverse trust
-  boundary, and F1 now exports `checkContentPolicy()` as the single gate
-  it must route through (C-18). F4 may not hold a second copy of the path
-  grammar, the executable rules, the region grammar or the owned-key
-  allowlist. A patch that would introduce any of them is refused.
-- **Two conditions were amended rather than adopted.** C-11 as written
-  would have made every legitimate `update` fail, and C-4 as written
-  would have refused to run in `/tmp` on macOS. Both are argued in §8.2.
-  Adopting a security condition that does not survive contact with the
-  product is not rigour; it is a defect with a citation.
+**What this constrains:**
+
+- **F2 may not reorder the phases or the writes.** `recipe/plan-steps.ts`
+  is the single ordering authority, and `apply/execute.ts` writes in the
+  order the plan gives. The consent gate precedes the lock; the manifest
+  is the last write.
+- **v1.1's `update` may only read state through `PackManifest` and
+  `.harness/pack/`.** It may not re-derive an applied file set from the
+  tree, and it must re-evaluate `when` against the **recorded** answers.
+  It must check `payloadDigest` before merging — that is C-11's concern
+  and Q-52 has already paid for half of it.
+- **F5 loses `shared/` entirely.** Its `shared/targets` section, its
+  G5.7, its `E-SHARED-*` error rows and its Q-34/Q-49 dependency chain
+  all come out (§6.2).
+
+**What gets harder, and what it costs:**
+
+- **Every diagnostic must be registered in one catalogue before it can be
+  thrown**, so adding an error is a two-file change. Unchanged from the
+  original ADR and still correct.
+- **`merge-json` needs an order-preserving JSON serializer**, which is
+  more work than `JSON.stringify` and remains the one place F1 can
+  plausibly overrun. Fallback if it does: write-if-absent, and record the
+  shortfall against R5. **Cheaper than it was**: with `update` deferred
+  there is no removal-honouring merge to build (C-3), so the serializer
+  is the whole of the difficulty.
+- **`verify` does not recompute `.harness/README.md`.** It is a CLI
+  write, not recipe output, so it falls outside the recomputation
+  identity. A user who deletes it gets no diagnostic. Bounded, stated,
+  and the price of §3.4 option A.
+- **A hand-edited manifest can still lie.** `payloadDigest` binds the
+  payload to the manifest; nothing binds the manifest to itself, because
+  Q-43 removed the self-hash and its only consumer was a merge that no
+  longer happens. Someone who edits the payload *and* recomputes the
+  digest defeats the check. That is deliberate work rather than an
+  accident, v1.0 never merges against the manifest, and stating it is
+  better than implying a check that is not there.
+- **Two calibrations, two targets contracts, and no mechanical
+  consistency check between either pair.** Q-49's duplication is accepted
+  and must be a **named v1.1 task**, not a discovery.
+
+**The security model is dormant at v1.0, and that is correct.** No v1.0
+pack registers a hook, and no v1.0 pack owns a security-relevant settings
+key — so the consent gate never fires for `coding`, `writing` or
+`planning`, and `init` stays non-interactive-clean. The apparatus is not
+a feature; it is a **format constraint**, and its value is that
+`lintel-harness validate` refuses a pack that would grant itself
+permissions before that pack can exist.
 
 ---
 
 ## 6. Conflicts flagged
 
-| # | Conflict | Disposition | Decision, and what must change |
+Everything below is a place where a current document contradicts this ADR
+or the settled model. **This ADR edits no other file.**
+
+### 6.1 `F1-spec-pack-format-and-manifest.md` v2.0 — 11 changes
+
+| # | Where | Change | Why |
 |---|---|---|---|
-| 1 | **Q-14 — `init --adopt`.** Master spec says adopt; F1 says not built. Blocks S7 and F2 acceptance | **ESCALATED-TO-THOMAS** | Architectural consequence of each branch is in §6.1. F1's format is implementable either way; the branch changes one manifest field and one warning. **F1 needs no change to start.** |
-| 2 | **Q-17 — writing-workstream scaffold in v1.0?** Master defers it; F5 keeps it | **ESCALATED-TO-THOMAS** | Format-neutral: a scaffold is `pack.json` data either way, and `writing` gaining a `scaffolds` array needs no format change. Only F5's size moves. |
-| 3 | **A third anatomy state.** F1: `present`/`declaredAbsent`. F5: needs `provisional` | **SETTLED-HERE** | `status: 'present' \| 'provisional' \| 'absent'`, default `present`; `declaredAbsent` is retired. `validate --json` and `pack info` report those three plus `missing` (invalid packs only). **F1 §US-2, §Error States and §F1.2 change; F5 §US-20 is already conformant.** New codes `E-ANATOMY-NO-REASON`, `E-ANATOMY-NO-NOTE`, warning `W-ANATOMY-PROVISIONAL`. |
-| 4 | **Two error vocabularies, conflicting exit codes** | **SETTLED-HERE** | F1's codes and its `0/1/2/3` classes are the only CLI model; F1 §Error States is the only catalogue. Codes are the stable contract (F6/CI branch on them); message text is verbatim within a minor version. Remapping: unknown scaffold → `E-SCAFFOLD-UNKNOWN` exit **1**; already applied → `E-ALREADY-APPLIED` exit **1**; anatomy undeclared → `E-ANATOMY-MISSING` exit **2**; missing/invalid calibration → `E-PARAM-MISSING`/`E-PARAM-INVALID` exit **1**; min-CLI → `E-PACK-CLI-TOO-OLD` exit **1**; undeclared shared read → new `E-SHARED-UNDECLARED` exit **2**. **F5 §Error States: strike the exit codes and prose for all twelve CLI rows and cite the code; keep the three pack-content rows verbatim.** |
-| 5 | **Calibration spelled two ways** | **SETTLED-HERE** | One mechanism: init parameters. `parameters[].flag` declares a CLI alias, so `--calibration <helio\|cadenza>` is `--set constraintFloor=helio` with no pack-specific CLI code. Q-13 closes: the format *can* express content varying by an init answer, via `when` mappings (whole files, which is what F5's `calibrations/<name>/` layout needs), `if` regions (in-file), and `{{harness:param.<id>}}`. **F1 §US-8 gains `flag`; F5 §US-19 keeps its CLI text but cites the parameter mechanism; master spec Q-13 closes on this, not on a new variant-block grammar.** |
-| 6 | **`harness pack info` unowned** | **SETTLED-HERE** | Assigned to **F1**, defined as `renderPackInfo(PackReport)` — the same structure `validate --json` emits. **F1 gains a user story for it (next free `US-29`; update `CLAUDE.md`'s counter table). F5's US-20/21/22 acceptance criteria then bind against F1.** |
-| 7 | **Determinism vs a generated date** | **SETTLED-HERE** | F1 wins: no timestamp in any generated file; the only two in the product are manifest `appliedAt` and `lastUpdatedAt`. The `CLAUDE.md` header date ships as the literal `{{YYYY-MM-DD}}` placeholder. **F5's NFR "except for a single declared date field" must be struck.** |
-| 8 | **Q-15 — where the shared bump rule lives** | **SETTLED-HERE — closed** | F1 owns both the logic (`src/pack/shared.ts`) *and* the surface (`harness validate --all`, an F1 command). F4 gains **nothing** — it is user-facing, and a maintainer subcommand there would split the code. This repo's CI runs `harness validate --all` without `--allow-stale-shared`; a non-zero exit is the enforcement. **The master spec's Q-15 default ("F4 exposes it as a maintainer subcommand") is amended.** |
+| 1 | §Technical Context *Manifest content* · US-10 · §F1.4 · §F1.5 · §F1.8 · §F1.9 · §NFR *Hashing algorithm* · §Open Questions Q-52 | **The manifest is six keys, not five.** Add `payloadDigest: sha256-…` between `pack` and `parameters`; add it to the §F1.4 worked example and its field table (consumer: `verify`, v1.1 `update`); change "lets the manifest be five keys" and "Five keys" to six; change §NFR's "It is **not** used in the manifest" — SHA-256 now has a fourth use; **move Q-52 from Open Questions to Resolved**, citing the brief | Q-52 amends Q-43. F1 v2.0 predates it |
+| 2 | §F1.3 step 8 · §F1.3's closing note · §F1.9 known limit 1 · US-3's "An empty directory is not representable" | **Delete the `skeleton/specifications/` step and the skeleton rationale.** Replace with the Q-50 READMEs: five `rename` steps out of `packs/coding/applied-readmes/` (`agentteams.md` → `AgentTeams/README.md`, `specifications-general.md` → `specifications/general/README.md`, `specifications-version.md` → `specifications/v1.0/README.md`, `targets.md` → `targets/README.md`, `copy.md` → `copy/README.md`). Restate the limit as **"an empty directory is not representable, and under Q-50 nothing needs one"** | Q-50 dissolves the premise. `packs/coding/applied-readmes/` already exists on disk with exactly these six files |
+| 3 | US-3 stage 2 carve-out · §F1.6 lifecycle · US-10 | **`.harness/README.md` joins the CLI-owned write list** — "the phase-1 payload, the manifest, the journal and the lock" becomes "…, the lock **and `.harness/README.md`**". Sequence it in §F1.6 as step 11b, after phase 2 and before the manifest, sourced from the fixed payload path `applied-readmes/harness.md` | Q-50 requires it; C-5 forbids a recipe step writing it. §3.4 decides it |
+| 4 | US-33 · §F1.8 | **`verify` checks `payloadDigest` first, fail-closed.** Delete "What `verify` cannot tell you at v1.0" and §F1.8's "The known limit, stated rather than glossed" — both are void. State the new order: digest, then recomputation; a digest mismatch suppresses the tree comparison because the expectation is computed from an untrusted input | Q-52 |
+| 5 | §Error States | **Add `E-PAYLOAD-DIGEST-MISMATCH`, exit 2.** `lintel-harness: .harness/pack/ does not match the payload this project recorded.` / `  recorded {recorded}` / `  computed {computed}` / `  The applied tree cannot be checked against an edited payload.` / `  → Restore .harness/pack/ from version control, or re-apply into a fresh directory.` | New code required by change 4 |
+| 6 | §Error States `E-MERGE-JSON-INVALID` | Extend to cover an unparseable **payload-side** `from`. Today the row covers only the destination and the post-serialization re-parse | A `merge-json` whose source JSON is malformed currently has no code |
+| 7 | §Open Questions Q-48, Q-53 | **Both are resolved in the brief §12** (Q-48: no `shared/` at v1.0; Q-53: F1 owns `verify`). Move both to Resolved Decisions and cite the brief rather than posing them | The brief is authoritative and post-dates F1 v2.0 |
+| 8 | §Technical Context · §F1.6 · US-13 | **Name the type CLI-owned writes carry.** F1 says they are "confined by construction" but the format has no term for them, and the journal covers phase-1 writes whose destination the denylist forbids to a recipe step. Adopt `HarnessPath` / `WritablePath` from the contract above | Phase 1 opened a typing hole the old model did not have. C-14's compile-error property does not hold without it |
+| 9 | US-30 | State that the payload file set used for `payloadDigest` is the **planned** set, computed in memory before any write, so "everything is planned before anything is written" stays literally true | Q-52 + the atomicity NFR |
+| 10 | §NFR *Legibility* | "The manifest fits on a screen" still holds at six keys — confirm rather than silently leave it | Editorial, but it is an assertion |
+| 11 | §Open Questions preamble | "Next free id at the time of writing: **Q-51**" is wrong — Q-51, Q-52 and Q-53 are all allocated and resolved. **Next free is Q-54** | Counter drift |
 
-### 6.1 Escalations — the concrete question for Thomas
+### 6.2 `F5-spec-template-packs.md` v2.0 — 9 changes, two of them contract breaks
 
-| Q | The question he must answer | Architectural consequence of each branch |
+| # | Where | Change | Severity |
+|---|---|---|---|
+| 1 | §Scope · G5.7 · US-22 · US-28 · the `shared/targets` section · each pack's *References* line · the extraction step (c) · Q-34 | **Remove `shared/` entirely (Q-48).** `targets` ships as `coding`-local content; `planning` ships **its own copy** (Q-49). There is no `shared/` tree, no `component.json`, no digest pin and no bump rule at v1.0 | **Contract break** — F5 specifies a mechanism F1 v2.0 does not define |
+| 2 | §Error States, CLI table | **Delete the `E-SHARED-UNDECLARED` and `E-SHARED-STALE` rows.** Neither code exists in F1 v2.0's catalogue, and F5 itself states F1's catalogue is the only one | **Contract break** — F5 cites codes that do not exist |
+| 3 | §Error States, "Gap flagged, not filled" | **Delete it. The gap is closed.** F1 v2.0 carries five recipe codes: `E-RECIPE-MISSING`, `E-RECIPE-INVALID`, `E-RECIPE-PRIMITIVE-UNKNOWN`, `E-RECIPE-STEP-INVALID`, `E-RECIPE-SOURCE-MISSING`, plus `E-PAYLOAD-PATH-INVALID` for a `from` that escapes the pack and `E-MAP-RESERVED-DEST` for a step writing somewhere reserved. Cite them | High — F5 asserts a defect in F1 that F1 has fixed |
+| 4 | §Open Questions Q-49, Q-50, Q-51 | **All three are resolved in the brief §12.** Move to Resolved Decisions with the brief's answers: Q-49 planning ships its own copy; Q-50 every created folder carries a README and there is **no `mkdir`**; Q-51 the writing extraction may author `index`/`home` templates as recipe scaffolding | High |
+| 5 | line ~1057 "**No primitive creates an empty directory** — see Q-50" · line ~1576 "`portfolio/bets/` is created empty" · §NFR "phase 2 writes 19 files and **2 empty directories**" | **Restate against Q-50.** No folder is empty. `planning` gains `portfolio/README.md` and `portfolio/bets/README.md`; `coding` gains six folder READMEs (five recipe steps + `.harness/README.md` written by the CLI); the file/directory counts change | High |
+| 6 | `coding` payload outline · the recipe table | **`packs/coding/applied-readmes/` is unstated in F5 and exists on disk.** Add it to the payload inventory and add its five `rename` steps to the recipe table | Medium |
+| 7 | Amendment history row 2.0 | Date is still the literal `{{YYYY-MM-DD}}`; the summary still says "`shared/targets` kept, declared by `coding`" | Medium |
+| 8 | US-27 · `planning` part 9 · the cross-pack anatomy table | The absorption-gate ABORT's vehicle is now `planning`'s **own** targets contract (Q-49). Part 9 stays `present`. Record Q-49's accepted duplication as a **named v1.1 reconciliation task**, not a discovery | Medium |
+| 9 | §Open Questions preamble | "The next free ID is **Q-50**" — Q-50…Q-53 are allocated and resolved. Next free is **Q-54** | Low |
+
+### 6.3 `LintelHarnessSpecification-1.0.md` — 7 changes
+
+| # | Where | Change |
 |---|---|---|
-| **Q-14** | Does v1.0 ship `harness init --adopt`, yes or no? | **No (F1's default):** S7 is satisfied by re-initing this repo — but that is **not free**: `init` refuses a non-empty tree (`E-TARGET-EXISTS`), and `--force` proceeds only for byte-identical files. This repo's `targets/README.md` and `specifications/README.md` were hand-rewritten (Dogfooding rows 7–8), so either `packs/coding` must render them byte-for-byte or those files must be deleted before the re-init. Someone must own that. **Yes:** F1 adds one manifest field (`pack.adopted: true`) and one warning; the real cost is that `.harness/base/` cannot hold the true applied bytes (they are unknown), so the base becomes the freshly rendered pack and every subsequent 3-way merge on a pre-adoption edit silently merges against the wrong base — which needs a `W-BASE-SYNTHETIC` warning and a documented caveat. Decide before F2's spec, not during it. |
-| **Q-16** | Package name, binary name, Node floor. | The file plan and the message catalogue assume `@lintel/harness`, binary `harness`, `engines.node >= 20` (the master spec's default). If any changes, only `package.json` and two catalogue strings change. Not blocking. |
-| **Q-17** | Do `frontend`, `app` and `writing-workstream` ship at v1.0? | Format-neutral. F5's size only. |
-| **Q-28** | What does `shared/presentation` ship? | Blocks F5, not F1 — but note it is referenced by all three packs, so under Q-4 every change to it bumps every pack in the product. If its content is unsettled, consider whether it ships at v1.0 at all. |
-| **Q-29** | Does authoring `planning` violate the Q-6 faithful-migration boundary? | Format-neutral. |
-| **Q-33** | Which project dogfoods `planning`? | Format-neutral, but it is the only evidence that would test S5 in anger. |
+| 1 | §Technical Context *v1.0 command surface* — "**`init` only**" | **Wrong.** The v1.0 surface is **four** commands: `init` (F2), and `validate`, `verify`, `pack info` (F1, per Q-53). F1's own `E-CLI-UNKNOWN-COMMAND` message already lists "init, validate, verify, pack". Q-53's decision text says explicitly that the master spec's command list must include `verify` |
+| 2 | §Technical Context *Sharing between packs* · §Out of Scope "The `shared/` reference *mechanism* is specified, but it has no v1.0 consumer" · §Feature 1 stub "the explicit `shared/` references Q-4 requires" · §Shared platform changes row | **Q-48 removes the mechanism.** It is not "specified with no consumer"; it does not ship. Restate all four |
+| 3 | §Open Questions · §Resolved Decisions · §Counters | **"Q-1…Q-46 are all resolved… next free Q-47" is stale.** Q-47…Q-53 are all resolved in the brief §12. Add index rows for each; next free is **Q-54** |
+| 4 | §Counters | "US-1…US-29 allocated, next free **US-30**" is stale. F1 v2.0 uses US-30…US-33 and F5 v2.0 allocates US-34…US-38. Next free is **US-39** — confirm against F5's block at the fold |
+| 5 | §Introduction, forward-investment bullet | The minimal manifest records **six** things, not five — add the payload digest (Q-52) |
+| 6 | §Technical Context | **Add a row for Q-50** (every created folder carries a README; `.claude/` excluded; no `mkdir` primitive and no `.gitkeep`). It is a cross-cutting content decision with a format consequence and it appears nowhere in the master spec |
+| 7 | §Spec-set readiness | Update: the ADR is rewritten as of this document, and its verdict is `REVISE SPEC`. **The remaining blockers stand**: `general/system-architecture.md`, `general/technology-choices.md`, the F2 and F6 specs, every epics-and-tasks document, and a fresh Mode A verdict |
 
-### 6.2 Architecture-level questions closed here
+### 6.4 Questions this ADR closes, and questions it does not
 
-| Q | Closed as |
+**Closed here** (F1-scoped, no escalation needed):
+
+| Q / issue | Closed as |
 |---|---|
-| **Q-13** | **Yes, the format expresses it** — `when` mappings + `if` regions + `{{harness:param}}`, no new grammar. F5's `calibrations/<name>/` layout is a pack-authoring convention over `when`. `validate --json` emits `parameterVaryingFiles`, which *is* F5's "declared calibration-varying file list". |
-| **Q-15** | **Closed** — F1 owns logic and surface; F4 gains nothing; CI enforces. Amends the master spec's default. |
-| **Q-18** | **Committed**, plus a generated `.harness/.gitattributes` (`base/** -text -diff`). Without it, git EOL munging corrupts every base copy on a Windows clone. |
-| **Q-19** | **Yes** — `pack.integrity` in the manifest, computed by the same `treeDigest` as a shared component. One digest function, three call sites. |
-| **Q-20** | **No** — one equality test. Confirmed. |
-| **Q-21** | **No in v1.0**, but the renderer takes `ApplyInputs` rather than reading answers from the manifest, so a v1.1 recalibrate is F3's merge with different inputs. Zero cost now. |
-| **Q-22** | **No in v1.0**; same provision — the scaffold set is a field of `ApplyInputs`. |
-| **Q-23** | **Keep `merge-json`**, tightened: it is the only mode permitted on a JSON target, the region grammar never runs on it (JSON cannot carry comment markers), and the manifest records a **per-owned-key hash** as well as the whole-file hash — the JSON analogue of `regions[].sha256` — so a user's own key edits are not misreported as pack-region drift. An unparseable existing target is `E-MERGE-JSON-INVALID` and nothing is written. Fallback if it overruns in F2: write-if-absent, shortfall recorded against R5. |
-| **Q-24** | **One `pack.json`.** Confirmed. |
-| **Q-25** | **No deletion** — report as orphaned. Confirmed; `origin` + `source` already carry enough for F3 to change later without a format change. |
-| **Q-26** | **BOM and line endings only.** Confirmed — trailing whitespace is real content, and ignoring it would make `contribute` emit patches that do not apply. |
-| **Q-27** | **Yes** — a component declares its own `mappings` in `component.json`; a referencing pack inherits them via its `shared` entry and may `remap` an individual destination. One declaration, three destinations. |
+| Manifest key count and the digest's location | **Six keys; `payloadDigest` top-level**, between `pack` and `parameters`. §3.2 |
+| Whether an eighth `mkdir` primitive ships | **No.** Q-50 removes the need; §3.3 argues why `mkdir` is worse than it looks (its output is invisible to `verify` and uncommittable by git) |
+| Whether the payload digest is over raw or normalized bytes | **Normalized** (BOM + EOL, Q-26). Raw would make every Windows clone report a tampered payload. §4 |
+| Where `.harness/README.md` comes from | **A CLI write**, from the fixed payload path `applied-readmes/harness.md`. C-5 stands unamended. §3.4 |
+| What type the CLI's own `.harness/` writes carry | **`HarnessPath`**, with `WritablePath = AppliedPath \| HarnessPath` on the journal, the writer and rollback. §1 contract |
+| Whether F1's recipe codes are sufficient for F5's flagged gap | **Yes** — five recipe codes plus two path codes cover unknown primitive, bad shape, missing source, missing recipe, a `from` escaping the pack, and a step writing to a reserved destination. All fail-closed, all exit 2 |
+| Q-20 (a `when` beyond single equality) | **Still no.** One equality test, one key. Restated for the recipe |
+| Q-24 (`pack.json` or a separate file) | **Two files** — `pack.json` identity, `recipe.json` procedure. Amends the original ADR's "one file", which was right that there is no *third* concept |
 
-### 6.3 Two hardenings, and one limitation to record
+**Escalated to Thomas** — one question, and it is small:
 
-- **The `{{harness:` reservation is correct and is the right call** — the
-  coding pack is full of `{{Feature name}}` and `{{YYYY-MM-DD}}` that must
-  survive apply byte-identical, and a bare `{{…}}` substituter would
-  corrupt every document template it ships. The gap is that a pack cannot
-  *document* the reserved token. Add one production: `{{harness:lit:X}}`
-  renders `{{harness:X}}` verbatim. Substitution stays fence-blind (unlike
-  marker scanning), so a pack may still substitute inside a code fence.
-- **Fence-awareness is Markdown-only.** In shell, PowerShell, YAML,
-  TypeScript and Bicep a comment-only `# harness:end` line is always a
-  marker, including inside a heredoc. Documented limitation, not a bug.
-- **Base copies exist for text files only.** A binary cannot be 3-way
-  merged, so `update` offers replace-or-keep for it and `contribute` skips
-  it. This is implied by F1 §US-12 and should be stated outright.
-
-These three are the hardenings the *original* pass found. They are not
-the complete set: **§7 is**, and it supersedes any reading of this
-subsection as exhaustive.
-
-### 6.4 Documents that must change to match this ADR
-
-| Document | Change |
-|---|---|
-| `F1-spec-…` §US-2, §Error States | Three-value `status` enum replaces `declaredAbsent`; add `E-ANATOMY-NO-REASON`, `E-ANATOMY-NO-NOTE`, `W-ANATOMY-PROVISIONAL`; report enum becomes `present \| provisional \| absent \| missing` |
-| `F1-spec-…` §US-8 | Add optional `parameters[].flag` (kebab-case CLI alias) and `E-PARAM-FLAG-INVALID` |
-| `F1-spec-…` §US-7, §F1.2 | `component.json` gains `mappings`; `SharedRef` gains optional `remap`; add `E-SHARED-UNDECLARED` |
-| `F1-spec-…` new user story `US-29` | `harness pack info <name>` (update `CLAUDE.md` counter table: last used US-29, next free US-30) |
-| `F1-spec-…` §US-6, §US-10 | `merge-json` records per-owned-key hashes; add `E-MERGE-JSON-INVALID` |
-| `F1-spec-…` §US-10, §US-12 | Manifest gains `pack.integrity` (Q-19); apply writes `.harness/.gitattributes`; base copies are text-only |
-| `F1-spec-…` §US-4 | Add the `{{harness:lit:X}}` escape |
-| `F1-spec-…` §Open Questions | Q-18…Q-27 move to Resolved Decisions citing this ADR |
-| `F5-spec-…` §Error States | Twelve CLI rows re-pointed at F1 codes and F1 exit classes; three pack-content rows keep verbatim strings |
-| `F5-spec-…` §NFR | Strike "except for a single declared date field"; restate "declared calibration-varying file list" as `validate --json`'s `parameterVaryingFiles` |
-| `F5-spec-…` §US-19 | Cite the parameter mechanism (`constraintFloor` enum + `flag: "calibration"`) rather than implying a bespoke flag |
-| `LintelHarnessSpecification-1.0.md` | Close Q-13 (parameters, not a variant-block grammar) and Q-15 (F1 owns logic and surface; F4 gains nothing); leave Q-14, Q-16, Q-17 open with §6.1's framing |
-
-#### 6.4.1 Added by the security remediation pass
-
-Everything below is authorised by §7 and mapped by §8. **F1 §Error
-States is the only catalogue**, so every new code lands there; the rows
-name the *other* section each change also touches.
-
-| Document | Change | Condition |
+| Q | The question | Consequence of each branch |
 |---|---|---|
-| `F1-spec-…` §US-3 | Replace the four-item path-safety list with §7.1's four stages. `to` follows the anchored grammar; collisions are computed on the NFC + case-folded `collisionKey`; the reserved-destination denylist applies to the **resolved** path; `executable: true` is permitted only under a declared `executableRoots` prefix | C-4 C-5 C-6 C-12 |
-| `F1-spec-…` §US-6 | The `merge-json` criteria gain: the §7.2.1 destination table; the leaf-only rule; `mode` lockdown on `.claude/settings*.json`; the §7.2.4 removal-honouring merge (**and the merge rule changes — existing entries keep on-disk order, new entries append in pack order**); the region-set comparison on `update` including orphans | C-1 C-3 C-9 |
-| `F1-spec-…` §US-4, §F1.1 | Pipeline step 5 takes the mapping's `mode`; JSON-string escaping into `merge-json`; re-parse **and deep-equal** verification; the line-break/marker ban on substituted values; no `{{harness:…}}` under a security-relevant owned key | C-7 C-8 C-9 |
-| `F1-spec-…` §US-7 | `--allow-stale-shared` gains the words **"on `harness validate` only"**; a shared-digest mismatch on any write path is `E-SHARED-STALE`, exit 2, zero bytes, no override. Component mappings and `remap` targets are confined identically to a pack's own | C-5 C-10 |
-| `F1-spec-…` §US-8 | `parameters[].pattern` (required for `string`) and `maxLength` (default 256); `notASecret`; the credential heuristic; answers re-validated on every read-back from the manifest; the reserved-flag list gains `--accept-permissions`, `--accept-hooks` | C-7 C-15 |
-| `F1-spec-…` §US-2 | A content source alongside `"status": "absent"` becomes `E-ANATOMY-SOURCE-ON-ABSENT` (exit 2), not a warning. State the line: a key that *contradicts* the status is an error, one that is merely *inapplicable* stays a warning | §7.8.3 |
-| `F1-spec-…` §US-1 | State the key/value asymmetry explicitly: unknown **keys** warn and are ignored; an unrecognised **value in a behaviour-selecting position** is exit 2, zero bytes, with the closed list of positions from §7.6 | C-16 |
-| `F1-spec-…` §US-10, §F1.4 | `OwnedKeyEntry` gains `security`, `entries`, `removed`; manifest `path` keys are NFC-normalized; state plainly that `parameters` and `.harness/base/` are **committed and repo-public** | C-3 C-6 C-15 |
-| `F1-spec-…` §US-11 | Drift reports a changed mode bit as `modified` with `modeChanged`; the Windows caveat; the `untracked` scan is bounded and does not follow links | C-12 C-17 |
-| `F1-spec-…` §US-13, §F1.6 | The consent gate precedes the lock; journal v2 with `preExisting`/`preHash`/`preMode`/`backup` and `.harness/journal.d/`; the five-case rollback table; exclusive-create writes and `E-TARGET-RACE`; re-confinement before each write | C-2 C-13 C-14 |
-| `F1-spec-…` §US-16 | The §7.7 check order, with the security checks at positions 3b, 3c, 7 and 8 | C-1…C-18 |
-| `F1-spec-…` §US-29 | `pack info` renders `PackReport.disclosure` — every security-relevant grant and every 0755 path, verbatim — and `parameterVaryingRegions` | C-2 C-12 §7.8.4 |
-| `F1-spec-…` §NFR | *Filesystem safety* restated as confinement-by-resolution; traversal caps (depth 32, 10 000 entries) under *Memory and size bounds*; *Rollback safety* restated per §7.5; *Concurrency* gains the stale-lock rule | C-4 C-13 C-17 |
-| `F1-spec-…` §Error States | **38 new rows.** Exit 2: `E-OWNEDKEY-FORBIDDEN`, `E-SETTINGS-MODE-FORBIDDEN`, `E-DEST-SYMLINK`, `E-MAP-RESERVED-DEST`, `E-MAP-PATH-GRAMMAR`, `E-MAP-NORM-COLLISION`, `E-PARAM-NO-PATTERN`, `E-PARAM-PATTERN-INVALID`, `E-PARAM-SECRET-SUSPECTED`, `E-SUBST-IN-SECURITY-KEY`, `E-SUBST-MARKER-INJECTION`, `E-REGION-TAMPERED`, `E-PACK-INTEGRITY-MISMATCH`, `E-EXEC-DEST-FORBIDDEN`, `E-EXEC-ROOT-UNDECLARED`, `E-EXEC-TOO-MANY`, `E-UNKNOWN-VALUE`, `E-TRAVERSAL-LIMIT`, `E-TARGET-RACE`, `E-JOURNAL-UNREADABLE`, `E-CONTRIB-POLICY`, `E-ANATOMY-SOURCE-ON-ABSENT`. Exit 1: `E-SETTINGS-CONSENT-REQUIRED`, `E-HOOKS-NOT-SUPPORTED`, `E-FLAG-NOT-PERMITTED`, `E-LOCK-HELD`, `E-CLI-UNKNOWN-COMMAND`, `E-CLI-UNKNOWN-FLAG`, `E-CLI-FLAG-VALUE-MISSING`, `E-CLI-ARG-UNEXPECTED`. Warnings: `W-SETTINGS-REMOVAL-HONOURED`, `W-HOOK-SCRIPT-INERT`, `W-PATH-NON-NFC`, `W-PACK-INTEGRITY-DIFFERS`, `W-ANSWER-LOOKS-SECRET`, `W-SCAN-SYMLINK-SKIPPED`, `W-LOCK-STALE-BROKEN`, `W-BASE-MISSING`. **Changed rows:** `E-MERGE-JSON-INVALID` (extended to the re-parse/deep-equal check), `E-MAP-CASE-COLLISION` (folding defined), `E-SHARED-STALE` (no override on a write path), **`E-BASE-MISSING` split per §7.8.5** | all |
-| `F1-spec-…` §F1.2 | **Strike the `settings.json` → `.claude/settings.json` mapping from the worked `coding` pack** — it contradicts F5's twice-stated "no default permission set". See §8.3 | S-1 |
-| `F1-spec-…` §Technical Context | Two rows: *Confinement* (by resolution, `AppliedPath`) and *Settings ownership* (destination-keyed allowlist, no hooks at v1.0) | C-1 C-4 |
-| `F5-spec-…` `planning` part 8 | **Drop the kill-criteria hook.** Part 8 = three slash commands plus one **inert** guard script under `.claude/hooks/`, 0644, registered by nothing. Restate the comparison-table row. Part 8 stays `present`, **not** `provisional` (the "exactly one provisional" NFR) | §7.2.5 |
-| `F5-spec-…` `planning` §Conventions | "Kill criteria stated BEFORE a bet starts… **Enforced by hook (part 8)**" → enforced by the `/bet` command's own instruction and by review, as `coding` and `writing` already record their unenforced rules | §7.2.5 |
-| `F5-spec-…` §Error States | The kill-criteria block message **stays verbatim** and stays F5's, but its emitter changes from a hook to the `/bet` command's agent instruction | §7.2.5 |
-| `F5-spec-…` §US-19 | Name the file **or region id** carrying the varying absorption-gate coverage narrative, and assert the gate's *rule* text is not inside it. Cite `parameterVaryingRegions` for the region-granular half of the NFR | §7.8.4 |
-| `F5-spec-…` R5 / findings | Record the third shortfall: **no v1.0 pack ships an enforcing hook**, and the reason is a format decision, not a migration constraint | §7.2.5 |
-| `F5-spec-…` `planning` part 7 | The scaffolding block's `.claude/{agents/, commands/, hooks}` stands, with `hooks/` annotated as inert at v1.0 | §7.2.5 |
-| `CLAUDE.md` counter table | No new user story is proposed. Every change above lands in an existing US or in §Error States; **next free remains US-30** | — |
+| **`.harness/README.md`** | Keep it, or treat `.harness/` as tool-owned like `.claude/` and drop it? | **Keep (this ADR's choice):** one CLI write, one payload file, one carve-out sentence in F1's US-3; the file is not covered by `verify`. **Drop:** delete `packs/coding/applied-readmes/harness.md`, amend Q-50's count from six to five for `coding`, and nothing else in this ADR moves. Not blocking — F1 can be written either way and the branch changes one paragraph |
 
 ---
 
 ## 7. Security architecture
 
-Added by the security remediation pass of 2026-08-30, against the
-SecurityReviewer's Mode A finding on F1 + this ADR (**REVISE-SPEC**,
-S-1…S-14, conditions C-1…C-18). Everything below is a *decision*, not a
-restatement of the finding. §8 maps each condition to where it lands.
+Carried forward from the 2026-08-30 remediation pass and rescoped where
+the model moved. **Both CRITICALs were apply-time and survive intact.**
+Where a subsection is unchanged it says so rather than being restated at
+length; where the model moved under it, the change is argued.
 
-### 7.0 The threat model, stated, because the controls only make sense against it
+### 7.0 The threat model — unchanged, and it still decides the priorities
 
-Lintel Harness is a local developer CLI with no network access
-(§NFR *No network*), no registry and no third-party packs (Q-2), and
-packs bundled with the published binary. There is no remote attacker in
-this model, and controls that only make sense against one are not worth
-their cost. The three actors that *are* in it:
+Lintel Harness is a local developer CLI with no network access, no
+registry and no third-party packs (Q-2), packs bundled with the published
+binary. There is no remote attacker in this model. Three actors are:
 
-1. **A pack author** — plausibly the user's colleague, plausibly the
-   user six months ago — writing a pack that a reviewer skims. Packs are
-   authored in one repo and applied in another; the review that would
-   catch `"ownedKeys": ["hooks"]` is a diff review of JSON, and JSON diff
-   reviews are exactly where a permission grant hides.
+1. **A pack author** — plausibly a colleague, plausibly the user six
+   months ago — writing a pack a reviewer skims. Packs are authored in
+   one repo and applied in another; the review that would catch
+   `"ownedKeys": ["hooks"]` is a JSON diff review, and JSON diff reviews
+   are exactly where a permission grant hides.
 2. **The format itself**, as a thing other people will copy. Q-2 forbids
    third-party packs at v1.0; it does not forbid someone reading this
-   spec in 2027 and building a registry on it. What `harness validate`
-   calls a valid pack is the format's real security boundary, and it
-   outlives the "no registry" mitigation.
-3. **The filesystem the CLI writes into**, which is not fully known at
-   plan time — symlinked directories, case-insensitive volumes, a
-   `specifications/` that is a symlink into another checkout.
+   spec in 2027 and building a registry on it. What `validate` calls a
+   valid pack is the real security boundary, and it outlives "no
+   registry".
+3. **The filesystem the CLI writes into**, not fully known at plan time —
+   symlinked directories, case-insensitive volumes, a `specifications/`
+   that is a symlink into another checkout.
 
-That ordering is why the **authoring-time checks are the high-value
-half** of this section: they run in CI, cost nothing at apply, and stop
-the bad pack from existing rather than stopping it from working. The
-runtime checks are defence-in-depth and are priced as such in §8.2.
+**The authoring-time checks are the high-value half.** They run in CI,
+cost nothing at apply, and stop the bad pack from existing rather than
+stopping it from working. Runtime checks are defence-in-depth and are
+priced as such.
 
-### 7.1 Confinement is by resolution, not by string
+**What the two-phase model changed in this picture, and what it did
+not.** Phase 1 adds a large new *write* surface (an entire tree copied
+into the project) but adds **no new decision** surface: it reads no
+declaration, evaluates no condition, and transforms nothing, so the only
+controls it needs are path confinement, the symlink ban, traversal bounds
+and size bounds — all of which already existed. Phase 2 replaces
+`mappings` with a recipe, which is a *narrower* surface than what it
+replaced: seven closed operations instead of an open set of file modes
+plus a region grammar plus a contribution mechanism. The removal of the
+region parser (Q-45) deletes an entire lexer's worth of attack surface.
+Net, the apply-time surface is smaller than the one the Mode A review
+assessed.
 
-F1's existing rule — reject a `to` that is absolute, contains `..`, or
-escapes the root — inspects a **declared string** and therefore says
-nothing about the filesystem it will meet (S-2). Confinement is
-restructured as four ordered stages, all of them in
-`src/security/confine.ts`, which is the **only** constructor of
-`AppliedPath`.
+### 7.1 Confinement is by resolution, not by string — unchanged, one extension
 
-#### 7.1.1 Stage 1 — the anchored `to` grammar (C-6), declaration time
+Four ordered stages, all in `src/security/confine.ts`, the **only**
+constructor of `AppliedPath`.
 
-A `to` value must match, as a whole:
+**Stage 1 — the anchored `to` grammar** (C-6, declaration time). Unchanged
+from the original ADR and now fully carried in F1 v2.0 US-3: the
+segment grammar; rejection of leading separators, any `\`, `^[A-Za-z]:`
+(both `C:\x` and drive-relative `C:x`), `//`/`\\` prefixes, `.`/`..`/empty
+segments, segments ending in `.` or whitespace, and reserved Windows
+basenames; mandatory NFC with `W-PATH-NON-NFC` on discovered basenames;
+`collisionKey` = NFC-normalized then case-folded, with
+`E-MAP-CASE-COLLISION` and `E-MAP-NORM-COLLISION` as separate codes
+because the remedy is different prose. **Extended by the model:** every
+payload-relative `from`, and every path phase 1 copies, satisfies the same
+grammar minus the trailing-slash rule — `E-PAYLOAD-PATH-INVALID`. That is
+what stops a pack shipping a file whose name is legal on the authoring
+machine and catastrophic on the applying one.
 
-```
-to        := segment ( "/" segment )* ( "/" )?      # trailing "/" only for a directory mapping
-segment   := char+                                   # NFC-normalized, ≥ 1 char
-char      := any Unicode scalar EXCEPT
-             /  \  :  *  ?  "  <  >  |  and U+0000–U+001F, U+007F
-```
+**Stage 2 — the reserved-destination denylist, on the resolved path**
+(C-5). Unchanged in mechanism, **extended in scope**: no step's `to`, no
+scaffold step's `to` and no `executableRoots` entry may resolve under
+`.git/`, `.hg/`, `.svn/` or `.harness/`, or inside the CLI's own resolved
+install directory. `E-MAP-RESERVED-DEST`, exit 2, checked **after**
+resolution.
 
-and additionally, all rejected with `E-MAP-PATH-GRAMMAR` (exit 2), each
-naming the offending construct:
+> **The `.harness/` extension is the security consequence of Q-39 and it
+> must be stated as an absolute.** A recipe step may **never** write under
+> `.harness/` — which includes writing into the payload it is reading
+> from. Under the old model `.harness/` held only bookkeeping; under the
+> two-phase model it holds **the input to phase 2**. A step that could
+> write there could rewrite its own source mid-run, which destroys
+> determinism, destroys `verify`'s recomputation identity, and gives a
+> pack a way to make the applied tree depend on step order in a way the
+> plan did not show. This is a stronger reason than the original
+> denylist's, and it is why §3.4 refuses to open a hole in it for one
+> README.
 
-| Rejected | Because |
+**Carve-out, restated.** The CLI's own writes under `.harness/` — the
+phase-1 payload, the manifest, the journal, `journal.d/`, the lock **and
+`.harness/README.md`** — are not recipe steps and do not consult the
+denylist. They carry `HarnessPath`, are derived from paths already proven
+grammar-clean, and are confined by construction. Without this stated, an
+implementer deadlocks the denylist against the payload copier.
+
+**Stage 3 — resolution confinement** (C-4, amended as on 2026-08-30 and
+the amendment stands). The project root is resolved **once per run** with
+`realpath()` and everything is judged against the resolved root —
+without which the CLI refuses to run in `/tmp` on macOS. Below it: every
+ancestor `lstat`ed top-down, `E-DEST-SYMLINK` on any symlink, junction or
+reparse point; directories created one level at a time, each checked
+before the next; the final destination `lstat`ed; the resolved parent
+joined with the basename proven a **strict descendant** of the resolved
+root. Skipped at `validate`, which has no project.
+
+**Stage 4 — the write** (C-14). `PlannedFile.path` is `WritablePath`, so
+a path that never went through a confining constructor cannot reach the
+writer without a compile error. `executeApply` re-runs stage 3
+immediately before each write, creates the temp file with `open(tmp,
+'wx', mode)`, claims a new destination with `link` then `unlink` (which
+fails `EEXIST` where `rename` would not), and re-hashes a destination the
+plan expects to exist. Any failure is `E-TARGET-RACE`, exit 2, journal
+intact.
+
+### 7.2 The settings and consent model — unchanged in substance
+
+**7.2.1 `merge-json` has a destination policy, not a pack policy**
+(C-1). Unchanged. The defect was never that `merge-json` exists; it is
+that `ownedKeys` was unconstrained, so nothing distinguished
+`permissions.allow` from `theme`. The constraint is a table keyed by
+**applied path**, so every pack writing that destination gets the same
+rule and S5 survives. The v1.0 table (`.claude/settings*.json`,
+`package.json`, any other JSON target), the forbidden lists and their
+reasons, and the general rule — *a destination is sensitive when some
+common toolchain executes what it contains, or governs what may be
+executed* — are carried in F1 v2.0 US-6 verbatim and are not restated
+here.
+
+**Leaf-only for security-relevant roots.** Unchanged:
+`"permissions.allow"` is ownable, `"permissions"` is not; `"env.EDITOR"`
+is ownable, `"env"` is not. `E-OWNEDKEY-FORBIDDEN`, exit 2, **at validate
+time** — such a pack never ships and never reaches a consent prompt.
+
+**Op lockdown.** The mechanism survives the rename from *mode* to *op*:
+`.claude/settings.json` and `.claude/settings.local.json` accept **only**
+a `merge-json` step. Any other primitive targeting them is
+`E-SETTINGS-MODE-FORBIDDEN`, exit 2 — otherwise a plain `copy` is a
+trivial bypass of everything above. `DestinationPolicy.allowedOps`
+carries this in the contract.
+
+**7.2.2 Consent is a gate on the plan, before the first byte** (C-2).
+Unchanged, including the six-row gate table, the rule that the disclosure
+enumerates **every value verbatim, one per line, never summarised and
+never counted**, and the property that **no value of `ApplyInputs` means
+"consent granted by default"** — a caller cannot reach the permissive
+branch by forgetting a field. The gate runs **before the lock is taken**,
+so a declined apply does not contend for one. One disclosure builder,
+three surfaces (`init`'s summary, `pack info`, `validate --json`).
+
+**7.2.3 `--accept-hooks` exists and always fails.** Unchanged, and
+deliberate: a flag that does not exist produces "unknown flag" and invites
+a workaround; a flag that exists and fails with `E-HOOKS-NOT-SUPPORTED`
+documents the boundary and reserves the name.
+
+**7.2.4 Removal-honouring merge — DEFERRED** (C-3). Its subject is
+`update`, and there is no second apply at v1.0 to resurrect anything.
+Shipping the bookkeeping now would be manifest fields with no reader.
+**Named v1.1 obligation** — see §8.
+
+**7.2.5 THE HOOK DECISION — unchanged and it is the strongest thing in
+this section.** No pack may register an agent hook at v1.0. `hooks` and
+every path under it are outside the ownable set at **every** destination;
+a pack declaring `"ownedKeys": ["hooks"]` fails `E-OWNEDKEY-FORBIDDEN` at
+validate time. The four reasons stand, and Q-42 **strengthens** the
+second: reason 2 was "`update` makes the consent unbounded, and that is
+not fixable in F1" — with `update` deferred, there is now no v1.0
+mechanism that could even attempt it, so the decision costs nothing it
+did not already cost. A pack **may** ship files under `.claude/hooks/`:
+ordinary files, `0644` (the executable bit is forbidden under `.claude/`),
+registered by nothing, named by `W-HOOK-SCRIPT-INERT` and listed in the
+disclosure so a reader is not misled. That is what `planning`'s
+`kill-criteria-guard.sh` is.
+
+### 7.3 Substitution is untrusted input — carried, one half removed
+
+An answer is typed by a user and recorded verbatim in a manifest this
+spec **requires to be committed**. It is untrusted at every use.
+
+- **Constrained at declaration** (C-7). `type: 'string'` requires an
+  anchored `pattern` (≤ 200 chars, no backreference, no lookaround) and
+  takes `maxLength` (default 256, ceiling 4096), checked **before** the
+  regex runs so pattern evaluation is bounded and ReDoS is not
+  reachable. Unchanged.
+- **Validated twice.** At collection, and **again on every read-back from
+  the manifest** — the manifest carries no self-integrity check by this
+  spec's own design, and `verify` re-renders from recorded answers.
+  Unchanged, and now *more* load-bearing than before, because `verify`
+  replays answers on every run.
+- **Context-aware escaping** (C-7). Substitution takes the destination's
+  kind: JSON-string-escaped into a `merge-json` target, verbatim
+  elsewhere; the merged output is **re-parsed and deep-equal-checked**
+  after serialization, failure being `E-MERGE-JSON-INVALID` with nothing
+  written. Unchanged.
+- **No substitution into a security-relevant key at all** (C-8).
+  `E-SUBST-IN-SECURITY-KEY`, exit 2, at validate time, **no override**.
+  A permission string is a decision the pack author makes at authoring
+  time; it is not a decision a user makes by typing a project name.
+  Unchanged.
+- **C-9 survives as half of itself.** The **newline ban** stands:
+  `\n`, `\r`, `U+2028` and `U+2029` are forbidden in a substituted value,
+  `E-SUBST-NEWLINE`, exit 2. It is the *sufficient* condition and the one
+  that holds when a pack author's `pattern` is weak. The **marker-lex
+  half is removed with the region parser** (Q-45): `E-SUBST-MARKER-
+  INJECTION` and `E-REGION-TAMPERED` have no subject, because the
+  anchors of US-32 are inert text that nothing reads, so a forged one has
+  nothing to hijack. **Named v1.1 obligation:** restore the lex check
+  before `update` starts reading anchors — the day anchors become
+  load-bearing is the day a forged anchor becomes an ownership hijack.
+
+### 7.4 The executable bit — carried in full, one deletion
+
+`executableRoots` in `pack.json`, `"executable": true` permitted only
+under a declared root (`E-EXEC-ROOT-UNDECLARED`), never under `.claude/`,
+`.git/`, `.hg/`, `.svn/` or `.harness/` (`E-EXEC-DEST-FORBIDDEN`, checked
+at declaration **and again per applied path**), a cap of 32 per apply
+(`E-EXEC-TOO-MANY`), and **every 0755 path enumerated verbatim** in the
+init summary and in `pack info`. Enumeration does not gate: disclosure is
+what C-12 asks for. Unchanged.
+
+**Deleted:** `FileDrift.modeChanged`. Drift is F3 (Q-42). The *principle*
+— an on-disk `chmod +x` is a change and a content-only comparison is
+blind to it — survives in `verify`, which compares the executable bit
+where the platform represents it and says so where it does not.
+
+### 7.5 Rollback — carried in full, extended to phase 1
+
+Journal **version 2** with `preExisting`, `preHash`, `preMode` and a
+`backup` under `.harness/journal.d/` written **before** the overwrite and
+present exactly when `preExisting && preHash !== sha256`. The five cases
+are exhaustive and are carried in F1 v2.0 US-13 unchanged.
+
+The invariant: **rollback deletes only paths this apply created, restores
+only paths this apply overwrote, and acts on neither unless the on-disk
+bytes are still exactly what this apply wrote.**
+
+**Extended:** phase-1 writes are journalled and rolled back exactly as
+phase-2 writes are. Phase 1 is not privileged; it is only simpler.
+`JournalEntry.phase` records which, for diagnostics only — rollback
+treats both identically. A journal declaring any `version` other than `2`
+is `E-JOURNAL-UNREADABLE`, exit 2, the fail-closed rule applied to the
+journal.
+
+### 7.6 Fail-closed, integrity, bounded walks — carried, enumeration rewritten
+
+**Fail-closed default** (C-16), unchanged in rule and **rewritten in
+enumeration**. Unknown **keys** warn and are ignored. An unknown or
+unrecognised **value in a behaviour-selecting position** is exit 2, zero
+bytes. The positions are enumerated and the enumeration is **closed**:
+
+`RecipeStep.op` · `ParameterDecl.type` · `AnatomyDecl.status` ·
+`ScaffoldDecl.category` (against the pack's own declared set) · an
+`ownedKeys` root against the destination policy · `Journal.version`.
+
+Six positions, down from eleven — `Mapping.mode`, `FileEntry.origin`,
+`FileEntry.mode`, `FileEntry.eol`, `TransformName`, a region directive
+name and `SharedRef.integrity` all had their subjects deleted. Where a
+position has its own code it is used; otherwise `E-UNKNOWN-VALUE`, naming
+field, value and permitted values verbatim.
+
+**Severity is a property of the code, not of the occasion.** Unchanged. A
+scenario fatal in one context and tolerable in another gets **two codes**,
+not one code with two severities.
+
+**Integrity, rescoped.** C-10's subject was `shared[].integrity` and
+`shared/` leaves v1.0 (Q-48), so there is no integrity-downgrading flag
+left to constrain. The **general rule survives**: a flag registered on a
+read-only command is `E-FLAG-NOT-PERMITTED`, exit 1, on a write command —
+refused rather than ignored, because a user who typed it believed it did
+something. C-11's subject was `pack.integrity`, removed by Q-43; its
+concern returns as Q-52 and is **half-answered at v1.0** — the payload is
+now digested and `verify` checks it. The half that remains for v1.1 is
+"the installed pack claiming this name and version is the same build the
+project applied", which needs `update` to have a reason to ask.
+
+**Both walks are bounded and neither follows a link** (C-17). One module,
+depth **32**, **10 000 entries**, `lstat` never `stat`, skip list
+`.git/`, `.hg/`, `.svn/`, `node_modules/`. **Two call sites at v1.0**:
+the phase-1 payload walk and the `verify` project scan (the `untracked`
+drift scan left with F3). `E-TRAVERSAL-LIMIT`, exit 2. A symlink in the
+pack is `E-SYMLINK-IN-PACK`; one met by the project scan is
+`W-SCAN-SYMLINK-SKIPPED`.
+
+**The lock is never broken silently.** Unchanged: broken only when the
+recorded host is this host, the recorded pid is not alive, and
+`startedAt` is older than 60 s — `W-LOCK-STALE-BROKEN`. Otherwise
+`E-LOCK-HELD`. `verify` takes no lock, because it writes nothing.
+
+**Credentials are forbidden, not handled** (C-15). Unchanged in
+mechanism, **message corrected**: the disclosure named
+`.harness/manifest.json` *and* `.harness/base/`; the base is gone, but
+**`.harness/pack/` is committed too**, and it is the largest thing the
+apply writes. The heuristic drops bare `key` (which false-positives on
+`monkey`, `keyword`, `sortKey`) and matches `api[_-]?key`,
+`private[_-]?key`, `secret`, `token`, `passwo?rd`, `credential`,
+`connection.?string`. `notASecret: true` is the escape.
+`W-ANSWER-LOOKS-SECRET` at answer time is a warning only — an error there
+is a false-positive machine. The tempting `type: 'secret'` remains
+**rejected**: an unrecorded answer makes the applied tree
+non-recomputable, which is the property the whole of Q-43 rests on.
+
+### 7.7 The new surface: the recipe itself, and what validation it gets
+
+A recipe is the one genuinely new thing the Mode A review has not seen.
+It is declarative and **fully validated before execution**, which is why
+it was chosen over a script — but "validated" must be stated as a list or
+it is an assertion.
+
+**What is checked, all at validate time, all fail-closed, all exit 2:**
+
+| Failure | Code |
 |---|---|
-| a leading `/` or `\` | POSIX-absolute |
-| any `\` anywhere | Windows separator; a pack must declare POSIX paths, and `a\b` is one segment on POSIX and two on Windows |
-| `^[A-Za-z]:` — `C:\x`, and **`C:x`** | drive-absolute and **drive-relative**; `C:x` resolves against the *per-drive* cwd and is not relative to anything the CLI controls |
-| `//` or `\\` prefix | UNC / network path |
-| a `.` or `..` or empty segment | the classic escape, now rejected as *grammar* rather than as substring search |
-| a segment ending in `.` or in any whitespace | Windows silently strips these, so `foo.txt.` and `foo.txt` are the same file there and different files here — a rename the pack did not ask for |
-| a reserved Windows basename, with or without extension (`CON`, `PRN`, `AUX`, `NUL`, `COM1`–`COM9`, `LPT1`–`LPT9`) | already an F1 NFR; now enforced in the one grammar |
-| a non-NFC `to` | see below |
+| `pack.json` names a recipe the pack does not contain | `E-RECIPE-MISSING` |
+| `recipe.json` unparseable, or its top-level shape wrong | `E-RECIPE-INVALID` |
+| A step's `op` is outside the seven | `E-RECIPE-PRIMITIVE-UNKNOWN` — lists the seven verbatim and states the set is closed |
+| A step's inputs are wrong for its `op` — missing required field, a field the primitive does not take, a directory `from` on a file-only primitive, a compound `when`, a scaffold with no steps | `E-RECIPE-STEP-INVALID`, naming step index, `op` and field |
+| A step's `from` names nothing in the payload | `E-RECIPE-SOURCE-MISSING` |
+| A step's `from` is not a legal pack path — including anything that would escape the pack directory | `E-PAYLOAD-PATH-INVALID` |
+| A step's `to` fails the anchored grammar | `E-MAP-PATH-GRAMMAR` |
+| A step's `to` resolves into a reserved destination, **`.harness/` included** | `E-MAP-RESERVED-DEST` |
+| Two steps write one applied path, over the **merged** step set | `E-MAP-COLLISION` (and the case/normalization variants) |
+| An editing step (`rewrite-path`, `substitute`) runs before its target is placed | `E-RECIPE-STEP-INVALID` — a rewrite that runs before its target is an authoring error, not a silent no-op |
+| A `rewrite-path` that matches nothing | `E-REWRITE-UNUSED` — a rewrite that no longer applies is stale, and staleness is the defect this product exists to prevent |
+| A `merge-json` claiming a key not ownable at its destination, or a security-relevant key claimed via a parent | `E-OWNEDKEY-FORBIDDEN` |
+| Any primitive but `merge-json` targeting a settings file | `E-SETTINGS-MODE-FORBIDDEN` |
+| A `pack.json`/`recipe.json` scaffold mismatch in either direction | `E-RECIPE-STEP-INVALID` |
+| A declared anchor missing, duplicated or unbalanced in the rendered output | `E-ANCHOR-INVALID` |
 
-**NFC.** `to` must be NFC. Source basenames discovered by directory
-recursion are NFC-normalized when the applied path is computed, with
-`W-PATH-NON-NFC` naming the file — because a macOS checkout can hold NFD
-filenames and an NFD manifest key would not match a Linux teammate's NFC
-one, breaking G-F1-7 quietly. **All manifest `path` keys are POSIX-
-separated and NFC-normalized**, without exception.
+**Three properties this validation has that are worth naming:**
 
-**Collision keys.** Two applied paths collide when
-`collisionKey(a) === collisionKey(b)`, where `collisionKey` is the path
-**NFC-normalized and then case-folded**. Case collision keeps
-`E-MAP-CASE-COLLISION`; a collision that survives case-folding but is
-created by normalization alone is `E-MAP-NORM-COLLISION`, exit 2, because
-the remedy is different prose ("these are two byte sequences for the same
-macOS filename", not "rename one of them"). The check runs over the
-**merged** mapping set — pack, every selected scaffold, and every
-inherited component mapping after `remap`.
+1. **It is total over the union.** `RecipeStep` is a discriminated union
+   and `ops/index.ts` is the only `op`→implementation map, so an
+   unhandled arm is a compile error and an unknown `op` is a diagnostic.
+   There is no third outcome.
+2. **It runs with no project.** Every check above except confinement
+   stage 3 is a property of the pack alone, so `validate --all` runs in
+   CI with no target directory. That is what makes the authoring-time
+   half of §7.0 actually cheap.
+3. **It runs per parameter combination** (≤ 32, `E-PARAM-COMBINATORICS`).
+   A step reachable only under `--calibration high-floor` is validated,
+   and its disclosure is built, without anyone applying it.
 
-#### 7.1.2 Stage 2 — the reserved-destination denylist, on the RESOLVED path (C-5)
+**What the recipe does NOT get, stated so a re-review can price it:**
 
-No mapping, scaffold mapping, inherited component mapping, `remap`
-target, `contributes[].file`, `executableRoots` entry or contribution
-target may resolve to a path whose first segment is:
+- No check that a `generate` template produces sensible content. The
+  anchor assertion is a **line count**, deliberately (Q-45), and an
+  anchor inside a fenced code block is counted.
+- No cross-step semantic check beyond ordering and collision. Two steps
+  that produce a contradictory project are a pack-authoring problem.
+- No bound on the number of steps. Bounded in practice by
+  `E-PAYLOAD-TOO-LARGE` (32 MB) and `E-TRAVERSAL-LIMIT`, but not
+  directly. **A re-review should decide whether it wants one.**
 
-`.git/` · `.hg/` · `.svn/` · `.harness/`
+### 7.8 New surfaces for the Mode A re-review
 
-or which lies inside the resolved directory the CLI is installed in
-(`realpath` of the package root — this matters precisely when someone
-runs `harness init` inside the harness repo, which S7 says they will).
-`E-MAP-RESERVED-DEST`, exit 2. This is checked **after** resolution, so a
-`to` that reaches `.git/hooks/pre-commit` by any route — a component
-mapping, a `remap`, a scaffold, a directory recursion — is caught by the
-same rule rather than by four copies of it.
+Numbered `N-` to avoid colliding with the reviewer's `C-` namespace.
 
-`.git/hooks/pre-commit` with `executable: true` was a conforming mapping
-under the pre-amendment spec and is remote-code-execution on the next
-commit. It is now two independent errors (this one and
-`E-EXEC-DEST-FORBIDDEN`), which is the right number.
-
-**The CLI's own `.harness/` writes are not mappings** and do not consult
-the denylist. `base-store.ts`, `journal.ts` and `lock.ts` take an
-already-confined `AppliedPath` and derive their `.harness/` location
-themselves; the base path for an applied path `p` is
-`.harness/base/` + `p`, and because `p` has already been proven free of
-`..` and of leading separators, the base path is confined by
-construction. This must be stated or an implementer deadlocks the
-denylist against the base store.
-
-#### 7.1.3 Stage 3 — resolution confinement (C-4)
-
-The **project root is resolved once per run** with `realpath()`, and
-everything below is judged against the *resolved* root. This is a
-deliberate departure from the condition as written — see §8.2 — and
-without it the CLI refuses to run in `/tmp` on macOS, where `/tmp` is
-itself a symlink to `/private/tmp`.
-
-Below the resolved root, for every applied path:
-
-- `lstat` every ancestor component, top down. Any component that is a
-  symlink, a Windows junction, or any other reparse point → `E-DEST-SYMLINK`,
-  exit 2, naming the component. The CLI does not traverse through one and
-  does not create through one.
-- Directories the apply itself needs are created **one level at a time**,
-  non-recursively, each `lstat`-checked before the next; a directory the
-  apply created is trivially not a symlink.
-- The final destination, if it exists, is `lstat`ed: a symlink there is
-  `E-DEST-SYMLINK` as well. A pack never writes through a link.
-- Assert the resolved parent directory, joined with the final basename,
-  is a **strict descendant** of the resolved root. This is the assertion
-  the string check was standing in for, and it is the one that actually
-  holds.
-
-The whole of this stage is skipped at `validate` time (`stage:
-'declared'`), which has no project to inspect; it runs at plan time and
-again at write time.
-
-#### 7.1.4 Stage 4 — the write itself (C-14)
-
-`PlannedFile.path` is `AppliedPath`, so a path that never went through
-`confinePath()` cannot reach the writer without a compile error. That is
-the point of the brand and it is worth more than any runtime check in
-this section.
-
-`executeApply` nonetheless **re-runs stage 3 immediately before each
-write** and creates with exclusive semantics, because plan-to-write is a
-window and the plan's `lstat` is stale by then:
-
-- Temp file: `fs.open(tmp, 'wx', mode)` — exclusive create, so a
-  pre-placed temp name cannot be written through.
-- Destination the plan expects to be **new**: `link(tmp, dest)` then
-  `unlink(tmp)`. `link` fails `EEXIST` if the destination appeared in the
-  window, which is exactly the exclusive-create semantic `rename` does
-  not give. Where `link` is unavailable (`EPERM`/`ENOSYS` on an exotic
-  filesystem), fall back to claim-with-`open(dest,'wx')` then `rename`,
-  and record the narrowed guarantee in the run's diagnostics.
-- Destination the plan expects to **exist** (`--force` byte-identical,
-  `merge-json` into an existing file, an `update`): `lstat` it, confirm a
-  regular file, recompute its hash, confirm it still equals what the plan
-  observed, then `rename`.
-- Any of those confirmations failing is `E-TARGET-RACE`, exit 2. The run
-  stops with the journal in place and is recoverable by `--rollback`.
-
-### 7.2 The settings and consent model
-
-#### 7.2.1 `merge-json` gains a destination policy, not a pack policy
-
-The defect in S-1 is not that `merge-json` exists; it is that
-`ownedKeys` was **unconstrained** and nothing distinguished
-`permissions.allow` from `theme`. The constraint belongs on the
-**destination**, not on the pack — a table keyed by applied path, in
-`src/security/destination-policy.ts`. Every pack writing that destination
-gets the same rule, so S5 ("adding a pack requires no core change")
-survives intact: adding `planning` does not touch the table.
-
-**The v1.0 sensitive-destination table.**
-
-| Destination | Ownable | Security-relevant | Forbidden, and why |
-|---|---|---|---|
-| `.claude/settings.json`, `.claude/settings.local.json` | `permissions.allow`, `permissions.deny`, `permissions.ask`, `env.<NAME>`, `model`, `outputStyle` | `permissions.allow`, `permissions.deny`, `permissions.ask`, `env.<NAME>` | `hooks` and anything under it — §7.2.5. `statusLine`, `apiKeyHelper`, `awsAuthRefresh`, `otelHeadersHelper` — each holds a **command that is executed**, and a pack that can set one has the hook capability under another name. `permissions.defaultMode` — weakens the default posture for everything, including grants the pack did not make. `permissions.additionalDirectories` — grants filesystem reach outside the project, which is the one thing the whole of §7.1 exists to prevent. `enableAllProjectMcpServers`, `enabledMcpjsonServers`, `enabledPlugins`, `forceLoginMethod` — each admits a whole new class of executable content by reference |
-| `package.json` | anything **except** the roots opposite | — | `scripts` and anything under it (`npm install` executes `postinstall`; this is the hook capability wearing an npm hat), `bin`, and the `*Dependencies` roots (adding a dependency is adding arbitrary code) |
-| any other JSON target | any dotted path | none | — |
-
-The general rule the table instantiates, which is what a v1.1 extends:
-**a destination is sensitive when some common toolchain executes what it
-contains, or when it governs what may be executed.** A `merge-json` into
-`tsconfig.json` needs none of this apparatus and gets none of it.
-
-**Leaf-only for security-relevant roots (C-1).** A declared owned key
-must resolve, in the pack's *source* JSON, to a scalar or an array of
-scalars — never to an object. So `"permissions.allow"` is ownable and
-`"permissions"` is not; `"env.EDITOR"` is ownable and `"env"` is not.
-This is the mechanical form of "ownable only by explicit leaf
-declaration, never via a parent object", and it is checkable without
-knowing the destination's schema. Violations of either the allowlist or
-the leaf rule are **`E-OWNEDKEY-FORBIDDEN`, exit 2, at validate time**,
-carrying a `{reason}` that distinguishes the two.
-
-**Mode lockdown.** A mapping whose applied path is `.claude/settings.json`
-or `.claude/settings.local.json` may use **only** `mode: "merge-json"`.
-Any other mode on that destination is `E-SETTINGS-MODE-FORBIDDEN`, exit 2
-— otherwise `mode: "managed"` is a trivial bypass of everything above.
-
-#### 7.2.2 Consent is a gate on the plan, before the first byte (C-2)
-
-The planner builds `SecurityDisclosure` (see the interface contract). It
-enumerates **every value** under a security-relevant owned key,
-**verbatim, one entry per line, never summarised and never counted** —
-"adds 14 permissions" is not consent, it is a number. It also enumerates
-every 0755 path and every inert hook script.
-
-The gate, in `executeApply`, before the lock is taken:
-
-| Situation | Behaviour |
-|---|---|
-| `requiresConsent === false` | proceed silently; this is every v1.0 pack |
-| interactive, prompt returns true | proceed |
-| interactive, prompt returns false | `E-SETTINGS-CONSENT-REQUIRED`, exit 1, **zero bytes** |
-| non-interactive, `--accept-permissions` | proceed, and print the disclosure to **stdout** so it lands in the CI log |
-| non-interactive, no flag | `E-SETTINGS-CONSENT-REQUIRED`, exit 1, **zero bytes** |
-| `--accept-hooks` given, ever | `E-HOOKS-NOT-SUPPORTED`, exit 1 |
-
-`ConsentInputs` is optional on `ApplyInputs` and its absence means
-*non-interactive with no blanket accept*. There is **no** value of
-`ApplyInputs` that means "consent is granted by default", which is the
-property that matters: a caller cannot reach the permissive branch by
-forgetting a field.
-
-`harness pack info` renders the same structure from `PackReport`
-(all-combinations form), so a user sees what a pack will take **before**
-deciding to apply it. One disclosure builder, three surfaces, no
-possibility of the summary and the prompt disagreeing.
-
-#### 7.2.3 `--accept-hooks` exists and always fails
-
-Deliberate. A flag that does not exist produces "unknown flag" and
-invites a workaround; a flag that exists and fails with
-`E-HOOKS-NOT-SUPPORTED` documents the boundary and gives a future version
-a name to keep. It is the one place we spend a code on something we have
-decided not to build.
-
-#### 7.2.4 `update` must not re-add what the user deleted (C-3)
-
-Array union pack-order-first silently resurrects a permission the user
-deliberately removed. The fix is in the manifest: `OwnedKeyEntry` records
-`entries` (exactly what this apply wrote) and `removed` (what the user has
-since deleted). On `update`, for a security-relevant array key:
-
-1. `removed' = (entries ∪ removed) \ onDisk` — anything we wrote before,
-   or already knew was removed, that is not on disk now, is removed **by
-   the user**. `removed` is monotonic; an entry leaves it only when the
-   user puts the value back by hand.
-2. Written array = the on-disk array, **in its on-disk order**, with the
-   pack's new entries appended in pack-declared order, *minus* everything
-   in `removed'`.
-3. Each suppressed entry is reported: `W-SETTINGS-REMOVAL-HONOURED`,
-   naming key and value — the user should know the pack asked and did not
-   get it.
-4. Record `entries` = the pack's current set, `removed` = `removed'`.
-5. **A genuinely new grant re-gates.** An entry in the pack's set that is
-   in neither `entries` nor `removed` is a new grant, and `update`
-   re-runs the §7.2.2 gate **on the delta only**. No delta, no prompt, so
-   `update` stays scriptable for every pack that is not asking for more.
-
-Note two changes this forces on F1 §US-6, both of which the SpecWriter
-must fold: the merge is no longer "union pack-order-first" (existing
-entries keep their on-disk order), and a `merge-json` file is no longer
-described purely by a per-owned-key hash.
-
-#### 7.2.5 THE HOOK DECISION — packs may not register hooks at v1.0
-
-F5 ships `planning` with a kill-criteria guard hook (its anatomy part 8,
-and its §Conventions says "Enforced by hook"), and its scaffolding block
-lists `.claude/{agents/, commands/, hooks}` — while F1 has **no** mapping
-mode, no declaration and no consent surface for hook registration. The
-honest answer is the one the reviewer's C-1/C-2 pairing points at: the
-declaration mechanism and the consent gate are one decision, and we are
-not in a position to make it well.
-
-**Decision: no pack may register an agent hook at v1.0.** `hooks` and
-every path under it are removed from the ownable set at every sensitive
-destination; a pack declaring `ownedKeys: ["hooks"]` — which was
-*conforming* before this amendment — now fails `E-OWNEDKEY-FORBIDDEN` at
-validate time, so it never ships and never reaches a consent prompt.
-
-Four reasons, in the order of their weight:
-
-1. **A hook is categorically unlike everything else a pack writes.** The
-   entire rest of F1's model is "a pack writes text files into a
-   project". Nothing else it writes executes. A hook is arbitrary shell,
-   run by the agent runtime, on events the user does not initiate
-   deliberately, with no per-invocation consent. One-time consent at init
-   is not consent to the hundredth invocation.
-2. **`update` makes the consent unbounded.** A hook's command string is a
-   merge target. The pack changes it, the user changed it, and F3's
-   3-way merge resolves to a command **neither party wrote**. C-3
-   (honour removals) is a strictly weaker guarantee than "a changed
-   command re-consents", and F1 has no design for consent-on-merge. This
-   is the reason that is not fixable by trying harder in F1.
-3. **There is no provenance story to hang it on.** v1.0 has no signing,
-   no registry and no provenance fields in `pack.json` (F1 §Out of
-   scope). The bundled packs are low-risk; the **format** is not, because
-   `harness validate` is the thing that pronounces a pack well-formed and
-   that pronouncement outlives "packs are bundled".
-4. **The consent UX belongs to F2 and F2's spec does not exist yet.**
-   Designing the format for it here and the consent there splits the one
-   decision that must not be split.
-
-**What a pack may still do.** A pack **may** ship files under
-`.claude/hooks/`. They are ordinary files: written `0644` (C-12 forbids
-`executable: true` under `.claude/`), registered by nothing, and executed
-by nothing. `harness validate` emits **`W-HOOK-SCRIPT-INERT`** naming
-each such file and saying plainly that no v1.0 mechanism registers it,
-and the file is listed in `SecurityDisclosure.inertHookScripts` so the
-init summary says the same thing. This is deliberate: it gives `planning`
-somewhere to put the guard, lets `update` carry it forward unchanged, and
-makes the v1.1 route obvious — a `hooks` declaration whose consent
-surface is designed together with F2's prompting, with the merge problem
-of reason 2 solved before it ships.
-
-**Consequence for F5's `planning` pack, stated concretely** (the
-SpecWriter folds this into F5, not F1):
-
-- Part 8 becomes **three slash commands (`/bet`, `/review`, `/horizon`)
-  plus one inert, documented guard script.** F5's comparison table row
-  "3 slash commands, 1 enforcement hook" must be restated.
-- §Conventions' "**Kill criteria stated BEFORE a bet starts.** … Enforced
-  by hook (part 8)" becomes **enforced by the `/bet` command's own
-  instruction and by review**, not by a hook — which is exactly the
-  treatment F5 already gives `coding`'s no-code-before-PROCEED rule and
-  `writing`'s index rule. The verbatim block message stays in F5's
-  §Error States as **pack content emitted by the `/bet` command's agent
-  instruction**, not by a hook. The row survives; only its emitter
-  changes.
-- **Part 8 stays `present`, not `provisional`.** Three slash commands is
-  real content, and F5 asserts "exactly one provisional part" across the
-  three packs as a counted NFR — that one is `planning`'s `roles`.
-  Marking part 8 provisional would make it two and break a mechanically
-  checked NFR to describe a gap F5 already has a form for.
-- F5's claim that "an authored pack reaches an adequate part 8 while both
-  migrated packs do not" now rests on three slash commands rather than on
-  the hook. It still stands; it is weaker, and it should be written as
-  weaker.
-- **R5 gains a third recorded shortfall**: no v1.0 pack ships an enforcing
-  hook, and the reason is a format decision rather than a migration
-  constraint. That is a stronger finding than either of the two F5
-  records today, and it is the honest headline of this amendment.
-
-### 7.3 Substitution is untrusted input (C-7, C-8, C-9)
-
-An answer is user input that is recorded verbatim and **replayed on every
-`update`**. It is treated as untrusted at every use.
-
-- **Constrained at declaration.** `type: 'string'` requires `pattern`
-  (anchored, ≤ 200 chars, no backreference, no lookaround —
-  `E-PARAM-PATTERN-INVALID`) and takes `maxLength` (default 256, ceiling
-  4096). A missing `pattern` is `E-PARAM-NO-PATTERN`, exit 2. The
-  recommended conservative pattern, which an author writes out rather
-  than inherits silently, is `^[\p{L}\p{N} ._-]{1,64}$`. `enum` and
-  `boolean` need neither; their value sets are already closed.
-- **Validated twice.** At answer-collection time, and **again whenever a
-  recorded answer is read back from the manifest** — because
-  `W-MANIFEST-EDITED` is a *warning*, so a recorded answer is an
-  attacker-controllable value by F1's own design. `E-PARAM-INVALID`.
-  Length is checked before the regex runs, so pattern evaluation is
-  bounded by `maxLength` and ReDoS is not reachable.
-- **Context-aware escaping.** Pipeline step 5 now takes the mapping's
-  `mode`. For `merge-json`, a substituted value is JSON-string-escaped
-  before insertion. For every other mode it is inserted verbatim, as
-  today. After serialization the merge-json output is **re-parsed**, and
-  the value at each owned key must **deep-equal the intended value** —
-  failure is `E-MERGE-JSON-INVALID`, nothing written. The deep-equal is
-  one line stronger than a re-parse check and catches an injection that
-  happens to still parse.
-- **No substitution into a security key at all (C-8).** No
-  `{{harness:…}}` token may appear in a source value that lands under a
-  **security-relevant** owned key. `E-SUBST-IN-SECURITY-KEY`, exit 2, at
-  validate time, no override. A permission string is a decision the pack
-  author makes at authoring time; it is not a decision a user makes by
-  typing a project name.
-- **No line breaks out of a value (C-9).** A substituted value may not
-  contain `\n`, `\r`, `U+2028` or `U+2029`, and the line it produces may
-  not lex as a `harness:` directive in any of the three comment wrappers.
-  Both checks, one code: `E-SUBST-MARKER-INJECTION`, exit 2. The newline
-  ban is the *sufficient* condition — a conforming `pattern` already
-  excludes them, and this is the check that does not depend on the author
-  having written a good pattern.
-- **`update` refuses a tampered region set (C-9).** Before merging, the
-  applied file is re-lexed and its ordered `harness:region` id list, its
-  nesting and its termination must equal the **manifest's recorded**
-  `regions[]` — including entries marked `orphaned`, since an orphan
-  legitimately remains in the file after the pack stops declaring it. Any
-  difference — an added region, a missing one, a reorder, an unterminated
-  marker — is `E-REGION-TAMPERED`, exit 2, and that file is refused for
-  merge; F3 offers replace-or-keep. This is what stops a forged region
-  from hijacking ownership or truncating a real one.
-
-### 7.4 The executable bit is declared, bounded, disclosed and watched (C-12)
-
-- `pack.json` gains **`executableRoots: string[]`** — applied-path
-  prefixes, each ending `/`, each subject to §7.1.1's grammar and
-  §7.1.2's denylist. `executable: true` outside every declared root is
-  `E-EXEC-ROOT-UNDECLARED`, exit 2. Absent or empty means the pack ships
-  no executable, which is the common case and the default.
-- A declared root that resolves under `.claude/`, `.git/`, `.hg/`,
-  `.svn/` or `.harness/` is `E-EXEC-DEST-FORBIDDEN`, exit 2 — checked at
-  declaration and again per applied path, so a directory recursion cannot
-  reach a forbidden destination that the root itself did not name.
-- **Cap: 32 executable files per apply**, `E-EXEC-TOO-MANY`, exit 2. The
-  cap's real value is not blast radius (see §8.2) but that a pack wanting
-  more has to say so in an ADR of its own.
-- Every 0755 path appears in `SecurityDisclosure.executables`, hence in
-  the init summary and in `pack info`. It does **not** gate: enumeration
-  is what C-12 asks for and a gate here would fire on nothing at v1.0.
-- **Drift sees the mode bit.** `FileDrift.modeChanged` is true when the
-  on-disk executable bit differs from `FileEntry.executable`, and the
-  file's state is `modified` even when the content hash matches — an
-  on-disk `chmod +x` is a change and content-hash-only drift was blind to
-  it. On Windows the bit is not represented, `modeChanged` is always
-  false, and drift is content-only; **this is the one place G-F1-7's
-  cross-platform promise genuinely differs by platform**, and it is
-  recorded rather than papered over.
-
-### 7.5 Rollback deletes only what it created, and restores what it overwrote (C-13)
-
-F1 §US-13 states the invariant "rollback never deletes a file it did not
-create" and then specifies a journal that cannot express it: under
-`--force`, a byte-identical pre-existing path is journalled with a hash
-that already matches on disk, so `--rollback` deletes a file the apply
-never created. `Journal` becomes **version 2** and gains the fields that
-make the invariant checkable:
-
-`preExisting`, `preHash`, `preMode` per entry, plus `backup` — a path
-under `.harness/journal.d/` holding the pre-apply bytes, written **before**
-the overwrite and present exactly when `preExisting && preHash !== sha256`.
-Only genuine overwrites pay for a backup.
-
-The four cases, exhaustively:
-
-| `preExisting` | on-disk hash | Rollback |
+| # | Surface | Why it is new |
 |---|---|---|
-| false | = intended | **delete** — we created it, it is still ours |
-| false | ≠ intended | **keep**, report — the user edited it after the crash |
-| true, `preHash === sha256` | = intended | **leave untouched**, report as kept — `--force` byte-identical; the file was already correct and was never ours |
-| true, `preHash !== sha256` | = intended | **restore from `backup`**, report as restored |
-| true | ≠ intended | **keep**, report — the user edited it after the crash |
-
-`createdDirs` is removed in reverse creation order, and only when empty.
-A journal declaring any `version` other than `2` is
-`E-JOURNAL-UNREADABLE`, exit 2 — the fail-closed default of §7.6 applied
-to the journal. Version 1 never shipped; the check exists so it never
-can.
-
-The invariant, restated as F1 should have stated it: **rollback deletes
-only paths this apply created, restores only paths this apply overwrote,
-and acts on neither unless the on-disk bytes are still exactly what this
-apply wrote.**
-
-### 7.6 Fail-closed, integrity, and the bounded walks
-
-**Fail-closed default (C-16), stated once and normatively.** Unknown
-**keys** in `pack.json`, `component.json` or the manifest are a warning
-and are ignored — unchanged, and F1.5's "unknown keys preserved verbatim
-on rewrite" stands. An unknown or unrecognised **value in a
-behaviour-selecting position** is a hard error, exit 2, zero bytes. The
-positions are enumerated, and the enumeration is closed:
-`Mapping.mode`, `ParameterDecl.type`, `AnatomyDecl.status`,
-`FileEntry.origin`, `FileEntry.mode`, `FileEntry.eol`, `TransformName`,
-a region directive name, an `ownedKeys` root against §7.2.1's table, a
-`SharedRef.integrity` prefix, and `Journal.version`. Where a specific
-code exists (`E-REGION-UNKNOWN`, `E-OWNEDKEY-FORBIDDEN`,
-`E-JOURNAL-UNREADABLE`) it is used; otherwise **`E-UNKNOWN-VALUE`**,
-carrying `{field}`, `{value}` and `{allowed}`.
-
-**Severity is a property of the code, not of the occasion.** A scenario
-that is fatal in one context and tolerable in another gets **two codes**,
-not one code with two severities. This is the general rule §7.8.5 applies
-to `E-BASE-MISSING`, and it is what keeps "exit class is a property of
-the run" true: `exitCodeFor()` folds a bag of fixed severities and never
-needs to know which command it is in.
-
-**Integrity is fail-closed on every write path (C-10).**
-`--allow-stale-shared` is registered on **`validate` only**, in
-`flags.ts`'s per-command table. On `init`, `update` or `contribute` it is
-`E-FLAG-NOT-PERMITTED`, exit 1 — *not* silently ignored, because a user
-who typed it believed it did something. A shared-digest mismatch on any
-write path is `E-SHARED-STALE`, exit 2, zero bytes, **no override
-exists**. F1 §US-7's "downgrades it to a warning for local iteration"
-must gain the words "on `harness validate` only".
-
-**`pack.integrity` is actually verified (C-11), correctly scoped.** The
-condition as written would break every legitimate `update`; the amended
-check is in §8.2. What is specified here: when the installed pack's
-`name` **and** `version` equal the manifest's recorded `pack.name` and
-`pack.version`, the installed pack's `treeDigest` **must** equal the
-recorded `pack.integrity`, or `E-PACK-INTEGRITY-MISMATCH`, exit 2, refuse
-to merge. Two different builds of `coding@1.0.0` is a wrong "ours" in a
-3-way merge, which loses work silently. When the versions differ this is
-a genuine upgrade, the check does not apply, and `update` records the new
-digest. `harness status` reports the same-version mismatch as
-`W-PACK-INTEGRITY-DIFFERS` — which is the check F1.4's field table
-already promised (`pack.integrity` → "detect *your CLI's pack differs
-from what you applied*") and never specified.
-
-**Both walks are bounded and neither follows a link (C-17).** One module,
-`src/fs/walk.ts`, serves the `contentRoot` recursion and the `untracked`
-project scan. Max depth **32**, max entries **10,000** per walk;
-exceeding either is `E-TRAVERSAL-LIMIT`, exit 2. Entries are `lstat`ed,
-never `stat`ed. A symlink under `contentRoot` remains
-`E-SYMLINK-IN-PACK`; a symlink met by the project scan is skipped with
-`W-SCAN-SYMLINK-SKIPPED`. The project scan does not descend into `.git/`,
-`.hg/`, `.svn/`, `.harness/` or `node_modules/`.
-
-**The lock is never broken silently (S-13).** `.harness/lock` holds
-`{ pid, host, startedAt, cli }` and is acquired with `open(…, 'wx')`. On
-`EEXIST`: if `host` equals this host, the recorded `pid` is not alive
-(`process.kill(pid, 0)`), **and** `startedAt` is older than 60 s, the
-lock is stale and is broken with `W-LOCK-STALE-BROKEN` naming the dead
-pid. Otherwise `E-LOCK-HELD`, exit 1. A lock whose pid is alive, or whose
-host is not ours, is never broken.
-
-**Credentials are forbidden, not handled (C-15).** At validate time, a
-`ParameterDecl` whose `id` or `prompt` matches
-`/secret|token|passwo?rd|credential|connection.?string|private[_-]?key|api[_-]?key/i`
-fails with `E-PARAM-SECRET-SUSPECTED`, exit 2, unless it carries
-`notASecret: true`. The message states plainly that the answer is written
-verbatim into `.harness/manifest.json` **and** into `.harness/base/`,
-both of which are **committed to version control by design** (Q-18,
-US-10) and are therefore exactly as public as the repository. At answer
-time, a value that looks like a credential (`-----BEGIN`, `sk-`, `ghp_`,
-`xox[baprs]-`, or ≥ 40 chars of high-entropy base64url) draws
-`W-ANSWER-LOOKS-SECRET` — a warning only, because an error there is a
-false-positive machine.
-
-The tempting design — a `type: 'secret'` that is prompted, used, and not
-recorded — is **rejected**: an unrecorded answer cannot be replayed, and
-`update` re-renders from recorded answers by construction (F1.8 item 1).
-v1.0 forbids credentials outright rather than supporting them halfway.
-
-### 7.7 Where the security checks join the validate run
-
-`validate-pack.ts` runs the US-16 order with the new checks interleaved,
-so a pack fails on the earliest and most explicable cause:
-
-```
-1  pack.json schema            + E-UNKNOWN-VALUE (fail-closed values)
-2  anatomy completeness        + E-ANATOMY-SOURCE-ON-ABSENT
-3  mapping + path safety       → confine.ts stage 1 and stage 2:
-                                 E-MAP-PATH-GRAMMAR, E-MAP-RESERVED-DEST,
-                                 E-MAP-CASE-COLLISION, E-MAP-NORM-COLLISION
-3b executable declarations     E-EXEC-ROOT-UNDECLARED, E-EXEC-DEST-FORBIDDEN,
-                                 E-EXEC-TOO-MANY
-3c destination policy          E-OWNEDKEY-FORBIDDEN, E-SETTINGS-MODE-FORBIDDEN,
-                                 W-HOOK-SCRIPT-INERT
-4  region grammar              (unchanged)
-5  rewrite usefulness          (unchanged)
-6  shared integrity            E-SHARED-STALE — downgradable HERE only
-7  parameter declarations      E-PARAM-NO-PATTERN, E-PARAM-PATTERN-INVALID,
-                                 E-PARAM-SECRET-SUSPECTED
-8  per-combination render      + E-SUBST-IN-SECURITY-KEY,
-                                 E-SUBST-MARKER-INJECTION
-9  scaffold collisions         (unchanged, over the merged mapping set)
-10 link integrity              (unchanged)
-11 disclosure                  build SecurityDisclosure over all combinations
-```
-
-Stage 3 of confinement (§7.1.3) is **not** in this list: `validate` has no
-project root to resolve. It runs at plan time and at write time only.
-
-### 7.8 Five gaps this pass found, decided
-
-#### 7.8.1 Hooks — decided in §7.2.5
-
-#### 7.8.2 Unknown CLI flags and commands have no diagnostic (gap 2)
-
-F1's catalogue is declared the only catalogue, and it has no code for the
-most common CLI failure there is. Four codes, all exit **1**, all
-fail-closed — argv parsing rejects, never ignores:
-
-| Code | Scenario |
-|---|---|
-| `E-CLI-UNKNOWN-COMMAND` | a first positional that is not a known command. Lists the known commands |
-| `E-CLI-UNKNOWN-FLAG` | a flag no command recognises. Names it and lists the flags **this** command accepts |
-| `E-CLI-FLAG-VALUE-MISSING` | a flag that takes a value received none |
-| `E-CLI-ARG-UNEXPECTED` | a positional the command does not take |
-
-Distinct from `E-FLAG-NOT-PERMITTED` (C-10), which is a **known** flag on
-the **wrong** command — `init --allow-stale-shared` must not read as a
-typo.
-
-**A two-pass parse is forced and must be stated**, or an implementer will
-report a false `E-CLI-UNKNOWN-FLAG` for every pack-declared alias. Pass 1
-recognises global flags, command flags and the pack name, and **defers**
-every unrecognised token. Pass 2 re-parses with the resolved pack's
-`parameters[].flag` aliases registered, and only then may a token be
-reported unknown.
-
-#### 7.8.3 `AnatomyDecl` — a content source on an `absent` entry (gap 3)
-
-F1 §US-2 currently treats it as a warning under US-1's unknown-key rule.
-That is wrong under C-16: `status: 'absent'` plus a content source is not
-an unknown key, it is a **contradiction** — the author has declared both
-"this part does not exist" and "here is its content", and the format
-cannot know which they meant. **`E-ANATOMY-SOURCE-ON-ABSENT`, exit 2.**
-
-The line this draws, which US-2 should state: a key that **contradicts**
-the declared status is an error; a key that is merely **inapplicable**
-(`reason` alongside `present`, `note` alongside `absent`) stays a
-warning. Contradiction is undecidable, redundancy is not.
-
-#### 7.8.4 F5's US-19 — what varies and what is byte-identical (gap 4)
-
-US-19 requires the two calibrations to differ in "the absorption-gate
-text describing how much of the gate is already structurally held" while
-being byte-identical in "the existence and non-delegability of the
-absorption gate". Those are compatible — but **only if the gate's *rule*
-and the gate's *coverage narrative* are not in the same file**, or are in
-the same file with the coverage narrative confined to an
-`harness:if constraintFloor=…` region.
-
-Which files those are is **pack content, and F5's call — referred back**.
-What F1 pins is the constraint F5 must satisfy, and the mechanism to
-check it:
-
-- F5 must name, in US-19, the file **or the region id** that carries the
-  varying coverage narrative, and assert that the gate's rule text is not
-  inside it.
-- The gate's rule — its existence, its non-delegability, that it may not
-  be cleared by the party that ran `deliver` and may not run in parallel
-  with `learn` — is invariant, and lives in the six phase definitions and
-  in `CLAUDE.md`'s practices.
-- **F1 makes the assertion checkable at the granularity F5 actually
-  means.** `PackReport` gains
-  `parameterVaryingRegions: { path, region }[]` alongside
-  `parameterVaryingFiles`. File granularity cannot express "this file
-  varies here and is byte-identical there", which is precisely the shape
-  of the gate record template. The validator computes it from the same
-  per-combination render it already runs, so it costs nothing new.
-
-#### 7.8.5 `E-BASE-MISSING`'s exit class (gap 5) — pinned for F3
-
-F1's row reads "Exit 1, per-file, during update", which contradicts "exit
-class is a property of the run, not the file". Pinned under §7.6's
-severity rule — **two codes, one severity each**:
-
-- **`W-BASE-MISSING`** (warning) — `update` has a per-file resolution
-  policy for this file (`--take-pack`, `--keep-mine`, or an interactive
-  answer). The file is handled, the run continues, and `exitCodeFor()`
-  sees a warning. A run in which every affected file is resolved exits
-  **0**.
-- **`E-BASE-MISSING`** (error, exit 1) — no resolution policy exists and
-  none can be obtained (non-interactive with no flag). The run's exit
-  class then falls out of `exitCodeFor()` like every other, with no
-  per-file special case anywhere.
-
-F3 may not invent a third behaviour, and in particular may not vary a
-code's severity by context.
+| **N-1** | **The phase-1 payload copy.** An entire pack tree written into every project and committed there | New write volume, new size and traversal exposure. Controls: path grammar on every payload path, symlink ban, depth 32 / 10 000 entries, 4 MB per file / 32 MB per payload, journalled and rollback-covered. **No new decision surface** — phase 1 reads no declaration |
+| **N-2** | **`.harness/pack/` as phase 2's input.** The thing a recipe reads is inside the project and writable by the user | Controls: no recipe step may write under `.harness/` (C-5, absolute); `payloadDigest` (Q-52) lets `verify` detect an edit. **Residual:** nothing stops a user editing the payload and then running `init` in a *different* project — but the payload is per-project, so this is not a propagation path |
+| **N-3** | **The recipe as a declared program.** §7.7 lists its validation | The closed union plus the closed registry is the control. A re-review should test the boundary: an `op` of `"copy "` with a trailing space, a `when` with two keys, a step object with two `op` keys after a JSON duplicate-key parse |
+| **N-4** | **`payloadDigest` itself.** A new integrity claim in a manifest with no self-integrity | It binds the payload to the manifest, not the manifest to itself. Someone who edits both defeats it. Stated in §5; a re-review should decide whether that is acceptable given v1.0 never merges |
 
 ---
 
-## 8. Security conditions — C-1…C-18 disposition
+## 8. Security conditions — C-1…C-18 re-disposition
 
-**SATISFIED-IN-ADR** = the decision is made here and the ADR is
-implementable against it. **DELEGATED-TO-SPEC** = the decision is made
-here, and a SpecWriter must fold the stated requirement into the named
-F1 (or F5) section before it is testable. Nothing is marked satisfied
-that is not actually specified above.
-
-### 8.1 The table
+**SATISFIED-IN-ADR** = decided here and implementable against it.
+**DELEGATED-TO-SPEC** = decided here, and the named spec section must
+carry it before it is testable. **DEFERRED-TO-V1.1** = its subject left
+v1.0 with Q-42 or Q-48; the obligation is named so v1.1 inherits it
+rather than rediscovering it. Nothing is marked satisfied that is not
+specified above.
 
 | C | Disposition | Where |
 |---|---|---|
-| **C-1** `ownedKeys` allowlist; `permissions.*`/`hooks.*` leaf-only or forbidden; `E-OWNEDKEY-FORBIDDEN` | **SATISFIED-IN-ADR** | §7.2.1 (the destination table, the leaf rule) · `src/security/destination-policy.ts` · `Mapping.ownedKeys: OwnedKey[]` in the contract. **Also DELEGATED**: F1 §US-6 must carry the table and the code; F1 §Error States must add `E-OWNEDKEY-FORBIDDEN` and `E-SETTINGS-MODE-FORBIDDEN` |
-| **C-2** verbatim enumeration + explicit consent; `E-SETTINGS-CONSENT-REQUIRED`, exit 1, zero bytes | **SATISFIED-IN-ADR** | §7.2.2 (the gate table) · `SecurityDisclosure`, `ConsentInputs`, `ApplyInputs.consent`, `ApplyPlan.disclosure`, `PackReport.disclosure` · `src/security/consent.ts`. **Also DELEGATED**: F1 §US-13 (gate precedes the lock), §US-29 (`pack info` renders it), §Error States |
-| **C-3** `update` must not re-add a removed security-relevant array entry | **SATISFIED-IN-ADR** | §7.2.4 (the five-step algorithm) · `OwnedKeyEntry.entries`/`.removed` · `FileDrift.ownedKeys[].removedByUser`. **Also DELEGATED**: F1 §US-6's merge rule changes (on-disk order preserved, not union-pack-first) and §US-10's entry shape; the `update` behaviour itself is **F3** |
-| **C-4** confinement by resolution; `lstat` ancestors; `E-DEST-SYMLINK`; descendant proof | **SATISFIED-IN-ADR, AMENDED** | §7.1.3 · `confinePath`, `ConfineContext`, `confineAtWrite`. Amendment (root resolved once, ancestor rule applies **below** the resolved root) argued in §8.2. **Also DELEGATED**: F1 §US-3's validation list and §NFR *Filesystem safety* |
-| **C-5** reserved-destination denylist on the resolved path; `E-MAP-RESERVED-DEST`, exit 2 | **SATISFIED-IN-ADR** | §7.1.2, including the `.harness/`-vs-base-store carve-out · `src/security/destination-policy.ts`. **Also DELEGATED**: F1 §US-3, §US-7 (component mappings and `remap`), §US-9 (`contributes`), §Error States |
-| **C-6** anchored `to` grammar; collision after case-fold **and** NFC | **SATISFIED-IN-ADR** | §7.1.1 (the grammar and the rejection table) · `collisionKey()`. **Also DELEGATED**: F1 §US-3 and §NFR *Cross-platform*; new codes `E-MAP-PATH-GRAMMAR`, `E-MAP-NORM-COLLISION`, `W-PATH-NON-NFC` |
-| **C-7** `pattern` + `maxLength` on every string param; JSON-escape into merge-json; `E-MERGE-JSON-INVALID` on re-parse failure | **SATISFIED-IN-ADR** | §7.3 · `ParameterDecl.pattern`/`.maxLength` · pipeline step 5 takes `mode` · re-parse **and deep-equal**. **Also DELEGATED**: F1 §US-8 (declaration), §US-4 (substitution), §F1.1 (step 5's new input), §Error States |
-| **C-8** no `{{harness:…}}` under a security-relevant owned key; `E-SUBST-IN-SECURITY-KEY`, exit 2, at validate | **SATISFIED-IN-ADR** | §7.3 · check position 8 of §7.7. **Also DELEGATED**: F1 §US-4, §US-16, §Error States |
-| **C-9** marker-injection ban; `update` refuses a mismatched region set (`E-REGION-TAMPERED`) | **SATISFIED-IN-ADR (validate side) · DELEGATED (update side)** | §7.3 — the newline ban and the lex check are F1's; the `update`-time re-lex and refusal are specified here but **implemented by F3**, and F1 must carry `E-REGION-TAMPERED` in §Error States and the "compare against the manifest's recorded set **including orphans**" rule in §US-6 |
-| **C-10** `--allow-stale-shared` on `validate` only; `E-FLAG-NOT-PERMITTED`; no override on a write path | **SATISFIED-IN-ADR** | §7.6 · `src/cli/flags.ts` per-command table. **Also DELEGATED**: **F1 §US-7 must gain the words "on `harness validate` only"**, §US-8's reserved-flag list, §Error States |
-| **C-11** `update` verifies `pack.integrity`; `E-PACK-INTEGRITY-MISMATCH`, exit 2 | **SATISFIED-IN-ADR, AMENDED** | §7.6 — scoped to a **same-name-same-version** comparison; argued in §8.2. **Also DELEGATED**: F1 §US-10 and §F1.4's field table; the check runs in **F3**; `W-PACK-INTEGRITY-DIFFERS` is F1's catalogue |
-| **C-12** `executable` inside declared roots only; never under `.claude/`,`.git/`,`.harness/`; enumerated; mode drift | **SATISFIED-IN-ADR** | §7.4 · `PackJson.executableRoots` · `SecurityDisclosure.executables` · `FileDrift.modeChanged`. **Also DELEGATED**: F1 §US-3 (the `executable` criterion), §US-11 (drift), §US-29, §Error States |
-| **C-13** journal records `preExisting` + pre-apply hash; rollback deletes only non-pre-existing matches | **SATISFIED-IN-ADR** | §7.5 (the five-case table) · `Journal` v2, `JournalEntry`, `.harness/journal.d/`, `RollbackResult.restored`. **Also DELEGATED**: F1 §US-13, §NFR *Rollback safety*, §F1.6's lifecycle diagram |
-| **C-14** branded `AppliedPath`; re-validate before each write; exclusive create; `E-TARGET-RACE` | **SATISFIED-IN-ADR** | §7.1.4 · the brand and `confineAtWrite()` in the contract · `PlannedFile.path: AppliedPath`. **Also DELEGATED**: F1 §US-13's write description, §Error States. Priced honestly in §8.2 |
-| **C-15** credential-valued parameters forbidden absent `notASecret`; the manifest is repo-public | **SATISFIED-IN-ADR** | §7.6 · `ParameterDecl.notASecret` · `src/security/secret-heuristic.ts`. **Also DELEGATED**: F1 §US-8, §US-10 (state plainly that answers are committed), §Error States |
-| **C-16** fail-closed: unknown keys warn, unrecognised **values** are exit 2 | **SATISFIED-IN-ADR** | §7.6 (the closed enumeration of behaviour-selecting positions) · `src/pack/schema.ts`. **Also DELEGATED**: F1 §US-1 (state the key/value asymmetry), §F1.5, §Error States (`E-UNKNOWN-VALUE`) |
-| **C-17** depth and entry caps on both walks; neither follows symlinks | **SATISFIED-IN-ADR** | §7.6 · `src/fs/walk.ts` (depth 32, 10 000 entries, skip list, `lstat`). **Also DELEGATED**: F1 §NFR *Memory and size bounds* and §US-11 (the `untracked` scan), §Error States |
-| **C-18** `contribute` subject to the identical validation set | **SATISFIED-IN-ADR (the boundary) · DELEGATED (the wiring)** | §Consequences · `checkContentPolicy()` and `ContentPolicyInput` in the contract · `src/security/content-policy.ts`. F1 exports the single gate and `E-CONTRIB-POLICY`; **F4 must route every patch through it and may not hold a second copy of any check** |
+| **C-1** `ownedKeys` allowlist; leaf-only for security-relevant roots; **hooks outside the ownable set entirely**; `E-OWNEDKEY-FORBIDDEN` | **SATISFIED-IN-ADR** | §7.2.1, §7.2.5 · `src/security/destination-policy.ts` · `OwnedKey` brand, `checkOwnedKey`, `DestinationPolicy.allowedOps`. **Already carried** in F1 v2.0 US-6 — no fold needed |
+| **C-2** verbatim enumeration + explicit consent, gate on the plan, before the lock, zero bytes on refusal | **SATISFIED-IN-ADR** | §7.2.2 · `SecurityDisclosure`, `ConsentInputs`, `ApplyInputs.consent`, `ApplyPlan.disclosure`, `PackReport.disclosure` · `src/security/consent.ts`. **Already carried** in F1 v2.0 US-13 and US-29 |
+| **C-3** removal-honouring settings merge | **DEFERRED-TO-V1.1** | Its subject is `update` (Q-42): it exists to stop a *second* apply resurrecting a deleted permission, and there is no second apply. **v1.1 obligation:** `update` may not union a security-relevant array without a `removed` set, and the manifest fields for it are additive optional keys that do not bump `manifestVersion` |
+| **C-4** confinement by resolution; root resolved once; ancestor `lstat`; `E-DEST-SYMLINK`; descendant proof | **SATISFIED-IN-ADR, amendment stands** | §7.1 stage 3 · `confinePath`, `ConfineContext`, `confineAtWrite`. The 2026-08-30 amendment (resolve the root once, apply the ancestor rule below it) is re-affirmed: without it the CLI cannot run in `/tmp` on macOS. **Already carried** in F1 v2.0 US-3 |
+| **C-5** reserved-destination denylist on the resolved path | **SATISFIED-IN-ADR, EXTENDED** | §7.1 stage 2. **Extension: no recipe step may write under `.harness/`**, which under the two-phase model means "no step may rewrite its own input". **DELEGATED:** F1 must add `.harness/README.md` to the CLI-owned carve-out list (§6.1 change 3) |
+| **C-6** anchored `to` grammar; collision after NFC **and** case-fold | **SATISFIED-IN-ADR, EXTENDED** | §7.1 stage 1 · `collisionKey()`. **Extension:** the same grammar applies to every payload path (`E-PAYLOAD-PATH-INVALID`), which is new surface phase 1 created. **Already carried** in F1 v2.0 US-3 and US-30 |
+| **C-7** `pattern` + `maxLength` on every string parameter; JSON escaping into `merge-json`; re-parse verification | **SATISFIED-IN-ADR** | §7.3 · `ParameterDecl.pattern`/`.maxLength` · `recipe/ops/substitute.ts` takes the destination kind · re-parse **and deep-equal**. **Already carried** in F1 v2.0 US-8 and US-4 |
+| **C-8** no `{{harness:…}}` under a security-relevant owned key | **SATISFIED-IN-ADR** | §7.3 · `E-SUBST-IN-SECURITY-KEY`, exit 2, at validate time, no override. **Already carried** in F1 v2.0 US-4 |
+| **C-9** substitution may not forge a marker | **HALF-SATISFIED · HALF-DEFERRED-TO-V1.1** | The **newline ban** is satisfied (§7.3, `E-SUBST-NEWLINE`) and is the sufficient condition. The **marker-lex half** and `E-REGION-TAMPERED` are removed with the region parser (Q-45) because the anchors are inert and a forged one hijacks nothing. **v1.1 obligation, named:** restore the lex check in the same change that makes `update` read anchors — not after it |
+| **C-10** integrity flags fail-closed on write paths | **RESCOPED** | Its subject was `--allow-stale-shared` over `shared[].integrity`; `shared/` leaves v1.0 (Q-48) and the flag does not exist. The **general rule survives** as `E-FLAG-NOT-PERMITTED`, exit 1: a read-only-command flag passed to a write command is refused, not ignored. §7.6 |
+| **C-11** integrity verified before a merge | **DEFERRED-TO-V1.1, PARTIALLY PRE-ANSWERED** | Its subject was `pack.integrity`, removed by Q-43. **Q-52's `payloadDigest` answers the half that matters most**: `verify` — and, later, `update` — can prove `.harness/pack/` is the payload this project recorded before trusting anything computed from it. The half that defers is "the *installed* pack claiming this name and version is the same build", which needs `update` to exist to have a consumer. **v1.1 obligation:** `update` checks `payloadDigest` **before** computing a merge base, and refuses on mismatch |
+| **C-12** `executable` inside declared roots only; never under `.claude/`/`.git/`/`.harness/`; enumerated | **SATISFIED-IN-ADR** | §7.4 · `PackJson.executableRoots` · `SecurityDisclosure.executables`. `FileDrift.modeChanged` is deleted with drift; the principle survives in `verify`'s mode comparison. **Already carried** in F1 v2.0 US-3 and US-29 |
+| **C-13** journal records `preExisting` + pre-apply hash; rollback deletes only what it created | **SATISFIED-IN-ADR, EXTENDED** | §7.5 · `Journal` v2, `JournalEntry`, `.harness/journal.d/`, the five-case table, `RollbackResult.restored`. **Extension: phase-1 writes are journalled identically**, so a crashed payload copy rolls back like anything else. **Already carried** in F1 v2.0 US-13 and US-30 |
+| **C-14** branded `AppliedPath`; re-validate before each write; exclusive create; `E-TARGET-RACE` | **SATISFIED-IN-ADR, EXTENDED** | §7.1 stage 4 · the brand and `confineAtWrite()`. **Extension: `HarnessPath` and `WritablePath`** — without them the CLI's own `.harness/` writes have no type, and the compile-error property C-14 buys does not hold across phase 1. **DELEGATED:** F1 must name the type (§6.1 change 8). The 2026-08-30 honesty about the runtime half stands: the brand is excellent value, the TOCTOU re-check is defence-in-depth and is the first thing to cut if F2 overruns |
+| **C-15** credential-valued parameters forbidden absent `notASecret`; the manifest is repo-public | **SATISFIED-IN-ADR, message corrected** | §7.6 · `ParameterDecl.notASecret` · `src/security/secret-heuristic.ts`. The disclosure named `.harness/base/`, which no longer exists; it now names `.harness/manifest.json` **and `.harness/pack/`**, both committed. **Already carried** in F1 v2.0 US-8 and US-10 |
+| **C-16** fail-closed: unknown keys warn, unrecognised **values** are exit 2 | **SATISFIED-IN-ADR, enumeration rewritten** | §7.6 — six behaviour-selecting positions, down from eleven, with the recipe's `op` replacing `Mapping.mode` and five manifest-shape positions deleted with their subjects. **Already carried** in F1 v2.0 US-1 |
+| **C-17** depth and entry caps on both walks; neither follows symlinks | **SATISFIED-IN-ADR** | §7.6 · `src/fs/walk.ts` (depth 32, 10 000 entries, `lstat`, skip list). Two call sites at v1.0: the phase-1 payload walk and the `verify` project scan. **Already carried** in F1 v2.0 US-30, US-33 and §NFR |
+| **C-18** `contribute` subject to the identical validation set | **DEFERRED-TO-V1.1** | `contribute` is F4 (Q-42) and `src/security/content-policy.ts` is not built. **v1.1 obligation, named precisely:** F1's pack-content policy must remain **a single callable gate** — the path grammar, the executable rules, the `ownedKeys` allowlist and the recipe validator — so that `contribute` routes through it rather than holding a second copy. The v1.0 module layout already keeps them separable (`security/`, `recipe/schema.ts`), and **v1.1 must not inline any of them into `validate-pack.ts`** |
 
-### 8.2 Where the reviewer is amended, and where the cost is argued
-
-Adopting a condition that does not survive contact with the product is
-not rigour, so these are argued rather than quietly dropped.
-
-1. **C-11 as written breaks every legitimate `update`.** "`update`
-   recomputes and compares `pack.integrity`; refuses to merge on
-   mismatch" — but `update` exists to move a project from `coding@1.0.0`
-   to `coding@1.1.0`, and those digests differ by definition. Taken
-   literally the condition makes `harness update` a command that always
-   fails. **Amended** (§7.6): the comparison is conditioned on *same name
-   and same version*, where a mismatch means two different builds claim
-   one version and the 3-way merge would use a wrong "ours" — which is
-   the real defect, and which the amended check catches while the literal
-   one would have been disabled within a week of shipping. The condition's
-   intent is fully served.
-
-2. **C-4 as written refuses to run in `/tmp` on macOS.** "`lstat` every
-   ancestor, refuse traversal through symlink" — but on macOS `/tmp` *is*
-   a symlink to `/private/tmp`, and a great many developers keep repos
-   under a symlinked home or a symlinked work volume. **Amended**
-   (§7.1.3): the project root is resolved **once** with `realpath()` and
-   everything is judged against the resolved root; the ancestor-symlink
-   refusal applies to components **below** it. The property C-4 wants —
-   a pack cannot write outside the tree the user pointed at — holds
-   exactly. Without this amendment the implementer ships a CLI that
-   cannot be used in the most common scratch directory on one of its
-   three supported platforms.
-
-3. **C-14's runtime half is the lowest-value item on the list, and is
-   adopted anyway.** The branded `AppliedPath` is excellent value: it
-   turns "someone forgot to validate this path" into a compile error, for
-   the cost of one `unique symbol`. The TOCTOU re-validation is not:
-   exploiting it needs an attacker with write access to the project
-   directory during the sub-second write window, and such an attacker can
-   simply write the file themselves. It is adopted because it is
-   genuinely cheap — one `lstat` and one exclusive create per file — but
-   its justification is defence-in-depth, **not a modelled threat**. If
-   it costs F2 schedule, it is the first thing on this page to cut, and
-   cutting it does not reopen S-2.
-
-4. **C-12's cap is priced honestly.** A cap of 32 executables does not
-   meaningfully bound blast radius — one executable in the wrong place is
-   the whole finding, and 32 is more than any plausible pack needs. Its
-   real value is procedural: a pack that wants more has to argue for it.
-   Adopted on that basis, not on the security one.
-
-5. **C-15's matcher needs narrowing.** A bare `key` substring
-   false-positives on `monkey`, `keyword`, `sortKey`. The regex in §7.6
-   drops bare `key` and matches `api[_-]?key` and `private[_-]?key`
-   instead, keeping `secret|token|passwo?rd|credential|connection.?string`.
-   The deeper point is worth recording: the *right* answer to secrets is
-   a `type: 'secret'` that is prompted, used and never recorded — and
-   that is incompatible with `update` re-rendering from recorded answers
-   (F1.8 item 1), so **v1.0 forbids credentials rather than supporting
-   them halfway**, which is the honest position.
-
-6. **C-2 gates on `permissions.deny`, which is monotonically
-   restrictive.** A pack can only *add* to `deny` under union merge, and
-   an added deny is safety-increasing; gating on it is the weakest part
-   of the condition. Adopted unchanged all the same — disclosing and
-   gating every security-relevant key is one rule, and a per-key gate
-   policy would be a second table for a benefit that rounds to nothing.
-   Recorded as a known, accepted cost.
-
-7. **S-7's fix is strengthened, not adopted as written.** "Reject a
-   substituted value containing a line that would lex as a marker" is
-   under-specified for the general case (a value can also *truncate* a
-   line, or complete a marker begun by the surrounding template). §7.3
-   bans line breaks in a substituted value outright, which is the
-   *sufficient* condition, and keeps the lex check as the second half.
-
-8. **The threat model is stated so the scope is arguable rather than
-   assumed** (§7.0). Under it, the authoring-time checks — C-1, C-5, C-6,
-   C-8, C-12, C-15, C-16, C-18 — are where the value is: they run in CI,
-   cost nothing at apply, and stop the bad pack from existing. That is
-   also why the hook decision is a *format* decision and not a *consent*
-   decision: the cheapest way to be safe about hooks is not to have a
-   route for them.
-
-### 8.3 One inconsistency this pass surfaced, for the SpecWriter
-
-F1 §F1.2's worked `coding` pack maps `settings.json` →
-`.claude/settings.json` with `ownedKeys: ["permissions.allow"]`. F5
-states twice that `coding` ships **"no default permission set"** (its
-part 8 assessment, and its comparison table row). Both cannot be true,
-and F1.2 claims to be "the coding pack expressed in the format".
-
-**Recommendation: strike the `settings.json` mapping from F1.2's worked
-example** and, if an illustration of `merge-json` is still wanted there,
-use a non-sensitive destination. F5's statement is about real pack
-content; F1.2's is an illustration. Striking it also means **no v1.0 pack
-owns a security-relevant key**, which makes the §7.2.2 gate cost exactly
-zero at v1.0 while remaining enforced against the format — the outcome
-argued for in §Consequences.
+**Summary:** of 18 conditions, **12 are SATISFIED-IN-ADR** (5 of them
+extended by the new model), **1 is half-satisfied and half-deferred**,
+**1 is rescoped**, and **4 are deferred to v1.1 with named obligations**.
+No condition is dropped. Both CRITICALs — C-1 and C-2 — are satisfied in
+full and were already carried into F1 v2.0.
 
 ---
 
-## 9. Verdict
+## 9. Open follow-ups
 
-`PROCEED`
+1. **A Mode A re-review is required before implementation, and this ADR
+   does not substitute for one.** The security review's verdict of record
+   is `REVISE-SPEC`; no `SECURITY-PROCEED` has been issued against F1
+   v2.0, F5 v2.0 or this rewrite. The surface changed: phase 1 is new
+   write volume, `.harness/pack/` is a new mutable input to phase 2, the
+   recipe is a new declared program, and `payloadDigest` is a new
+   integrity claim (N-1…N-4). The review should also confirm that
+   deleting the region parser removed the surface cleanly rather than
+   leaving a half-parser in `generate`.
+2. **F2's spec does not exist**, and the consent UX belongs to it. §7.2.5
+   reason 4 — "designing the declaration here and the consent there
+   splits one decision" — is still live for any v1.1 hook work.
+3. **The `.harness/README.md` branch** (§6.4) is one escalation, and it is
+   small. Either answer is implementable.
+4. **`general/system-architecture.md` and `general/technology-choices.md`
+   are required and unwritten.** Q-39 changed the shape of the system
+   after F1 and the original ADR were written, and nothing currently
+   records the whole-system view. This ADR's file-level plan is the
+   closest thing that exists and it is F1-scoped.
+5. **Q-49's duplication needs an owner.** Two copies of the targets
+   contract will drift before v1.1's `shared/` work lands. It should be a
+   named task on the v1.1 plan, not a discovery.
+6. **A step-count bound on recipes** — §7.7 records that none exists. Not
+   blocking; a re-review should decide it.
+
+---
+
+## 10. Verdict
+
+`REVISE SPEC`
+
+**The architecture is settled and I do not expect it to move.** The
+two-phase model, the closed seven-primitive recipe, the six-key manifest,
+F1's ownership of `verify`, and the security architecture of §7 are all
+decidable on the evidence and are decided here. The file-level plan and
+the interface contract are complete enough to build and to test against.
+
+**The spec set is not.** Three things stop it, and none of them is a
+question — they are folds that have not happened:
+
+1. **F1 v2.0 specifies a five-key manifest and a `skeleton/` tree.** An
+   implementer building faithfully from F1 today produces a manifest this
+   ADR rejects and a coding recipe the settled model superseded. Six
+   changes in §6.1 are mechanical; five are substantive.
+2. **F5 v2.0 has two live contract breaks against F1.** It ships
+   `shared/targets` as a v1.0 mechanism F1 does not define, and it cites
+   `E-SHARED-UNDECLARED` and `E-SHARED-STALE` — codes absent from what
+   F5 itself calls the only catalogue. That is exactly the class of
+   F1↔F5 contradiction ADR-001's first pass existed to close, and it has
+   reopened because Q-48 and Q-49 landed after F5 was written.
+3. **The master spec says the v1.0 command surface is `init` only.**
+   Q-53 says otherwise and says explicitly that the master spec must
+   change. A downstream reader taking the master spec at face value
+   builds one command instead of four.
+
+Add to that what the master spec itself already records as outstanding:
+no F2 spec, no F6 spec, no `system-architecture.md`, no
+`technology-choices.md`, no epics-and-tasks for any feature, and no fresh
+security verdict.
+
+**`REVISE SPEC` is therefore a statement about the document set, not
+about the design.** The revisions in §6 are folds of already-settled
+decisions; none of them requires a new decision, and none of them should
+change this ADR. Once F1, F5 and the master spec carry §6's changes and
+a Mode A re-review returns, this ADR should be re-stamped `PROCEED`
+without amendment.
+
+**Whatever verdict this ADR carries, implementation must not begin
+before a fresh Mode A security review of the rewritten specs.** The
+verdict of record remains `REVISE-SPEC` and this document does not
+change it.
