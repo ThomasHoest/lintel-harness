@@ -122,8 +122,8 @@ packs/coding/
 <project>/
 ├── .claude/
 │   ├── agents/*.md            10 agents, spawnable by name
-│   ├── commands/target.md     /target <file> — launches an unsupervised run
-│   └── settings.json          merge-json, declared owned keys only
+│   └── commands/target.md     /target <file> — launches an unsupervised run
+│                              (no settings.json — nothing writes it at v1.0, Q-54)
 ├── AgentTeams/
 │   ├── Specify.md             research → spec → ADR → security → PROCEED
 │   └── Implement.md           implementer + testwriter + reviewer + security

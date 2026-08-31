@@ -68,11 +68,11 @@ the run.
 ## Phase 2 is a recipe, not a script
 
 A script would make a pack **code that executes on the user's machine**,
-which voids the security model — path confinement, the reserved-
-destination denylist and consent gating all depend on the apply plan
-being inspectable *before* anything runs.
+which voids the security model — path confinement and the reserved-
+destination denylist both depend on the apply plan being inspectable
+*before* anything runs.
 
-A recipe is a declared sequence over a fixed primitive set:
+A recipe is a declared sequence over a fixed set of **six** primitives:
 
 | Primitive | Does | Example from the coding pack |
 |---|---|---|
@@ -82,7 +82,6 @@ A recipe is a declared sequence over a fixed primitive set:
 | `rewrite-path` | Replace a literal path string inside content | `template/targets/…` → `.harness/pack/targets/…` |
 | `substitute` | Replace `{{harness:param.<id>}}` with an answer | project name into `CLAUDE.md` |
 | `generate` | Render a file from payload + answers | `CLAUDE.md` with inert region anchors |
-| `merge-json` | Merge declared owned keys into existing JSON | `.claude/settings.json` |
 
 A pack can only do what the primitives allow. A genuinely new step
 requires a new primitive in the CLI — deliberately, so the set of things
@@ -98,6 +97,12 @@ testable, and it is why the manifest can stay minimal (Q-43): the
 applied state is always recomputable from `.harness/pack/` + the recipe
 + the recorded answers, so no per-file hash list and no `.harness/base/`
 store are needed.
+
+**The purity claim holds without exception** (Q-54). `merge-json` was
+the only primitive that took a fourth input — the pre-existing content
+of its destination — and it is dropped from v1.0, so no primitive reads
+anything outside (payload, answers, scaffold selection). `verify`'s
+recomputation identity is therefore exact rather than approximate.
 
 ---
 

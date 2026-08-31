@@ -1,11 +1,11 @@
 # F5 — Template Packs Specification — Lintel Harness v1.0
-**Version:** 2.0
+**Version:** 2.1
 **Status:** Draft
 **Date:** 2026-08-31
 **Platform:** Pack content is plain files — Markdown, JSON, shell/PowerShell, Bicep, CDK TypeScript — bundled with the Node/TypeScript CLI and consumed by Claude Code's `.claude/` conventions. No runtime of its own.
 **Design spec:** n/a (no UI)
 **ADR:** {{`F5-ADR-NNN-template-packs.md` — filled in by the architect after this spec is reviewed}}
-**References:** `specifications/general/pack-application.md` (the two-phase apply model — **authoritative**), `specifications/general/pack-inventory.md` (the three pack trees and per-file phase metadata — **authoritative for structure**), `specifications/project-brief.md` §3, §6 R1/R2/R5/R6, §12 Q-1…Q-53 (**all resolved, authoritative**), `specifications/v1.0/research-planning-pack-framing.md`, `specifications/v1.0/F1-spec-pack-format-and-manifest.md`, `specifications/v1.0/F1-ADR-001-pack-format-and-manifest.md` (**authoritative for the format**), `packs/coding/specifications/conventions.md`, `packs/coding/` (the coding pack source), `/Users/mrandersen/Projects/AIImpactOnOrganizationsAndLeadership/` (the writing pack source)
+**References:** `specifications/general/pack-application.md` (the two-phase apply model — **authoritative**), `specifications/general/pack-inventory.md` (the three pack trees and per-file phase metadata — **authoritative for structure**), `specifications/project-brief.md` §3, §6 R1/R2/R5/R6, §12 Q-1…Q-54 (**all resolved, authoritative**), `specifications/v1.0/research-planning-pack-framing.md`, `specifications/v1.0/F1-spec-pack-format-and-manifest.md`, `specifications/v1.0/F1-ADR-001-pack-format-and-manifest.md` (**authoritative for the format**), `packs/coding/specifications/conventions.md`, `packs/coding/` (the coding pack source), `/Users/mrandersen/Projects/AIImpactOnOrganizationsAndLeadership/` (the writing pack source)
 
 **Amendment history**
 
@@ -18,6 +18,7 @@
 | **2.0** | **2026-08-31** | **Two-phase rewrite (Q-39…Q-46).** The whole document is restated against `general/pack-application.md`. **Every pack now authors a `recipe.json`**, specified here as an explicit sub-part of anatomy part 7 (§Flows / *Where the recipe sits*) — the anatomy stays nine parts. Each pack outline is split into **payload** (phase 1, `.harness/pack/`) and **what the recipe produces** (phase 2). **Document templates, conventions and process READMEs are no longer copied out** — they stay in the payload (Q-46 supersedes Q-38). `update`/`status`/`contribute` criteria removed or marked v1.1 (Q-42). `.harness/base/` and all per-file-hash criteria removed (Q-43). All marked-region criteria removed; only inert `CLAUDE.md` anchors remain (Q-45). **Q-46 prose stripping is stated as a migration requirement per pack, with the sections named.** `shared/presentation` removed from v1.0 entirely (Q-28); the targets component still kept as a shared tree at this pass — reversed one row below by Q-48. Scaffolds cut to three, with `backend-azure`/`backend-aws` restated as **alternatives, not composable peers** (Q-17). `constraintFloor` enum values corrected to `high-floor` / `near-zero-floor` per `general/pack-inventory.md`; Helio and Cadenza demoted to reference organisations. **US-23 retired**; US-34…US-38 added. Three new questions: **Q-49, Q-50, Q-51.** |
 | **2.0** | **2026-08-31** | **`F1-ADR-001` fold (`REVISE SPEC`, §6.2's nine changes), plus Q-48…Q-53.** **The `shared/` mechanism is removed from this spec entirely (Q-48)** — no `shared/` tree, no `component.json`, no declared references, no digest pin and no bump rule at v1.0. `targets` ships as `coding`-local content and `planning` ships **its own copy** (Q-49), whose duplication is recorded here as a **named v1.1 reconciliation task**. **`E-SHARED-UNDECLARED` and `E-SHARED-STALE` are deleted** — neither exists in F1's catalogue, which this spec calls the only one. The "gap flagged, not filled" note on recipe validation is **deleted and the codes cited**: F1 carries `E-RECIPE-MISSING`, `-INVALID`, `-PRIMITIVE-UNKNOWN`, `-STEP-INVALID`, `-SOURCE-MISSING`, plus `E-PAYLOAD-PATH-INVALID` and `E-MAP-RESERVED-DEST`. **Q-50 removes every empty directory**: `coding` gains five folder READMEs from `applied-readmes/` (now stated in the payload inventory and the recipe table) and `planning` gains three (`portfolio/`, `portfolio/bets/`, `targets/`), so the coding phase-2 count becomes **24 files and no empty directory**; there is no `mkdir` primitive and no `.gitkeep`. **US-22 is retired** with the mechanism it asserted. **Every question this spec carried closes**: Q-30, Q-31, Q-32, Q-34, Q-36, Q-49, Q-50 and Q-51 move to Resolved Decisions, so **F5 has no open questions**. Next free question id **Q-54**; next free story id **US-39**. |
 | **2.0** | **2026-08-31** | **`F1-ADR-001` §6.2 changes 10–11 folded — the Q-50 folder-README rule becomes a checked rule.** F1 v2.2 adds `validate` **step 12** (`W-FOLDER-README-MISSING`, a warning, fatal under `--strict`), run **per parameter combination**, and `pack.json` gains **`folderReadme`**. Two consequences land here. **(10)** `packs/writing/pack.json` **declares `"folderReadme": "index.md"`**, its existing Obsidian convention paired with `Home.md`; `coding` and `planning` omit the key and take the `README.md` default. **(11)** **Every folder a recipe creates must receive its folder README from a step in the same `when` branch as whatever creates the folder** — stated as a requirement on all three recipes and worked concretely for `coding`'s `backend-azure`/`backend-aws` scaffolds, `writing`'s per-workstream stage folders and `planning`'s two calibration branches. `W-FOLDER-README-MISSING` is added to the CLI-scenario table **by citation**; F1 remains the only catalogue. One goal added, **G5.11** (`validate --all --strict` exits `0` over the bundled packs), and one NFR under *Anatomy and legibility*. **No new code, no new story and no new question**: next free question id **Q-54**; next free story id **US-39**. |
+| **2.1** | **2026-08-31** | **`F1-ADR-001` Mode A re-review fold — §6.2 changes 12–16, as overridden by Q-54.** **`merge-json` is dropped from v1.0 (Q-54): six primitives, not seven.** The three `merge-json` "Settings" steps in `coding`, `writing` and `planning` are **deleted** — the architect established they were never valid recipes (no `from`, no owned key, no settings source file in any payload), so nothing is removed but placeholders. **`.claude/settings.json` leaves every produced-tree listing and every acceptance criterion**, including US-17 and US-18; US-18's *"contains no `hooks` key"* becomes the stronger, mechanically checkable *"the applied tree contains no `.claude/settings.json`"*. **Every reference to `E-OWNEDKEY-*`, `E-MERGE-JSON-*` and `E-SETTINGS-*` is deleted** — those codes no longer exist in F1's catalogue, which this spec calls the only one, so citing them was a contract break. **No pack ships a permission set, owns a settings key, or triggers a consent prompt at v1.0.** Restated and unchanged: **no pack registers an agent hook at v1.0**; `planning` still ships its inert `0644` guard script and the kill-criteria rule is still carried by `/bet`'s instruction and by `/review`. R5's shortfall record gains a **fourth** entry — no pack ships a default permission set either, deferred to v1.1 with `merge-json`. **C-12's lapse is repaired:** US-17 and §NFR *Payload fidelity* said phase 1 copies *"including modes"*, which is the opposite of the rule — **phase 1 writes every payload file `0644` and preserves no source mode** (F1 US-30). Counts corrected: `coding` phase 2 writes **23** files (18 working + 5 folder READMEs), not 24. Four F5-internal corrections from §6.2 change 16: US-34's provenance clause restated against §3.6 (source is a payload path, resolved at plan time, no execute-time read); `planning` gains the **`rewrite-path`** step its targets contract already required; the 7b summary-matrix cells restated for all three packs; and §Flows' *"which F1 must add"* on the recipe-schema code struck, because that gap closed. **Q-54 is indexed as resolved; next free question id Q-55; next free story id US-39. No story retired, no new code, no new question.** |
 
 ---
 
@@ -48,9 +49,12 @@ that split is now the organising fact of pack content:
   `.harness/pack/`. No renames, no substitution, no rewriting, identical
   mechanism for every pack.
 - **Phase 2 — recipe.** The CLI reads `.harness/pack/` (Q-41) and applies
-  the pack's own **declarative recipe** over a fixed primitive set —
-  `copy`, `rename`, `strip-suffix`, `rewrite-path`, `substitute`,
-  `generate`, `merge-json` (Q-40).
+  the pack's own **declarative recipe** over a fixed primitive set of
+  **six** — `copy`, `rename`, `strip-suffix`, `rewrite-path`,
+  `substitute`, `generate` (Q-40, as narrowed by Q-54). **`merge-json`
+  does not ship at v1.0** and is deferred to v1.1 with the rest of the
+  settings story, so **no pack writes `.claude/settings.json`, owns a
+  settings key, or ships a default permission set**.
 
 Three consequences land squarely on this spec. First, **every pack must
 now author a `recipe.json`**, and F5 must say what each pack's recipe
@@ -159,7 +163,8 @@ Only settled decisions. Everything unsettled is in **Open Questions**.
 | Decision | Choice | Rationale |
 |---|---|---|
 | Apply model | **Two phases.** Phase 1 copies the pack verbatim to `.harness/pack/`; phase 2 runs the pack's declarative recipe, reading from that copy | Q-39/Q-41 — matches what the manual apply actually did; makes the generic half generic and the varying half explicitly per-pack, and gives a phase that cannot fail in an interesting way |
-| Phase 2 form | A **declarative recipe** over seven primitives — `copy`, `rename`, `strip-suffix`, `rewrite-path`, `substitute`, `generate`, `merge-json` — applied automatically by the CLI, never by the user | Q-40 — a script would make a pack code that executes on the user's machine, voiding path confinement, the reserved-destination denylist and consent gating, all of which need the plan inspectable *before* anything runs |
+| Phase 2 form | A **declarative recipe** over **six** primitives — `copy`, `rename`, `strip-suffix`, `rewrite-path`, `substitute`, `generate` — applied automatically by the CLI, never by the user | Q-40 as narrowed by Q-54 — a script would make a pack code that executes on the user's machine, voiding path confinement and the reserved-destination denylist, both of which need the plan inspectable *before* anything runs |
+| Settings and permissions | **No pack writes `.claude/settings.json` at v1.0.** `merge-json` is dropped, so no pack owns a settings key, ships a default permission set, or presents anything for a user to consent to at apply time. The whole settings story defers to v1.1 | Q-54 — F5's three settings steps were never valid recipes: not one named a `from`, not one named a single owned key, and no pack payload holds a settings source file. Once they went, `merge-json` had no v1.0 consumer while carrying the format's largest attack surface, so the surface is deleted rather than repaired |
 | Recipe placement in the anatomy | **An explicit sub-part of part 7**, not a tenth part. The anatomy stays nine parts | §Flows / *Where the recipe sits* — part 7 already answers "what shape does an applied project have?", and the recipe is the executable statement of exactly that. Keeping nine parts preserves F1's nine-key `anatomy` object, the `present`/`provisional`/`absent` enum, and this spec's counted NFRs |
 | Where reference material lives | **In the payload.** Document templates, `conventions.md` and process READMEs stay at `.harness/pack/` and are read from there; the recipe copies out only working parts | Q-41 + Q-46 — one copy of the pack per project, no duplication to drift, and no file that is wrong the instant it is copied. **Supersedes Q-38** |
 | Bootstrap prose | **Deleted from the pack sources.** "Copy this folder", "rename the template", "fix the paths", "adopting this in a new project" come out of `packs/coding/**` and the writing extraction entirely | Q-46 — the recipe performs that procedure, so the instructions are dead content. This is also what lets phase 1 copy verbatim: nothing in the payload is wrong once copied |
@@ -193,8 +198,9 @@ Each is assessable yes/no when F5 is done.
   `packs/coding/pack.json` and `packs/planning/pack.json` omit the key
   and take F1's `README.md` default.
 - **G5.2** — Each pack ships a valid **`recipe.json`** that uses only the
-  seven declared primitives and produces the applied tree this spec
-  states.
+  **six** declared primitives and produces the applied tree this spec
+  states. No recipe contains a `merge-json` step, because the primitive
+  does not exist at v1.0 (Q-54).
 - **G5.3** — Every pack declares all nine anatomy parts. Any part with no
   content is declared `absent` with a stated reason; any part that is
   inferred rather than sourced is declared `provisional` with a note; no
@@ -252,6 +258,12 @@ Each is assessable yes/no when F5 is done.
   no-code-before-PROCEED hook, a default permission set) are deferred.
 - **A registered hook in any pack.** Deferred to the first version that
   gains a hook-registration mechanism with a designed consent surface.
+- **Any pack-written `.claude/settings.json`, and the whole settings
+  story with it** (Q-54). `merge-json` does not ship at v1.0, so no pack
+  declares owned keys, no pack ships a default permission set, and no
+  apply has a settings grant to disclose or a consent gate to raise.
+  Deferred **whole** to v1.1, together with the ownable-key allowlist,
+  the destination policy and the security disclosure the surface needed.
 - **Authoring document templates the writing pack does not have**, with
   **one bounded exception**: Q-51 permits `index.template.md` and
   `home.template.md`, recorded as **recipe scaffolding rather than pack
@@ -291,7 +303,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
 - `lintel-harness init coding` in an empty directory exits `0` and
   produces `.harness/pack/`, `.harness/manifest.json`, `CLAUDE.md`,
   `.claude/agents/` (10 files), `.claude/commands/target.md`,
-  `.claude/settings.json`, `AgentTeams/` (2 files),
+  `AgentTeams/` (2 files),
   `specifications/README.md`, `specifications/project-brief.md`,
   `specifications/general/`, `specifications/v1.0/`, `targets/Run.md`
   and `copy/tone-of-voice.md`.
@@ -304,8 +316,15 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   `infrastructure/backend-deploy/README.md` already come from elsewhere
   in the recipe. `.claude/` and `.harness/` are **excluded** as
   tool-owned, and there is **no `.harness/README.md`**.
-- `.harness/pack/` is **byte-identical** to `packs/coding/` at the
-  applied version — same file list, same bytes, same modes.
+- **The applied tree contains no `.claude/settings.json`.** No v1.0 pack
+  writes one: `merge-json` does not ship (Q-54), so the pack owns no
+  settings key, ships no permission set, and the apply presents nothing
+  to consent to.
+- `.harness/pack/` is **byte-identical in content** to `packs/coding/` at
+  the applied version — same file list, same bytes, file for file.
+  **Modes are not preserved:** phase 1 writes every payload file `0644`
+  and every created directory `0755`, reading no source mode (F1 US-30).
+  The fidelity test is a **content** diff, not a mode comparison.
 - `AgentTeams/` exists and `agent-teams/` does not: the directory rename
   is performed by the recipe, not by the user.
 - `copy/tone-of-voice.md` exists and `copy/tone-of-voice.template.md`
@@ -353,9 +372,13 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   contains a personal name, an absolute path beginning `/Users/`, a
   research source, a voice sample, or any entry from the source
   project's permission allowlist.
-- `.claude/settings.json` in the produced tree contains no `hooks` key.
-  (The source project's only hook is a third-party notifier and does not
-  migrate.)
+- **The produced tree contains no `.claude/settings.json` at all, and the
+  pack owns no settings key at v1.0** (Q-54). This is the stronger form
+  of the criterion an earlier draft stated as *"`settings.json` contains
+  no `hooks` key"*, and unlike that one it is checkable by listing the
+  tree rather than by parsing a file the apply never writes. (The source
+  project's only hook is a third-party notifier and does not migrate; its
+  ~120-entry permission allowlist does not migrate either — Q-30.)
 - `lintel-harness pack info writing` reports parts 8 and 9 as `absent`,
   each with its declared reason.
 
@@ -532,8 +555,12 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   the produced project's `CLAUDE.md`. `lintel-harness validate` says the
   same about the script with `W-HOOK-SCRIPT-INERT` (F1 §Error States),
   and `pack info` lists it as inert.
-- A `pack.json` declaring `hooks` among its owned `.claude/settings.json`
-  keys fails validation (F1 §Error States).
+- **No `pack.json` declares any owned settings key, and none can:**
+  `merge-json` does not ship at v1.0 (Q-54), so there is no route by
+  which any pack — this one included — writes `.claude/settings.json`.
+  The rule that no pack registers an agent hook is therefore satisfied
+  by construction rather than by a check: there is no settings file to
+  register one in.
 
 ---
 
@@ -594,14 +621,18 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
 **Acceptance criteria:**
 - Each of `packs/coding/`, `packs/writing/` and `packs/planning/` ships a
   `recipe.json` at its root.
-- Every step in every recipe names one of exactly seven primitives:
+- Every step in every recipe names one of exactly **six** primitives:
   `copy`, `rename`, `strip-suffix`, `rewrite-path`, `substitute`,
-  `generate`, `merge-json`. A recipe naming anything else fails
-  validation with `E-RECIPE-PRIMITIVE-UNKNOWN` (F1 §Error States, exit 2)
-  and `init` refuses to apply the pack. **F1 owns the code and the
-  message**; F5 cites and does not invent.
-- Every recipe step reads a source path under `.harness/pack/` and never
-  from the bundled pack (Q-41).
+  `generate`. A recipe naming anything else — **`merge-json` included,
+  which is not a v1.0 primitive (Q-54)** — fails validation with
+  `E-RECIPE-PRIMITIVE-UNKNOWN` (F1 §Error States, exit 2) and `init`
+  refuses to apply the pack. **F1 owns the code and the message**; F5
+  cites and does not invent.
+- Every recipe step's source is a path **in the payload**; the CLI
+  resolves it at plan time, and phase 2 performs no read during execution
+  (F1 §F1.6, `F1-ADR-001` §3.6). The payload is the authoritative tree —
+  the pack copy at `.harness/pack/`, never the bundle (Q-41) — which is a
+  statement about **provenance**, not about the moment of the read.
 - No recipe step reads a timestamp, an environment variable, the network,
   or the current working directory. Two applies of the same pack version
   with the same answers into empty directories produce **byte-identical**
@@ -730,16 +761,14 @@ diagnostics, they have no code, and they do not belong in F1's catalogue.
 | Both backend scaffolds requested — same destination | `E-SCAFFOLD-EXCLUSIVE` | 1 |
 | `pack.json` names a `recipe` the pack does not contain | `E-RECIPE-MISSING` | 2 |
 | `recipe.json` is unparseable or its top-level shape is wrong | `E-RECIPE-INVALID` | 2 |
-| A step declares an `op` outside the seven primitives | `E-RECIPE-PRIMITIVE-UNKNOWN` | 2 |
+| A step declares an `op` outside the six primitives — including `merge-json`, dropped by Q-54 | `E-RECIPE-PRIMITIVE-UNKNOWN` | 2 |
 | A step's inputs are wrong for its primitive — a missing `to`, a directory `from` on a file-only primitive, a compound `when`, a scaffold with no steps | `E-RECIPE-STEP-INVALID` | 2 |
 | A step's `from` names nothing in the payload | `E-RECIPE-SOURCE-MISSING` | 2 |
 | A pack-relative path escapes the pack or is otherwise illegal | `E-PAYLOAD-PATH-INVALID` | 2 |
-| A pack declares `hooks` among its owned settings keys | `E-OWNEDKEY-FORBIDDEN` / `E-HOOKS-NOT-SUPPORTED` — **F1 decides which** | 2 |
 | A `substitute` step leaves a token unresolved | `E-SUBST-UNRESOLVED` | 2 |
 | A `rewrite-path` step matches nothing | `E-REWRITE-UNUSED` | 2 |
 | A recipe writes to a reserved destination | `E-MAP-RESERVED-DEST` | 2 |
 | Two recipe steps write the same destination | `E-MAP-COLLISION` | 2 |
-| A `merge-json` step targets invalid JSON | `E-MERGE-JSON-INVALID` | 2 |
 | Pack's `minCliVersion` exceeds the installed CLI | `E-PACK-CLI-TOO-OLD` | 1 |
 | `init` in a directory that already has a manifest | `E-ALREADY-APPLIED` | 1 |
 | Inert guard script present, registered by nothing | `W-HOOK-SCRIPT-INERT` | unchanged |
@@ -764,6 +793,21 @@ earlier draft carried here — `E-SHARED-UNDECLARED` and `E-SHARED-STALE` —
 name codes that do not exist and have been deleted rather than
 reinterpreted.
 
+**And there is no `E-MERGE-JSON-*`, no `E-OWNEDKEY-*` and no
+`E-SETTINGS-*` family either.** Q-54 drops `merge-json` from v1.0, and
+with it the ownable-key allowlist, the destination policy, the leaf-only
+rule, the consent gate and the security disclosure — so those code
+families are **removed from F1's catalogue rather than repaired**. Three
+rows an earlier draft of this section carried — a pack declaring `hooks`
+among its owned settings keys (`E-OWNEDKEY-FORBIDDEN` /
+`E-HOOKS-NOT-SUPPORTED`), a `merge-json` step targeting invalid JSON
+(`E-MERGE-JSON-INVALID`), and the `E-SETTINGS-MODE-FORBIDDEN` row a
+mid-fold draft was told to add — **are deleted**. Citing a code F1 does
+not carry is a contract break whichever direction it points, and this
+spec has now made that mistake twice; the rule that closes it is the one
+already stated in §Scope: **F1 owns the only catalogue, and F5 cites
+codes it can point at.**
+
 ### Pack-content scenarios — F5 owns the string, verbatim
 
 | Scenario | Expected Behaviour |
@@ -783,8 +827,9 @@ reinterpreted.
 
 **The headline shortfall against R5, recorded rather than softened:**
 
-> **No v1.0 pack ships an enforcing hook, and the reason is a decision
-> about the pack *format*, not a constraint on the migrations.**
+> **No v1.0 pack ships an enforcing hook, and no v1.0 pack ships a
+> default permission set. Both reasons are decisions about the pack
+> *format*, not constraints on the migrations.**
 
 Two shortfalls were already known and are about *migration*: `coding` and
 `writing` inherited no hooks, and Q-6 forbids inventing content during a
@@ -792,9 +837,25 @@ faithful migration. The third is different in kind. The **authored**
 pack — the one Q-9 chose specifically to prove the format could carry
 what the migrations could not — was the one pack that had an enforcing
 hook, and it lost it because the format has no way to declare a hook and
-no consent surface to gate one. R5's "hooks and skills are the weakest
-part" therefore reads, at v1.0, as a statement about the harness rather
-than about the packs.
+no surface on which to seek a user's agreement to one. R5's "hooks and
+skills are the weakest part" therefore reads, at v1.0, as a statement
+about the harness rather than about the packs.
+
+**The fourth shortfall, recorded on the same terms, is new at this
+pass.** **No v1.0 pack ships a default permission set either**, and the
+reason is again the format: **Q-54 drops `merge-json`**, so there is no
+primitive by which any pack writes `.claude/settings.json`, and
+therefore no route by which a pack could ship sensible default
+permissions even if it had them to ship. R5 named "sensible default
+permissions" as a want; at v1.0 it is **deferred to v1.1 with
+`merge-json` and the settings story as a whole**, not merely unbuilt.
+This is not a loss of capability — the three settings steps this spec
+carried until now were never valid recipes: not one named a `from`, not
+one named a single owned key, and no pack's payload contained a settings
+source file, so each would have failed `validate` before it wrote a byte.
+What is recorded here is the honest consequence: `coding`'s part 8 said
+"no default permission set" as a migration gap, and it is now a
+**product-wide** fact with a v1.1 owner.
 
 Two things follow, both v1.0 facts:
 
@@ -802,10 +863,14 @@ Two things follow, both v1.0 facts:
    migrated packs do not" still stands, but it rests on three slash
    commands rather than on a command-plus-hook. It is **weaker than it
    was**, and part 8 says so.
-2. The route out is known: a `hooks` declaration whose consent surface is
-   designed together with F2's prompting, and whose merge-time
-   re-consent problem is solved before it ships. Until then, a pack that
-   wants a rule enforced states it and has an agent follow it.
+2. The route out is known, and it is **v1.1 work, deferred as a whole**:
+   `merge-json` returns, and with it a settings destination, an
+   ownable-key allowlist, a `hooks` declaration, and the surface on which
+   a user is asked to agree to a grant before it lands — designed
+   together with F2's prompting, with the merge-time re-agreement problem
+   solved before any of it ships. Until then, a pack that wants a rule
+   enforced states it and has an agent follow it, and a pack that wants
+   sensible default permissions cannot express them at all.
 
 ---
 
@@ -819,8 +884,10 @@ Two things follow, both v1.0 facts:
 - **Size:** phase 1 copies **≤ 120 files** for any pack. Phase 2 writes
   **≤ 60 files** with no scaffold selected and **≤ 200** with every
   scaffold a pack offers. Concretely at v1.0: `coding` phase 1 copies
-  ~60 files and phase 2 writes **24 files and no empty directory** — the
-  19 working files plus the five folder READMEs Q-50 requires.
+  ~60 files and phase 2 writes **23 files and no empty directory** — the
+  **18** working files plus the five folder READMEs Q-50 requires.
+  (The count was 24 until Q-54 removed `.claude/settings.json`, which
+  the old arithmetic carried as one of the working files.)
 - **No empty directories, in any pack.** Under Q-50 every folder an apply
   creates carries a README, so a recipe never needs to express an empty
   directory and no primitive can. There is **no `mkdir` primitive** and
@@ -841,10 +908,25 @@ Two things follow, both v1.0 facts:
   convention already uses.
 - **Recipe purity:** a recipe is a pure function of (payload, parameter
   answers). No environment reads, no network, no clock, no ordering
-  dependence among independent steps.
-- **Payload fidelity:** `.harness/pack/` is byte-identical to
-  `packs/<name>/` at the applied version, file-for-file including modes.
-  This is checkable with one diff and is the phase-1 acceptance test.
+  dependence among independent steps. **This holds at every applied path,
+  with no exception.** `merge-json` was the one primitive that took a
+  fourth input — the destination's pre-existing content — and Q-54
+  removes it, so the claim is now true as stated rather than true
+  everywhere except one destination kind.
+- **Payload fidelity:** `.harness/pack/` is **byte-identical in content**
+  to `packs/<name>/` at the applied version, file for file. **Modes are
+  not preserved: phase 1 writes every payload file `0644` and every
+  directory `0755`** (F1 US-30), reading no source mode. The phase-1
+  acceptance test is a **content** diff, and is checkable with one
+  command. An earlier edition of this NFR said "file-for-file including
+  modes"; that was the opposite of the rule, it was the only place in the
+  document set that specified phase-1 modes at all, and under it a `0755`
+  source file would have landed `0755` under `.harness/` — which
+  `E-EXEC-DEST-FORBIDDEN` forbids by name. The fixed mode is what makes
+  phase 1 satisfy that rule **by construction**, and it costs nothing: a
+  pack's executable is made executable by the recipe step that copies it
+  out, at the destination, and nothing ever reads the payload copy's
+  mode.
 
 **Content integrity**
 
@@ -979,8 +1061,12 @@ halves need distinguishing.
 - `pack.json`'s `anatomy` object keeps **nine keys**, and part 7's entry
   covers both halves.
 - **`recipe.json` validity is not an anatomy question.** A missing or
-  invalid recipe is a recipe-schema failure with its own code — which
-  F1 must add (§Error States).
+  invalid recipe is a recipe-schema failure with its own code, and **F1
+  already carries those codes** — `E-RECIPE-MISSING`, `E-RECIPE-INVALID`,
+  `E-RECIPE-PRIMITIVE-UNKNOWN`, `E-RECIPE-STEP-INVALID` and
+  `E-RECIPE-SOURCE-MISSING` (§Error States). An earlier edition of this
+  bullet said the code was one "F1 must add"; that gap closed, and this
+  section said so eighty lines above while this bullet did not.
 - Each pack's README describes what its recipe produces (US-28), because
   that is now part of describing part 7.
 
@@ -1005,7 +1091,7 @@ nothing branches on them.
 | 5 | Coordination rules | **weak** — 2 team prompts with lead playbooks; no routing table, no parallelization rules | **strong** — 8-row routing table, 3 parallelization rules, no-auto-chaining, bounded critic loop | present — cadence-by-uncertainty, non-delegable gate, kill-criteria escalation |
 | 6 | Behavioural guidelines | present — `CLAUDE.md.template`, 15 headings | **strong** — voice, words-to-avoid, standing instructions, plus a loadable guide | present — the five practices, each operational |
 | 7a | Folder scaffolding | present — 5 produced top-level paths, per-version spec folders, 1 backend scaffold (2 alternatives) | present — shared corpus + per-workstream stages, `index.md` everywhere, `Home.md` front door | present *(authored)* — register, per-bet folders, horizons, decision log, calibration record |
-| **7b** | **Apply recipe (`recipe.json`)** | **required** — copy-out + rename + strip-suffix + 2 path rewrites + generate + merge-json + 1 scaffold branch | **required** — copy-out + strip-suffix + rename to `Home.md` + generate + merge-json + 1 scaffold branch | **required** — copy-out + **`when` on `constraintFloor`** + substitute + generate + portfolio skeleton |
+| **7b** | **Apply recipe (`recipe.json`)** | **required** — copy-out + 7 renames + strip-suffix + 2 path rewrites + substitute + generate + 1 scaffold branch | **required** — copy-out + strip-suffix + rename to `Home.md` + per-folder index renames + generate + 1 scaffold branch | **required** — copy-out + **`when` on `constraintFloor`** + 1 path rewrite + substitute + 3 folder-README renames + generate + portfolio skeleton |
 | 8 | Skills & automations | **weak** — 1 slash command (`/target`), 0 hooks, 0 skills, no default permission set | **absent** — 0 commands, 0 pack-owned hooks, 0 skills | present *(authored)* — 3 slash commands **plus 1 inert guard script**; 0 enforcing hooks, because no pack may register one |
 | 9 | Autonomy contract | present — targets: readiness gate, autonomy envelope, abort criteria, work log, SUCCESS/ABORT. **Pack-local content** (Q-48) | **absent** — no target contract, no gate, no envelope, no log | present — **its own copy** of the targets contract, tuned to bets (Q-49), plus a phase the envelope may never enter |
 
@@ -1030,7 +1116,7 @@ Four readings follow, all v1.0 facts:
    `calibrations/<name>/` — a pack-authoring convention over an existing
    mechanism, not new grammar (Q-13).
 4. **Part 7b is the one part where all three packs are equal.** Every
-   pack authors a recipe, every recipe uses the same seven primitives,
+   pack authors a recipe, every recipe uses the same six primitives,
    and none may do anything the primitives cannot express. That is the
    security property Q-40 bought, and it is visible in this table as the
    only row with no variation.
@@ -1129,14 +1215,13 @@ authoring** for the migration: `pack.json`, `recipe.json`, `commands/`
 | Path fix | `rewrite-path` | `targets/Run.md`, `.claude/commands/target.md` | `template/targets/…` → `.harness/pack/targets/…` |
 | Answers | `substitute` | project name and stack into the above | — |
 | Onboarding | `generate` | `CLAUDE.md.template` + answers | `CLAUDE.md`, with inert anchors (Q-45) |
-| Settings | `merge-json` | declared owned keys only | `.claude/settings.json` |
 | Backend | `copy` + `strip-suffix`, `when scaffold` | `scaffolds/backend-azure/**` **or** `scaffolds/backend-aws/**` | `infrastructure/backend-deploy/` — **including that folder's own `README.md`, from inside the selected scaffold** |
 
 **Applied tree:**
 
 ```
 <project>/
-├── .claude/{agents/*.md ×10, commands/target.md, settings.json}
+├── .claude/{agents/*.md ×10, commands/target.md}
 ├── AgentTeams/{README.md, Specify.md, Implement.md}
 ├── specifications/
 │   ├── README.md  project-brief.md
@@ -1148,11 +1233,22 @@ authoring** for the migration: `pack.json`, `recipe.json`, `commands/`
 └── infrastructure/backend-deploy/     only with a backend scaffold
 ```
 
-**24 files, and not one empty directory.** The 19 working files plus the
-five folder READMEs. `.claude/` and `.harness/` carry no pack-written
+**23 files, and not one empty directory.** The **18** working files plus
+the five folder READMEs. `.claude/` and `.harness/` carry no pack-written
 README — both are tool-owned and excluded by Q-50 — and in particular
 **there is no `.harness/README.md`**, because C-5 forbids any recipe step
 writing under `.harness/` and Q-50 does not carve a hole in it.
+
+**And there is no `.claude/settings.json`.** The tree above carried one
+until this pass, written by a `merge-json` step that was never a valid
+recipe — it named no `from`, it named no owned key, and
+`packs/coding/`'s payload inventory contains no settings source file, so
+the step would have failed `E-RECIPE-SOURCE-MISSING` before it wrote
+anything. **Q-54 removes the primitive rather than repairing the step**,
+so `coding` writes no settings file, owns no settings key and ships no
+default permission set. That last is a real gap and part 8 records it
+(§*Skills and automations* below); it is not repaired by leaving a
+placeholder in an acceptance criterion.
 
 **`coding` omits `folderReadme`, so its declared basename is
 `README.md`** — which is why every folder-README row above ends
@@ -1194,7 +1290,8 @@ empty**: each receives a README from `applied-readmes/`, and so does every
 other folder this recipe brings into being. **Q-50 dissolves the
 empty-directory problem rather than solving it** — no folder is ever
 empty, so no primitive ever needs to create one, and the primitive set
-stays at seven. An earlier draft of this spec proposed an eighth `mkdir`
+needs no addition. It is **six** at v1.0 (Q-54). An earlier draft of this
+spec proposed an additional `mkdir`
 primitive; that proposal is **withdrawn**, and the reason it was worse
 than it looked is recorded in `F1-ADR-001` §3.3: a `mkdir`'s entire
 output is invisible to `verify`'s file comparison and uncommittable by
@@ -1483,7 +1580,6 @@ should be corrected to the four-file guide when it is next revised.
 | Writing guide | `strip-suffix` | `writing-guide/*.template.md` | `writing-guide/*.md` |
 | Front door | `rename` | `templates/home.template.md` | `Home.md` |
 | Onboarding | `generate` | `CLAUDE.md.template` + answers | `CLAUDE.md`, with inert anchors |
-| Settings | `merge-json` | declared owned keys only — **no `hooks`, no permission allowlist** | `.claude/settings.json` |
 | Corpus + workstreams | `copy`, `when scaffold=writing-workstream` | `scaffolds/writing-workstream/**` | `sources/{_scouting,inbox}/`, `analyses/`, `notes/`, `tasks/`, `workstreams/` |
 | Folder indexes — unconditional folders | `rename` per destination | `templates/index.template.md` | one `index.md` per folder the **unconditional** steps create — `writing-guide/` included |
 | Folder indexes — scaffold folders | `rename` per destination, **`when scaffold=writing-workstream`** | `templates/index.template.md` | one `index.md` per folder **that scaffold** creates, in the **same** branch |
@@ -1492,7 +1588,7 @@ should be corrected to the four-file guide when it is next revised.
 
 ```
 <project>/
-├── .claude/{agents/*.md ×8, settings.json}
+├── .claude/agents/*.md ×8
 ├── writing-guide/           voice guide + words-to-avoid, ready to fill
 ├── Home.md                  map-of-content; the reader's front door
 ├── CLAUDE.md
@@ -1508,6 +1604,16 @@ so `writing` needs **no new folder READMEs** and creates **no empty
 directory**, `sources/inbox/` included. Keeping the `index.md` current
 thereafter is enforced by prose at v1.0, not by a hook — part 8 is
 absent. The document templates stay in the payload.
+
+**`writing` writes no `.claude/settings.json`.** The tree above carried
+one until this pass, from a `merge-json` step annotated *"no `hooks`, no
+permission allowlist"* — an annotation describing what the step would not
+do, attached to a step that named no `from` and no owned key and had no
+source file in the payload to merge. **Q-54 removes the primitive**, so
+the annotation's promise is now a structural fact: the pack has no route
+to a settings file at all. Q-30's decision is unchanged and is now
+trivially satisfied — `writing` ships no permission set and no hook, and
+part 8 stays `absent` with that reason.
 
 **The index steps are split across two branches, and that split is a
 requirement rather than a formatting choice.** Every folder the
@@ -1780,6 +1886,7 @@ portfolio roles plus `target-reviewer.md`), `templates/` (4),
 | Commands | `copy` | `commands/{bet,review,horizon,target}.md` | `.claude/commands/` (4 files) |
 | Guard | `copy` | `hooks/kill-criteria-guard.sh` | `.claude/hooks/` — **`0644`, inert** |
 | Kickoff | `copy` | `targets/Run.md` | `targets/Run.md` — from `planning`'s **own** targets copy (Q-49) |
+| Path fix | `rewrite-path` | `targets/Run.md`, `.claude/commands/target.md` | the pack-relative `targets/…` literal → `.harness/pack/targets/…` |
 | Calibrated content | `copy`, **`when constraintFloor=high-floor`** | `calibrations/high-floor/**` | cadence, horizon and gate-coverage files |
 | Calibrated content | `copy`, **`when constraintFloor=near-zero-floor`** | `calibrations/near-zero-floor/**` | the same destinations, different content |
 | Calibration record | `substitute` | `{{harness:param.constraintFloor}}` | `calibration.md` at the repo root |
@@ -1788,7 +1895,6 @@ portfolio roles plus `target-reviewer.md`), `templates/` (4),
 | Folder README | `rename` | `applied-readmes/portfolio-bets.md` | `portfolio/bets/README.md` |
 | Folder README | `rename` | `applied-readmes/targets.md` | `targets/README.md` |
 | Onboarding | `generate` | `CLAUDE.md.template` + calibrated fragments + answers | `CLAUDE.md`, with inert anchors |
-| Settings | `merge-json` | declared owned keys only — **never `hooks`** | `.claude/settings.json` |
 
 **Applied tree:**
 
@@ -1797,8 +1903,7 @@ portfolio roles plus `target-reviewer.md`), `templates/` (4),
 ├── .claude/
 │   ├── agents/*.md ×7         6 marked provisional, plus target-reviewer
 │   ├── commands/{bet,review,horizon,target}.md
-│   ├── hooks/kill-criteria-guard.sh   INERT 0644 — registered by nothing
-│   └── settings.json
+│   └── hooks/kill-criteria-guard.sh   INERT 0644 — registered by nothing
 ├── calibration.md             which calibration this project was initialised at
 ├── portfolio/
 │   ├── README.md              what belongs in this folder and what does not
@@ -1819,6 +1924,43 @@ empty and no `mkdir` primitive is needed. `bets/<slug>/` is created by
 `/bet` at use time, not by the apply, so the rule does not reach it. The
 four document templates and `target.template.md` stay in the payload and
 are read from `.harness/pack/`.
+
+**`planning` writes no `.claude/settings.json` either.** The tree above
+carried one, from a `merge-json` step annotated *"never `hooks`"* — and
+that annotation was the whole of the step's content, because it named no
+`from` and no owned key and the payload has no settings source. **Q-54
+removes the primitive**, so the guarantee it was gesturing at is now
+structural: `planning` cannot register its guard script even in
+principle, which is what the next paragraph and part 8 already said and
+the recipe table contradicted. The guard therefore ships exactly as
+before — copied to `.claude/hooks/kill-criteria-guard.sh` at `0644`,
+inert, registered by nothing and executed by nothing — and the
+kill-criteria rule is carried by `/bet`'s own instruction and by
+`/review`, re-checked at every review.
+
+**`planning`'s `rewrite-path` step is stated above and was previously
+missing.** §Flows / *The targets contract* requires `Run.md`
+path-rewritten to `.harness/pack/targets/` in **both** pack-local copies,
+and `planning`'s recipe table listed no such step while `coding`'s did.
+The step is added rather than the requirement dropped: `planning`'s
+`Run.md` and `/target` command point at reference material that lives in
+the payload, exactly as `coding`'s do.
+
+**One authoring constraint follows, and it is stated because it is easy
+to get wrong.** `coding` rewrites the legacy `template/targets/…`
+literal because it is **migrated** and that literal is what the source
+commit contains. `planning` is **authored** (Q-29), so its `Run.md` has
+no legacy literal to inherit and could in principle be written with
+`.harness/pack/targets/…` already in it — at which point the
+`rewrite-path` step above would match nothing and fail
+`E-REWRITE-UNUSED`, exit 2, at validate time. **So `planning`'s payload
+`targets/Run.md` and `commands/target.md` must be authored with the
+pack-relative `targets/…` form**, exactly as `coding`'s source carries
+it, and the recipe rewrites it on the way out. Authoring the destination
+form directly and dropping the step is the alternative; it is rejected
+because it would make the two pack-local copies of the contract differ
+in their recipe as well as their content, which is the drift v1.1-T1
+already exists to reconcile.
 
 **`planning` omits `folderReadme` and takes the `README.md` default**, and
 **all three of its folder-README steps are unconditional**, matching the
@@ -2012,12 +2154,17 @@ to **part 9**, counted there rather than here:
 
 **The guard does not run at v1.0, and this is a format decision rather
 than an oversight.** An earlier draft shipped it as a registered agent
-hook. **No pack may register an agent hook at v1.0**: `hooks` is outside
-the ownable set of `.claude/settings.json`, and a pack declaring it fails
-validation. The decisive reason is `update`: a hook's command string is a
-merge target, so a 3-way merge between a pack's change and a user's
-change can resolve to a command **neither party wrote**, and no v1.0
-mechanism re-consents to that.
+hook. **No pack may register an agent hook at v1.0**, and under Q-54 that
+now holds by construction rather than by a check: **no v1.0 pack writes
+`.claude/settings.json` at all**, because `merge-json` does not ship, so
+there is no file in which a hook could be registered and no owned key a
+pack could declare. The decisive reason the hook was dropped is
+`update`: a hook's command string is a merge target, so a 3-way merge
+between a pack's change and a user's change can resolve to a command
+**neither party wrote**, and v1.0 has no mechanism by which a user could
+be asked to agree to that. Both halves of the problem — the declaration
+and the agreement surface — are **v1.1 work, deferred together with
+`merge-json`**.
 
 What survives, exactly:
 
@@ -2207,13 +2354,15 @@ looks runnable but is not.
 
 ## Open Questions
 
-**None.** `Q-1`…`Q-53` are **all resolved** — see the brief §12, which is
+**None.** `Q-1`…`Q-54` are **all resolved** — see the brief §12, which is
 authoritative, together with the rows below and in *Resolved Decisions*.
 Every question this spec carried at version 2.0 has closed, including the
-three it raised (Q-49, Q-50, Q-51). **The next free ID is Q-54.** Question
+three it raised (Q-49, Q-50, Q-51), and **Q-54 — which drops `merge-json`
+from v1.0 — is resolved in the brief and folded into this version.**
+**The next free ID is Q-55.** Question
 IDs are unique across the whole project, not per document; cross-feature
 questions belong in the master spec, and a question raised from here takes
-Q-54 and is recorded in the document that raises it.
+Q-55 and is recorded in the document that raises it.
 
 | # | Question | Owner | Status |
 |---|---|---|---|
@@ -2235,10 +2384,14 @@ is in F1's.
 
 ## Resolved Decisions
 
-Q-1…Q-53 are **all resolved**. The full decision text for Q-1…Q-53 lives
+Q-1…Q-54 are **all resolved**. The full decision text for Q-1…Q-54 lives
 in the brief's §12, which is authoritative, or in the master spec or F1.
 The rows below are the questions **F5 raised**, all now closed; they keep
-their original IDs per `conventions.md` and are never reused.
+their original IDs per `conventions.md` and are never reused. **One row
+is an exception and is marked as such: Q-54 was raised by the Mode A
+re-review and answered in the brief**, and it is restated here because it
+removes content this spec carried in three recipe tables and three
+acceptance criteria.
 
 | # | Question | Decision | Date |
 |---|---|---|---|
@@ -2250,5 +2403,6 @@ their original IDs per `conventions.md` and are never reused.
 | Q-49 | Does `packs/planning/` declare the shared targets component at v1.0, and if not, where does its part 9 come from? | **`planning` ships its own copy of the targets contract**, tuned to bets rather than code (brief §12). Q-48 removed the mechanism the question assumed, so there was nothing to declare. Part 9 stays **`present`** and US-27's absorption-gate ABORT keeps a vehicle. **Accepted cost, and this spec assigns it an owner:** two copies of the contract now exist and will drift — the exact duplication Q-4 was written to prevent — so reconciling them is booked as **v1.1-T1**, owned by the architect, in §Flows / *The targets contract*. | 2026-08-31 |
 | Q-50 | How does a recipe create an empty directory? | **It does not have to — the premise is dissolved, not the problem solved** (brief §12). Every folder an apply creates carries a README: `README.md` for `coding` and `planning`, `index.md` for `writing`, with **`.claude/` and `.harness/` excluded as tool-owned**. So no folder is ever empty, and there is **no eighth `mkdir` primitive, no `skeleton/` tree and no `.gitkeep`**. The proposed `mkdir` is withdrawn: `F1-ADR-001` §3.3 records that its entire output is invisible to `verify` and uncommittable by git, so an applied tree using it would not survive a clone. `coding` gains five folder READMEs from `applied-readmes/`; `planning` gains its `portfolio/`, `portfolio/bets/` and `targets/` READMEs; `writing` already had the convention. | 2026-08-31 |
 | Q-51 | May the `writing` extraction author the templates its recipe needs? | **Yes, and exactly two** (brief §12). `index.template.md` and `home.template.md` are authored and recorded in the extraction record as **recipe scaffolding rather than content** — without them the recipe cannot render `Home.md` or a per-folder `index.md`, and the pack would ship a convention it cannot execute. Everything else stays faithful: the one real `post` template migrates as it is, and the writing guide keeps its **four files under their existing names**, `.template`-suffixed only where the recipe strips a suffix. Part 3 stays thin. | 2026-08-31 |
+| Q-54 | *(Raised by the Mode A re-review, not by F5 — restated here because it removes content this spec carried.)* Does `merge-json` ship at v1.0? | **No — six primitives, not seven** (brief §12). `merge-json` is deferred to v1.1 with the whole settings story: the ownable-key allowlist, the destination policy, the leaf-only rule, the agreement gate and the security disclosure are **removed rather than repaired**. The trigger was this spec: its three "Settings" steps in `coding`, `writing` and `planning` were **never valid recipes** — not one named a `from`, not one named a single owned key, and no pack's payload inventory holds a settings source file — so once they were deleted `merge-json` had **no v1.0 consumer** while carrying the format's largest attack surface. Consequences folded here: no pack writes `.claude/settings.json`, owns a settings key or ships a default permission set; `E-MERGE-JSON-*`, `E-OWNEDKEY-*` and `E-SETTINGS-*` leave F1's catalogue and every citation of them leaves this spec; `coding`'s phase-2 count drops to **23**; and R5 gains a **fourth** recorded shortfall. **Bonus, and it is not small:** `merge-json` was the only primitive taking a fourth input — the destination's pre-existing content — so the *Recipe purity* NFR is now true **without exception**. | 2026-08-31 |
 | Q-35 | How is the project-monotonic `US-N` counter reconciled across parallel feature specs? | **Reconciled by the 2026-08-30 consistency pass.** F1 keeps US-1…US-16 (earlier in build order) and later gained US-29; F5's block was renumbered to US-17…US-28. Standing rule for later parallel passes: the earlier feature in build order keeps its block, later blocks are renumbered at the merge, and the counter table is updated before either spec reaches `Accepted`. **Applied again in this rewrite:** US-23 is retired rather than reused, and new stories were allocated from US-34. **Applied again at the ADR-001 fold:** US-22 is retired with the `shared/` mechanism it asserted (Q-48), its id is not reused, and no replacement story is allocated — what it protected is now task **v1.1-T1**. F5's live block is US-17…US-21, US-24…US-28, US-34…US-38; F1 holds US-1…US-4, US-6, US-8…US-10, US-13…US-16 and US-29…US-33; **next free id US-39**. | 2026-08-30 |
 | Q-37 | Where is a pack's anatomy declaration validated — schema or CLI? | **Answered by F1.** `pack.json` carries a mandatory `anatomy` object with exactly nine keys; a missing key is `E-ANATOMY-MISSING`; a key whose globs match no files is `E-ANATOMY-EMPTY`. The anatomy carries a three-value `status` enum — `present \| provisional \| absent`, defaulting to `present` — with `provisional` requiring a `note` and `absent` a `reason`, which is what makes this spec's provisional/absent counts mechanically checkable. **Reaffirmed by this rewrite:** the recipe is a sub-part of part 7 precisely so that nine keys stays nine keys. | 2026-08-30 |
