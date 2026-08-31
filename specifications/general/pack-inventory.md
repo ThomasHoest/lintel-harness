@@ -320,7 +320,20 @@ packs/planning/
 │   ├── bet-framer.md                      P2   prioritize + frame bets
 │   ├── horizon-analyst.md                 P2   the max() decision aid
 │   ├── gate-reviewer.md                   P2   absorption gate · MUST differ from deliver
-│   └── learning-synthesiser.md            P2   learn phase
+│   ├── learning-synthesiser.md            P2   learn phase
+│   ├── target-reviewer.md                 P2   7th agent · NOT provisional · readiness gate
+│   └── README.md                          P1   payload-only · carries the provisional statement
+├── process.md                             P1   anatomy source, part 1
+├── conventions.md                         P1   anatomy source, part 4
+├── coordination.md                        P1   anatomy source, part 5
+├── calibration.template.md                P2   → portfolio/calibration.md · the one substitution
+├── portfolio-seed/                        P1   register.md · decisions.md · unconditional seed
+├── applied-readmes/                       P2   portfolio.md · portfolio-bets.md · targets.md
+├── hooks/
+│   └── kill-criteria-guard.sh             P1+P2 INERT 0644 · registered by nothing
+├── targets/                               P1+P2 planning's OWN copy (Q-49), not shared
+│   ├── README.md · Run.md                 P2
+│   └── target.template.md                 P1   copied per goal
 ├── templates/
 │   ├── opportunity-bet-brief.template.md  P1   6 fields incl. absorption cost, kill criteria
 │   ├── roadmap-review.template.md         P1   5 fields · committed-milestone
@@ -332,6 +345,7 @@ packs/planning/
 └── commands/
     ├── bet.md                             P2   /bet · refuses without kill criteria
     ├── review.md                          P2   /review · runs a roadmap review
+    ├── target.md                          P2   /target · launches an unsupervised run
     └── horizon.md                         P2   /horizon · walks the decision aid
 ```
 
