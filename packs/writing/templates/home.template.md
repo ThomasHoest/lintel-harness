@@ -10,6 +10,7 @@ tags: [moc, home]
 > [!tip] How to use this note
 > This is the reader's map of the whole vault. Every folder also has its own `index.md` with a fuller table — those are the living source of truth; this note is the front door. Set this as your Obsidian home note (Settings → Homepage) if you have the Homepage plugin.
 
+Purpose, writer, audience and evidence standard: [[project-brief|Project brief]]
 Background and framing: [[CLAUDE|Project workflow & conventions (CLAUDE.md)]]
 
 ---
@@ -25,7 +26,7 @@ Background and framing: [[CLAUDE|Project workflow & conventions (CLAUDE.md)]]
 
 ## 🧭 Reading paths
 
-- **New to the project?** → {{the framing note, once one exists}}
+- **New to the project?** → [[project-brief|Project brief]] (what this is for, who is writing it, who it is for, and what it will not cover)
 - **Want the digested argument?** → [[analyses/index|Analyses]] (close readings with the thesis, evidence, and cross-links pulled out)
 - **Want the raw field maps?** → [[sources/_scouting/index|Scouting reports]] (one per subject: canon, debates, gaps)
 - **Want every source in one place?** → [[sources/bibliography|Master bibliography]]

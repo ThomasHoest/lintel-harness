@@ -42,7 +42,7 @@ copies and giving this pack one is a **named v1.1 task**.
 ## What the recipe produces
 
 Phase 1 copies this whole folder verbatim to `.harness/pack/`. Phase 2 runs
-`recipe.json` — eleven declared steps over six primitives, six unconditional
+`recipe.json` — twelve declared steps over six primitives, seven unconditional
 and five inside the scaffold.
 
 | Step | Primitive | From (payload) | To (project) |
@@ -51,7 +51,8 @@ and five inside the scaffold.
 | Writing guide | `strip-suffix` | `writing-guide/*.template.md` | `writing-guide/*.md` (4 files) |
 | Guide index | `rename` | `templates/index.template.md` | `writing-guide/index.md` |
 | Front door | `rename` | `templates/home.template.md` | `Home.md` |
-| Answers | `substitute` | — | `writing-guide/*.md`, `Home.md` |
+| Project brief | `rename` | `templates/project-brief.template.md` | `project-brief.md` |
+| Answers | `substitute` | — | `writing-guide/*.md`, `Home.md`, `project-brief.md` |
 | Onboarding | `generate` | `CLAUDE.md.template` | `CLAUDE.md`, with inert anchors |
 | Corpus | `copy` ×4, scaffold only | `scaffolds/writing-workstream/{sources,analyses,notes,tasks}/` | `sources/` (with `_scouting/`, `inbox/`), `analyses/`, `notes/`, `tasks/` |
 | Workstreams | `copy`, scaffold only | `scaffolds/writing-workstream/workstreams/` | `workstreams/` and one starter workstream with its four stage folders |
@@ -62,6 +63,8 @@ and five inside the scaffold.
 ├── writing-guide/           README.md, tone-of-voice.md, ai-tells.md,
 │                            bilingual-publishing.md, index.md
 ├── Home.md                  map-of-content; the reader's front door
+├── project-brief.md         who is writing, for whom, to what standard of
+│                            evidence — upstream of every writing stage
 ├── CLAUDE.md                voice, the strict phase order, routing defaults,
 │                            parallelization rules, standing instructions
 └── (with --scaffold writing-workstream)
@@ -77,7 +80,9 @@ convention invented for the checker; it is the pack's existing Obsidian shape,
 the per-folder table of contents `Home.md` links to. Every folder the scaffold
 creates receives its `index.md` from a step in the **same** scaffold branch, so
 both `init writing` and `init writing --scaffold writing-workstream` are
-self-consistent on their own.
+self-consistent on their own. `project-brief.md`, `Home.md` and `CLAUDE.md`
+all land at the project root and create no folder, so none of them touches
+that rule.
 
 `writing-guide/` carries **both** a `README.md` and an `index.md`. They do
 different jobs: the README is the migrated guide's own front matter — what the
@@ -99,9 +104,9 @@ Three, all substitution-only; this pack declares no conditional step.
 
 | Id | Prompt | Lands in |
 |---|---|---|
-| `projectName` | Project name | `CLAUDE.md`, `Home.md` |
+| `projectName` | Project name | `CLAUDE.md`, `Home.md`, `project-brief.md` |
 | `projectPurpose` | One line: what this project researches and writes about | `CLAUDE.md`, `Home.md` |
-| `authorName` | The writer whose voice the writing guide describes | `CLAUDE.md`, `writing-guide/*.md` |
+| `authorName` | The writer whose voice the writing guide describes | `CLAUDE.md`, `writing-guide/*.md`, `project-brief.md` |
 
 Placeholders the pack deliberately leaves for the user to fill are written as
 `{{…}}` markers that carry no `harness:` prefix, and are copied through
@@ -127,12 +132,17 @@ content were dropped rather than migrated:
   placeholders pointing at wherever a new project keeps its samples, which is
   what the guide's own portability note asks for.
 
-Two templates were **authored** rather than migrated:
-`templates/index.template.md` and `templates/home.template.md`. They are
-**recipe scaffolding, not pack content** — without them the recipe cannot
-render the `index.md`-in-every-folder convention or `Home.md`, and the pack
-would ship a convention it cannot execute. They do not count toward part 3,
-which stays thin on the strength of the one real document template.
+Three templates were **authored** rather than migrated:
+`templates/index.template.md`, `templates/home.template.md` and
+`templates/project-brief.template.md`. They are **recipe scaffolding, not
+pack content** — the first two because without them the recipe cannot render
+the `index.md`-in-every-folder convention or `Home.md`, and the pack would
+ship a convention it cannot execute; the third because a project that cannot
+state who is writing it, for whom, and to what standard of evidence has
+nothing for the outliner, the writer and the critic to work against. All
+three are rendered out of the payload rather than read from it, and none
+counts toward part 3, which stays thin on the strength of the one real
+document template.
 
 Manual bootstrap prose — anything telling a reader to copy a folder, rename a
 file, fix a path or set the project up by hand — is not in this pack. The

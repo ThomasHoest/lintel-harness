@@ -11,6 +11,31 @@ to have a roadmap.
 {{ONE PARAGRAPH — what portfolio is this? Which organisation or unit,
 what kind of bets, and who decides.}}
 
+**The organisational context every framework here depends on is in
+`project-brief.md` at the repo root — read it first.** The horizon
+formula computes from its determinants section; the cadence defaults
+assume its constraint floor; the absorption gate is only meaningful
+against its absorption-capacity number. A portfolio run on an unfilled
+brief produces well-formed bets whose horizons were set by the planning
+calendar, which is the failure this pack exists to prevent. If the brief
+is still at its template placeholders, say so and fill it before the
+first intake pass.
+
+**The evidence behind the brief lives in `background/`.** That folder is
+**raw material** — company details, vision and strategy, existing
+products, performance, customers and competitors, constraints, capacity —
+dropped in unedited, each file carrying **where it came from and when**.
+`project-brief.md` is the **distillation**: it states the conclusions,
+`background/` holds what they were drawn from. Neither is a dumping
+ground for the other. When you write a brief claim, name the file in
+`background/` it came from; when you read one, check it there. **A claim
+traceable to nothing in `background/` is a claim to re-check, not one to
+trust** — write it `[NEEDS SOURCE]` rather than trusting it. Undated
+material is treated as unreliable, and a two-year-old market read is not
+evidence about today. When you gather context, write it into
+`background/` with its provenance block before you distil it into the
+brief; `background/README.md` says which subfolder feeds which section.
+
 **The calibration this project was initialised at is recorded in
 `calibration.md` at the repo root.** It set the cadence defaults, the
 horizon defaults and the absorption-gate coverage narrative in
@@ -21,6 +46,8 @@ Where things live:
 
 | Path | What it holds |
 |---|---|
+| `project-brief.md` | The company, the constraint floor, the vision, what this portfolio decides, absorption capacity, the horizon determinants, governance |
+| `background/` | The raw material the brief is distilled from, with provenance. `company/` → §1 · `strategy/` → §3, §4 · `products/` + `performance/` → §5 and determinant `U` · `market/` → determinant `S` · `constraints/` → §2, the `constraintFloor` calibration, determinants `L` and `I` · `capacity/` → §6, which the absorption gate is checked against |
 | `portfolio/register.md` | Every bet, its status, its phase and its horizon |
 | `portfolio/bets/<slug>/` | One folder per bet — brief, evidence notes, gate record, reviews |
 | `portfolio/horizons.md` | The computed horizon per programme, with its determinant |
@@ -103,6 +130,13 @@ Standing instructions. All five hold at both calibrations.
 4. **Keep the security gate non-delegable.**
 5. **Budget review capacity as a portfolio input** — review throughput
    constrains how many bets can run.
+
+Three of the five read their inputs straight out of `project-brief.md`:
+practice 1 from its absorption-capacity section (the absorbable-bet
+number that the prioritise cut cuts to), practice 2 from its horizon
+determinants, and practice 3 from its uncertainty-resolution rate. When
+one of those inputs changes, it changes in the brief first and the
+portfolio follows — not the other way round.
 <!-- harness:end -->
 
 <!-- harness:region id=conventions -->
@@ -117,6 +151,11 @@ the same way are one interested source three times.
 **The claims ledger.** Every load-bearing claim in a brief or a review is
 recorded with its source and its class. A claim with no source is written
 `[NEEDS SOURCE]` and stays that way. **Never fabricate a citation.**
+
+**Provenance in `background/`.** The same discipline covers the raw
+material: every file there records where the information came from and
+when, and undated material is treated as unreliable. Agents gathering
+context write the provenance block or do not write the file.
 
 **Kill criteria before the bet starts.** A brief without kill criteria is
 not committed, whatever its status says. They must be observable, dated

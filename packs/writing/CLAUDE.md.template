@@ -3,6 +3,8 @@
 <!-- harness:region id=overview -->
 ## What this project is
 {{harness:param.projectPurpose}}
+
+The full statement lives in [`/project-brief.md`](project-brief.md): the purpose and the change it should produce in a reader, who is writing and what they are *not* an authority on, the audience and their first objection, the style norms, the evidence standard, the planned workstreams, what is out of scope, and the success criteria. **Read it before outlining, drafting or reviewing anything.** Where the brief and a draft disagree about audience or scope, the brief wins and the draft is what gets fixed; where the brief and this file disagree about voice, `writing-guide/tone-of-voice.md` is the authority for both.
 <!-- harness:end -->
 
 <!-- harness:region id=voice -->
@@ -22,6 +24,11 @@
 
 <!-- harness:region id=layout -->
 ## Where things live
+
+**At the root:**
+- /project-brief.md — purpose, writer, audience, style norms, evidence standard, workstreams, scope, success criteria. Upstream of everything below.
+- /Home.md — the vault map-of-content.
+- /writing-guide/ — the durable voice reference.
 
 **Shared research corpus** (done once, feeds every workstream):
 - /sources/ — the corpus. Bibliography in /sources/bibliography.md.
@@ -80,6 +87,8 @@ Do not auto-chain phases. After each agent reports back, stop and wait for user 
 
 <!-- harness:region id=standing-instructions -->
 ## Standing instructions
+- Read `/project-brief.md` before outlining, drafting or reviewing. If it is still at its template placeholders, say so and fill it first — an outline written without a stated audience and purpose is guesswork with headings.
+- Keep the brief current. When a decision changes the audience, the scope, the style norms or the evidence standard, it is recorded there (move the open question to the resolved-decisions table, keeping its `Q-N` id) rather than in the draft that provoked it.
 - Never invent sources. [NEEDS SOURCE] markers are fine; fabrication is not.
 - Always preserve prior drafts. Versioned filenames, not overwrites.
 - When in doubt about voice, re-read the workstream's `published/<best-recent-piece>.md` and match.
