@@ -4,11 +4,11 @@ argument-hint: <path to a filled, Ready-to-run target file>
 ---
 
 You are launching a **target run** (the way of working documented in
-`targets/README.md`). The target to run is the file at:
+`.harness/pack/targets/README.md`). The target to run is the file at:
 
 $ARGUMENTS
 
-Execute it strictly per `targets/Run.md` — read that file and follow
+Execute it strictly per `.harness/pack/targets/Run.md` — read that file and follow
 its phases:
 
 1. **Phase 0 — Readiness gate + permission pre-flight.** Spawn the
