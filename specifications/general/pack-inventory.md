@@ -29,7 +29,7 @@ phase 2 also acts on.
 
 | Pack | Version | State | Source | Anatomy gaps |
 |---|---|---|---|---|
-| `coding` | 1.0.0 | **Exists** — migrating from `packs/coding/` | Voxio/Lintel, proven on RAFAL | Part 5 weak, part 8 weak |
+| `coding` | 1.0.0 | **53 files** — migrating from `packs/coding/` | Voxio/Lintel, proven on RAFAL | Part 5 weak, part 8 weak |
 | `writing` | 1.0.0 | **To extract** | `AIImpactOnOrganizationsAndLeadership/` | Part 3 weak, parts 8 + 9 absent |
 | `planning` | 1.0.0 | **To author** | Portfolio-roadmap-deck research (knowledge base) | Part 2 provisional |
 
@@ -40,6 +40,29 @@ at v1.0** (Q-48): the mechanism defers to v1.1 alongside
 accepted and booked as a named v1.1 task — reconciling the two copies
 is work `shared/` must do when it lands, not something to discover
 then.
+
+---
+
+## Every pack ships its own project brief
+
+All three packs render a `project-brief.md` into the applied project, and
+**they are deliberately three different documents**, not one template with
+the nouns swapped:
+
+| Pack | Applied path | What it asks for |
+|---|---|---|
+| `coding` | `specifications/project-brief.md` | Purpose, the problem, goals with measures, requirements, the dominating design decision, success criteria |
+| `writing` | `project-brief.md` (root) | Purpose as *a change in the reader*, the writer's standing and what they do **not** stand on, a named example reader, voice, style norms, evidence discipline |
+| `planning` | `project-brief.md` (root) | Company profile, **the constraint floor**, vision, what the portfolio decides, absorption capacity, the four horizon determinants |
+
+`planning`'s constraint-floor section does double duty: answering it is
+how a reader discovers whether they are `high-floor` or `near-zero-floor`,
+which is the pack's `constraintFloor` calibration. The brief is not just
+context — filling it in is the calibration decision.
+
+`coding` places its brief under `specifications/` because that pack has a
+specifications tree; the other two place it at the applied root, which is
+their front door. The three are not uniform on location, deliberately.
 
 ---
 
@@ -73,7 +96,7 @@ the two paths above.
 
 ## `packs/coding` — 1.0.0
 
-Gated spec process. 45 files today.
+Gated spec process. 53 files today.
 
 ```
 packs/coding/
@@ -221,7 +244,8 @@ packs/writing/
 │   ├── ai-tells.md                        P2   the explicit avoid list
 │   └── bilingual-publishing.md            P2   locale handling
 ├── templates/
-│   └── post.template.md                   P1   the ONE template the source has
+│   ├── post.template.md                   P1   the ONE template the source has
+│   └── project-brief.template.md          P2   → project-brief.md (user fills)
 │                                               (from workstreams/learning-journey/)
 └── scaffolds/
     └── writing-workstream/                P2   opt-in (Q-17)
@@ -243,6 +267,8 @@ packs/writing/
 │   ├── tone-of-voice.md       audience, tone, length norms
 │   ├── ai-tells.md            the explicit avoid list
 │   └── bilingual-publishing.md  locale handling
+├── project-brief.md           purpose, the writer, audience, voice, evidence
+│                              discipline — ready for the user to fill in
 ├── Home.md                    map-of-content; the reader's front door
 │                              (no template in the source — see Q-51)
 ├── sources/                   only with --scaffold writing-workstream
@@ -326,9 +352,20 @@ packs/planning/
 ├── process.md                             P1   anatomy source, part 1
 ├── conventions.md                         P1   anatomy source, part 4
 ├── coordination.md                        P1   anatomy source, part 5
-├── calibration.template.md                P2   → portfolio/calibration.md · the one substitution
+├── calibration.template.md                P2   → calibration.md at the applied ROOT · the one substitution
 ├── portfolio-seed/                        P1   register.md · decisions.md · unconditional seed
-├── applied-readmes/                       P2   portfolio.md · portfolio-bets.md · targets.md
+├── applied-readmes/                       P2   11 folder READMEs, one per folder an apply creates
+│   ├── portfolio.md                       P2   → portfolio/README.md
+│   ├── portfolio-bets.md                  P2   → portfolio/bets/README.md
+│   ├── targets.md                         P2   → targets/README.md
+│   ├── background.md                      P2   → background/README.md · raw material vs. distillation
+│   ├── background-company.md              P2   → background/company/README.md
+│   ├── background-strategy.md             P2   → background/strategy/README.md
+│   ├── background-products.md             P2   → background/products/README.md
+│   ├── background-market.md               P2   → background/market/README.md
+│   ├── background-performance.md          P2   → background/performance/README.md
+│   ├── background-constraints.md          P2   → background/constraints/README.md
+│   └── background-capacity.md             P2   → background/capacity/README.md
 ├── hooks/
 │   └── kill-criteria-guard.sh             P1+P2 INERT 0644 · registered by nothing
 ├── targets/                               P1+P2 planning's OWN copy (Q-49), not shared
@@ -338,7 +375,8 @@ packs/planning/
 │   ├── opportunity-bet-brief.template.md  P1   6 fields incl. absorption cost, kill criteria
 │   ├── roadmap-review.template.md         P1   5 fields · committed-milestone
 │   ├── portfolio-intake.template.md       P1   5 fields · Now-Next-Later
-│   └── horizon-decision-aid.md            P1   max(lead-time, irreversibility) ± adjustments
+│   ├── horizon-decision-aid.md            P1   max(lead-time, irreversibility) ± adjustments
+│   └── project-brief.template.md          P2   → project-brief.md (user fills)
 ├── calibrations/                          P1   content varying by init answer (Q-13)
 │   ├── high-floor/                        P1   long horizons, gate partly held by V&V
 │   └── near-zero-floor/                   P1   short adaptive horizons, gate held by policy
@@ -354,13 +392,39 @@ packs/planning/
 ```
 <project>/
 ├── .claude/
-│   ├── agents/*.md            6 agents, all marked provisional
+│   ├── agents/*.md            7 agents — six provisional, plus target-reviewer
 │   ├── commands/
 │   │   ├── bet.md             /bet — opens a brief; refuses without kill criteria
 │   │   ├── review.md          /review — runs a roadmap review
-│   │   └── horizon.md         /horizon — walks the max() decision aid
+│   │   ├── horizon.md         /horizon — walks the max() decision aid
+│   │   └── target.md          /target — launches an unsupervised run
 │   └── hooks/
 │       └── kill-criteria-guard.sh   INERT 0644 — registered by nothing at v1.0
+├── project-brief.md           company profile, the constraint floor, vision,
+│                              what the portfolio decides, absorption capacity,
+│                              the four horizon determinants — distilled from
+│                              background/, ready for the user to fill in
+├── background/                the raw material the brief is distilled from —
+│   │                          dropped in unedited, with a source and a date
+│   ├── README.md              what belongs here, and how it feeds the brief
+│   ├── company/README.md      who the organisation is, how it is shaped, how
+│   │                          it makes money — the company profile
+│   ├── strategy/README.md     stated vision, strategy documents, goals, and
+│   │                          prior roadmaps — the vision and what the
+│   │                          portfolio decides
+│   ├── products/README.md     what is shipped, sold and maintained today —
+│   │                          the current portfolio, before intake reorders it
+│   ├── market/README.md       customers, competitors, and how fast a position
+│   │                          decays — the substitution-rate determinant
+│   ├── performance/README.md  metrics, money, traction, retention — how fast
+│   │                          this organisation learns
+│   ├── constraints/README.md  what genuinely cannot be compressed — the
+│   │                          evidence behind the constraint floor, the
+│   │                          calibration itself, and the lead-time and
+│   │                          irreversibility determinants
+│   └── capacity/README.md     who reviews, secures, validates and operates —
+│                              absorption capacity, the input the gate is
+│                              checked against
 ├── targets/
 │   ├── README.md              filled targets and work logs live here
 │   └── Run.md                 kickoff prompt for /target
@@ -371,7 +435,9 @@ packs/planning/
 │   ├── bets/<slug>/
 │   │   ├── brief.md           from the opportunity/bet brief template
 │   │   └── reviews/           one file per roadmap review of this bet
-│   ├── horizons.md            the computed horizon per programme + determinant
+│   ├── horizons.md            calibrated — default range and binding determinant
+│   ├── cadence.md             calibrated — trigger, cadence, the failure it guards
+│   ├── absorption-gate.md     calibrated — coverage narrative, not the gate's rules
 │   └── decisions.md           decision log — what was killed, when, and why
 └── CLAUDE.md                  generated — the six-phase loop, the absorption
                                gate, the five practices, calibrated content
@@ -386,7 +452,7 @@ and a gate held only by policy.
 **Anatomy.** 1 process `present` (6 phases + absorption gate) ·
 2 roles **`provisional`** — the only provisional part in any pack; the
 research flags EM-portfolio responsibility as unwritten · 3 templates
-`present` (4) · 4 conventions `present` (evidence discipline, claims
+`present` (5 — four portfolio templates plus the project brief) · 4 conventions `present` (evidence discipline, claims
 ledger, kill criteria before start) · 5 coordination `present` (cadence
 follows uncertainty resolution) · 6 guidelines `present` (five
 practices) · 7 scaffolding `present` · 8 automations `present` — three
