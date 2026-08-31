@@ -186,6 +186,39 @@ a multi-agent team.
 
 ---
 
+## Folding a decision — the step everyone forgets
+
+When a decision is made, it lands in the feature spec and the ADR. It
+does **not** automatically land in the cross-cutting documents under
+`general/`, and those are the ones a reader opens *first* — before the
+feature specs make sense.
+
+**So the fold is not finished until you have checked `general/`.** For
+every decision folded into a feature spec or an ADR, ask of each
+`general/` document: does it state something this decision just made
+false?
+
+The failure is not carelessness, it is structural. A `general/` document
+*summarises* what the feature specs say. A summary written before a
+decision stays fluent and readable after it — it simply describes a
+system that no longer exists. Nothing about it looks stale, which is why
+it survives review.
+
+Two shapes to watch for, both of which have actually happened:
+
+- **A closed enumeration.** "The manifest records name, version, answers
+  and scaffolds" is wrong the moment a fifth field is added, and reads
+  perfectly well while being wrong.
+- **A count or a completeness claim.** "Two drifts, two codes" and "the
+  only X in v1.0" go false silently the first time a third one appears.
+
+The corollary for reviewers: when a document says a cross-cutting
+reference is authoritative, check the reference against the specs rather
+than trusting the claim. A document asserting agreement is not evidence
+of agreement.
+
+---
+
 ## What "good" looks like
 
 - Every acceptance criterion is independently verifiable — a yes/no

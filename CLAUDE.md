@@ -383,6 +383,21 @@ diminishing returns, and should be read as one.
 
 **`§F1.9`'s known limits and v1.1 obligations are part of the contract.**
 
+### Folding a decision — check `general/` too
+
+A decision folded into F1, F5 or the ADR is **not** folded until the
+cross-cutting documents under `specifications/general/` have been
+checked against it. This has now failed three times in this project:
+`pack-application.md` stated the execute-time read C-23 had ruled out;
+it later enumerated the manifest at five keys after Q-52 made it six;
+and `system-architecture.md` said "two drifts, two codes" after Q-56
+made it three. Each read perfectly well while being false.
+
+Watch for **closed enumerations** and **completeness claims** — "records
+X, Y and Z", "the only generate step", "two drifts". Those go false
+silently. And when a document calls a cross-cutting reference
+authoritative, verify it rather than trusting the assertion.
+
 ### Genuinely outstanding before code
 
 - **No epics-and-tasks document** for F1 or F5.

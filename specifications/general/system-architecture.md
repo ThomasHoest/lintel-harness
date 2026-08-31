@@ -280,6 +280,40 @@ Two drifts, two codes, two exit classes: the payload moved (`E-PAYLOAD-DIGEST-MI
 exit 2) or the applied tree moved (`E-VERIFY-MISMATCH`, exit 1). That is what Q-52
 buys — `verify` can say **which side moved**.
 
+### Three drifts, because one of them is expected
+
+The applied tree moving is not always drift. `verify` reports **four**
+states per path — `match`, `adapted`, `differs`, `missing` (Q-56) —
+because `differs` was doing two jobs: *someone changed this*, and *this
+was supposed to change*. A recipe step declares its output
+**adapt-expected**; the generated `CLAUDE.md` is, in all three packs,
+because it carries project-owned prose F6 exists to adapt. Such a path
+reports `adapted`, which is **not** a failure and does not affect the
+exit code. A path not so declared still reports `differs` and still
+fails — this is a per-path declaration, never a blanket suppression.
+
+Without it, S7's release gate and F6's stated job contradicted each
+other: the gate requires a green `verify`, F6 adapts `CLAUDE.md`, and
+Q-57 made the skill the normal path rather than an edge case. **The
+manifest gains nothing for it** — the adapt-expected set is recomputable
+from the payload and the recipe, which the recomputation already reads,
+so the six keys stand.
+
+### Diagnostics carry a class
+
+Every code is classified once, in F1's catalogue. A **defect** is
+author-fixable — a missing folder README, a dangling link. A **notice**
+reports a declared state the pack intends — a `provisional` anatomy
+part, an inert hook script. **`--strict` promotes defects only**, and a
+notice is never fatal under any flag; an unclassified code defaults to
+`defect`, so a forgotten classification makes CI louder rather than
+quieter (Q-60).
+
+This is the same repair as `adapted`, one layer down: a single severity
+was reporting both *this is wrong* and *this is deliberate*, which left
+`validate --all --strict` unable to pass for two of three bundled packs
+— for reasons that were design decisions, not defects.
+
 ### What this path does not guarantee — stated, not implied
 
 1. **Reserved-destination class 2 is a denylist, and a denylist is incomplete by

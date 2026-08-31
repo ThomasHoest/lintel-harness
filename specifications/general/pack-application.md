@@ -143,11 +143,34 @@ and no `.harness/base/` store are needed. `.harness/pack/` is read here,
 at `verify` time — which is the **only** place an apply's payload is read
 off disk.
 
+**Diagnostics carry a class** (Q-60). Every code is classified once, in
+F1's catalogue: a **defect** is author-fixable — a missing folder
+README, a dangling link; a **notice** reports a declared state the pack
+intends — a `provisional` anatomy part, an inert hook script.
+`--strict` promotes **defects only**, and a notice is never fatal under
+any flag. The split exists because one severity was reporting both *this
+is wrong* and *this is deliberate*, which made `validate --all --strict`
+unable to pass for two of the three bundled packs — for reasons that
+were design decisions rather than defects.
+
 **The purity claim holds without exception** (Q-54). `merge-json` was
 the only primitive that took a fourth input — the pre-existing content
 of its destination — and it is dropped from v1.0, so no primitive reads
 anything outside (payload, answers, scaffold selection). `verify`'s
 recomputation identity is therefore exact rather than approximate.
+
+**`verify` reports four states per path** — `match`, `adapted`,
+`differs`, `missing` (Q-56). `adapted` exists because `differs` was
+doing two jobs: *someone changed this*, and *this was supposed to
+change*. A recipe step may declare its output **adapt-expected** — the
+generated `CLAUDE.md` is, in all three packs, because it carries
+project-owned prose the skill is meant to adapt — and such a path
+reports `adapted` rather than `differs`. **`adapted` is not a failure**
+and does not affect the exit code; a path *not* so declared that changes
+still reports `differs` and still fails. It is a per-path declaration,
+never a blanket suppression. The manifest gains nothing for it: the
+adapt-expected set is recomputable from the payload and the recipe,
+which the identity above already reads.
 
 ---
 
@@ -186,9 +209,14 @@ one.
 Two pieces of forward investment keep v1.1 an addition rather than a
 retrofit:
 
-- **The minimal manifest** records pack name, version, CLI version,
-  parameter answers and chosen scaffolds — enough for a later `update`
-  to know what was applied and recompute the expected tree.
+- **The minimal manifest** records **six** things: pack name, pack
+  version, CLI version, parameter answers, chosen scaffolds, and a
+  **`payloadDigest`** over the `.harness/pack/` tree (Q-52) — enough for
+  a later `update` to know what was applied and recompute the expected
+  tree. The digest is what lets `verify` distinguish *the applied tree
+  drifted* from *the payload itself was edited*; without it,
+  recomputation would silently trust a payload someone may have
+  changed.
 - **Inert region anchors** are emitted into the generated `CLAUDE.md`
   (Q-45) so a later `update` can find pack-owned regions. No parser,
   no region hashes and no tamper detection ship at v1.0.
