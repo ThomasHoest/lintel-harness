@@ -3,6 +3,17 @@
 **Status:** Draft · **Date:** 2026-08-31 · **Applies to:** v1.0
 **Decisions:** Q-9/Q-9a/Q-9b (three packs) · Q-11 (planning framing) · Q-17 (scaffolds) · Q-28 (presentation deferred) · Q-39/Q-40 (two-phase apply, **six** primitives) · Q-46 (no bootstrap prose) · Q-48/Q-49 (no `shared/`) · Q-50 (folder READMEs) · Q-54 (`merge-json` dropped; nothing writes `.claude/settings.json`)
 
+**Corrected 2026-08-31 — C-37 and the Q-50 residue.** **C-37** is
+dispositioned here and in the master spec's residue-pass amendment row;
+this document's half was the settings row in §*Dogfooding gap*, deleted
+rather than repaired, and the disposition is recorded in full at that
+paragraph. The same pass removed the last statements that contradicted
+**Q-50** — `specifications/general/` and `specifications/v1.0/` were
+described as *"created empty"*, which no recipe can produce, and three
+folder READMEs were missing from `coding`'s applied tree — and restated
+`writing`'s `index.md` convention as the checked rule it now is. Phase
+2's input is restated as **plan-time** throughout, per C-23.
+
 Cross-cutting reference. What each pack contains, file by file, and
 which apply phase each file belongs to. The authoritative *behaviour*
 lives in `v1.0/F5-spec-template-packs.md`; this is the tree and the
@@ -48,9 +59,12 @@ Independent of pack. Written by the CLI, not by a recipe.
 ```
 
 `.harness/pack/` is the **only** copy of the pack's reference material
-in the project. Phase 2 reads from it (Q-41) and never duplicates it —
-document templates, conventions and process docs stay there rather than
-being copied out.
+in the project. It is phase 2's authoritative source (Q-41) and phase 2
+never duplicates it — document templates, conventions and process docs
+stay there rather than being copied out. **Source, not execute-time
+read:** phase 2 renders from planner-resolved payload bytes at plan time
+and reads nothing from disk while it writes (C-23, `pack-application.md`);
+`.harness/pack/` is read off disk only by `verify`.
 
 Every applied tree below is what the recipe produces **in addition** to
 the two paths above.
@@ -125,23 +139,38 @@ packs/coding/
 │   └── commands/target.md     /target <file> — launches an unsupervised run
 │                              (no settings.json — nothing writes it at v1.0, Q-54)
 ├── AgentTeams/
+│   ├── README.md              how to pick a team — from applied-readmes/ (Q-50)
 │   ├── Specify.md             research → spec → ADR → security → PROCEED
 │   └── Implement.md           implementer + testwriter + reviewer + security
 ├── specifications/
 │   ├── README.md              generated index — what is here, conventions in force
 │   ├── project-brief.md       ready for the user to fill in
-│   ├── general/               created empty — cross-cutting reference specs
-│   └── v1.0/                  created empty — the first version's docs
+│   ├── general/README.md      cross-cutting reference specs — from
+│   │                          applied-readmes/specifications-general.md (Q-50)
+│   └── v1.0/README.md         the first version's docs — from
+│                              applied-readmes/specifications-version.md (Q-50)
 ├── targets/
+│   ├── README.md              the way of working — from applied-readmes/ (Q-50)
 │   └── Run.md                 kickoff prompt, paths rewritten to .harness/pack/
 ├── copy/
+│   ├── README.md              what belongs here — from applied-readmes/ (Q-50)
 │   └── tone-of-voice.md       ready to fill; copywriter halts without it
 ├── CLAUDE.md                  generated — project overview, process, agents,
 │                              conventions, with inert region anchors (Q-45)
 └── infrastructure/            only with --scaffold backend-azure|backend-aws
     └── backend-deploy/        Bicep + Neon, or CDK + Lambda
-                               deploy.sh/.ps1 + setup-neon.sh/.ps1 land 0755
+                               its own README ships inside the selected
+                               scaffold (Q-50); deploy.sh/.ps1 +
+                               setup-neon.sh/.ps1 land 0755
 ```
+
+**No folder in the tree above is empty, and none can be** (Q-50). Every
+folder an apply creates carries a README — `.claude/` and `.harness/`
+excluded as tool-owned — which is exactly why the format needs no
+`mkdir` primitive and no `.gitkeep`. Any listing here that showed a
+folder "created empty" was describing a state the recipe cannot produce;
+the five `coding` folder READMEs come from `applied-readmes/` and are
+enumerated in the payload tree above.
 
 **The four backend scripts are the only executable files any v1.0 apply
 produces.** `coding`'s `pack.json` declares
@@ -209,9 +238,11 @@ packs/writing/
 ├── .claude/
 │   └── agents/*.md            8 agents: scout, researcher, librarian, analyst,
 │                              outliner, writer, critic, editor
-├── writing-guide/
-│   ├── voice.md               ready to fill — audience, tone, length norms
-│   └── words-to-avoid.md      ready to fill — the explicit avoid list
+├── writing-guide/             the source's four files, migrated verbatim
+│   ├── README.md              how the guide is used
+│   ├── tone-of-voice.md       audience, tone, length norms
+│   ├── ai-tells.md            the explicit avoid list
+│   └── bilingual-publishing.md  locale handling
 ├── Home.md                    map-of-content; the reader's front door
 │                              (no template in the source — see Q-51)
 ├── sources/                   only with --scaffold writing-workstream
@@ -232,9 +263,12 @@ packs/writing/
                                routing defaults, parallelization rules
 ```
 
-Every folder above carries an `index.md` with a table of contents. That
-convention is enforced by prose at v1.0, not by a hook — part 8 is
-absent for this pack.
+Every folder above carries an `index.md` with a table of contents. Its
+*content* is a prose convention; its *presence* is a checked rule —
+`writing`'s `pack.json` declares `"folderReadme": "index.md"` and
+`validate` step 12 raises `W-FOLDER-README-MISSING`, fatal under
+`--strict`, for any folder a recipe creates without one (Q-50). No hook
+enforces anything here — part 8 is absent for this pack.
 
 **Anatomy.** 1 process `present` (9 stages, two sequences) · 2 roles
 `present` (8) · 3 templates **weak** — exactly one exists today, inside
@@ -254,9 +288,15 @@ writing guide is **four files under their existing names**, not two
 `.template.md` files, and there is exactly **one** template
 (`post-template.md`), which is why part 3 rates weak. An earlier draft
 of this document invented `voice.template.md`, `words-to-avoid.template.md`,
-`index.template.md` and `home.template.md`. Whether the extraction may
+`index.template.md` and `home.template.md`. **Corrected again
+2026-08-31:** that draft's residue survived in the *applied* tree above,
+which still listed `voice.md` and `words-to-avoid.md` as files "ready to
+fill"; it now lists the four real files, migrated verbatim, matching the
+payload tree. Whether the extraction may
 author the missing `index`/`home` templates — recipe scaffolding the
-recipe arguably cannot work without — is **Q-51**.
+recipe cannot work without — **was Q-51, and Q-51 is resolved: it may,
+recorded as recipe scaffolding rather than as content, and everything
+else extracts faithfully.** No question is open here.
 
 **v1.0 boundary.** Faithful extraction only. Gaining targets is a
 post-v1.0 bump (Q-6); parts 3, 8 and 9 stay as they are.
@@ -363,10 +403,18 @@ it has today against what `lintel-harness init coding` would produce:
 | `AgentTeams/` | **Removed** — it is a phase-2 artifact and returns on apply |
 | `targets/Run.md` | **Removed** — same |
 
-**`.claude/settings.json` is deliberately not in this table.** An earlier
-edition carried a row reading *"owned keys — **Missing**, no pack owns a
-security-relevant key at v1.0"*, which framed the absence as a gap this
-repo happens to have. It is not a gap. Under **Q-54** it is **the
+**`.claude/settings.json` is deliberately not in this table — this is
+where condition C-37 landed on this document.** An earlier edition
+carried a row reading *"owned keys — **Missing**, no pack owns a
+security-relevant key at v1.0"*. **C-37** identified it as one of two
+dangling references to concepts Q-54 deleted: "owned keys" named the
+`merge-json` ownable-key allowlist, which no longer exists, and the row
+framed the absence as a gap this repo happens to have. The row is
+**deleted, not repaired**, and this paragraph replaces it. (C-37's other
+half — the master spec's assertion that this document still listed seven
+primitives and still used `.claude/settings.json` as a worked example —
+was corrected in that document's 2026-08-31 residue-pass amendment row,
+which now cites C-37 by number.) It is not a gap. Under **Q-54** it is **the
 specified state of every applied project**: `merge-json` is dropped, no
 primitive can write a settings file, `.claude/settings.json` and
 `.claude/settings.local.json` are reserved destinations forbidden to

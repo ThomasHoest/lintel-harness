@@ -1,7 +1,20 @@
 # Pack application — the two-phase model
 
 **Status:** Draft · **Date:** 2026-08-31 · **Applies to:** v1.0
-**Decisions:** Q-39 (two phases) · Q-40 (recipe, not script) · Q-41 (phase 2 reads the payload) · Q-42 (v1.0 scope) · Q-43 (minimal manifest) · Q-45 (anchors only) · Q-46 (no bootstrap prose)
+**Decisions:** Q-39 (two phases) · Q-40 (recipe, not script) · Q-41 (the payload is phase 2's source, **rendered at plan time** — see C-23) · Q-42 (v1.0 scope) · Q-43 (minimal manifest) · Q-45 (anchors only) · Q-46 (no bootstrap prose) · Q-54 (six primitives)
+
+**Corrected 2026-08-31 — security conditions C-42 and C-46.** **C-42:**
+this document is called *authoritative* by both F1 and the master spec,
+and it still described phase 2 as reading `.harness/pack/` **during
+execution** — in the *Reads from* cell and in the flowchart's phase-2
+node — which is the reading `F1-ADR-001` §3.6 ruled out under **C-23**.
+Both now state plan-time rendering and that the executor reads nothing
+from disk. The same pass replaced *"needs no validation beyond path
+confinement"*, which contradicted F1 US-30, with the bounds phase 1
+actually applies. **C-46:** the determinism claim named two inputs where
+F1 names **three**; the third, scaffold selection, is corrected here and
+in the master spec. Nothing was demoted — the fix is to make this
+document true, not to stop calling it authoritative.
 
 Cross-cutting reference. How `lintel-harness init` turns a pack into a
 working project. Every pack applies through this model; only phase 2's
@@ -17,14 +30,37 @@ recipe differs between packs.
 | **Destination** | `.harness/pack/` | Project root, `.claude/`, `copy/`, scaffold dirs |
 | **Varies by pack?** | **No** — identical mechanism for every pack | **Yes** — each pack ships its own recipe |
 | **Transformation** | None. No renames, no substitution, no rewriting | Renames, path rewrites, substitution, generation |
-| **Reads from** | The bundled pack in the CLI | `.harness/pack/` (Q-41), never the bundle |
+| **Reads from** | The bundled pack in the CLI | **The payload, resolved by the planner at plan time.** `.harness/pack/` is phase 2's *authoritative source* (Q-41) and never the bundle — but the executor **reads nothing from disk**: every byte phase 2 writes was rendered in memory before phase 1 landed a file. `.harness/pack/` is phase 2's **logical** input, and its **literal** input only at `verify` |
 | **Run by** | The CLI, automatically | The CLI, automatically — never the user (Q-40) |
 
+**Phase 2 renders entirely at plan time** (C-23, `F1-ADR-001` §3.6, F1
+US-30). There is no execute-time read anywhere in an apply: the planner
+resolves every step's source out of the payload it is about to write,
+renders the result, and `executeApply` only writes. That is what makes
+Q-41's recorded consequence — *the user cannot adjust the payload before
+phase 2 runs* — literally true, and what keeps Q-40's "no environment
+reads" honest, since a filesystem read at step *n* is both an environment
+read and an ordering dependence. Read *"phase 2 reads the payload"*
+throughout this document as a statement about **provenance**, never about
+when a byte leaves the disk.
+
 Phase 1 is a dumb copy on purpose. Because it transforms nothing, it
-cannot fail in an interesting way, it needs no validation beyond path
-confinement, and the result is byte-identical to the pack that shipped.
-Everything that varies is pushed into phase 2, where it is declared and
-inspectable.
+cannot fail in an interesting way and the result is byte-identical in
+content to the pack that shipped. **It is not unvalidated.** Before a
+byte lands, the payload is checked for: **symlinks** — any symlink
+anywhere in the pack is refused (`E-SYMLINK-IN-PACK`); **path grammar**
+— every pack-relative path is `/`-separated, NFC, relative, with no
+`..`, no backslash, no drive letter and no segment ending in `.` or
+whitespace (`E-PAYLOAD-PATH-INVALID`); **traversal bounds** — the walk
+is depth ≤ 32 and ≤ 10 000 entries, `lstat` only, never following a link
+(`E-TRAVERSAL-LIMIT`); **size caps** — per file and over the whole
+payload (`E-CONTENT-TOO-LARGE`, `E-PAYLOAD-TOO-LARGE`); and
+**destination confinement**, including a refusal to traverse or create
+through a symlink, junction or other reparse point (`E-DEST-SYMLINK`).
+Phase 1 also **preserves no source mode**: every payload file is written
+`0644` and every directory `0755` (F1 US-30). F1 owns every code named
+here and is the only catalogue. Everything that *varies* is pushed into
+phase 2, where it is declared and inspectable.
 
 ---
 
@@ -38,13 +74,13 @@ flowchart TD
     C --> D[Validate pack.json<br/>anatomy · parameters · scaffolds · recipe]
     D -- invalid --> D1["exit 2, zero bytes"]
     D -- valid --> E[Collect parameter answers<br/>--set / prompts]
-    E --> F[Plan both phases in memory]
+    E --> F["Plan both phases in memory<br/>render phase 2 from planner-resolved payload bytes"]
     F --> G{Plan passes<br/>all checks?}
     G -- no --> G1["exit 1 or 2, zero bytes"]
     G -- yes --> H[Write journal]
 
     H --> P1["PHASE 1 — payload<br/>copy pack verbatim to .harness/pack/"]
-    P1 --> P2["PHASE 2 — recipe<br/>read .harness/pack/, apply primitives"]
+    P1 --> P2["PHASE 2 — recipe<br/>write the bytes already rendered at plan time<br/>no read from disk"]
     P2 --> M[Write minimal manifest]
     M --> N[Delete journal]
     N --> Z([Applied project])
@@ -59,9 +95,11 @@ flowchart TD
 
 **Everything is planned before anything is written.** Validation, both
 phases and the manifest are computed in memory; the journal is written;
-only then do bytes land. A failure in either phase rolls back to the
-pre-init state, and rollback never deletes a file that existed before
-the run.
+only then do bytes land. **This is literal, not a figure of speech:**
+phase 2's output is fully rendered before phase 1 writes its first file,
+so no step's result can depend on what an earlier step left on disk. A
+failure in either phase rolls back to the pre-init state, and rollback
+never deletes a file that existed before the run.
 
 ---
 
@@ -89,14 +127,21 @@ an apply can do stays enumerable.
 
 ### Determinism is a requirement, not a hope
 
-The recipe is a pure function of **(payload, parameter answers)**. No
-timestamps, no ordering dependence, no environment or network reads.
-Two applies of the same pack version with the same answers produce
+The recipe is a pure function of **(payload, parameter answers, scaffold
+selection)** — **three** inputs, and the third is not optional: a
+`--scaffold` invocation produces a different tree from a bare one, so a
+two-input statement of this claim is false of every scaffolded apply
+(F1 §NFR *Determinism* is the authoritative form). No timestamps, no
+ordering dependence, no environment or network reads — and, under C-23,
+no execute-time filesystem read either. Two applies of the same pack
+version with the same answers **and the same scaffold selection** produce
 byte-identical trees. This is what makes "applied correctly every time"
 testable, and it is why the manifest can stay minimal (Q-43): the
 applied state is always recomputable from `.harness/pack/` + the recipe
-+ the recorded answers, so no per-file hash list and no `.harness/base/`
-store are needed.
++ the recorded answers + the recorded scaffolds, so no per-file hash list
+and no `.harness/base/` store are needed. `.harness/pack/` is read here,
+at `verify` time — which is the **only** place an apply's payload is read
+off disk.
 
 **The purity claim holds without exception** (Q-54). `merge-json` was
 the only primitive that took a fourth input — the pre-existing content

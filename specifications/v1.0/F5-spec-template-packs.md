@@ -1,5 +1,5 @@
 # F5 — Template Packs Specification — Lintel Harness v1.0
-**Version:** 2.2
+**Version:** 2.3
 **Status:** Draft
 **Date:** 2026-08-31
 **Platform:** Pack content is plain files — Markdown, JSON, shell/PowerShell, Bicep, CDK TypeScript — bundled with the Node/TypeScript CLI and consumed by Claude Code's `.claude/` conventions. No runtime of its own.
@@ -20,6 +20,7 @@
 | **2.0** | **2026-08-31** | **`F1-ADR-001` §6.2 changes 10–11 folded — the Q-50 folder-README rule becomes a checked rule.** F1 v2.2 adds `validate` **step 12** (`W-FOLDER-README-MISSING`, a warning, fatal under `--strict`), run **per parameter combination**, and `pack.json` gains **`folderReadme`**. Two consequences land here. **(10)** `packs/writing/pack.json` **declares `"folderReadme": "index.md"`**, its existing Obsidian convention paired with `Home.md`; `coding` and `planning` omit the key and take the `README.md` default. **(11)** **Every folder a recipe creates must receive its folder README from a step in the same `when` branch as whatever creates the folder** — stated as a requirement on all three recipes and worked concretely for `coding`'s `backend-azure`/`backend-aws` scaffolds, `writing`'s per-workstream stage folders and `planning`'s two calibration branches. `W-FOLDER-README-MISSING` is added to the CLI-scenario table **by citation**; F1 remains the only catalogue. One goal added, **G5.11** (`validate --all --strict` exits `0` over the bundled packs), and one NFR under *Anatomy and legibility*. **No new code, no new story and no new question**: next free question id **Q-54**; next free story id **US-39**. |
 | **2.1** | **2026-08-31** | **`F1-ADR-001` Mode A re-review fold — §6.2 changes 12–16, as overridden by Q-54.** **`merge-json` is dropped from v1.0 (Q-54): six primitives, not seven.** The three `merge-json` "Settings" steps in `coding`, `writing` and `planning` are **deleted** — the architect established they were never valid recipes (no `from`, no owned key, no settings source file in any payload), so nothing is removed but placeholders. **`.claude/settings.json` leaves every produced-tree listing and every acceptance criterion**, including US-17 and US-18; US-18's *"contains no `hooks` key"* becomes the stronger, mechanically checkable *"the applied tree contains no `.claude/settings.json`"*. **Every reference to `E-OWNEDKEY-*`, `E-MERGE-JSON-*` and `E-SETTINGS-*` is deleted** — those codes no longer exist in F1's catalogue, which this spec calls the only one, so citing them was a contract break. **No pack ships a permission set, owns a settings key, or triggers a consent prompt at v1.0.** Restated and unchanged: **no pack registers an agent hook at v1.0**; `planning` still ships its inert `0644` guard script and the kill-criteria rule is still carried by `/bet`'s instruction and by `/review`. R5's shortfall record gains a **fourth** entry — no pack ships a default permission set either, deferred to v1.1 with `merge-json`. **C-12's lapse is repaired:** US-17 and §NFR *Payload fidelity* said phase 1 copies *"including modes"*, which is the opposite of the rule — **phase 1 writes every payload file `0644` and preserves no source mode** (F1 US-30). Counts corrected: `coding` phase 2 writes **23** files (18 working + 5 folder READMEs), not 24. Four F5-internal corrections from §6.2 change 16: US-34's provenance clause restated against §3.6 (source is a payload path, resolved at plan time, no execute-time read); `planning` gains the **`rewrite-path`** step its targets contract already required; the 7b summary-matrix cells restated for all three packs; and §Flows' *"which F1 must add"* on the recipe-schema code struck, because that gap closed. **Q-54 is indexed as resolved; next free question id Q-55; next free story id US-39. No story retired, no new code, no new question.** |
 | **2.2** | **2026-08-31** | **Mode A residue fold — C-35 and C-38.** Two documentation defects, one of which required a decision. **C-38 — the executable disagreement is settled, and `coding` ships executables.** F1 said every v1.0 pack ships no executable file; §NFR said *"no executable pack content outside a declared scaffold"*, which reads as the opposite. Decided in one direction: **`coding` declares `"executableRoots": ["infrastructure/backend-deploy/"]`** and its backend scaffold steps set **`"executable": true`** on `deploy.sh`, `deploy.ps1`, `setup-neon.sh` and `setup-neon.ps1`, which land **`0755`** and are enumerated in `init`'s pre-write disclosure. Those scripts are meant to be run, `0644` would force a `chmod` on every applied project, and giving C-12's apparatus a real consumer beats leaving it specified and dormant — the pattern Q-54 was the lesson about. Restated across §NFR *Content integrity*, US-21, `coding`'s 7b recipe row and applied tree, and the scaffold inventory. **The matching change lands in F1; this spec does not own it.** **C-35 — anatomy `paths` are payload-relative**, stated wherever the declaration is described (§What is in scope, US-20, §Flows / *The nine parts across the three packs*, §NFR *Anatomy completeness*), with `coding`'s `agent-teams/` → `AgentTeams/` rename given as the case that proves the payload and applied namespaces are different rather than usually-equal. Matching an applied path against an anatomy glob silently drops the two agent-team documents, which is C-35's root cause; F1 restates its substituted-answer classifier over applied paths. **No new question, no new story, no new error code:** next free question id **Q-55**, next free story id **US-39**. Codes cited are F1's existing `E-EXEC-ROOT-UNDECLARED`, `E-EXEC-DEST-FORBIDDEN` and `E-EXEC-TOO-MANY`. |
+| **2.3** | **2026-08-31** | **Final Mode A fold — the F5 side of C-40, the widened reserved list confirmed, and C-46.** The final pass over F1 v2.4 / F5 v2.2 returned **`REVISE-SPEC`** with **3 HIGH, 3 MEDIUM, 4 LOW and no CRITICAL**, 36 of 38 conditions holding. **C-40's evidence lived partly here:** §Flows / *2. Role set* listed the agent frontmatter keys inline, `permissionMode` among them, which read as a menu of what a **pack** may declare. That list is now stated explicitly as **descriptive of the Claude Code runtime**, with what a pack-written `.claude/` file may declare deferred to F1, which is being amended so that such a file **may not declare any permission-bearing key** — tool grant or permission mode — and so that the pre-write disclosure prints the **whole frontmatter block**, not only `tools:`. **Consequence made explicit rather than left to the migration:** `coding`'s `architect.md`, `reviewer.md` and `securityreviewer.md` carry `permissionMode: readonly` in the source and **the migrated pack does not ship it**; US-24 gains it as **declared difference class (d)**, enumerated as exactly three lines in three named files, and the empty class renames to (e). Nothing is lost that was load-bearing — the pack's own `agents/README.md` already says the `tools:` whitelist is the real safety net, and those three agents omit `Write`/`Edit`/`Bash`. **No code is cited for the new rule**, deliberately: whether C-40 extends `E-CLAUDE-TOOL-GRANT` or adds one beside it is F1's, and F1 remains the only catalogue. **The widened reserved-destination list is confirmed against this spec and nothing contradicts it** — US-21 gains an acceptance criterion saying so, naming `azure-pipelines.yml` because the pack ships an **Azure** scaffold: `backend-azure`'s entire write set is `infrastructure/backend-deploy/` and it ships **no CI or pipeline file of any kind**, as do `backend-aws` and `writing-workstream`. **C-46:** §NFR *Recipe purity* named two inputs where F1 names three; it now reads *(payload, parameter answers, scaffold selection)* and restates plan-time rendering (C-23). **No new question, no new story, no new error code:** next free question id **Q-55**, next free story id **US-39**. |
 
 ---
 
@@ -49,7 +50,9 @@ that split is now the organising fact of pack content:
 - **Phase 1 — payload.** The CLI copies the pack folder **verbatim** to
   `.harness/pack/`. No renames, no substitution, no rewriting, identical
   mechanism for every pack.
-- **Phase 2 — recipe.** The CLI reads `.harness/pack/` (Q-41) and applies
+- **Phase 2 — recipe.** `.harness/pack/` is the CLI's source (Q-41),
+  **resolved at plan time** — phase 2 renders from planner-held payload
+  bytes and reads nothing from disk while it writes (C-23). It applies
   the pack's own **declarative recipe** over a fixed primitive set of
   **six** — `copy`, `rename`, `strip-suffix`, `rewrite-path`,
   `substitute`, `generate` (Q-40, as narrowed by Q-54). **`merge-json`
@@ -499,6 +502,20 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   equivalent. Any script it ships executable lands under the **same**
   declared root, is disclosed the same way, and counts against the same
   per-apply cap of 32.
+- **No scaffold writes a reserved destination, and `backend-azure` is
+  the one worth naming.** It is an **Azure** scaffold and
+  `azure-pipelines.yml` is a reserved destination under F1's widened
+  class-2 denylist — alongside `.mcp.json`, `.gitlab-ci.yml`,
+  `Jenkinsfile`, `bitbucket-pipelines.yml`, `GNUmakefile`, `.justfile`,
+  `.circleci/` and `.devcontainer/`. **It ships no CI or pipeline file
+  of any kind:** its entire write set is `infrastructure/backend-deploy/`
+  — `main.bicep`, `production.bicepparam`, the four scripts and that
+  folder's README — and deployment is invoked by running a script, never
+  by a pipeline definition the pack lays down. The same holds for
+  `backend-aws` and `writing-workstream`. A step attempting any reserved
+  path is `E-MAP-RESERVED-DEST`, exit 2, zero bytes (F1 §Error States),
+  and `validate --all --strict` over the three bundled packs must exit
+  `0` (G5.11).
 - **`backend-azure` and `backend-aws` are alternatives, not composable
   peers.** Requesting both writes zero bytes and fails with
   `E-SCAFFOLD-EXCLUSIVE` (F1 §Error States), because both declare the
@@ -520,18 +537,25 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   taken from.
 - A documented, re-runnable check diffs the shipped pack against that
   commit.
-- **Every difference the check reports falls into exactly one of four
+- **Every difference the check reports falls into exactly one of five
   declared classes**, and the record says which: (a) a Q-46 deletion,
   named by file and heading; (b) an added `pack.json`, `recipe.json` or
   `applied-readmes/` file; (c) the declared restructure —
   `infrastructure/backend-deploy/` → `scaffolds/backend-azure/`, and the
-  `/target` command moving into `commands/`; (d) nothing else.
+  `/target` command moving into `commands/`; (d) **the removal of the
+  `permissionMode:` line from `architect.md`, `reviewer.md` and
+  `securityreviewer.md`** — a format requirement under C-40, enumerated
+  by file, and the only frontmatter change the migration makes;
+  (e) nothing else.
 - **`targets/` does not move.** Under Q-48 there is no `shared/` tree to
   lift it into, so the check expects `targets/` and `target-reviewer.md`
   exactly where the source commit has them; their absence is a migration
   bug, not a declared restructure.
-- Class (d) is empty. Any difference the check cannot place in (a), (b)
-  or (c) fails the check.
+- Class (e) is empty. Any difference the check cannot place in (a), (b),
+  (c) or (d) fails the check.
+- **Class (d) is enumerated, not open.** It is exactly three lines in
+  three named files; a `permissionMode:` line surviving anywhere in the
+  migrated pack, or any other frontmatter difference, fails the check.
 - The Q-46 deletion list is exhaustive and enumerated in §Flows, so the
   check compares against a list rather than a judgement.
 
@@ -932,9 +956,14 @@ Two things follow, both v1.0 facts:
   the literal `{{YYYY-MM-DD}}` placeholder the coding pack's own header
   convention already uses.
 - **Recipe purity:** a recipe is a pure function of (payload, parameter
-  answers). No environment reads, no network, no clock, no ordering
-  dependence among independent steps. **This holds at every applied path,
-  with no exception.** `merge-json` was the one primitive that took a
+  answers, **scaffold selection**) — three inputs, the third because a
+  `--scaffold` apply produces a different tree, which is why the
+  two-input form this NFR previously carried was false of every one of
+  them (C-46; F1 §NFR *Determinism* is the authoritative wording). No
+  environment reads, no network, no clock, no ordering dependence among
+  independent steps, and **no execute-time filesystem read** — phase 2
+  renders at plan time from planner-resolved payload bytes (C-23).
+  **This holds at every applied path, with no exception.** `merge-json` was the one primitive that took a
   fourth input — the destination's pre-existing content — and Q-54
   removes it, so the claim is now true as stated rather than true
   everywhere except one destination kind.
@@ -1448,8 +1477,42 @@ Version-level artifacts sit outside the per-feature sequence:
 
 #### 2. Role set — ten agents
 
-Single-purpose, configured by frontmatter (`name`, `description`,
-`tools`, `model`, `permissionMode`, `maxTurns`), body as system prompt.
+Single-purpose, body as system prompt, configured by frontmatter.
+
+**That key list describes the Claude Code runtime, not what a pack may
+ship — the distinction is load-bearing and this spec states it
+explicitly** (C-40). The keys the runtime reads on an agent file are
+`name`, `description`, `tools`, `model`, `permissionMode` and
+`maxTurns`. What a **pack-written** file under `.claude/` may *declare*
+is F1's rule, not F5's, and F1 is the only authority on it: **a
+pack-written `.claude/` file may not declare a permission-bearing key at
+all** — neither a tool grant nor a permission mode — and `init`'s
+pre-write disclosure prints the **whole frontmatter block** of every
+`.claude/` file a pack writes, not just its `tools:` line. Nothing in
+this spec states or implies that a pack may declare `permissionMode`;
+where an earlier edition listed the runtime's keys inline it read as a
+menu of what a pack may set, and it is not one.
+
+**Consequence for `coding`, stated rather than left to the migration.**
+Three agents in the source tree — `architect.md`, `reviewer.md` and
+`securityreviewer.md` — carry `permissionMode: readonly` today. That key
+is permission-bearing, so **the migrated pack does not ship it**, and the
+migration record books its removal as a declared class rather than a
+faithfulness breach (Q-6 constrains content improvement; it does not
+license shipping a file F1's format rejects). **Nothing is lost that was
+load-bearing:** the pack's own `agents/README.md` already records that
+`permissionMode` is honoured by some harnesses and ignored by others and
+that *"the `tools:` whitelist is your real safety net"* — the three
+read-only agents omit `Write`, `Edit` and `Bash` from `tools:`, which is
+what actually holds. An agent's `tools:` list is a **restriction the
+runtime applies underneath a permission engine the pack cannot touch**,
+it is permitted, and it is disclosed verbatim with the rest of the
+block.
+
+**No error code is cited here**, deliberately: the diagnostic for a
+pack-declared permission-bearing key is F1's, and whether C-40 extends
+`E-CLAUDE-TOOL-GRANT` or adds a code beside it is F1's to decide. F1
+remains the only catalogue.
 
 | Agent | Purpose | Model | Write boundary |
 |---|---|---|---|

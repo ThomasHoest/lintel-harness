@@ -15,7 +15,8 @@
 | 1.0.0 | 2026-08-31 | **Two-phase apply and scope rewrite (Q-39…Q-46).** Rewritten in place against the settled model. The apply becomes two phases — a verbatim payload copy, then a declarative recipe over seven primitives run by the CLI. **v1.0 narrows to F1, F2, F5 and F6; F3 (`update`) and F4 (`status`/`contribute`) defer to v1.1, and G3, S3 and R4 defer with them.** S7 weakens to apply-only. The manifest becomes minimal and `.harness/base/` is deleted; `--adopt` is dropped; marked regions reduce to inert anchors; bootstrap prose is deleted from pack sources. Sequencing becomes F1 → F2 → F5 → F6. All open questions close: none remain, next free **Q-47**. |
 | 1.0.0 | 2026-08-31 | **`F1-ADR-001` fold (§6.3's seven changes), plus Q-47…Q-53.** The **v1.0 command surface is corrected from "`init` only" to four commands** — `init` (F2) and `validate`, `verify`, `pack info` (F1, per Q-53). **The `shared/` mechanism is removed, not merely unconsumed** (Q-48): it does not ship at v1.0, so the Technical Context row, the Out of Scope bullet, F1's stub and the shared-platform-changes row all drop it; `targets` becomes `coding`-local content and `planning` ships its own copy (Q-49). The forward-investment manifest bullet becomes **six keys**, adding the payload digest (Q-52). A **Technical Context row for Q-50** is added — every created folder carries a README, `.claude/` and `.harness/` excluded, no `mkdir` primitive, no `.gitkeep`. **Q-47…Q-53 are indexed as resolved; next free Q-54.** The US counter is corrected to **next free US-39**. §Spec-set readiness is restated against the rewritten ADR and its `REVISE SPEC` verdict. No new design decisions. |
 | 1.0.0 | 2026-08-31 | **`F1-ADR-001` Mode A re-review fold (§6.3 change 8, as overridden by Q-54).** **The primitive set is six, not seven** — `merge-json` is dropped from v1.0 and deferred to v1.1 with the whole settings story (Q-54), so the Introduction, the *Phase 2 form* row, F1's stub and the shared-platform-changes row all drop it. **The determinism narrowing that §6.3 change 8 called for is deliberately NOT applied.** That change existed because `merge-json` took a fourth input — the destination's pre-existing content — and made the purity claim false at exactly one kind of destination. **With `merge-json` gone the claim is true as originally written**, at every applied path, so `verify`'s recomputation identity and the *Determinism* NFR are restated as holding **without exception** rather than qualified. A **Technical Context row for Q-54** is added and the rows implying a settings or consent surface are corrected: no pack writes `.claude/settings.json`, owns a settings key, ships a default permission set, or presents anything at apply time for a user to agree to. **Q-54 is indexed as resolved; next free Q-55.** The story counter is unchanged at **next free US-39**. §Spec-set readiness is restated: the security verdict of record is `REVISE-SPEC` from the re-review, F1 folds to v2.3 and F5 to v2.1, and **a further Mode A pass is required against the folded documents.** No new design decisions; this document owns no user stories and no acceptance criteria. |
-| 1.0.0 | 2026-08-31 | **Mode A residue pass — one false assertion corrected.** The §*The settled model* row for `general/pack-application.md` asserted that the document *"still lists seven primitives and still names `.claude/settings.json` as `merge-json`'s worked example"*, and claimed precedence over it on those two points. **That was true when written and is now false:** the document is at **six** primitives, names no settings file anywhere, and carries the Q-54 purity note in full. The assertion and its precedence carve-out are **withdrawn**, here and in the *Phase 2 form* row's source cell, and `pack-application.md` is authoritative again without qualification. Editorial only: **no decision changes, no question opens, and this document still owns no user stories and no acceptance criteria.** Next free question id **Q-55**; next free story id **US-39**. |
+| 1.0.0 | 2026-08-31 | **Mode A residue pass — condition C-37, one false assertion corrected.** **This row is C-37's disposition on this document**, and `general/pack-inventory.md` §*Dogfooding gap* carries the other half: C-37 found **two dangling references to concepts Q-54 deleted** — this document's assertion about `general/pack-application.md`, corrected below, and the inventory's *"owned keys — Missing"* settings row, which named the `merge-json` ownable-key allowlist and was **deleted rather than repaired**. The §*The settled model* row for `general/pack-application.md` asserted that the document *"still lists seven primitives and still names `.claude/settings.json` as `merge-json`'s worked example"*, and claimed precedence over it on those two points. **That was true when written and is now false:** the document is at **six** primitives, names no settings file anywhere, and carries the Q-54 purity note in full. The assertion and its precedence carve-out are **withdrawn**, here and in the *Phase 2 form* row's source cell, and `pack-application.md` is authoritative again without qualification. Editorial only: **no decision changes, no question opens, and this document still owns no user stories and no acceptance criteria.** Next free question id **Q-55**; next free story id **US-39**. |
+| 1.0.0 | 2026-08-31 | **Final security fold — C-42, C-44, C-46, and the gate closed by decision.** The **fourth** Mode A pass (over F1 v2.4 / F5 v2.2) returned **`REVISE-SPEC`** with **3 HIGH, 3 MEDIUM, 4 LOW and no CRITICAL**, and **36 of 38** conditions holding. Three findings land here or on this document's authoritative references. **C-46** — the determinism claim named **two** inputs where F1 names **three**; the Introduction and the *Determinism* row now read *(payload, parameter answers, scaffold selection)*, because a `--scaffold` apply produces a different tree and the two-input form is false of every one of them. **C-44** — condition **C-37** had been folded but was cited by no document; the residue-pass row above is now its **disposition of record**, alongside `general/pack-inventory.md` §*Dogfooding gap*. **C-42** — `general/pack-application.md`, which this document and F1 both call **authoritative**, still stated an **execute-time** read of `.harness/pack/` in its *Reads from* cell and its flowchart, and still said phase 1 *"needs no validation beyond path confinement"*; it is corrected there, and the *settled model* and *Phase 2 input* rows are restated against C-23's plan-time rendering. §*Spec-set readiness* is restated: **the security gate is closed by decision after four review rounds, not by a `SECURITY-PROCEED` verdict**, and **C-47 plus the remaining LOW residue are accepted for v1.0** with their requirements and tests recorded. **No decision changes and no question opens; this document still owns no user stories and no acceptance criteria.** Next free question id **Q-55**; next free story id **US-39**. |
 
 ---
 
@@ -49,11 +50,16 @@ automatically by the CLI and never by the user. A script would make a
 pack *code that executes on the user's machine*, voiding the security
 model, because path confinement and the reserved-destination denylist
 both depend on the plan being inspectable **before**
-anything runs. Phase 2 reads from the phase-1 copy on disk (Q-41), not
-from the bundle, and it is a **pure function of (payload, parameter
-answers)** — no timestamps, no ordering dependence, no environment or
-network reads. Two applies of the same pack version with the same
-answers produce byte-identical trees. Determinism is a requirement, not
+anything runs. Phase 2's source is the phase-1 copy in the project
+(Q-41), never the bundle — **resolved at plan time**: phase 2 renders
+entirely from planner-resolved payload bytes and the executor reads
+nothing from disk (C-23, `F1-ADR-001` §3.6). It is a **pure function of
+(payload, parameter answers, scaffold selection)** — three inputs, the
+third because a `--scaffold` apply produces a different tree — with no
+timestamps, no ordering dependence, and no environment or network reads.
+Two applies of the same pack version with the same answers **and the
+same scaffolds** produce byte-identical trees. Determinism is a
+requirement, not
 a hope: it is what makes "applied correctly every time" testable, and
 it is why the manifest can stay minimal.
 
@@ -64,8 +70,9 @@ settings key, or ships a default permission set. That deletion is worth
 one sentence here because it strengthens the paragraph above rather than
 qualifying it. **`merge-json` was the only primitive that took a fourth
 input** — the destination's pre-existing content — and it was therefore
-the one place where "a pure function of (payload, parameter answers)"
-was not literally true. With it gone the claim **holds at every applied
+the one place where "a pure function of (payload, parameter answers,
+scaffold selection)" was not literally true. With it gone the claim
+**holds at every applied
 path, without exception**, and so does the recomputation identity
 `verify` is built on.
 
@@ -133,7 +140,7 @@ disagrees with them, they win:**
 
 | Document | Covers |
 |---|---|
-| [`../general/pack-application.md`](../general/pack-application.md) | The two-phase apply — the phase table, the init flowchart, the **six**-primitive recipe set, the determinism requirement, and what the coding pack's recipe encodes. **Corrected 2026-08-31 and now agreeing with this document on every point:** it lists six primitives, names no settings file, and carries the Q-54 purity note in full. An earlier edition of this row said it still listed seven and still used `.claude/settings.json` as a worked example, and claimed precedence over it on those two points; that assertion was **true when written and is now false**, so the precedence carve-out is withdrawn. The document is authoritative again without qualification |
+| [`../general/pack-application.md`](../general/pack-application.md) | The two-phase apply — the phase table, the init flowchart, the **six**-primitive recipe set, the determinism requirement, and what the coding pack's recipe encodes. **Corrected 2026-08-31 and now agreeing with this document on every point:** it lists six primitives, names no settings file, and carries the Q-54 purity note in full. An earlier edition of this row said it still listed seven and still used `.claude/settings.json` as a worked example, and claimed precedence over it on those two points; that assertion was **true when written and is now false**, so the precedence carve-out is withdrawn (**C-37**). **Corrected again 2026-08-31 for C-42 and C-46, which is what makes "agreeing on every point" true rather than asserted:** the document's *Reads from* cell and its flowchart's phase-2 node still described an **execute-time** read of `.harness/pack/`, the reading `F1-ADR-001` §3.6 ruled out under C-23; both now state plan-time rendering and an executor that reads nothing from disk. Its phase-1 sentence *"needs no validation beyond path confinement"* is replaced by the bounds F1 US-30 actually applies. Its determinism claim now names **three** inputs. The document is authoritative without qualification |
 | [`../general/pack-inventory.md`](../general/pack-inventory.md) | The three packs file by file, per-file phase metadata (P1 / P2 / P1+P2), applied trees, versions, the anatomy matrix, and this repo's dogfooding gap |
 
 ### The release gate
@@ -166,29 +173,35 @@ Recorded honestly, because the process gates on it:
   found to be wrong about six conditions. The verdict clears when every
   §6 change has landed, not when the ADR is read.
 - **The security verdict of record is `REVISE-SPEC`, issued by the
-  2026-08-31 Mode A re-review** — not the 2026-08-30 review it
-  supersedes. It found 2 CRITICAL, 3 HIGH, 5 MEDIUM and 2 LOW, re-opened
-  the original CRITICAL S-1 through a route the first review never saw,
-  and issued conditions C-19…C-30. **Q-54 answers the largest part of it
-  by deletion rather than by repair:** `merge-json` was the target of
-  both CRITICALs, of both lapses of C-16 and of the newly found rollback
-  defect, and dropping it removes the surface instead of hardening it.
-- **The folds this verdict requires are in flight, and each document
-  carries its own version.** **F1 folds to v2.3** (§6.1 changes 17–27);
-  **F5 folds to v2.1** (§6.2 changes 12–16, as overridden by Q-54); this
-  document carries §6.3 change 8, adjusted by Q-54 — the determinism
-  narrowing is **not** applied, because `merge-json`'s removal makes the
-  unqualified claim true rather than needing a qualifier. §6.5's five
-  out-of-scope corrections sit with the owners of
-  `general/pack-application.md`, `general/pack-inventory.md` and the
-  brief §12, and are **not discharged here**.
-- **A further Mode A pass is required against the folded documents, and
-  it is a precondition, not a formality.** No `SECURITY-PROCEED` exists
-  against any version of this set, the folds materially change what a
-  reviewer would be reading, and Q-54 removes a primitive rather than
-  adjusting one — a deletion of that size is exactly the kind of change
-  a re-review is for. **Folding the ADR does not substitute for the
-  verdict, and neither does this document's amendment row.**
+  fourth and final Mode A pass (2026-08-31, over F1 v2.4 and F5 v2.2).**
+  It found **3 HIGH, 3 MEDIUM, 4 LOW and no CRITICAL**, with **36 of 38**
+  conditions holding. **Four rounds, and the trajectory is the argument:**
+  2 CRITICAL → 2 CRITICAL → 0 CRITICAL / 2 HIGH → 0 CRITICAL / 3 HIGH,
+  with conditions holding rising 24/31 → 36/38. **Q-54 answered the
+  largest part of the second round by deletion rather than by repair:**
+  `merge-json` was the target of both CRITICALs, of both lapses of C-16
+  and of the newly found rollback defect, and dropping it removed the
+  surface instead of hardening it.
+- **The HIGH and MEDIUM findings of that final pass are folded.** F1
+  carries C-39/C-40/C-41/C-43/C-45/C-48 at **v2.5**; F5 carries the
+  agent-frontmatter and reserved-destination corrections at **v2.3**;
+  this document and the two `general/` references carry **C-42, C-44 and
+  C-46**, recorded in the amendment row above. The earlier rounds'
+  folds are complete and verified rather than assumed: §6.1 changes
+  17–27 at F1 v2.3, §6.2 changes 12–16 at F5 v2.1, §6.3 change 8 here as
+  adjusted by Q-54, and §6.5's five out-of-scope corrections discharged
+  by the owners of `general/pack-application.md`,
+  `general/pack-inventory.md` and the brief §12.
+- **The security gate is closed by decision, after four review rounds —
+  not by a `SECURITY-PROCEED` verdict, which no revision of this set has
+  ever carried.** State it plainly and do not let a later reader mistake
+  it for a clean pass: the final verdict of record is `REVISE-SPEC`.
+  **C-47 and the remaining LOW residue are accepted for v1.0**, with
+  their requirements and their tests recorded rather than waived, and
+  they are implementation obligations, not closed items. What the
+  decision rests on is the trajectory above and the fact that the fourth
+  round found nothing CRITICAL and nothing that changes the
+  architecture — not on a reviewer's clearance.
 - **This is the second consecutive round in which a rewrite lapsed
   conditions a disposition table claimed were satisfied**, and it is
   recorded here rather than only in the ADR because it is a fact about
@@ -200,7 +213,11 @@ Recorded honestly, because the process gates on it:
   must cite the **mechanism and its quantifier**, not a section number;
   and the closed attacks get **adversarial fixture packs** run in CI,
   each asserted to fail with a named code. Until both are in place, a
-  green disposition table is not evidence.
+  green disposition table is not evidence. **Both are in place, and the
+  two rounds since have not repeated the failure** — the fixture set is
+  specified in F1 and grew with each round, and rounds three and four
+  found no lapsed condition. That, not a verdict, is what the closed gate
+  rests on.
 - **No epics-and-tasks document exists** for any feature.
 - **F2 and F6 have no feature spec.** Only F1 and F5 have one.
 - **`general/system-architecture.md` and `general/technology-choices.md`
@@ -208,12 +225,15 @@ Recorded honestly, because the process gates on it:
   Q-39 changed the shape of the system after F1 and ADR-001 were first
   written, and nothing currently records the whole-system view.
 
-No implementation should begin until the ADR's §6 folds are complete —
-F1 at v2.3, F5 at v2.1, this document as amended, and §6.5's five
-corrections folded or explicitly deferred by their owners — the two
-`general/` documents exist, F2 and F6 have specs, every feature has an
-epics-and-tasks document, and **a fresh Mode A verdict has been issued
-against the folded set.**
+The ADR's §6 folds are complete — F1 at v2.5, F5 at v2.3, this document
+as amended, and §6.5's five corrections discharged by their owners — and
+the security gate is closed on the terms above. **What still blocks
+implementation is everything else in this section:** the two `general/`
+documents must exist, F2 and F6 must have specs, every feature must have
+an epics-and-tasks document, and **C-47 and the accepted LOW residue must
+be carried into those documents as requirements with tests**, since
+accepting a finding for v1.0 is a commitment to build it, not a decision
+to forget it.
 
 ### What v1.0 deliberately does *not* change
 
@@ -243,8 +263,8 @@ originating question, whose full rationale is in `project-brief.md`
 | Apply model | **Two phases.** Phase 1 copies the pack verbatim into `.harness/pack/` — no transformation, identical for every pack. Phase 2 is the pack-specific application that copies out and wires up | Q-39 |
 | Phase 2 form | A **declarative recipe** over **six** fixed primitives — `copy`, `rename`, `strip-suffix`, `rewrite-path`, `substitute`, `generate` — applied automatically by the CLI, never by the user. A new kind of step requires a new primitive in the CLI, deliberately | Q-40 as narrowed by Q-54 · `general/pack-application.md`, which says six and agrees |
 | Settings and permissions | **No pack writes `.claude/settings.json` at v1.0.** `merge-json` is dropped: six primitives, not seven. No pack owns a settings key, ships a default permission set, or produces anything at apply time for a user to agree to — there is no settings grant, no disclosure of one and no gate on one, because there is no route by which a pack reaches a settings file. The ownable-key allowlist, the destination policy, the leaf-only rule and their error families are **removed rather than repaired**, and the whole settings story defers to v1.1 | Q-54 — F5's three settings steps were never valid recipes (no `from`, no owned key, no settings source file in any payload), so `merge-json` had no v1.0 consumer while carrying the format's largest attack surface. It was the target of both CRITICALs in the Mode A re-review, of both lapses of C-16, and of the newly found rollback defect. **R5's "sensible default permissions" waits for v1.1** and F5 records it as a fourth shortfall |
-| Phase 2 input | Phase 2 reads the **phase-1 copy in the project**, never the bundle. The user cannot adjust the payload between phases at v1.0 | Q-41 |
-| Determinism | The recipe is a pure function of **(payload, parameter answers)**. No timestamps, ordering dependence, environment or network reads. Same pack version + same answers ⇒ byte-identical trees. **This holds at every applied path, with no exception** — `merge-json` was the one primitive taking a fourth input (the destination's pre-existing content), and Q-54 removes it, so the claim needs no qualifier and `verify`'s recomputation identity is universal | Q-40, Q-54 |
+| Phase 2 input | Phase 2's source is the **phase-1 copy in the project**, never the bundle — and it is **resolved at plan time**: phase 2 renders from planner-held payload bytes and performs **no read during execution** (C-23). `.harness/pack/` is phase 2's *logical* input and its *literal* input only at `verify`. This is what makes "the user cannot adjust the payload between phases" true rather than aspirational | Q-41 as settled by `F1-ADR-001` §3.6 · `general/pack-application.md` |
+| Determinism | The recipe is a pure function of **(payload, parameter answers, scaffold selection)** — **three** inputs. No timestamps, ordering dependence, environment or network reads, and no execute-time filesystem read (C-23). Same pack version + same answers + same scaffolds ⇒ byte-identical trees. **This holds at every applied path, with no exception** — `merge-json` was the one primitive taking a fourth input (the destination's pre-existing content), and Q-54 removes it, so the claim needs no qualifier and `verify`'s recomputation identity is universal | Q-40, Q-54 · **C-46**: this row and `general/pack-application.md` both named only two inputs, which is false of any `--scaffold` apply; F1 §NFR *Determinism* has the authoritative three-input form |
 | Planning before writing | Validation, both phases and the manifest are computed in memory; a journal is written; only then do bytes land. Failure in either phase rolls back, and rollback never deletes a pre-existing file | Q-39 · `general/pack-application.md` |
 | v1.0 command surface | **Four commands.** `init` (F2) is the apply; `validate`, `verify` and `pack info` (F1) all read a pack or a manifest, write nothing and take no lock. `update`, `status` and `contribute` defer to v1.1 with F3 and F4 | Q-42, Q-53 · F1's `E-CLI-UNKNOWN-COMMAND` lists `init, validate, verify, pack` |
 | Command ownership | **F1 owns the three read-only commands; F2 owns the apply and nothing else.** `verify` sits with `validate` and `pack info` because all three are the same class of read-only question over the same machinery, and F1 defines the recomputation identity `verify` answers | Q-53 |
@@ -361,7 +381,7 @@ them. These are not restated as v1.0 goals anywhere in this document.
 
 ## Feature 1 — Pack format, recipe & manifest
 
-*Full detail in [`F1-spec-pack-format-and-manifest.md`](F1-spec-pack-format-and-manifest.md) · ADR [`F1-ADR-001-pack-format-and-manifest.md`](F1-ADR-001-pack-format-and-manifest.md) — **being rewritten; its `PROCEED` predates Q-39…Q-46** · Tasks in `F1-epics-and-tasks-pack-format-and-manifest.md` (not written)*
+*Full detail in [`F1-spec-pack-format-and-manifest.md`](F1-spec-pack-format-and-manifest.md) · ADR [`F1-ADR-001-pack-format-and-manifest.md`](F1-ADR-001-pack-format-and-manifest.md) — **rewritten 2026-08-31 against the two-phase model; the 2026-08-30 `PROCEED` predates Q-39…Q-46 and is void** · Tasks in `F1-epics-and-tasks-pack-format-and-manifest.md` (not written)*
 
 F1 defines what a pack *is* on disk, how it declares its own
 application, and what an applied project records about it — and it is
@@ -398,8 +418,9 @@ resolves the named pack from the bundle, validates `pack.json` and
 `recipe.json`, collects parameter answers from `--set` flags or
 prompts, plans both phases and the manifest **entirely in memory**,
 writes a journal, and only then lands bytes — copying the pack verbatim
-into `.harness/pack/` (phase 1) and then executing the pack's recipe
-against that copy (phase 2) to produce `.claude/`, `AgentTeams/`,
+into `.harness/pack/` (phase 1) and then writing phase 2's output — the
+pack's recipe, rendered at plan time from the payload the planner
+resolved, not re-read from disk (C-23) — to produce `.claude/`, `AgentTeams/`,
 `targets/Run.md`, `copy/`, the generated `CLAUDE.md` with its inert
 anchors, and any selected scaffold directories. A failure in either
 phase rolls back to the pre-init state and never deletes a file that
@@ -571,12 +592,13 @@ the document that raises them.
 | — | *No cross-feature question is open.* | — | — |
 
 This is a statement about **questions**, not about readiness. The spec
-set has outstanding *work* — the ADR's §6 folds (**F1 to v2.3**, and
-§6.5's five out-of-scope corrections, both still open), **a further Mode
-A security pass against the folded documents**, two `general/`
-documents, the F2 and F6 specs and every epics-and-tasks document —
-listed under *Spec-set readiness* above. Those are known tasks, not
-undecided questions.
+set has outstanding *work* — two `general/` documents, the F2 and F6
+specs, every epics-and-tasks document, and **C-47 plus the accepted LOW
+residue to carry forward as requirements with tests** — listed under
+*Spec-set readiness* above. The ADR's §6 folds and the security review
+rounds are **complete**; the gate is closed by decision rather than by a
+`SECURITY-PROCEED` verdict, which is recorded there and in the ADR.
+Those are known tasks, not undecided questions.
 
 ---
 
@@ -637,7 +659,7 @@ this master spec.
 | Q-37 | The anatomy declaration is validated by the CLI, with a three-value `status` enum and per-status diagnostics | this document · F1 §User Stories |
 | Q-38 | A pack's document templates are copied into the applied project — **superseded by Q-46; under the phase model they stay in the payload** | brief §12 |
 | Q-39 | **Applying a pack is two phases** — a verbatim payload copy into `.harness/pack/`, then a pack-specific application | brief §12 · `general/pack-application.md` |
-| Q-40 | **Phase 2 is a declarative recipe over a fixed primitive set**, applied automatically by the CLI, and a pure function of (payload, answers) | brief §12 · `general/pack-application.md` |
+| Q-40 | **Phase 2 is a declarative recipe over a fixed primitive set**, applied automatically by the CLI, and a pure function of (payload, answers, **scaffold selection**) — the brief's §12 row states two of the three inputs, and F1 §NFR *Determinism* carries the authoritative form (C-46) | brief §12 · `general/pack-application.md` · F1 |
 | Q-41 | **Phase 2 reads the phase-1 copy in the project**, not the bundle; the payload is not user-editable between phases at v1.0 | brief §12 |
 | Q-42 | **`update`, `status` and `contribute` defer to v1.1.** F3 and F4 leave v1.0; G3, S3 and R4 defer with them; S7 weakens to apply-only | brief §12 |
 | Q-43 | **A minimal manifest ships**: pack, pack version, CLI version, answers, scaffolds. No per-file hash list, no `.harness/base/` — **amended by Q-52, which adds a sixth key, `payloadDigest`** | brief §12 |
