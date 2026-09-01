@@ -1,14 +1,15 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 1.2
+**Version:** 1.3
 **Status:** Draft
 **Date:** 2026-09-01
-**References:** `F1-spec-pack-format-and-manifest.md` (**v3.2** — authoritative for every acceptance criterion, the **87**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
+**References:** `F1-spec-pack-format-and-manifest.md` (**v3.4** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
 
 **Amendment history**
 
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 1.3 | 2026-09-01 | **Mode A over F2/F3/F6 folded — the F1 half.** Five tasks: **T-0113** (one control-character escaping function for every stream, C-50), **T-0114** (`E-DISCLOSURE-FORGERY`, catalogue **87 → 88**), **T-0806** (the disclosure containment check, **the CRITICAL**, at `init` **and** `validate` step 11 — no fifteenth step), **T-0211** (`skills` joins the reserved names at any `.claude` segment, C-53) and **T-1221** (fixtures for both, plus marking `compare.ts` security-relevant, C-55). **T-0806 is C-9's marker-lex check restored** — Q-45 removed it while anchors were inert and recorded the obligation to bring it back when something started reading markers; F1 v3.3 created such a marker and did not consult it. Next free task id **T-1222**. |
 | 1.2 | 2026-09-01 | **Q-82 — add-on packs.** `coding`'s two backend scaffolds move to `addons/` as v1.1 add-ons, which leaves **`writing-workstream` as the only scaffold in the product** and **no v1.0 pack shipping an executable at all**. Six rules lose their only bundled-pack subject — scaffold *composition* and exclusivity, `executableRoots`, `executable: true` (a security gate C-34 showed fails **open** on a typo), `E-EXEC-DEST-FORBIDDEN`, US-13's `0755` disclosure and `verify`'s mode comparison. **No rule is weakened and none is removed**; what changes is that the adversarial fixture suite becomes their **sole** coverage, so **T-1220** adds the four fixtures that were previously redundant with the bundled packs. Next free task id **T-1221**. |
 | 1.1 | 2026-09-01 | **F1 v3.0 fold, and nine of the fourteen ⚠️ entries unblock.** **Q-81 ratified the dependency posture**, which is a single answer that clears **U-1, U-2, U-3, U-6, U-8 and U-10** at once — each of those tasks stops being "choose, then build" and becomes "build". **U-4 clears differently and the resolution matters more than the clearing**: `collisionKey` folds **ASCII only**, so T-0202 must *not* reach for `toLowerCase()` or hand-roll a Unicode fold, and a test pins the narrowing. **U-11 clears because F1 v3.0 allocated the code it was waiting for** — `W-LINK-FALLBACK`. **Five entries remain and each blocks real work**: U-5, U-7, U-12 (×2), U-13 (×2). **Six new tasks** for what v3.0 added: **T-0111** (nine new codes), **T-0112** (`--dry-run` reserved), **T-0410** (the fill-expected set), **T-1005** (`filled`/`unfilled`), **T-1110** (journal v3), **T-1219** (the zero-dependency assertion). **T-1002 is rewritten in place** — six states, not four. Next free task id **T-1221** within E-12; **E-13** was the next free epic and is now claimed by F5. |
 
@@ -233,6 +234,25 @@ T-0103…T-0105 land.
   `"flag": "dry-run"` first and shadow a read-only mode when F3 ships, which
   is the `--accept-permissions` mistake avoided rather than repeated.
   *Depends on: T-0107.*
+
+- [ ] **T-0113** `[Implementer]` `src/diag/` — **one escaping function for
+  every stream** (C-50): C0 control characters other than `\n` and `\t`,
+  plus `U+2028`/`U+2029`, escaped to a visible form in **every**
+  diagnostic, prompt and disclosure row. **Escaped, not refused** — a path
+  or answer containing one is legitimate content and should print rather
+  than abort a run. **Stated and applied once**, not per call site, which
+  is how half of them get missed. The fault it closes: ANSI escapes in a
+  parameter `prompt`, an applied path or an agent's frontmatter can
+  **erase or overwrite the disclosure they just triggered**, or make a
+  prompt ask a different question from the one being answered.
+  `E-SUBST-NEWLINE` does not cover it — that bounds a value written into
+  a **file**, and nothing reaching a terminal.
+  *Depends on: T-0104. Prerequisite for every command that prints.*
+
+- [ ] **T-0114** `[Implementer]` `src/diag/codes.ts` — add
+  **`E-DISCLOSURE-FORGERY`** (C-49), exit 2, taking the catalogue **87 →
+  88**. Raised where the check in T-0806 fires.
+  *Depends on: T-0111.*
 ---
 
 ## E-02 — Path confinement, branded paths and the bounded walk
@@ -354,6 +374,18 @@ E-11. E-09's steps 6 and 7 are this epic's rules, run at validate time.
   asserted. C-14.
   *Depends on: T-0206.*
 
+
+- [ ] **T-0211** `[Implementer]` Add **`skills`** to the
+  reserved-destination names matched at **any `.claude` segment** (C-53),
+  beside `settings.json`'s basename reservation and on the same
+  reasoning: **a pack may not install instructions into the agent runtime
+  of the project it is applied to**. The frontmatter checks bound what a
+  pack-placed file may *declare*; they bound nothing about what it may
+  *instruct*, and a pack shipping `.claude/skills/lintel/SKILL.md` would
+  install instructions under the harness's own name. **`skill install` is
+  a CLI write and is unaffected** — the reservation binds recipe steps.
+  Bounded at v1.0 by bundled packs; **unbounded the moment F4 ships**.
+  *Depends on: T-0203.*
 ---
 
 ## E-03 — The pack declaration — strict JSON, schema, anatomy, parameters, scaffolds
@@ -986,6 +1018,26 @@ E-11's pre-write summary (F2 renders it).
   written without it.
   *Depends on: T-0803, T-0804.*
 
+
+- [ ] **T-0806** `[Implementer]` **The disclosure containment check**
+  (C-49, **CRITICAL**). Before `init` emits the block, scan the assembled
+  rows for **either sentinel line**; a match is `E-DISCLOSURE-FORGERY`,
+  exit 2, **zero bytes**, naming the offending path. `validate` runs the
+  identical scan at **step 11**, over the same rendered set, so a pack
+  cannot ship the fault at all. **No fifteenth validate step** — it joins
+  step 11 rather than renumbering the runner.
+  **Read the reasoning before implementing, because the check looks
+  paranoid and is not.** US-13 prints whole agent frontmatter blocks
+  **verbatim and multi-line**, so a pack shipping a frontmatter line
+  reading `--- lintel disclosure end ---` truncates the block for any
+  consumer that reads to the marker — the user's eye, and F6 under IM-10.
+  Everything after is invisible: `0755` paths, later tool grants,
+  substituted values. **The truncated block stays well-formed and
+  shorter, and nothing looks wrong.** This is **C-9's marker-lex check,
+  restored** — Q-45 removed it as unnecessary while anchors were inert,
+  and recorded the obligation to bring it back when something started
+  reading markers.
+  *Depends on: T-0114, T-0804. Prerequisite for F2 T-2102.*
 ---
 
 ## E-09 — `validate` and `pack info` — the fourteen-step runner and one report
@@ -1584,6 +1636,19 @@ for the applying fixtures E-11.
   **Do not trim this suite on the grounds that no shipping pack needs it** —
   that is now true of all four, and it is the reason they exist.
   *Depends on: T-0307, T-0405, T-0504, T-1201. Q-82.*
+
+- [ ] **T-1221** `[TestWriter]` Two fixtures for C-49 and C-50: a pack
+  whose agent frontmatter carries a sentinel line, requiring
+  `E-DISCLOSURE-FORGERY` at **both** `validate` and `init` with zero
+  bytes; and a pack whose parameter `prompt`, applied path and frontmatter
+  each carry an ANSI escape, requiring every one to appear **escaped** in
+  the disclosure, the prompt and the report. **Mark `src/verify/compare.ts`
+  as security-relevant in this suite** (C-55): `verify` reports on its
+  result and `update` **writes** on it, so a comparison defect is data
+  loss, and `verify` is simultaneously S7's acceptance test — a divergence
+  corrupts the gate that would have caught it. **Not over-coverage; do not
+  trim.**
+  *Depends on: T-0806, T-0113, T-1201.*
 ---
 
 ## Cross-epic notes

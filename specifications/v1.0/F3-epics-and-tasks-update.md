@@ -1,14 +1,15 @@
 # Epics & Tasks: `harness update` (Lintel Harness v1.0 — Feature 3)
-**Version:** 1.0
+**Version:** 1.1
 **Status:** Draft
 **Date:** 2026-09-01
-**References:** `F3-spec-update.md` (US-59…US-72) · `F3-ADR-004-update.md` (**PROCEED** — authoritative for the file plan, the four dispositions and the exit-class rule) · `F1-spec-pack-format-and-manifest.md` **v3.3** (journal v3, the four `E-UPDATE-*` codes, `fillExpected`) · `F6-ADR-005` (Q-77 and Q-78 jointly) · `general/interaction-model.md` §11
+**References:** `F3-spec-update.md` (US-59…US-72) · `F3-ADR-004-update.md` (**PROCEED** — authoritative for the file plan, the four dispositions and the exit-class rule) · `F1-spec-pack-format-and-manifest.md` **v3.4** (journal v3, the four `E-UPDATE-*` codes, `fillExpected`) · `F6-ADR-005` (Q-77 and Q-78 jointly) · `general/interaction-model.md` §11
 
 **Amendment history**
 
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown against `F3-ADR-004`. Claims **E-23…E-25** and **T-2301…T-2507**. |
+| 1.1 | 2026-09-01 | **Mode A conditions C-51 and C-54 folded.** **T-2407** — deletion re-confines immediately before acting, refusing a path whose type changed since planning; C-14 makes write-time re-confinement absolute and the delete path carried no equivalent. **The risk is the backup, not the unlink**: `update` reads pre-apply bytes into `journal.d/` before removing, and a symlink planted between plan and execute makes that read reach outside the project. **T-2508** — the human report bounds `expectedNew` excerpts with an explicit truncation notice, `--json` staying the complete channel. Next free **T-2408**, **T-2509**. |
 
 ---
 
@@ -187,6 +188,21 @@ for that reason.
   file the run did not create is not removed.
   *Depends on: T-2403.*
 
+
+- [ ] **T-2407** `[Implementer]` **Deletion re-confines immediately before
+  acting** (C-51). `confineAtWrite()` on each target, `lstat` it, and
+  **refuse a path whose type changed since planning** — `E-TARGET-RACE`,
+  exit 2, journal intact, the same code and class the write path already
+  uses for the same fault. C-14 makes write-time re-confinement absolute
+  and §1 carried no equivalent into deletion.
+  **The risk is the backup, not the unlink.** Removing a symlink removes
+  the link and not its target, so this is not arbitrary file deletion —
+  but `update` **reads the pre-apply bytes into `.harness/journal.d/`
+  before removing**, and a read through a symlink planted between plan and
+  execute reaches outside the project. The confinement is needed for the
+  **capture**, which is the half that is easy to miss when reasoning about
+  deletion alone.
+  *Depends on: T-2402, F1 T-0207.*
 ---
 
 ## E-25 — The report, `--dry-run`, and the exit-class contract
@@ -262,6 +278,18 @@ instead.
   exists for is silent**, which is why it is a test rather than a note.
   *Depends on: T-2401, T-2406.*
 
+
+- [ ] **T-2508** `[Implementer]` **The human report bounds its excerpts**
+  (C-54): a stated line cap on `expectedNew`, with an **explicit
+  truncation notice naming how many lines were withheld**; `--json`
+  remains the complete channel. **Never silently short** — F1's rule for
+  the disclosure is *never summarised, never truncated, never counted*,
+  and a report that quietly drops content while looking complete is the
+  same fault the Mode A review's C-1 opened with. Bounded-and-labelled is
+  a different thing. Every line printed also passes F1 v3.4's
+  control-character escaping (C-50), since `expectedNew` is pack-rendered
+  content going to a terminal.
+  *Depends on: T-2502, F1 T-0113.*
 ---
 
 ## Counters claimed by this document

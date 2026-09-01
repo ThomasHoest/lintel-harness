@@ -5,6 +5,7 @@
 **Mode:** A — architectural validation at the ADR gate
 **Subjects:** `F2-ADR-003` (`PROCEED`) · `F3-ADR-004` (`PROCEED`) · `F6-ADR-005` (`PROCEED`, conditions cleared) · their specs, and `F1-spec` **v3.3** where these three depend on it
 **Verdict:** **REVISE-SPEC** — one CRITICAL, three HIGH, two MEDIUM, one LOW. See §5.
+**Disposition:** **all eight conditions folded 2026-09-01** — see §6. A re-review is required before `SECURITY-PROCEED`; folding is not passing.
 
 ---
 
@@ -261,3 +262,37 @@ fold-check rule applying to *security conditions* and not only to
 cross-cutting documents. A condition marked "v1.1 obligation" needs to be
 consulted by the change that creates its trigger, and nothing currently
 makes that happen.
+
+---
+
+## 6. Conditions folded — 2026-09-01
+
+All eight, in the same session the review ran. **This is not a
+`SECURITY-PROCEED`.** The verdict stands at `REVISE-SPEC` until a
+re-review examines the folds; a reviewer's conditions being met is a
+precondition for a pass, not the pass itself.
+
+| # | Folded as |
+|---|---|
+| **C-49** | **F1 v3.4** — `E-DISCLOSURE-FORGERY`, exit 2, zero bytes, catalogue **87 → 88**. Scanned by `init` before emitting **and** by `validate` at **step 11**, over the same rendered set, so a pack cannot ship the fault. **Joins step 11 rather than adding a fifteenth**, so the runner is not renumbered. Tasks T-0114, T-0806, T-1221 |
+| **C-50** | **F1 v3.4 §NFR** — one escaping function in `src/diag/`, applied to every diagnostic, prompt and disclosure row. **Escaped, not refused**: legitimate content should print rather than abort a run. Task T-0113 |
+| **C-51** | **`F3-ADR-004` §9** — deletion re-confines immediately before acting, `E-TARGET-RACE` on a type change. Task T-2407 |
+| **C-52** | **`F6-ADR-005` §9 — `--user` dropped.** Specifying a second confinement root, with its own brand and ancestor walk, to serve a convenience was not the trade. Tasks T-2606, T-2706 rewritten |
+| **C-53** | **F1 v3.4** — `skills` reserved at any `.claude` segment. Task T-0211 |
+| **C-54** | **`F3-ADR-004` §9** — bounded excerpt with an explicit truncation notice; `--json` stays complete. Task T-2508 |
+| **C-55** | **F1 v3.4 §F1.9 known limit 18** — `compare.ts` recorded as security-relevant, and T-1221 says not to trim its tests |
+| **C-56** | **`F6-ADR-005` §9 — `--force` dropped**; `E-TARGET-EXISTS` unconditionally. Task T-2607 rewritten |
+
+**Two conditions were closed by removing a flag rather than adding
+machinery** (C-52, C-56), and that is worth naming as a pattern: **the
+cheapest way to close a finding about a surface is usually to not have
+the surface.** Both flags were conveniences; both cost more to secure
+than they returned.
+
+**The closing note of §5 is not discharged by this fold.** It argued that
+the fold-check rule must cover **security conditions** and not only
+cross-cutting documents — C-9's obligation named this exact trigger and
+sat two thousand lines away in a disposition table the change never
+consulted. **Nothing in this fold makes that happen next time.** It
+belongs in the coding pack's spec process, where the fold-check rule
+already lives, so it propagates to every project the pack applies to.

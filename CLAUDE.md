@@ -330,9 +330,9 @@ counter anywhere in this file, that is the bug, and this section wins.
 | Open question | **Q-84** | `Q-N`, **project-monotonic, not per document**. An id is never reused, and it keeps its number when it moves to a Resolved Decisions table. **Q-1…Q-63 and Q-79…Q-82 are resolved** — the register is `specifications/project-brief.md` §12, which holds the decision and the rationale for each. This file does not restate them. **Q-64 is reserved**, not free (see Q-63). **Q-65…Q-78 are open**, each feature-local to F2, F3 or F6 and resolvable in its own ADR, plus **Q-83** (the `category` model), which is project-level and waits on F7. |
 | User story | **US-99** | `US-N`, project-monotonic across features. **F1 and F5 each state their own range in their §User Stories**, — read them there rather than trusting a list here. F2, F3 and F6 now hold stories too (US-39…US-98). **Retired and never reusable:** US-5, US-6, US-7, US-11, US-12 (F1); US-22, US-23 (F5). |
 | Epic | **E-28** | `E-NN`, per feature, and the range is contiguous. **F1 E-01…E-12 · F5 E-13…E-19 · F2 E-20…E-22 · F3 E-23…E-25 · F6 E-26…E-27.** Every v1.0 feature now has epics. |
-| Task | per epic | Scheme A, epic-derived `T-XXYY`, so there is no single next-free id. **F1 T-0101…T-1219** (112) · **F5 T-1301…T-1906** (32) · **F2 T-2001…T-2206** (19) · **F3 T-2301…T-2507** (21) · **F6 T-2601…T-2708** (15) — **199 tasks** across five features. Each document ends with its own per-epic next-free table; that is where to look, not here. |
+| Task | per epic | Scheme A, epic-derived `T-XXYY`, so there is no single next-free id. **F1 T-0101…T-1219** (112) · **F5 T-1301…T-1906** (32) · **F2 T-2001…T-2206** (19) · **F3 T-2301…T-2507** (21) · **F6 T-2601…T-2708** (15) — **206 tasks** across five features. Each document ends with its own per-epic next-free table; that is where to look, not here. |
 | ADR | — | Five written: **`F1-ADR-001`** (`PROCEED`, amended to F1 v3.2), **`F5-ADR-002`** (`REVISE SPEC`), **`F2-ADR-003`** (`PROCEED`), **`F3-ADR-004`** (`PROCEED`), **`F6-ADR-005`** (issued `REVISE SPEC`, **conditions cleared, now `PROCEED`**). ADRs are feature-prefixed and numbered per feature, so there is no project-wide next-free id. Epic-scoped ADRs use `ADR-EXX`. |
-| Error code | — | F1's catalogue is the **only** one, and it holds **87** at v3.0. No other document may invent a code. The nine added by the fold are four for `update` (F3 fires them), four for `init` (F2's) and one notice, `W-LINK-FALLBACK`. |
+| Error code | — | F1's catalogue is the **only** one, and it holds **88** at v3.4. No other document may invent a code. Ten were added on 2026-09-01: nine at v3.0 (four for `update`, four for `init`, one notice) and **`E-DISCLOSURE-FORGERY` at v3.4**, closing the Mode A CRITICAL. |
 
 ---
 
@@ -487,14 +487,15 @@ authoritative, verify it rather than trusting the assertion.
   there is no CLI to run. `ls .harness` is the check.
 - **No CLI source exists.** Not a line. Everything below assumes that.
 - **Every v1.0 feature now has a spec, an ADR and epics.**
-- **F2/F3/F6's Mode A pass has run and returned `REVISE-SPEC`** —
-  **1 CRITICAL, 3 HIGH, 2 MEDIUM, 1 LOW**, conditions **C-49…C-56**
-  (`security-review-mode-a-F2-F3-F6.md`). The CRITICAL is **C-1**: the
-  disclosure block's delimiters can be forged by pack content, which
-  defeats the one control that exists *because* pack content is untrusted.
-  **It is a regression against C-9**, whose lex check Q-45 removed with a
-  v1.1 obligation to restore it when something started reading markers —
-  F1 v3.3 created such a marker and did not consult the obligation.
+- **F2/F3/F6's Mode A pass returned `REVISE-SPEC`** — 1 CRITICAL, 3 HIGH,
+  2 MEDIUM, 1 LOW — and **all eight conditions (C-49…C-56) are folded**
+  (`security-review-mode-a-F2-F3-F6.md` §6). **The verdict has not moved:
+  folding is not passing, and a re-review is required.** The CRITICAL was
+  the disclosure block's delimiters being forgeable by the content they
+  wrap — a regression against **C-9**, whose lex check Q-45 removed with an
+  obligation to restore it when something started reading markers. Two
+  conditions were closed by **dropping a flag** rather than adding
+  machinery (`--user`, `--force`).
 - **ADR-002 has not been re-issued** against F5 v3.1.
 - **No epics-and-tasks document for F2, F3 or F6.** F1 and F5 both have one.
 - **Pack content no longer lags the spec** — this is the line that went

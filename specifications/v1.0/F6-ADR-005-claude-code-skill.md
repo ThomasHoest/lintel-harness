@@ -3,7 +3,7 @@
 **Status:** Draft
 **Date:** 2026-09-01
 **Decides:** `F6-spec-claude-code-skill.md` (US-79…US-98, Q-75…Q-78; **Q-79 was resolved at project level** and is not re-opened here)
-**Reads:** `F1-spec-pack-format-and-manifest.md` **v3.3** (which this ADR's condition 1 produced) · `F2-ADR-003` · `F3-ADR-004` · `general/interaction-model.md` (IM-1…IM-41) · `general/technology-choices.md` §9
+**Reads:** `F1-spec-pack-format-and-manifest.md` **v3.4** (v3.3 was this ADR's condition 1; v3.4 folded the Mode A findings that followed) · `F2-ADR-003` · `F3-ADR-004` · `general/interaction-model.md` (IM-1…IM-41) · `general/technology-choices.md` §9
 **Verdict:** **REVISE SPEC**, issued 2026-09-01 — **conditions cleared the same day; see §8.** The standing verdict is **PROCEED**. The revision was small and named; the architecture was never in question.
 
 ---
@@ -46,7 +46,7 @@ byte-for-byte, it is not the skill's.**
 | `skill/SKILL.md` | **New** | F6 | The skill itself — frontmatter plus the workflow. Ships **inside `@lintel/cli`**, and is copied out by a CLI command (§3.1) |
 | `skill/reference/init.md` | **New** | F6 | What `init`'s output looks like and what to do with each part. Loaded on demand, not inline |
 | `skill/reference/update.md` | **New** | F6 | The reconciliation workflow over `update --json` |
-| `src/cli/commands/skill.ts` | **New** | **F6→F1** | `lintel harness skill install [--user]` — copies `skill/` to `.claude/skills/lintel/` or the user profile. **A sixth command; see §5** |
+| `src/cli/commands/skill.ts` | **New** | **F6→F1** | `lintel harness skill install` — copies `skill/` to `.claude/skills/lintel/`. **Project-local only; `--user` was dropped at C-52 (§9).** A sixth command; see §5 |
 
 **No runtime, no dependency, no state file.** The skill has no memory
 between invocations beyond what is in the project, which is deliberate:
@@ -267,3 +267,52 @@ never had a **Mode A security pass**, and `skill install` — a command
 that writes into `.claude/`, the directory every pack rule in F1 exists
 to protect — is the surface most worth a reviewer's attention. Clearing
 an architectural verdict is not clearing a security gate.
+
+---
+
+## 9. Mode A conditions folded — 2026-09-01
+
+Two conditions are F6's, and **both are closed by removing a flag rather
+than by adding machinery.** That is the cheaper and the more defensible
+answer in each case, and it is worth naming as a pattern: the least
+expensive way to close a finding about a surface is usually to not have
+the surface.
+
+### C-52 (HIGH) — `--user` is dropped
+
+`--user` wrote to the user profile, making `skill install` **the only
+write in the product that deliberately leaves the project root**. Every
+confinement guarantee in F1 is expressed *against* that root, so `--user`
+was the one destination no existing rule covered — and the review found
+its confinement stated only in a task instruction (`T-2606`), which is
+not where a boundary belongs.
+
+**The options were: specify a second confinement root — resolved,
+`lstat`ed at every ancestor, no symlink followed, a branded path type that
+is its only constructor — or drop the flag.**
+
+**Dropped.** A project-local install is sufficient at v1.0: the skill
+drives `init` and `update`, both of which operate on a project, so a
+per-project skill is the normal case and a profile-wide one is a
+convenience. **Adding a whole second confinement root — with its own
+brand, its own ancestor walk and its own tests — to serve a convenience
+is exactly the speculation Q-42 and Q-48 were right to refuse**, and it
+would double the surface of the one command in this feature that writes.
+
+**Reopening it is a v1.1 question with a stated price:** the second root
+and its brand, specified before the flag returns, not after.
+
+### C-56 (LOW) — `--force` is dropped
+
+`F6-epics` T-2607 had an existing installation *"refused rather than
+overwritten unless `--force`"*. **`--force` is a reserved CLI flag whose
+meaning F1 fixes for `init`** — the pre-existing-path rule of US-13 —
+and reusing the name for different behaviour on a different command,
+specified in a task and in no specification, is how a flag acquires two
+meanings and a user acquires a wrong expectation.
+
+**Dropped. `skill install` refuses an existing installation
+unconditionally**, with `E-TARGET-EXISTS` and a remedy telling the user to
+remove the directory if they mean to replace it. Re-installing is rare,
+the manual step is one command, and **one flag with one meaning across the
+whole surface** is worth more than saving it.

@@ -1,14 +1,15 @@
 # Epics & Tasks: the Claude Code skill (Lintel Harness v1.0 — Feature 6)
-**Version:** 1.0
+**Version:** 1.1
 **Status:** Draft
 **Date:** 2026-09-01
-**References:** `F6-spec-claude-code-skill.md` **v1.1** (US-79…US-98) · `F6-ADR-005-claude-code-skill.md` (issued `REVISE SPEC`, **conditions cleared — `PROCEED`**) · `general/interaction-model.md` (IM-1…IM-41) · `F1-spec-pack-format-and-manifest.md` **v3.3** (the disclosure sentinels, the six-command surface) · `F2-ADR-003` · `F3-ADR-004`
+**References:** `F6-spec-claude-code-skill.md` **v1.1** (US-79…US-98) · `F6-ADR-005-claude-code-skill.md` (issued `REVISE SPEC`, **conditions cleared — `PROCEED`**) · `general/interaction-model.md` (IM-1…IM-41) · `F1-spec-pack-format-and-manifest.md` **v3.4** (the disclosure sentinels and their containment check, the six-command surface) · `F2-ADR-003` · `F3-ADR-004`
 
 **Amendment history**
 
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown against `F6-ADR-005`. Claims **E-26…E-27** and **T-2601…T-2708**. |
+| 1.1 | 2026-09-01 | **Mode A conditions C-52 and C-56 folded, both by removing a flag.** **`--user` dropped** — it was the only write in the product that deliberately left the project root, and every F1 confinement guarantee is expressed *against* that root, so keeping it meant specifying a whole second confinement root with its own brand, ancestor walk and tests to serve a convenience. **`--force` dropped** — the name is reserved and F1 fixes its meaning for `init`, and an existing installation is now refused unconditionally with `E-TARGET-EXISTS`. **No task added; three rewritten** (T-2606, T-2607, T-2706). The cheapest way to close a finding about a surface is usually to not have the surface. |
 
 ---
 
@@ -108,20 +109,26 @@ E-21 (the disclosure sentinels exist to be captured).
   *Depends on: T-2601, T-2604.*
 
 - [ ] **T-2606** `[Implementer]` `src/cli/commands/skill.ts` —
-  `lintel harness skill install [--user]`, copying `skill/` to
-  `.claude/skills/lintel/` or the user profile. **Through the confinement
-  gate and the atomic writer**, journalled like any other write.
-  **`--user` targets a path outside the project**, which is the one write
-  in the product that does — so its destination is constructed and
-  confined explicitly, never assembled from a string, and it is the single
-  most important line in this task to review.
+  `lintel harness skill install`, copying `skill/` to
+  `.claude/skills/lintel/`. **Through the confinement gate and the atomic
+  writer**, journalled like any other write. **Project-local only:
+  `--user` was dropped at C-52.** It was the one write in the product that
+  deliberately left the project root, and every confinement guarantee in
+  F1 is expressed *against* that root — so serving a convenience would
+  have cost a whole second confinement root with its own brand, ancestor
+  walk and tests. **Do not reintroduce it without specifying that root
+  first.**
   *Depends on: F1 T-0203, T-1104, T-2601.*
 
 - [ ] **T-2607** `[Implementer]` `skill install`'s failure paths, all
-  existing F1 codes and **none new**: an existing installation is
-  refused rather than overwritten unless `--force`; an unwritable
-  destination is `E-WRITE-FAILED`. Register the sixth command in
-  `main.ts` and in `E-CLI-UNKNOWN-COMMAND`'s list.
+  existing F1 codes and **none new**: an existing installation is refused
+  **unconditionally** with `E-TARGET-EXISTS`, whose remedy tells the user
+  to remove the directory if they mean to replace it; an unwritable
+  destination is `E-WRITE-FAILED`. **No `--force`** (C-56) — the name is
+  reserved and F1 fixes its meaning for `init`'s pre-existing-path rule,
+  and one flag with one meaning across the whole surface is worth more
+  than saving a manual step in a rare operation. Register the sixth
+  command in `main.ts` and in `E-CLI-UNKNOWN-COMMAND`'s list.
   *Depends on: F1 T-0106, T-2606.*
 
 ---
@@ -177,11 +184,13 @@ the skill is unimplementable no matter how well written.
   *Depends on: T-2607.*
 
 - [ ] **T-2706** `[TestWriter]` **`skill install` is confined.** Assert it
-  writes only under `.claude/skills/lintel/`; that a crafted `--user`
-  destination cannot escape its own root; and that the write is journalled
-  and rolled back like any other. **The security-relevant test in this
-  feature** — it is the product writing into the directory its own pack
-  rules exist to protect.
+  writes only under `.claude/skills/lintel/`; that the write is journalled
+  and rolled back like any other; and that **no destination outside the
+  project root is reachable at all**, `--user` having been dropped at
+  C-52. **The security-relevant test in this feature** — it is the product
+  writing into the directory its own pack rules exist to protect, and
+  C-53 now reserves `skills` against **packs** writing there, so this
+  command must be demonstrably the only route in.
   *Depends on: T-2606.*
 
 - [ ] **T-2707** `[TestWriter]` The instruction-level checks that can be

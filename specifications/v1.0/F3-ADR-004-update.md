@@ -3,8 +3,8 @@
 **Status:** Draft
 **Date:** 2026-09-01
 **Decides:** `F3-spec-update.md` (US-59…US-72, Q-70…Q-74) — and, jointly with `F6-ADR-005`, **Q-78**
-**Reads:** `F1-spec-pack-format-and-manifest.md` **v3.2** · `F1-ADR-001` (amended 2026-09-01) · `F6-spec-claude-code-skill.md` (IM-7, IM-30, IM-31, IM-33) · `general/interaction-model.md` §11
-**Verdict:** **PROCEED** — see §7.
+**Reads:** `F1-spec-pack-format-and-manifest.md` **v3.4** · `F1-ADR-001` (amended 2026-09-01) · `F6-spec-claude-code-skill.md` (IM-7, IM-30, IM-31, IM-33) · `general/interaction-model.md` §11
+**Verdict:** **PROCEED** — see §7. **Amended 2026-09-01** for Mode A conditions **C-51** and **C-54**; see §9.
 
 ---
 
@@ -264,3 +264,52 @@ are resolved, three of them by F1's v3.0 fold.
 presents the pack's version of an edited file, and in what order it works
 through the reported paths. That is F6's, and this ADR deliberately hands
 over bytes and a list rather than a workflow.
+
+---
+
+## 9. Mode A conditions folded — 2026-09-01
+
+`security-review-mode-a-F2-F3-F6.md` returned `REVISE-SPEC`. Two of its
+conditions are F3's, and both are additive — neither disturbs §1.
+
+### C-51 (HIGH) — deletion re-confines immediately before acting
+
+**C-14 makes write-time re-confinement absolute**: `executeApply` re-runs
+US-3's stage 3 immediately before **each write**, because the plan's
+`lstat` is stale by the time the write happens. §1 introduced **deletion**
+and carried no equivalent, which is a control not followed into a new
+operation rather than a control anyone argued against.
+
+**Required and now specified.** The delete path calls
+`confineAtWrite()` on each target immediately before acting, `lstat`s it,
+and **refuses a path whose type has changed since planning** —
+`E-TARGET-RACE`, exit 2, journal intact, the same code and class the write
+path already uses for the same fault.
+
+**The concrete risk is the backup, not the unlink.** Deleting a symlink
+removes the link and not its target, so this is not arbitrary file
+deletion. But `update` **reads the pre-apply bytes into
+`.harness/journal.d/` before removing**, and a read through a symlink
+planted between plan and execute reaches outside the project. The
+confinement is needed for the *capture*, which is the half that is easy
+to miss when reasoning about deletion alone.
+
+### C-54 (MEDIUM) — the human report bounds its excerpts
+
+`UpdateEntry.expectedNew` carries whole rendered files so F6 can show what
+the pack changed. Correct for `--json`, where the bytes are escaped and
+the consumer is a program.
+
+**The human report prints a bounded excerpt** — a stated line cap, with an
+**explicit truncation notice naming how many lines were withheld** — and
+`--json` remains the complete channel.
+
+**Never silently truncated.** F1's rule for the disclosure is *never
+summarised, never truncated, never counted*, and a report that quietly
+drops content while looking complete is the same fault the review's C-1
+opened with. Bounded-and-labelled is a different thing from silently
+short.
+
+**Also inherited:** every line the report prints passes F1 v3.4's
+control-character escaping (C-50). `expectedNew` is pack-rendered content
+going to a terminal, which is exactly the class that rule exists for.
