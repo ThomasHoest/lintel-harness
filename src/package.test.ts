@@ -35,8 +35,16 @@ test('the package declares no runtime dependency', async () => {
 test('the build type-checks rather than strips', async () => {
   const m = await manifest();
   const scripts = m['scripts'] as Record<string, string>;
-  assert.equal(scripts['build'], 'tsc');
-  assert.equal(scripts['typecheck'], 'tsc --noEmit');
+
+  // Assert the PROPERTY, not the literal command. An earlier version of
+  // this test pinned `typecheck === 'tsc --noEmit'` and broke the moment a
+  // second tsconfig was added — the same mistake F1 §NFR made by specifying
+  // an empty `dependencies` object instead of "no runtime dependency".
+  // What must hold is that the build compiles with a type checker and that
+  // typecheck does so without emitting.
+  assert.match(scripts['build'] ?? '', /(^|\s)tsc(\s|$)/, 'build must run tsc');
+  assert.match(scripts['typecheck'] ?? '', /(^|\s)tsc(\s|$)/, 'typecheck must run tsc');
+  assert.match(scripts['typecheck'] ?? '', /--noEmit/, 'typecheck must not emit');
 
   const dev = m['devDependencies'] as Record<string, string>;
   assert.ok('typescript' in dev, 'typescript must be a dev dependency');

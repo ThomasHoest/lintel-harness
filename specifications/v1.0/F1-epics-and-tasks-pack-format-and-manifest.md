@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 1.7
+**Version:** 1.8
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 1.8 | 2026-09-01 | **T-0102 done — the acceptance harness, and a layout constraint T-0101 created.** `tests/harness/cli.ts` gives the suite the two things F1 states as contracts and neither of which is observable from inside the process: **the exit class** (named, not numbered, at call sites) and **zero bytes written**, proved by a before/after snapshot of a real directory rather than by spot-checking paths the test thought of. The snapshot is built from **`readdir` entries**, so it reports the **on-disk spelling** — C-36's distinction, which a test composing its own paths cannot make on a case-insensitive volume, and which two fixtures turn on. **Three tsconfigs, because of the depth invariant T-0101 pinned:** `paths.ts` must compile one level inside its out root, so tests cannot be compiled to a different root alongside it — the app builds `src → dist` **excluding tests**, unit tests build to the same root, and `tests/` builds to `dist-tests/` and drives the **built artefact**. Production `dist/` contains **zero** test files. **The harness tests itself against the filesystem with no CLI in the picture**, because every acceptance test in F1, F2, F3 and F6 asserts through it. |
 | 1.7 | 2026-09-01 | **T-0101 done — the first code in the project, and it falsified a spec sentence.** `package.json`, `tsconfig.json`, `src/paths.ts` and eight passing tests. **§NFR's *empty `dependencies` object* is not assertable** — `npm install` normalises it away — so F1 v3.8 restates the requirement as *no runtime dependency declared*, empty **or absent**. **T-1219 is amended to match.** Also verified by running rather than by reading: `packs/` ships (121 files) and **`addons/` does not** (0), and the resolution does not move when `cwd` does. |
 | 1.6 | 2026-09-01 | **The ⚠️ register closes; every blocked task unblocks.** U-5, U-7 and U-9 were **already decided and the register had not caught up** — U-9 by `F2-ADR-003`, U-5 and U-7 by Q-81, since each named a dependency as its alternative. **U-12: `tsc` only**, no bundler, because the build must **type-check** and the path brands are compile-time controls; `packs/` resolves from `import.meta.url`, **never `process.cwd()`**. **U-13: GitHub Actions**, three platforms, **Windows not optional**. **T-0101 unblocks, and it was the prerequisite for every task in this document** — nothing in F1 is blocked any more. |
 | 1.5 | 2026-09-01 | **Mode A round 4 — C-61, C-62; the CRITICAL closes and the review returns `SECURITY-PROCEED`.** T-0806 refuses the delimiter **shape** as well as this run's nonce, which is what keeps `E-DISCLOSURE-FORGERY` **reachable** — the nonce alone made it probabilistically unfireable, and an untriggerable check rots. T-0806 also states the nonce's **scope**: `init`'s block only, so `pack info --json` stays deterministic. **T-1221 gains the two fixtures that assert both.** |
@@ -141,15 +142,26 @@ T-0103…T-0105 land.
   would let a user's project shadow the bundled packs.
   *No dependencies. Prerequisite for every task in this document.*
 
-- [ ] **T-0102** `[Implementer]` Add the test-runner configuration and the
+- [x] **T-0102** `[Implementer]` Add the test-runner configuration and the
   scripts that run unit, integration and fixture suites. The runner must
   assert on the **process exit class**, and for two fixtures on **file mode
   and directory-entry name** with no code involved (US-16, C-36).
   **✅ UNBLOCKED (U-10, closed by Q-81): the runner is `node:test`.** It
   ships with Node 22, so it is a dependency in neither budget, and it
   needs no config file — the ADR's `vitest.config.ts` row is superseded.
-  The task is now to write the npm scripts and the fixture harness, not
-  to choose.
+  **Done.** `tests/harness/cli.ts` — `runCli` (a real process, because the
+  exit class is the contract and an in-process call cannot observe one),
+  `EXIT` naming F1's four classes, `snapshot` over `readdir` entries so the
+  **on-disk spelling** is what is reported (C-36), `unchanged` for the
+  zero-bytes claim, and `withTempDir`. Six self-tests run it against the
+  filesystem with no CLI involved.
+  **A layout constraint fell out of T-0101's depth invariant** and is worth
+  knowing before adding a fourth config: `paths.ts` must compile **one
+  level inside its out root**, so tests cannot share a root with it at a
+  different depth. Hence three tsconfigs — app (`src → dist`, tests
+  excluded), unit (same root, tests included), integration (`tests →
+  dist-tests`, driving the **built** artefact). Production `dist/` carries
+  **no** test files.
   *Depends on: T-0101. Prerequisite for every `[TestWriter]` task.*
 
 ### The diagnostic contract

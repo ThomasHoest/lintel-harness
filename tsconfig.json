@@ -1,16 +1,16 @@
 {
   "compilerOptions": {
     "target": "ES2023",
-    "lib": ["ES2023"],
+    "lib": [
+      "ES2023"
+    ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "rootDir": "src",
     "outDir": "dist",
-
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
@@ -19,11 +19,15 @@
     "noFallthroughCasesInSwitch": true,
     "noPropertyAccessFromIndexSignature": true,
     "useUnknownInCatchVariables": true,
-
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true
   },
-  "include": ["src/**/*.ts"]
+  "include": [
+    "src/**/*.ts"
+  ],
+  "exclude": [
+    "src/**/*.test.ts"
+  ]
 }
