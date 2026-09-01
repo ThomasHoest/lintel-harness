@@ -1,6 +1,6 @@
 # ADR-002 — Template packs: a pack-authoring contract, three deliberately unequal packs, and a specification the packs have overtaken
 
-**Status:** Draft
+**Status:** Draft — **re-issued 2026-09-01 against F5 v3.1; see §9. Standing verdict: `PROCEED` with two conditions.**
 **Date:** 2026-09-01
 **Deciders:** `architect` (this ADR) · escalations to Thomas Andersen
 **Refs:** `F5-spec-template-packs.md` **v2.9** · `F1-spec-pack-format-and-manifest.md` **v2.9** (**authoritative for the format**) · `F1-ADR-001-pack-format-and-manifest.md` · `specifications/general/pack-application.md` (**authoritative** — the two-phase model) · `specifications/general/pack-inventory.md` · `specifications/project-brief.md` §12 (Q-1…Q-63, all resolved; **Q-64 reserved**) · `packs/coding/`, `packs/writing/`, `packs/planning/` (the three built packs) · `packs/coding/specifications/adr-feature.template.md`
@@ -835,3 +835,78 @@ the predictable cost of authoring before the architecture gate, recorded
 here rather than absorbed.
 
 **REVISE SPEC**
+
+---
+
+## 9. Re-issued against F5 v3.1 — 2026-09-01
+
+**Standing verdict: `PROCEED`, with two conditions.** §8's `REVISE SPEC`
+was issued against **v2.9** and is superseded, not withdrawn — it was
+right, and the record of what it cost is the point of keeping it.
+
+### The six findings, checked against evidence rather than against the spec's own text
+
+That distinction is `T-1906`'s requirement and it is not pedantry: **the
+failure §8 found was a completeness claim that had never met a diff**, so
+re-reading the spec to see whether it now says the right thing would
+reproduce the original error one level up.
+
+| §8 finding | State at v3.1 | Checked by |
+|---|---|---|
+| §6.1 — US-24 asserts an empty class that is not empty | **Widened to ten classes at Q-80**, each new one enumerated **by file** | The classes are grep-assertable: five `{{harness:` paths, six `.harness/pack` references, six anchors. Verified against the packs, not the prose |
+| §6.2 — *"`planning` is the only pack with a parameter"* | **Corrected.** `coding` 2, `writing` 3, `planning` 1; the true claim is that `planning` holds the only `when` | `python3 -c` over the three `pack.json` and `recipe.json` files |
+| §6.3 — two packs omit `provenance` | **All three conform**, and the finding was worse than §8 knew: `planning` *had* one and it was **invalid** — an array value and a 347-character note, either of which is `E-UNKNOWN-VALUE`. **The pack that had tried was the only one that would have failed the apply** | Every value re-checked as a string ≤ 200 chars, no newline |
+| §6.5 / §6.6 — `writing`'s 7b table and `when scaffold=` describe mechanisms that do not exist | **Corrected.** One `index.md` rename, twelve pre-authored files; and `writing` split its `strip-suffix` for `fillExpected` | `find packs/writing -name index.md` → 12, against one rename in `recipe.json` |
+| §6.7 — §Scope defers a command Q-62 returned | **Corrected** | Read directly |
+| §6.8 — `packs/coding/README.md` fails four of US-28's five | **Rewritten**, 120 lines, all five met | Line count, part count, block length, version line, self-containment claim |
+
+**Six for six.** The spec now describes the content it governs.
+
+### A new finding, and it arrived from this ADR's own side of the fence
+
+**US-24 has no class for a post-migration change to migrated content**,
+and the gap surfaced immediately: on 2026-09-01 the Mode A review's
+closing argument was folded into
+`packs/coding/specifications/README.md` — a **migrated** file, edited
+after the migration, under a recorded decision. **The widened enumeration
+does not cover it.** Class (h) is *net-new authoring*, which this is not;
+(e) through (g) and (i) are each a specific mechanism.
+
+**The deeper problem is the framing, not the missing class.** US-24's
+check diffs the shipped pack against the source commit, and that conflates
+two different questions:
+
+1. **Was the migration faithful?** A question about a point in time, which
+   the enumeration answers well.
+2. **Has the pack diverged from its source since?** An ongoing question
+   whose honest answer will always be *"yes, and increasingly"* — because
+   the pack is **product under active development** and F5's whole job is
+   to improve it.
+
+Adding a class per improvement makes the enumeration a changelog with
+extra steps. **Condition 1 below is the fix**, and it is deliberately the
+cheap one: a single class whose members are auditable **elsewhere**,
+rather than an enumeration that grows forever.
+
+### The condition §8 raised that is still not met
+
+**The check has still never been run.** §6.1's finding was that a
+completeness claim had never met a diff; **widening the enumeration did
+not run it either.** `T-1502` exists for exactly this and its deliverable
+is *evidence, not a pass*. Until it runs, class (j)'s emptiness is an
+untested claim of precisely the kind class (e)'s was — which F5 v3.0 says
+about itself, honestly, and which this ADR is not going to treat as
+discharged because the sentence admitting it is well written.
+
+### Conditions
+
+| # | Condition | Why it is a condition and not a blocker |
+|---|---|---|
+| **1** | **US-24 gains a class (k): a post-migration change recorded in F5's change history**, and the check treats F5's history as its audit trail rather than growing a class per edit. **Or** US-24 is reframed with an explicit cutoff, so it answers *was the migration faithful* and stops pretending to answer *has the pack changed* | The criterion is sound; its scope is one sentence too wide. Either fix is a paragraph, and neither changes what the check does at the commit it was written for |
+| **2** | **`T-1502` runs and its output is recorded in the migration record** before F5 is called Accepted | Already a task, restated as a condition because it is the acceptance test for the finding that produced §8's verdict, and a spec can be correct while its central claim is still unverified |
+
+**Verdict: `PROCEED`.** Every finding §8 raised is addressed, and both
+conditions above are about *verifying and scoping* a criterion rather
+than about whether the packs or the spec are right. **`PROCEED` is not
+`SECURITY-PROCEED`** — F5's content passed no security gate here, and the
+standing security verdict for F1 and F5 remains `REVISE-SPEC` by decision.

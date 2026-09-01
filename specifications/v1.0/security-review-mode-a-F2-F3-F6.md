@@ -5,7 +5,7 @@
 **Mode:** A — architectural validation at the ADR gate
 **Subjects:** `F2-ADR-003` (`PROCEED`) · `F3-ADR-004` (`PROCEED`) · `F6-ADR-005` (`PROCEED`, conditions cleared) · their specs, and `F1-spec` **v3.3** where these three depend on it
 **Verdict:** **REVISE-SPEC** — one CRITICAL, three HIGH, two MEDIUM, one LOW. See §5.
-**Disposition:** **all eight conditions folded 2026-09-01** — see §6. A re-review is required before `SECURITY-PROCEED`; folding is not passing.
+**Disposition:** all eight conditions folded 2026-09-01 (§6). **Round 2 ran the same day and returned `REVISE-SPEC` again — the CRITICAL is carried, not closed.** See §7. Two new conditions, **C-57 and C-58**.
 
 ---
 
@@ -296,3 +296,96 @@ sat two thousand lines away in a disposition table the change never
 consulted. **Nothing in this fold makes that happen next time.** It
 belongs in the coding pack's spec process, where the fold-check rule
 already lives, so it propagates to every project the pack applies to.
+
+---
+
+## 7. Round 2 — over the folds, 2026-09-01
+
+**Verdict: `REVISE-SPEC`. One CRITICAL carried, one HIGH new.** The eight
+conditions were folded in good faith and four of them are closed
+outright. **C-49 is not**, and the reason is worth reading carefully,
+because the fold looks complete and is not.
+
+**Closed outright, no residue:** C-51 (deletion re-confines), C-52
+(`--user` dropped — a removed surface cannot be got wrong), C-53 (`skills`
+reserved; verified no bundled pack ships such a path), C-55 (recorded),
+C-56 (`--force` dropped). **C-54 closed with a note** — the bounded
+excerpt is correct, and it now depends on C-50, which is itself carried.
+
+### C-1 (CARRIED, CRITICAL) — the containment check's comparison is unspecified, so the check and its consumer can disagree
+
+F1 v3.4 says the assembled rows are *"scanned for **either sentinel
+line**"*. **It does not say what "is a sentinel line" means**, and every
+plausible reading gives a different answer:
+
+| Pack ships | Exact-match check | A consumer doing `line.trim() === marker` |
+|---|---|---|
+| `--- lintel disclosure end ---` | **catches** | matches |
+| `--- lintel disclosure end --- ` *(trailing space)* | **misses** | **matches** |
+| `  --- lintel disclosure end ---` *(leading spaces)* | **misses** | **matches** |
+| `--- LINTEL DISCLOSURE END ---` | **misses** | matches if the consumer folds case |
+
+**The truncation attack survives any check stricter than its consumer.**
+This is the same finding as C-1, one level down: the control is now
+present and its *matching rule* is the unbounded part. A reviewer reading
+"scanned for either sentinel line" would reasonably assume it is closed.
+
+**Required (C-57).** State the comparison **normatively and on both
+sides**, and make the emitter's check **deliberately more liberal than
+any consumer could be**:
+
+- A line is a sentinel candidate if, **after trimming ASCII whitespace
+  from both ends and ASCII-case-folding**, it equals either marker.
+- **Any candidate is `E-DISCLOSURE-FORGERY`** — not only an exact match.
+- F6's reference material states the **same** rule for capture, so the
+  two cannot drift apart.
+
+Over-refusing is the correct direction: a pack whose content legitimately
+contains a line resembling the marker has a one-line problem it can see
+and fix, and the alternative is a control that fails silently.
+
+### C-2 (NEW, HIGH) — C-50's escaping and C-49's scan have no stated order, and the wrong order defeats both
+
+F1 v3.4 requires control characters escaped in every disclosure row
+(C-50) and the rows scanned for sentinels (C-49). **Neither says which
+runs first**, and each order fails differently:
+
+- **Escape, then scan.** The scan now runs over *escaped* text, so a raw
+  sentinel line has become a visibly escaped string and no longer matches
+  — while the bytes a naive consumer reads may still be the marker. The
+  check stops firing on the case it exists for.
+- **Scan, then escape** — correct, but only if the scan sees the raw
+  bytes, which is what C-57's normalization must operate on.
+
+There is also a case neither order catches on its own: a pack ships
+`--- lintel disclosure\x08 end ---`. Escaping renders the `\x08`
+visible, so the terminal is safe — but a consumer reading the **raw**
+stream, which is what IM-10 asks F6 to do, sees a backspace that many
+terminals and some parsers collapse.
+
+**Required (C-58).** State the order — **scan first, over raw bytes,
+then escape** — and fold the control-character rule into C-57's
+normalization: a line is a candidate if it matches **after stripping C0
+characters as well as whitespace**. One normalization, applied once,
+before anything else touches the row.
+
+### What this round did not find
+
+**No new finding against F2, F3 or F6's architecture**, and none against
+the two dropped flags. The three ADR verdicts are undisturbed for a
+second round. Both findings here are about **the specification of a
+mechanism**, not about whether the mechanism is the right one — which is
+the expected shape for a round following a fold, and is a good sign
+rather than a bad one.
+
+### Conditions
+
+| # | Condition | Owner |
+|---|---|---|
+| **C-57** | The sentinel comparison is specified normatively on **both** sides — trimmed, ASCII-case-folded, C0-stripped — and the emitter refuses **any candidate**, not only an exact match (C-1 carried) | F1, with F6 restating the identical rule |
+| **C-58** | The order is stated: **scan raw, then escape**, over one shared normalization (C-2) | F1 |
+
+**Verdict: `REVISE-SPEC`.** A carried CRITICAL forecloses a pass. **Both
+conditions are narrow and neither reopens a design decision** — this is
+now a matter of specifying a comparison precisely, which is exactly where
+a review of a fold should end up if the fold was made in good faith.

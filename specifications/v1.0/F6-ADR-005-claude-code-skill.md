@@ -316,3 +316,27 @@ unconditionally**, with `E-TARGET-EXISTS` and a remedy telling the user to
 remove the directory if they mean to replace it. Re-installing is rare,
 the manual step is one command, and **one flag with one meaning across the
 whole surface** is worth more than saving it.
+
+---
+
+## 10. Mode A round 2 — C-57's F6 half, 2026-09-01
+
+**The skill states the sentinel rule identically to the CLI, and may not
+relax it alone.** Round 2 found that v3.4's *"scanned for either sentinel
+line"* left the comparison unspecified, so the emitter's refusal and the
+consumer's recognition could disagree — a marker with one trailing space
+missed by an exact check and matched by any consumer that trims.
+
+**`skill/reference/init.md` states the same normalization F1 v3.5
+states**: a line ends the block if, after removing C0 control characters,
+trimming ASCII whitespace and ASCII-case-folding, it equals the end
+marker. **Not "the line equals the marker"**, which is what an
+implementer writes by default and what makes the two sides diverge.
+
+**Why this is stated in both places rather than referenced from one.**
+The skill is Markdown read by a model, not code importing a constant —
+it cannot share an implementation, so the only way the rule holds on both
+sides is that both sides say it. **The cost is a duplicated rule that can
+drift**, and that is accepted with its mitigation named: **T-2707 already
+checks the skill's instructions against the CLI's surface**, and this
+rule joins what it checks.

@@ -217,6 +217,43 @@ reference is authoritative, check the reference against the specs rather
 than trusting the claim. A document asserting agreement is not evidence
 of agreement.
 
+### The same rule for security conditions, and it is the one that bites
+
+**A security condition deferred with a stated trigger is an obligation
+nobody is watching.** A review closes with rows like *"v1.1 obligation:
+restore the lex check when X starts happening"* — recorded honestly, in
+the right place, and then filed in a disposition table that is only read
+when the next review runs. **X happens. The change that makes it happen
+does not consult the table.**
+
+That is not hypothetical. It is how a CRITICAL finding gets re-introduced
+by the change that discharges a different condition, months after
+everyone agreed the risk was understood.
+
+**So: a change that creates a deferred condition's trigger must consult
+that condition, in the same change.** Concretely, before folding
+anything that adds a mechanism:
+
+- **Grep the disposition tables for the mechanism you are adding.** A
+  marker, a delimiter, a parser, a new destination, a new write, a new
+  reader of something previously inert. If a prior condition was closed
+  *because nothing did that yet*, you are the thing that now does it.
+- **Watch for the phrase "for now".** *"Resolved by deletion for now"*,
+  *"inert, so a forged one hijacks nothing"*, *"nothing reads this yet"*
+  — each names a premise, and a premise is a trigger written in the
+  passive voice.
+- **A deferred condition is not closed.** It is a bet that the premise
+  holds. The change that breaks the premise owes the check, not the next
+  reviewer.
+
+**Why this belongs beside the fold-check rule rather than in a security
+document:** it is the same failure, one layer down. The fold-check rule
+exists because a *summary* stays fluent after the thing it summarises
+changes. This exists because a *deferral* stays reasonable after the
+condition it rested on stops holding. Both are true-sounding text that
+nothing re-reads, and neither is caught by reviewing the change in front
+of you.
+
 ---
 
 ## What "good" looks like
