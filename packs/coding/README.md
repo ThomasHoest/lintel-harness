@@ -1,7 +1,6 @@
 # `coding` — a gated specification-and-build way of working
 
-**Version 1.0.0 · `minCliVersion` 1.0.0 · scaffolds: `backend-azure`,
-`backend-aws` (choose at most one)**
+**Version 1.0.0 · `minCliVersion` 1.0.0 · no scaffolds**
 
 A pack for projects whose output is software. A gated spec process where
 every arrow is a gate, ten single-purpose agents with non-overlapping write
@@ -30,7 +29,7 @@ from `pack.json`.
 | 4 | Conventions | `present` | `specifications/conventions.md` — file naming, ID schemes for questions, stories, epics and tasks, document ownership, status values, and the two task-numbering schemes with the rule for choosing between them. |
 | 5 | Coordination | `present`, **and thin** | Two agent-team prompts, `Specify.md` and `Implement.md`, each naming a sequence and a file-ownership table. What it does **not** have is `writing`'s routing table from prompt shape to agent, or its parallelization rules. A real gap, recorded rather than papered over. |
 | 6 | Behavioural guidelines | `present` | One generated `CLAUDE.md` carrying the project overview, the layout, the process summary, the agent roster, the conventions and the targets contract — six inert region anchors, one per section. |
-| 7 | Folder scaffolding | `present` | `specifications/` with its version folders and `general/`, `AgentTeams/`, `targets/`, `copy/`, and — under a backend scaffold — `infrastructure/backend-deploy/`. Every folder an apply creates arrives with a README. |
+| 7 | Folder scaffolding | `present` | `specifications/` with its version folders and `general/`, `AgentTeams/`, `targets/`, `copy/`. Every folder an apply creates arrives with a README. **No scaffolds** — the two backend kits left this pack for `addons/`, and nothing here is optional. |
 | 8 | Skills and automations | `present`, **and thin** | Exactly one slash command, `/target`. Zero skills, zero hooks, no default permission set. The source codebase's automation was project-specific and did not migrate. This is the product's weakest area across all three packs, and this pack is the weakest of the three. |
 | 9 | Autonomy contract | `present`, and the **strong** part | A target contract, a `target-reviewer` readiness gate that returns `READY` / `NEEDS-CORRECTION` before any work starts, an autonomy envelope, and hard `SUCCESS` / `ABORT` termination. Never an open-ended "improve X". |
 
@@ -43,8 +42,9 @@ is the cross-pollination Q-6 defers to the first post-v1.0 bump.
 ## What the recipe produces
 
 Phase 1 copies this whole folder verbatim to `.harness/pack/`. Phase 2 runs
-`recipe.json` — fifteen declared base steps over six primitives, plus three
-more inside whichever backend scaffold is selected.
+`recipe.json` — **fifteen declared steps** over six primitives, and there
+are no branches: every apply of this pack runs all fifteen and produces the
+same tree.
 
 | Step | Primitive | From (payload) | To (project) |
 |---|---|---|---|
@@ -59,7 +59,6 @@ more inside whichever backend scaffold is selected.
 | Path fix | `rewrite-path` | `targets/Run.md`, `.claude/commands/target.md` | pack-relative `targets/…` → `.harness/pack/targets/…` |
 | Answers | `substitute` | — | `specifications/README.md`, `project-brief.md`, `AgentTeams/*.md` |
 | Onboarding | `generate` | `CLAUDE.md.template` | `CLAUDE.md`, with six inert anchors |
-| Backend | `copy` + `strip-suffix` ×2, scaffold only | `scaffolds/backend-{azure,aws}/` | `infrastructure/backend-deploy/` |
 
 ```
 <project>/
@@ -69,9 +68,7 @@ more inside whichever backend scaffold is selected.
 ├── specifications/      README.md, project-brief.md, general/, v1.0/
 ├── targets/             README.md, Run.md
 ├── copy/                tone-of-voice.md, README.md
-├── CLAUDE.md
-└── (with --scaffold backend-azure | backend-aws)
-    └── infrastructure/backend-deploy/
+└── CLAUDE.md
 ```
 
 **What stays at `.harness/pack/` and is never copied out:** the document
@@ -108,11 +105,12 @@ mechanism that would give them somewhere to live.
   respects the `.claude/agents/*.md` convention).
 - You are happy with **Markdown + frontmatter** for specs, in version
   control — not Notion, Linear or a tracker.
-- A backend scaffold is **optional and cloud-specific**. `backend-azure`
-  targets Azure Static Web Apps + Neon Postgres; `backend-aws` targets AWS
-  Lambda + CDK. Both land at `infrastructure/backend-deploy/`, which is why
-  they are alternatives rather than composable peers. Select neither and the
-  pack is entirely cloud-agnostic.
+- **This pack is cloud-agnostic and ships no infrastructure.** The Azure
+  and AWS backend kits were scaffolds of this pack through v1.0 planning
+  and are now **add-ons**, parked in `addons/` at the repository root.
+  Nothing applies them — the add-on mechanism is **v1.1**. If you need a
+  deployable backend today, take the contents of `addons/backend-azure/`
+  or `addons/backend-aws/` by hand and treat them as your own.
 
 The pieces are deliberately decoupled: the spec process, the roles, the
 teams and the targets contract are each usable without the others. A

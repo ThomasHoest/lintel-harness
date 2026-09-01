@@ -178,6 +178,40 @@ an ADR finding rather than a paperwork problem.
 classes against T-1502's **actual output** rather than the enumeration's
 own text.
 
+## 3d. Q-82 — add-on packs (NEW, mid-session scope change)
+
+**Decided and executed.** An **add-on** is a composable unit that is not a
+way of working. A project holds **one pack and zero or more add-ons**. The
+mechanism is **v1.1 (F7)** and undesigned.
+
+**Done:** `backend-azure` and `backend-aws` moved to **`addons/`** — not
+under `packs/`, because `packs/` means *what ships at v1.0* and three
+separate checks rely on that. Each carries a `pack.json` marked
+`unsupported-until-1.1` and a **record `recipe.json` that no CLI reads**,
+preserving the steps rather than leaving them to be reconstructed.
+`packs/coding/` lost its `scaffolds`, its `executableRoots` and both recipe
+branches; its README, F5 v3.1, F5's epics v1.1, F1's epics v1.2,
+`pack-inventory.md`, `CLAUDE.md` and brief §12 all follow.
+
+**Two costs, accepted and recorded rather than discovered later:**
+
+- **No v1.0 apply composes two scaffolds**, and no pair shares a category —
+  so scaffold composition *and* `E-SCAFFOLD-EXCLUSIVE` have no bundled
+  subject. Composition is the bigger loss: it is ordinary success-path code
+  that nothing real now exercises.
+- **No v1.0 pack ships an executable.** `executableRoots`, `executable:
+  true` (a gate C-34 showed fails **open** on a typo),
+  `E-EXEC-DEST-FORBIDDEN`, US-13's `0755` disclosure and `verify`'s mode
+  comparison all lose their only real instance.
+
+**F1's T-1220 adds the four fixtures** that were previously redundant with
+those scaffolds. **That suite is now the sole coverage for two
+security-relevant rules** — worth knowing before anyone trims it.
+
+**Still open on this:** F7 has no spec, and the add-on *composition* rule
+(ordering, collisions between an add-on and its pack, whether add-ons can
+declare parameters) is entirely undesigned.
+
 ## 4. Waves 2 and 3
 
 **Wave 2** — ADRs for F2, F3, F6 (parallel), plus F5's epics once §3 is

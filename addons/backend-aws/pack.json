@@ -1,0 +1,17 @@
+{
+  "name": "backend-aws",
+  "version": "0.1.0",
+  "kind": "addon",
+  "status": "unsupported-until-1.1",
+  "minCliVersion": "1.1.0",
+  "description": "AWS Lambda + CDK \u2014 app and handler sources plus a deploy script.",
+  "category": "backend",
+  "executableRoots": [
+    "infrastructure/backend-deploy/"
+  ],
+  "provenance": {
+    "kind": "extracted",
+    "source": "packs/coding/scaffolds/backend-aws",
+    "note": "Was a coding-pack scaffold through v1.0 planning. Extracted to an add-on pack; no CLI supports add-ons until v1.1, so nothing applies this."
+  }
+}

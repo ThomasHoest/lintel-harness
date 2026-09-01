@@ -1,14 +1,15 @@
 # Epics & Tasks: Template Packs (Lintel Harness v1.0 — Feature 5)
-**Version:** 1.0
+**Version:** 1.1
 **Status:** Draft
 **Date:** 2026-09-01
-**References:** `F5-spec-template-packs.md` (**v3.0** — authoritative for every acceptance criterion, the three pack outlines and the ten-class difference enumeration), `F5-ADR-002-template-packs.md` (**REVISE SPEC** against v2.9 — **its findings are folded and its verdict has not been re-issued**; see the note below), `F1-spec-pack-format-and-manifest.md` (**v3.0** — the format every task here conforms to, and the 87-code catalogue), `F1-ADR-001-pack-format-and-manifest.md` (amended 2026-09-01), `specifications/general/pack-inventory.md`, `specifications/general/pack-application.md`, `CLAUDE.md`
+**References:** `F5-spec-template-packs.md` (**v3.1** — authoritative for every acceptance criterion, the three pack outlines and the ten-class difference enumeration), `F5-ADR-002-template-packs.md` (**REVISE SPEC** against v2.9 — **its findings are folded and its verdict has not been re-issued**; see the note below), `F1-spec-pack-format-and-manifest.md` (**v3.0** — the format every task here conforms to, and the 87-code catalogue), `F1-ADR-001-pack-format-and-manifest.md` (amended 2026-09-01), `specifications/general/pack-inventory.md`, `specifications/general/pack-application.md`, `CLAUDE.md`
 
 **Amendment history**
 
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown, written against F5 v3.0. Claims **E-13…E-19** and **T-1301…T-1906**. |
+| 1.1 | 2026-09-01 | **Q-82 — E-17 loses most of its subject.** `coding`'s two backend scaffolds became add-ons in `addons/`, so `writing-workstream` is the only scaffold at v1.0 and **no bundled pack ships an executable**. **T-1701 is retired** (US-37 has no v1.0 subject) and **T-1703 is rewritten** (no bundled executable to assert). Both assertions move to F1's **T-1220** as fixtures. **T-1401's step counts change**: `coding` is **15 with no branches**. The retired task's id is **not reused**. |
 
 ---
 
@@ -61,7 +62,7 @@ completed without a decision that is not yet recorded.
 | E-14 | The three recipes produce what they claim | US-17, US-18, US-19, US-38 | F1 E-04, E-05, E-13 |
 | E-15 | Migration and extraction fidelity — the checks nobody has run | US-24, US-25 | E-13 |
 | E-16 | The pack READMEs and the reference material | US-28, US-35, US-36 | E-13 |
-| E-17 | Scaffolds — opt-in, composable, and exclusive where declared | US-21, US-37 | F1 E-03, E-14 |
+| E-17 | Scaffolds — one at v1.0, and what left with the other two | US-21 (part), US-37 (deferred) | F1 E-03, E-14 |
 | E-18 | The two pack-content rules that ship unenforced | US-26, US-27 | E-14 |
 | E-19 | The bundled-pack acceptance gate | US-20, all NFRs | every epic above, F1 E-09 |
 
@@ -126,11 +127,11 @@ README both describe — and that the two declarations `verify` depends on,
 
 - [ ] **T-1401** `[TestWriter]` `tests/packs/recipe-shape.test.ts` — assert
   the declared step counts against `recipe.json`, not against prose:
-  **`coding` 15 base + 3 per backend branch, `writing` 8 base + 5 scaffold,
-  `planning` 23 base**. Assert that **only one backend branch can run**, so
-  no single total describes an apply — the number that matters is per
-  selection, and a test asserting a grand total would be asserting
-  something no apply ever produces.
+  **`coding` 15 with no branches, `writing` 8 base + 5 scaffold, `planning`
+  23 base**. **`coding` has no scaffolds as of Q-82**, so all fifteen of its
+  steps run on every apply and its total is unambiguous — the first pack in
+  the product for which a single number describes an apply. `writing` is
+  still the case where it does not.
   *Depends on: F1 T-0405.*
 
 - [ ] **T-1402** `[TestWriter]` Assert the **adapt-expected set is exactly
@@ -272,29 +273,42 @@ into it.
 
 ---
 
-## E-17 — Scaffolds — opt-in, composable, and exclusive where declared
+## E-17 — Scaffolds — one at v1.0, and what left with the other two
+
+**Q-82 emptied most of this epic**, and the emptying is the point rather
+than a gap to fill. `coding`'s two backend scaffolds became add-ons, so
+**`writing-workstream` is the only scaffold in the product** and **no
+bundled pack ships an executable**. Two of this epic's three tasks had no
+subject left; both assertions moved to F1's **T-1220** as fixtures, where
+they are now the *sole* coverage for those rules.
+
+**Do not restore a scaffold to a pack in order to make a test possible.**
+That is the tail wagging the dog, and Q-82's whole argument is that a
+backend kit does not belong inside a way of working.
 
 **Depends on:** F1 E-03 (scaffold selection), E-14.
 
-- [ ] **T-1701** `[TestWriter]` US-37 — `--scaffold backend-azure
-  --scaffold backend-aws` fails with **`E-SCAFFOLD-EXCLUSIVE`**, exit 2,
-  **zero bytes written**, naming the category. Both declare
-  `"category": "backend"` and both land at
-  `infrastructure/backend-deploy/`, which is *why* they are alternatives
-  rather than composable peers — assert the category, not the destination,
-  since the category is the declaration the CLI acts on.
-  *Depends on: F1 T-0307.*
+- ~~**T-1701**~~ **Retired (Q-82).** US-37 has **no v1.0 subject**: the two
+  backends were the only pair sharing a `category`, and `writing-workstream`
+  is alone in its own. The assertion lives on as **F1 T-1220(b)**, against a
+  fixture pack. **The id is not reused.**
 
-- [ ] **T-1702** `[TestWriter]` US-21 — applying each pack with **no**
-  scaffold produces a complete, usable project; applying `coding` with one
-  backend adds exactly `infrastructure/backend-deploy/` and its
-  `applied-readmes/infrastructure.md` folder README, and nothing else.
-  *Depends on: T-1405, T-1701.*
+- [ ] **T-1702** `[TestWriter]` US-21, **the half that survives** — applying
+  each pack with **no** scaffold produces a complete, usable project, and
+  `writing --scaffold writing-workstream` adds exactly the corpus and
+  workstream trees and nothing else. The backend half of US-21 defers to
+  v1.1 with the add-on mechanism.
+  *Depends on: T-1405.*
 
-- [ ] **T-1703** `[TestWriter]` The executable rule: `coding` ships **four**
-  executables and only under its declared `executableRoots`; every other
-  applied file, in every pack and every branch, is `0644`. A scaffold
-  script outside a declared root is `E-EXEC-DEST-FORBIDDEN`.
+- [ ] **T-1703** `[TestWriter]` The executable rule, **rewritten as a
+  negative** (Q-82): assert that **every applied path of every bundled pack,
+  in every scaffold selection, is `0644`** — no v1.0 pack declares
+  `executableRoots`, none declares `executable: true`, and none writes a
+  `0755` file. Assert also that US-13's pre-write disclosure lists **zero**
+  executable paths for every bundled pack, so an empty disclosure section is
+  the *expected* output rather than a rendering bug someone later "fixes".
+  The positive cases — an executable inside a declared root, and one outside
+  it raising `E-EXEC-DEST-FORBIDDEN` — are **F1 T-1220(c) and (d)**.
   *Depends on: F1 T-0504, T-1702.*
 
 ---

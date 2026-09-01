@@ -9,7 +9,8 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
-| 1.1 | 2026-09-01 | **F1 v3.0 fold, and nine of the fourteen ⚠️ entries unblock.** **Q-81 ratified the dependency posture**, which is a single answer that clears **U-1, U-2, U-3, U-6, U-8 and U-10** at once — each of those tasks stops being "choose, then build" and becomes "build". **U-4 clears differently and the resolution matters more than the clearing**: `collisionKey` folds **ASCII only**, so T-0202 must *not* reach for `toLowerCase()` or hand-roll a Unicode fold, and a test pins the narrowing. **U-11 clears because F1 v3.0 allocated the code it was waiting for** — `W-LINK-FALLBACK`. **Five entries remain and each blocks real work**: U-5, U-7, U-12 (×2), U-13 (×2). **Six new tasks** for what v3.0 added: **T-0111** (nine new codes), **T-0112** (`--dry-run` reserved), **T-0410** (the fill-expected set), **T-1005** (`filled`/`unfilled`), **T-1110** (journal v3), **T-1219** (the zero-dependency assertion). **T-1002 is rewritten in place** — six states, not four. Next free task id **T-1220** within E-12; **E-13** remains the next free epic. |
+| 1.2 | 2026-09-01 | **Q-82 — add-on packs.** `coding`'s two backend scaffolds move to `addons/` as v1.1 add-ons, which leaves **`writing-workstream` as the only scaffold in the product** and **no v1.0 pack shipping an executable at all**. Six rules lose their only bundled-pack subject — scaffold *composition* and exclusivity, `executableRoots`, `executable: true` (a security gate C-34 showed fails **open** on a typo), `E-EXEC-DEST-FORBIDDEN`, US-13's `0755` disclosure and `verify`'s mode comparison. **No rule is weakened and none is removed**; what changes is that the adversarial fixture suite becomes their **sole** coverage, so **T-1220** adds the four fixtures that were previously redundant with the bundled packs. Next free task id **T-1221**. |
+| 1.1 | 2026-09-01 | **F1 v3.0 fold, and nine of the fourteen ⚠️ entries unblock.** **Q-81 ratified the dependency posture**, which is a single answer that clears **U-1, U-2, U-3, U-6, U-8 and U-10** at once — each of those tasks stops being "choose, then build" and becomes "build". **U-4 clears differently and the resolution matters more than the clearing**: `collisionKey` folds **ASCII only**, so T-0202 must *not* reach for `toLowerCase()` or hand-roll a Unicode fold, and a test pins the narrowing. **U-11 clears because F1 v3.0 allocated the code it was waiting for** — `W-LINK-FALLBACK`. **Five entries remain and each blocks real work**: U-5, U-7, U-12 (×2), U-13 (×2). **Six new tasks** for what v3.0 added: **T-0111** (nine new codes), **T-0112** (`--dry-run` reserved), **T-0410** (the fill-expected set), **T-1005** (`filled`/`unfilled`), **T-1110** (journal v3), **T-1219** (the zero-dependency assertion). **T-1002 is rewritten in place** — six states, not four. Next free task id **T-1221** within E-12; **E-13** was the next free epic and is now claimed by F5. |
 
 ---
 
@@ -1561,6 +1562,28 @@ for the applying fixtures E-11.
   `collisionKey` narrowing test named in T-0202, so the two halves of Q-81 —
   what was refused and what was conceded — are both pinned.
   *Depends on: T-0101, T-0102, T-0202.*
+
+- [ ] **T-1220** `[TestWriter]` **Four fixtures that stopped being redundant
+  at Q-82.** Moving `coding`'s two backend scaffolds to `addons/` left
+  `writing-workstream` as the **only** scaffold in the product, and all four
+  v1.0 executables went with them — so this suite is now the **sole**
+  coverage for rules a bundled pack used to exercise incidentally. Each
+  fixture asserts an exact code and exit class: **(a) two-scaffold
+  composition** — a pack declaring two scaffolds in *different* categories,
+  both selected, asserting the merged step order is base-then-scaffolds in
+  `pack.json`-declared order; **(b) same-category collision** — two
+  scaffolds sharing a `category`, both selected, `E-SCAFFOLD-EXCLUSIVE`,
+  exit 2, zero bytes; **(c) executable inside a declared root** — written
+  `0755`, disclosed by US-13's pre-write disclosure, and reported by
+  `verify`'s mode comparison with `modeChecked: true`; **(d) executable
+  outside one** — `E-EXEC-DEST-FORBIDDEN`, exit 2.
+  **(a) is the one to write first and the one most likely to be skipped.**
+  (b), (c) and (d) are error paths, and error paths get written; (a) is
+  ordinary success-path step-merging that no real apply performs any more,
+  which makes it the path that can regress without anything going red.
+  **Do not trim this suite on the grounds that no shipping pack needs it** —
+  that is now true of all four, and it is the reason they exist.
+  *Depends on: T-0307, T-0405, T-0504, T-1201. Q-82.*
 ---
 
 ## Cross-epic notes

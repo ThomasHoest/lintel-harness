@@ -1,5 +1,5 @@
 # F5 — Template Packs Specification — Lintel Harness v1.0
-**Version:** 3.0
+**Version:** 3.1
 **Status:** Draft
 **Date:** 2026-09-01
 **Platform:** Pack content is plain files — Markdown, JSON, shell/PowerShell, Bicep, CDK TypeScript — bundled with the Node/TypeScript CLI and consumed by Claude Code's `.claude/` conventions. No runtime of its own.
@@ -28,6 +28,7 @@
 | **2.8** | **2026-09-01** | **Q-63 rename — nothing in this specification changes but a name.** The binary is **`lintel`** with **`harness` as a command group**, so every acceptance criterion here now reads `lintel harness <command>`: G5.6, G5.11, the `coding`/`writing`/`planning` apply criteria, the `pack info` criteria and the two `validate` CI criteria. **No pack content moves.** The rename touches no payload path, no recipe step, no applied path, no anchor count and no `pack.json` field; `{{harness:…}}` is a substitution namespace and `.harness/` is a directory, and **neither is the binary name** — both are deliberately untouched. F1 v2.8 owns the CLI-side detail (the `lintel:` diagnostic prefix, the re-scoped `E-CLI-UNKNOWN-COMMAND`); **no code is cited here that F1 does not carry, and none is invented.** No new story, no new question: next free **Q-64**, reserved. |
 | **2.9** | **2026-09-01** | **One stale cross-reference corrected — F1's live story block no longer lists US-6.** §User Stories and the Q-35 Resolved-Decisions row both said F1 holds *"US-1…US-4, **US-6**, US-8…US-10…"*. **F1 retired US-6 at v2.3** under **Q-54**, which dropped `merge-json` and with it the story's entire subject — owning part of a settings file. Both sentences now list F1's live block as **US-1…US-4, US-8…US-10, US-13…US-16 and US-29…US-33**, and both name US-6 among F1's retirements alongside US-5, US-7, US-11 and US-12. **Nothing else in this document moves.** No pack content, no recipe step, no acceptance criterion and no error code is touched; F1 remains the only catalogue and none is cited that it does not carry. **There is no counter conflict to resolve** — F1 and this document already agreed that **US-39** is next free, and they still do, so no story is renumbered and none is allocated. Q-62 returns `update` to v1.0 and the master spec folds it; **this spec asserts nothing about the command surface and needed no change for it**. No new question: next free **Q-64**, reserved. |
 | **3.0** | **2026-09-01** | **Q-80 widens US-24's enumeration, Q-79 lands `fillExpected`, and five defects ADR-002 found are corrected.** **Q-80.** US-24 asserted class (e) was **empty** — every difference between the source commit and the shipped `coding` pack falling into four declared classes. It was not empty, and the check has never been run against a real diff. **Five further classes are admitted, each enumerated by file**, and the residue class relabels to (j): **(e) payload-side path repointing** — five migrated files whose pack-relative literals became `.harness/pack/…`; **(f) parameter-token insertion** — the five `{{harness:` paths C-43 already counted, three of them migrated content; **(g) region anchors** — six in `CLAUDE.md.template`, which is class (h) itself; **(h) net-new authoring beyond class (b)** — the pack's own `README.md`, `CLAUDE.md.template`, `applied-readmes/` ×6 and the two `.template.md` files under `specifications/`; **(i) Q-59's `securityreviewer` generalisation**, which the brief had already recorded as a declared difference and which US-24 never admitted. **Widened rather than reverted, because reverting is not available**: the region anchors of (g) and the parameter tokens of (f) are **required by F1** (US-32, US-4), so `coding` cannot both satisfy the format and fit the enumeration as written. **The enumeration stays a list rather than a judgement**, which is the only property that made it worth running. **Q-79.** Three paths per pack are now declared **`fillExpected`** — every pack's `project-brief.md`, plus `writing`'s voice guide — which is what makes US-33's green `verify` reachable on a project someone has actually used; through v2.9 a filled brief reported `differs` and failed the S7 gate. **`fillExpected` and `adaptExpected` are mutually exclusive**, so the generated `CLAUDE.md` keeps `adaptExpected` and gains nothing. **Five ADR-002 defects corrected.** *(1)* *"`planning` is the only pack with a parameter"* is **false** — `coding` declares 2, `writing` 3, `planning` 1; the true claim is that **`planning` is the only pack with a `when` over an answer**, and it is the claim that was meant. *(2)* `writing`'s 7b table described **`rename` per destination** for folder indexes, a mechanism that **does not exist**: the recipe holds **one** `index.md` rename, and the scaffold ships **twelve pre-authored `index.md` files** as ordinary payload. *(3)* `writing` renders **three** templates out, not one. *(4)* §What is NOT in scope and §Out of Scope still deferred **`update` and `status`** after **Q-62** returned them. *(5)* `planning`'s payload inventory omitted **`process.md`, `conventions.md`, `coordination.md` and `agents/README.md`** — all four payload-only, which is why an inventory read off the recipe missed them, and which left anatomy parts 1, 4 and 5 declared with nothing visibly behind them. **A pack-content consequence lands with Q-79:** `writing`'s `strip-suffix` splits in two so `fillExpected` covers the voice guide alone and not three reference files nobody is asked to fill in, taking that pack from **7 declared base steps to 8**. **No new question, no new story, no new code:** next free story id **US-99**; next free question **Q-82**. |
+| **3.1** | **2026-09-01** | **Q-82 — add-on packs, and `coding` loses both backend scaffolds.** An **add-on** is a composable unit that is *not* a way of working — an infrastructure kit, or `presentation` (Q-28). A project holds **one pack and zero or more add-ons**. The mechanism is **v1.1 and undesigned**; `backend-azure` and `backend-aws` move to **`addons/`** at the repository root, **not** under `packs/`, because `packs/` means *what ships at v1.0* and `validate --all`, `find packs -name pack.json` and E-13 all rely on that. **`coding` now declares no scaffolds and no `executableRoots`**, its recipe has **no branches**, and all fifteen of its steps run on every apply. **This supersedes Q-17's count**: v1.0 ships **one** scaffold, `writing-workstream`, not three. **Two costs are accepted and neither is hidden.** *(1)* **Scaffold exclusivity has no bundled subject** — the two backends were the only pair in the product sharing a `category` — and, more consequentially, **no v1.0 apply composes two scaffolds at all**, so the step-merge path is ordinary success-path code that nothing real exercises. *(2)* **No v1.0 pack ships an executable.** All four were in the Azure branch (one in the AWS branch), so `executableRoots`, `executable: true` — a security gate C-34 showed fails **open** on a typo — `E-EXEC-DEST-FORBIDDEN`, US-13's `0755` disclosure and `verify`'s mode comparison all lose their only real instance. **Every rule stands; only its bundled coverage is gone**, and F1's **T-1220** adds the four fixtures that were previously redundant with these scaffolds. US-37 and US-21's backend half **defer to v1.1 with the mechanism**. |
 
 ---
 
@@ -168,6 +169,8 @@ section first if you are here for the packs themselves.
   the Q-46 deletions. A typo migrates as a typo.
 - **A fourth pack**, and **multi-pack composition** (Q-12).
 - **`frontend` and `app` scaffolds** (Q-17, deferred to v1.1).
+- **Add-on packs and everything that applies one** (Q-82, F7). `backend-azure`
+  and `backend-aws` sit in `addons/` and no v1.0 command reads them.
 - **Verifying the portfolio deck's contested claims.** `planning` takes
   the deck's process and templates, which a critic pass found sound; it
   does not take the surrounding evidence, which the same pass marked
@@ -198,7 +201,7 @@ Only settled decisions. Everything unsettled is in **Open Questions**.
 | Migration fidelity | `coding` and `writing` migrate **faithfully**, modulo the Q-46 deletions, which are enumerated; `planning` is **authored** | Q-6 keeps S6 verifiable; Q-29 confirms authoring `planning` is not a boundary violation |
 | `planning` framing | Portfolio and roadmap management as a decision loop: `intake → discovery → prioritize → commit → deliver → learn`, non-delegable absorption/security gate between deliver and learn, horizon-setting first-class inside commit | Q-11 — the spine is evidenced research output, not a process invented to fill a template |
 | `planning` parameterisation | Calibrated at init by `constraintFloor`, values `high-floor` \| `near-zero-floor`, expressed as recipe **`when` conditions over `calibrations/<name>/`** | Q-11 + Q-13 — contingency is the research's central finding; the recipe's `when` is the mechanism, and `calibrations/<name>/` is a pack-authoring convention over it, not a format feature |
-| Scaffolds | **Three at v1.0**: `backend-azure`, `backend-aws`, `writing-workstream`. The two backend scaffolds are **alternatives within a category, not composable peers** — both write `infrastructure/backend-deploy/` | Q-17 + Q-8a. `frontend` and `app` defer to v1.1 |
+| Scaffolds | **One at v1.0 (Q-82)**: `writing-workstream`. `backend-azure` and `backend-aws` were the other two and are now **add-ons** under `addons/`, applied by nothing until v1.1. Nothing at v1.0 composes two scaffolds, and no pair shares a category. *(Superseded text: the two backend scaffolds are **alternatives within a category, not composable peers** — both write `infrastructure/backend-deploy/` | Q-17 + Q-8a. `frontend` and `app` defer to v1.1 |
 | Hooks | **No pack may register an agent hook at v1.0.** `planning` ships three slash commands plus one **inert** `0644` guard script | `F1-ADR-001` §7.2.5 — a hook's command string is a merge target with no re-consent surface |
 | Executables | **`coding` ships four, and only under a declared root.** `pack.json` declares `"executableRoots": ["infrastructure/backend-deploy/"]`; the backend scaffold steps set `"executable": true` on `deploy.sh`, `deploy.ps1`, `setup-neon.sh`, `setup-neon.ps1`, which land **`0755`** and are enumerated in `init`'s pre-write disclosure. `writing` and `planning` declare no root and ship none. Everything else any pack writes is `0644` | C-12 — the scripts are meant to be run, so `0644` would force a `chmod` on every applied project; and apparatus that is specified but has no consumer is the pattern Q-54 was the lesson about |
 | Regions | **None at v1.0.** The generated `CLAUDE.md` carries inert anchors as forward investment for v1.1's `update` | Q-45 — regions had two justifications and Q-39/Q-42 removed both |
@@ -319,6 +322,8 @@ Each is assessable yes/no when F5 is done.
   `specifications/project-brief.template.md` as a *project* brief the
   recipe copies out; a *document-kit* brief template is separate work.)
 - **`frontend` and `app` scaffolds** (Q-17).
+- **Add-on packs** (Q-82) — the mechanism, the composition rule, and the two
+  backend kits now parked in `addons/`.
 - **A fourth pack type**, and **multi-pack composition** (Q-12).
 - **Third-party pack authoring.**
 
@@ -536,6 +541,20 @@ agree that **US-39** is next free, so nothing here is renumbered.
 ---
 
 **US-21 — Pick scaffolds at init**
+
+> **Largely deferred to v1.1 by Q-82, and read this before the criteria
+> below.** Every backend criterion in this story — the `infrastructure/`
+> tree, the four `0755` scripts, the `executableRoots` prefix, the
+> disclosure of executable paths — describes `backend-azure` and
+> `backend-aws`, which are now **add-ons in `addons/`** that nothing
+> applies. **What survives at v1.0 is the first criterion and the
+> `writing-workstream` half**: a pack with no `--scaffold` produces no
+> optional tree, and `writing`'s one scaffold is selectable. **The rest is
+> not wrong, it is unreachable** — kept verbatim rather than deleted,
+> because v1.1's add-on mechanism must reproduce exactly this behaviour and
+> a reconstructed requirement is a worse requirement. F1's **T-1220**
+> carries the executable and composition assertions forward as fixtures in
+> the meantime.
 > As an operator whose new project needs a backend, I want to select a scaffold at init so that I get the deploy machinery without getting scaffolds I do not need.
 
 **Acceptance criteria:**
@@ -899,6 +918,16 @@ agree that **US-39** is next free, so nothing here is renumbered.
 ---
 
 **US-37 — Choose one backend, not two**
+
+> **Deferred to v1.1 in full by Q-82.** This story has **no subject at
+> v1.0**: `backend-azure` and `backend-aws` were the only pair of scaffolds
+> in the product sharing a `category`, and both are now add-ons.
+> `writing-workstream` is the only scaffold left and it is alone in its
+> category, so no v1.0 selection can produce the collision this story
+> describes. **The rule is not repealed** — `E-SCAFFOLD-EXCLUSIVE` and the
+> category mechanism stay in F1 and must work when add-ons arrive — and
+> F1's **T-1220(b)** asserts it against a fixture pack instead. Kept
+> verbatim for the same reason as US-21.
 > As an operator selecting scaffolds, I want mutually exclusive alternatives to be refused rather than silently merged so that I never get a half-Azure, half-AWS deploy tree.
 
 **Acceptance criteria:**

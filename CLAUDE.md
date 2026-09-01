@@ -309,6 +309,7 @@ Conventions chosen 2026-08-30 at the first spec run:
 | F2 | `harness init` — the apply engine |
 | F3 | `harness update` — drift classification, **no merge engine** (Q-62), plus its read-only mode (the former `status`) |
 | F4 | `harness contribute` — **v1.1 only**; the number is reserved and never reused |
+| F7 | **Add-on packs — v1.1 only (Q-82).** Composable units that are not ways of working: `backend-azure`, `backend-aws`, and `presentation` (Q-28). Parked in `addons/`, applied by nothing |
 | F5 | Template packs (coding, writing, planning) |
 | F6 | The Claude Code skill — the judgment layer |
 
@@ -326,7 +327,7 @@ counter anywhere in this file, that is the bug, and this section wins.
 
 | Counter | Next free | Rule |
 |---|---|---|
-| Open question | **Q-82** | `Q-N`, **project-monotonic, not per document**. An id is never reused, and it keeps its number when it moves to a Resolved Decisions table. **Q-1…Q-63, Q-79, Q-80 and Q-81 are resolved** — the register is `specifications/project-brief.md` §12, which holds the decision and the rationale for each. This file does not restate them. **Q-64 is reserved**, not free (see Q-63). **Q-65…Q-78 are open**, each feature-local to F2, F3 or F6 and resolvable in its own ADR. |
+| Open question | **Q-83** | `Q-N`, **project-monotonic, not per document**. An id is never reused, and it keeps its number when it moves to a Resolved Decisions table. **Q-1…Q-63 and Q-79…Q-82 are resolved** — the register is `specifications/project-brief.md` §12, which holds the decision and the rationale for each. This file does not restate them. **Q-64 is reserved**, not free (see Q-63). **Q-65…Q-78 are open**, each feature-local to F2, F3 or F6 and resolvable in its own ADR. |
 | User story | **US-99** | `US-N`, project-monotonic across features. **F1 and F5 each state their own range in their §User Stories**, — read them there rather than trusting a list here. F2, F3 and F6 now hold stories too (US-39…US-98). **Retired and never reusable:** US-5, US-6, US-7, US-11, US-12 (F1); US-22, US-23 (F5). |
 | Epic | **E-20** | `E-NN`, per feature. **F1 holds E-01…E-12; F5 holds E-13…E-19.** F2, F3 and F6 have none. |
 | Task | per epic | Scheme A, epic-derived `T-XXYY`, so there is no single next-free id. **F1 holds T-0101…T-1219** (112 tasks); **F5 holds T-1301…T-1906** (32 tasks). Next free within F1's last epic is **T-1220**; F5's per-epic next-free values are listed at the end of its own document. |
@@ -492,12 +493,13 @@ authoritative, verify it rather than trusting the assertion.
   stale last time, so it now says how to check itself. All three packs
   ship a `pack.json` and a `recipe.json`
   (`find packs -name pack.json`). Their `steps` arrays hold **coding
-  15, writing 8, planning 23**; counting **every** scaffold branch as
-  well the totals are **21 / 13 / 23** — but **only one branch runs in
+  15, writing 8, planning 23**; counting the one remaining scaffold
+  branch as well the totals are **15 / 13 / 23** — but **only one branch runs in
   any given apply**, so no single number describes what an apply does.
-  `coding` has two mutually exclusive branches (`backend-azure`,
-  `backend-aws`) at 3 steps each, `writing` one (`writing-workstream`)
-  at 5, `planning` none. `packs/coding/commands/target.md` exists; the
+  **`coding` has no branches as of Q-82** — its two backend scaffolds
+  left for `addons/` as v1.1 add-ons — so `writing`'s
+  `writing-workstream` at 5 steps is the **only** scaffold in the
+  product, and `planning` has none. `packs/coding/commands/target.md` exists; the
   old `infrastructure/backend-deploy/` is now
   `packs/coding/scaffolds/backend-azure/` with `backend-aws/` beside
   it; and C-43's **five** `{{harness:`-bearing `coding` paths are met

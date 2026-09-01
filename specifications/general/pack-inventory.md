@@ -148,9 +148,7 @@ packs/coding/
 │   └── copy.md                            P2   → copy/README.md
 ├── commands/
 │   └── target.md                          P2   → .claude/commands/ · /target
-└── scaffolds/
-    ├── backend-azure/                     P2   opt-in · Bicep + Neon (exists)
-    └── backend-aws/                       P2   opt-in · Lambda + CDK (to author)
+(no scaffolds/ — the two backend kits left for addons/ at Q-82)
 ```
 
 ### Applied structure
@@ -180,11 +178,8 @@ packs/coding/
 │   └── tone-of-voice.md       ready to fill; copywriter halts without it
 ├── CLAUDE.md                  generated — project overview, process, agents,
 │                              conventions, with inert region anchors (Q-45)
-└── infrastructure/            only with --scaffold backend-azure|backend-aws
-    └── backend-deploy/        Bicep + Neon, or CDK + Lambda
-                               its own README ships inside the selected
-                               scaffold (Q-50); deploy.sh/.ps1 +
-                               setup-neon.sh/.ps1 land 0755
+(no infrastructure/ at v1.0 — Q-82 moved both backend kits to addons/,
+ and nothing applies an add-on until v1.1)
 ```
 
 **No folder in the tree above is empty, and none can be** (Q-50). Every
@@ -214,7 +209,7 @@ Filled targets and their work logs live in `targets/` alongside
 
 **Note.** `pack.json`, `recipe.json`, `commands/` and `scaffolds/` do
 not exist yet — the current tree has `infrastructure/backend-deploy/`,
-which becomes `scaffolds/backend-azure/`, and the `/target` command
+which became `scaffolds/backend-azure/` and then, at **Q-82**, `addons/backend-azure/` — outside `packs/` entirely, because `packs/` means what ships at v1.0. The `/target` command
 currently lives in this repo's `.claude/commands/`.
 
 ---
@@ -533,3 +528,40 @@ then run the apply against this repo. That is S7.
 The gaps are recorded, not accidental. `coding` gaining coordination
 rules and `writing` gaining an autonomy contract are the deferred
 cross-pollination of Q-6, landing in the first post-v1.0 bump.
+
+---
+
+## Add-ons — `addons/`, and why they are not in `packs/`
+
+**Q-82** introduced a second kind of unit. A **pack** answers *how do we
+work?*; an **add-on** answers *what do we bolt on?* — an infrastructure kit,
+or `presentation` (Q-28). The one-pack invariant is right for the first and
+wrong for the second: two ways of working contradict each other, two bolt-ons
+do not.
+
+| Add-on | Category | Was | Status |
+|---|---|---|---|
+| `addons/backend-azure/` | `backend` | `packs/coding/scaffolds/backend-azure/` | **v1.1**, applied by nothing |
+| `addons/backend-aws/` | `backend` | `packs/coding/scaffolds/backend-aws/` | **v1.1**, applied by nothing |
+
+**`addons/` sits outside `packs/` deliberately.** `packs/` means *what ships
+at v1.0* — `validate --all` walks it, `find packs -name pack.json` is the
+repo's inventory check, and F5's E-13 asserts the conformance of everything
+in it. A parked v1.1 pack inside `packs/` would be swept up by all three and
+would read as a fourth shipping pack.
+
+Each add-on keeps a **`recipe.json` that no CLI reads**, recording the steps
+its scaffold actually ran. It is a record, not an instruction: the branches
+were deleted from `packs/coding/recipe.json` in the same change, and a
+deleted step set is far harder to recover accurately later than to preserve
+now.
+
+**What the move cost v1.0, recorded here because it is an inventory fact.**
+`writing-workstream` is now the **only** scaffold in the product, and **no
+bundled pack ships an executable** — all four were in the Azure kit, one in
+the AWS kit. So scaffold *composition*, scaffold exclusivity,
+`executableRoots`, `executable: true`, `E-EXEC-DEST-FORBIDDEN`, US-13's
+`0755` disclosure and `verify`'s mode comparison have **no bundled subject**
+at v1.0. Every rule stands; F1's **T-1220** carries the coverage as
+adversarial fixtures, and that suite is now their only coverage.
+

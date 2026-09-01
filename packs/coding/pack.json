@@ -5,9 +5,6 @@
   "title": "Coding — a gated spec process, 10 roles, 2 agent teams, targets",
   "minCliVersion": "1.0.0",
   "recipe": "recipe.json",
-  "executableRoots": [
-    "infrastructure/backend-deploy/"
-  ],
   "anatomy": {
     "process": {
       "paths": [
@@ -69,18 +66,6 @@
       "default": "",
       "pattern": "^[\\p{L}\\p{N} ./+_-]{0,120}$",
       "maxLength": 120
-    }
-  ],
-  "scaffolds": [
-    {
-      "id": "backend-azure",
-      "category": "backend",
-      "description": "Azure Static Web App + Neon Postgres, Bicep + scripts"
-    },
-    {
-      "id": "backend-aws",
-      "category": "backend",
-      "description": "AWS Lambda + CDK"
     }
   ],
   "provenance": {

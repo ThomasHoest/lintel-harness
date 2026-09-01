@@ -1,0 +1,35 @@
+{
+  "formatVersion": 1,
+  "note": "NOT EXECUTABLE AT v1.0. No CLI reads this file. It records the steps the coding-pack scaffold ran, so the v1.1 add-on mechanism has a starting point rather than a reconstruction.",
+  "steps": [
+    {
+      "op": "strip-suffix",
+      "from": "payload/",
+      "to": "infrastructure/backend-deploy/",
+      "suffix": ".template",
+      "exclude": [
+        "*.sh.template",
+        "*.ps1.template"
+      ]
+    },
+    {
+      "op": "strip-suffix",
+      "from": "payload/",
+      "to": "infrastructure/backend-deploy/",
+      "suffix": ".template",
+      "exclude": [
+        "*.md.template",
+        "*.bicep.template",
+        "*.bicepparam.template",
+        "*.ts.template",
+        "*.json.template"
+      ],
+      "executable": true
+    },
+    {
+      "op": "rename",
+      "from": "applied-readmes/infrastructure.md",
+      "to": "infrastructure/README.md"
+    }
+  ]
+}

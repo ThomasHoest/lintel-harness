@@ -1,0 +1,17 @@
+{
+  "name": "backend-azure",
+  "version": "0.1.0",
+  "kind": "addon",
+  "status": "unsupported-until-1.1",
+  "minCliVersion": "1.1.0",
+  "description": "Azure Static Web App + Neon Postgres \u2014 Bicep template plus deploy and setup scripts.",
+  "category": "backend",
+  "executableRoots": [
+    "infrastructure/backend-deploy/"
+  ],
+  "provenance": {
+    "kind": "extracted",
+    "source": "packs/coding/scaffolds/backend-azure",
+    "note": "Was a coding-pack scaffold through v1.0 planning. Extracted to an add-on pack; no CLI supports add-ons until v1.1, so nothing applies this."
+  }
+}
