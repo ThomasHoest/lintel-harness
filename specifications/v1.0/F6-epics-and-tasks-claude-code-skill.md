@@ -1,5 +1,5 @@
 # Epics & Tasks: the Claude Code skill (Lintel Harness v1.0 — Feature 6)
-**Version:** 1.1
+**Version:** 1.2
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F6-spec-claude-code-skill.md` **v1.1** (US-79…US-98) · `F6-ADR-005-claude-code-skill.md` (issued `REVISE SPEC`, **conditions cleared — `PROCEED`**) · `general/interaction-model.md` (IM-1…IM-41) · `F1-spec-pack-format-and-manifest.md` **v3.4** (the disclosure sentinels and their containment check, the six-command surface) · `F2-ADR-003` · `F3-ADR-004`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown against `F6-ADR-005`. Claims **E-26…E-27** and **T-2601…T-2708**. |
+| 1.2 | 2026-09-01 | **Mode A round 3 — the sentinel rule is gone, replaced by a nonce (C-59).** T-2603 and T-2701 change from *restate F1's normalization* to *read the nonce from the begin line and match it*. **This removes the duplicated rule §10 had accepted**, along with the mitigation it named — `T-2707` compares command and flag **names**, which is mechanical, and was never going to compare an English normalization rule to a coded one (M-3). |
 | 1.1 | 2026-09-01 | **Mode A conditions C-52 and C-56 folded, both by removing a flag.** **`--user` dropped** — it was the only write in the product that deliberately left the project root, and every F1 confinement guarantee is expressed *against* that root, so keeping it meant specifying a whole second confinement root with its own brand, ancestor walk and tests to serve a convenience. **`--force` dropped** — the name is reserved and F1 fixes its meaning for `init`, and an existing installation is now refused unconditionally with `E-TARGET-EXISTS`. **No task added; three rewritten** (T-2606, T-2607, T-2706). The cheapest way to close a finding about a surface is usually to not have the surface. |
 
 ---
@@ -85,9 +86,14 @@ E-21 (the disclosure sentinels exist to be captured).
 
 - [ ] **T-2603** `[Implementer]` `skill/reference/init.md` — what `init`'s
   output looks like and what to do with each part. **Capture the
-  disclosure between F1 v3.3's two sentinel lines**, reproduce it as a
-  contiguous unmodified substring before any commentary (IM-10), and
-  **never summarise, reorder or truncate it**. Loaded on demand, not
+  disclosure between F1 v3.6's two delimiter lines**: **read the nonce
+  from the begin line** and treat the line carrying that same nonce as
+  the end. **Match the nonce you were handed, never a constant** — that
+  is the whole rule, and it replaces a normalization that failed three
+  security rounds. **If the end line never arrives, stop and report**: do
+  not treat the rest of the stream as disclosure, and do not re-sync on a
+  later begin line. Reproduce as a contiguous unmodified substring before
+  any commentary (IM-10), and **never summarise, reorder or truncate**. Loaded on demand, not
   inline in `SKILL.md`.
   *Depends on: F2 T-2102, T-2601.*
 
@@ -143,9 +149,11 @@ the skill is unimplementable no matter how well written.
 **Depends on:** E-26, F2 E-22, F3 E-25.
 
 - [ ] **T-2701** `[TestWriter]` **IM-10 — the disclosure is capturable.**
-  Run `init`, capture stderr, assert the two sentinel lines appear exactly
-  once each in order, every US-13 row lies between them, and nothing else
-  does. **This requirement was unmeetable from the day it was written**
+  Run `init`, capture stderr, assert the two delimiter lines appear
+  exactly once each in order **carrying the same nonce**, every US-13 row
+  lies between them, and nothing else does. **Assert across two runs that
+  the nonce differs**, which is the property C-59 rests on — a fixed
+  value would restore the whole forgery class. **This requirement was unmeetable from the day it was written**
   until F1 v3.3 — it demanded a contiguous unmodified substring while
   nothing fixed the block's boundaries. The test is what stops it
   regressing to that state.

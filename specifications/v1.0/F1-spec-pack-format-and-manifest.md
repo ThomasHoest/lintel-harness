@@ -1,5 +1,5 @@
 # Pack Format & Manifest Specification — Lintel Harness v1.0
-**Version:** 3.5
+**Version:** 3.6
 **Status:** Draft
 **Date:** 2026-09-01
 **Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/cli`, binary `lintel`, with **`harness` as a command group** — every command in this document is reached as `lintel harness <command>` (Q-16 **as amended by Q-63**). Pack content is Markdown, shell, PowerShell and Bicep; `pack.json`, `recipe.json` and the manifest are JSON. No UI.
@@ -30,6 +30,7 @@
 | **3.3** | **2026-09-01** | **`F6-ADR-005`'s two conditions: the disclosure gets delimiters, and the surface becomes six.** **(1) The disclosure block gains two sentinel lines.** US-13 has fixed the block's **rows** since v2.0 and never its **boundaries**, and `init` has no `--json` (IM-22) — so **IM-10, which requires the skill to reproduce the block as a contiguous unmodified substring, has been unmeetable since it was written**. Nobody noticed because no consumer existed yet; F6 is the first, and Q-76 is what found it. The fix is the smallest thing that discharges it: two **fixed, versionless, countless** lines, `--- lintel disclosure begin ---` and `--- lintel disclosure end ---`, emitted on **stderr** around the rows. **Rejected: giving `init` a `--json`** — a second output contract, and a schema to version, for a command whose output is otherwise prose and whose only machine consumer is a Markdown file. **Rejected: matching the block's first and last row text** — that makes a consumer's capture depend on message wording this document is free to change, which is the string-matching §Error States forbids one layer up. **(2) The command surface is six**, not five: `lintel harness skill install [--user]` (`F6-ADR-005` §3.1) copies the shipped skill into `.claude/skills/lintel/`. `E-CLI-UNKNOWN-COMMAND`'s message lists six, and §Technical Context's surface row names the owner. **`skill install` writes**, so the writing set goes two → three while the read-only set stays three — `interaction-model.md`'s IM-38 moves from *three of five* to *three of six* in the same pass, and the ratio is the part that matters. **It is subject to the confinement gate like any other write**: it targets `.claude/skills/`, and the product's own tooling does not get the carve-out C-5 denies to packs. **No code is added or removed; the catalogue holds 87** — `skill install`'s failures are existing codes, and it invents none. `validate` remains a **14**-step runner and the lifecycle **twelve** steps. |
 | **3.4** | **2026-09-01** | **Mode A over F2/F3/F6 folded — the F1 half: C-49, C-50, C-53, C-55.** **C-49 (CRITICAL) — the disclosure's delimiters were forgeable by the content they wrap.** US-13 prints whole agent frontmatter blocks **verbatim**, so a pack shipping a frontmatter line reading `--- lintel disclosure end ---` truncated the block for any consumer that reads to the marker — the user's eye, or F6 under IM-10 — hiding every `0755` path, tool grant and substituted value after it, in a block that stayed **well-formed and shorter**. **The fix is a containment check, fail-closed**, and it is what C-9's marker-lex half was before Q-45 removed it: **`E-DISCLOSURE-FORGERY`**, exit 2, zero bytes, raised by `init` before emitting **and** by `validate` at step 11 over the same rendered set, so a pack cannot ship the fault at all. **Rejected: a length-prefixed block** — robust, and it makes the delimiter carry a number, which v3.3 rejected for reasons that still hold. **The catalogue grows 87 → 88.** **Why this was CRITICAL under a threat model that bounds hostile packs:** the disclosure exists *because* pack content is untrusted, so a delimiter pack content can forge is a convention rather than a control — and it was a **regression against C-9**, whose v1.1 obligation named exactly this trigger and sat two thousand lines away in a disposition table the change never consulted. **C-50 (HIGH) — one output rule for control characters**, stated once in §NFR and applied in `src/diag/`: C0 other than `\n` and `\t`, plus `U+2028`/`U+2029`, are **escaped** in every diagnostic, prompt and disclosure row. Escaped rather than refused, because a legitimate path or value should not be unprintable — but a pack could otherwise use ANSI escapes to **erase the disclosure it had just triggered**. **C-53 (HIGH) — `skills` joins the reserved-destination names** at any `.claude` segment, on exactly the reasoning that reserved `settings.json`: a pack may not install instructions into the agent runtime of the project it is applied to. Bounded at v1.0 by bundled packs; unbounded the moment F4 ships. **`skill install` is a CLI write and is unaffected** — the reservation binds recipe steps. **C-55 (MEDIUM) — `src/verify/compare.ts` is security-relevant**, recorded in §F1.9: `verify` reports and `update` **writes** on the same comparison, so a defect there is data loss and not a reporting bug. `validate` remains a **14**-step runner — the C-49 check joins step 11 rather than adding a fifteenth — and the lifecycle stays **twelve** steps. |
 | **3.5** | **2026-09-01** | **Mode A round 2 — C-57 and C-58. The CRITICAL was carried, and this is what closes it.** v3.4 said the disclosure rows are *"scanned for either sentinel line"* and **never said what that means**, so the check and its consumer could disagree: a pack shipping `--- lintel disclosure end --- ` with a trailing space is **missed by an exact-match check and matched by any consumer that trims** — which is every reasonable consumer. **The truncation attack survives any check stricter than its reader**, so the control was present and its matching rule was the unbounded part. **C-57 — one normalization, stated normatively, and deliberately more liberal than any consumer can be:** a line is a **sentinel candidate** if, after **stripping C0 control characters, trimming ASCII whitespace from both ends, and ASCII-case-folding**, it equals either marker — and **any candidate** is `E-DISCLOSURE-FORGERY`, not only an exact match. **Over-refusing is the correct direction**: a pack whose content legitimately resembles the marker has a one-line problem it can see, and the alternative is a control that fails silently. **F6 states the identical rule for capture**, so the two sides cannot drift. **C-58 — the order is now stated: scan raw, then escape.** v3.4 required both and sequenced neither, and escape-then-scan defeats the check outright — the scan would run over escaped text, stop matching the raw sentinel it exists for, while the bytes a consumer reads are unchanged. The C-50 escaping is therefore **after** the C-49 scan, both over the same normalization, applied **once** before anything else touches a row. **No code is added: the catalogue holds 88.** `validate` remains a **14**-step runner. |
+| **3.6** | **2026-09-01** | **Mode A round 3 — C-59 and C-60. The delimiters carry a per-run nonce, and the matching rule is deleted rather than tightened again.** Round 3 carried the CRITICAL a **third** time: v3.5 trimmed **ASCII** whitespace, and `String.prototype.trim()` — the call every consumer reaches for — also trims `U+00A0`, `U+2003` and `U+3000`, so a marker with a trailing NBSP was missed by the check and matched by the reader. **Three rounds, three tightenings, three defeats by a slightly wider consumer normalization**, and the pattern was the finding: the emitter cannot win an argument about what a reader considers "the same string", because the reader is not obliged to tell it. **C-59 ends the class.** The begin line now carries a **per-run nonce** and the end line repeats it — `--- lintel disclosure begin {nonce} ---` — so **a pack cannot forge what it cannot predict**, and the consumer matches the nonce it read rather than a constant it knows. `E-DISCLOSURE-FORGERY` survives, simplified: it refuses content containing the run's nonce, which is now a probabilistic near-impossibility rather than a normalization question. **This does not reintroduce what v3.3 rejected** — v3.3 refused a delimiter carrying a **version or a row count**, which a consumer must *know* in advance and which an added row invalidates; **a nonce is read, not known**, so it creates no compatibility surface. **Accepted cost, and it is real:** the disclosure is no longer byte-identical between two runs. **G-F1-4's determinism is about applied trees and manifests, not stdout**, so nothing it promises weakens — but tests asserting the block must match the nonce as a pattern. **C-60 — where any normalization survives, it uses `String.prototype.trim()`, never a hand-rolled ASCII trim.** The ASCII narrowing was **Q-81 applied where it does not fit**: `collisionKey` folds ASCII because full case folding needs tables and a dependency, and that limit is documented; **trimming is stdlib and Unicode-aware and costs nothing.** Q-81 forbids dependencies, not correctness — and this is how a sound constraint becomes a bug when carried past its reason. **No code added: the catalogue holds 88.** |
 
 ---
 
@@ -1893,10 +1894,16 @@ diagnostic.
   **stderr**, wrapped in two fixed lines:
 
   ```
-  --- lintel disclosure begin ---
+  --- lintel disclosure begin 7f3a9c2e ---
   … the rows above, in the order this table gives them …
-  --- lintel disclosure end ---
+  --- lintel disclosure end 7f3a9c2e ---
   ```
+
+  **The token is a per-run nonce** (C-59, v3.6): at least 64 bits from a
+  cryptographic source, lowercase hex, **generated once per invocation**
+  and repeated verbatim on the end line. **The consumer reads it from the
+  begin line** and matches the end line against what it read — never
+  against a constant.
 
   **Fixed, versionless and countless**, on purpose: a delimiter carrying
   a version or a row count is a delimiter that changes, and a consumer
@@ -1910,24 +1917,27 @@ diagnostic.
   raw bytes, before any escaping** (C-58) — for a **sentinel candidate**,
   and **any candidate** is **`E-DISCLOSURE-FORGERY`**, exit 2, **zero
   bytes written**, naming the offending path.
-  - **A line is a sentinel candidate** if, after **(1)** removing every
-    C0 control character, **(2)** trimming ASCII whitespace from both
-    ends and **(3)** ASCII-case-folding, it equals either marker. **One
-    normalization, applied once**, before anything else touches the row.
-  - **The check is deliberately more liberal than any consumer can be**,
-    and that asymmetry is the whole point. v3.4 said only *"scanned for
-    either sentinel line"*, which an implementer would reasonably read as
-    exact match — and a pack shipping the marker with **one trailing
-    space** would then be missed by the check and matched by every
-    consumer that trims. **A control is worthless if it is stricter than
-    its reader.**
-  - **Over-refusing is the correct direction.** A pack whose content
-    legitimately contains a line resembling a marker has a one-line
-    problem it can see and fix; the alternative is a check that passes
-    while the attack works.
-  - **F6 states the identical rule for capture**, so the emitter's
-    refusal and the consumer's recognition cannot drift apart. Neither
-    side may relax it alone. `validate` runs the identical scan at **step 11**, over
+  - **The check is: does any row contain this run's nonce?** If so,
+    `E-DISCLOSURE-FORGERY`. There is **no normalization rule**, because
+    there is nothing to normalize against — the pack would have to have
+    shipped content containing a value generated after it was authored.
+  - **This replaced a matching rule that failed three security rounds**,
+    and the history is kept because the reasoning is the useful part.
+    v3.4 said only *"scanned for either sentinel line"* — read as exact
+    match, defeated by a **trailing space**. v3.5 specified trimming,
+    case-folding and C0-stripping — defeated by a **non-breaking space**,
+    because `String.prototype.trim()` removes Unicode whitespace and the
+    rule said ASCII. **Each fix made the emitter more liberal; each was
+    beaten by a reader that was more liberal still.** The emitter cannot
+    win that argument, because it is trying to enumerate every way a
+    reader might call two strings the same, and the reader is not obliged
+    to tell it.
+  - **A nonce is not a tighter comparison — it removes the comparison.**
+    The security property changes from *"the emitter's matching rule
+    dominates every consumer's"*, which is unfalsifiable, to *"the pack
+    cannot predict a random value"*, which is a property with a name.
+  - **F6 states only "read the nonce from the begin line and match it"**,
+    so the two sides share no rule that can drift. `validate` runs the identical scan at **step 11**, over
   the same rendered set, so a pack cannot ship the fault at all rather
   than only failing at apply time.
   **Why this is not optional.** The rows above include whole agent

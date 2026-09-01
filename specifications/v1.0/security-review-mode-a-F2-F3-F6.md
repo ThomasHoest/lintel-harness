@@ -5,7 +5,7 @@
 **Mode:** A — architectural validation at the ADR gate
 **Subjects:** `F2-ADR-003` (`PROCEED`) · `F3-ADR-004` (`PROCEED`) · `F6-ADR-005` (`PROCEED`, conditions cleared) · their specs, and `F1-spec` **v3.3** where these three depend on it
 **Verdict:** **REVISE-SPEC** — one CRITICAL, three HIGH, two MEDIUM, one LOW. See §5.
-**Disposition:** all eight conditions folded 2026-09-01 (§6). **Round 2 ran the same day and returned `REVISE-SPEC` again — the CRITICAL is carried, not closed.** See §7. Two new conditions, **C-57 and C-58**.
+**Disposition:** all eight conditions folded 2026-09-01 (§6). Round 2 returned `REVISE-SPEC` (§7, conditions C-57/C-58). **Round 3 carried the CRITICAL a third time and stopped patching the comparison** — see §8, condition **C-59**.
 
 ---
 
@@ -389,3 +389,101 @@ rather than a bad one.
 conditions are narrow and neither reopens a design decision** — this is
 now a matter of specifying a comparison precisely, which is exactly where
 a review of a fold should end up if the fold was made in good faith.
+
+---
+
+## 8. Round 3 — over C-57 and C-58, 2026-09-01
+
+**Verdict: `REVISE-SPEC`. The CRITICAL is carried a third time — and the
+third instance is the finding.**
+
+### C-1 (CARRIED, third round) — ASCII whitespace is narrower than the trim every consumer actually uses
+
+C-57 specified the normalization as *"strip C0 control characters, trim
+**ASCII** whitespace, ASCII-case-fold"*. Measured against the consumer it
+must dominate:
+
+| Pack ships | C-57's ASCII trim | JavaScript `.trim()` |
+|---|---|---|
+| marker + ASCII space | **catches** | matches |
+| marker + `U+00A0` NBSP | **misses** | **matches** |
+| marker + `U+2003` em space | **misses** | **matches** |
+| `U+3000` + marker | **misses** | **matches** |
+
+`String.prototype.trim` removes Unicode whitespace, so **a consumer using
+the obvious stdlib call trims characters the check does not** — and the
+truncation attack works again. **This is round 2's finding with a
+different character class**, and that is the point rather than an
+embarrassment.
+
+**The pattern is now the finding.** Three rounds, three fixes, each
+tightening the emitter's comparison, each defeated by a slightly wider
+consumer normalization. **That is an arms race the emitter cannot win**,
+because it is trying to enumerate every way a reader might decide two
+strings are "the same", and the reader is not obliged to tell it.
+
+**The ASCII narrowing was not carelessness — it was Q-81 applied where it
+does not fit.** `collisionKey` folds ASCII only because full Unicode case
+folding needs tables and a dependency, and that limit is documented and
+correct. **Trimming is different: `String.prototype.trim()` is stdlib,
+Unicode-aware, and costs nothing.** Q-81 forbids dependencies, not
+correctness. Reaching for ASCII here was a habit carried from a decision
+that had a real reason, into a place where the reason does not apply —
+worth naming, because it is how a sound constraint becomes a bug.
+
+### C-59 (REQUIRED) — stop making the marker match-proof and make it unguessable
+
+**Structural fix, and it ends the class rather than the instance.** The
+begin line carries a **per-run nonce**, and the end line repeats it:
+
+```
+--- lintel disclosure begin 7f3a9c2e ---
+… rows …
+--- lintel disclosure end 7f3a9c2e ---
+```
+
+- **A pack cannot forge what it cannot predict.** The nonce is generated
+  per invocation, so shipped content cannot contain it. No normalization
+  question arises, because there is nothing to normalize *against* — the
+  consumer matches the nonce it read from the begin line.
+- **The containment check survives and gets simpler**: refuse content
+  containing the nonce, which is now a probabilistic near-impossibility
+  rather than a matching rule.
+- **It does not reintroduce what v3.3 rejected.** v3.3 refused a
+  delimiter carrying a **version or a row count**, because a consumer
+  would have to *know* them in advance and could be broken by an added
+  row. **A nonce is read, not known** — it creates no compatibility
+  surface and cannot go stale.
+- **Cost, stated:** the disclosure is no longer byte-identical between
+  two runs of the same apply. **F1's determinism guarantee is about
+  applied trees and manifests, not stdout**, so nothing that G-F1-4
+  promises is weakened — but any test asserting the disclosure verbatim
+  must match the nonce as a pattern, and `T-2203`/`T-2701` need that
+  said.
+
+### M-3 (MEDIUM, new) — the duplicated rule's mitigation is asserted, not specified
+
+`F6-ADR-005` §10 accepts that the sentinel rule is stated in two places
+that cannot share an implementation, and names `T-2707` as the mitigation.
+**`T-2707` checks command and flag names** — mechanical string comparisons
+against a known list. **Comparing a normalization rule written in English
+to one written in code is not the same kind of check**, and calling it
+covered overstates what that task does.
+
+**C-59 dissolves most of this**: with a nonce there is no normalization
+rule to keep in sync, only "match the nonce from the begin line". The
+residue is small enough to state and drop.
+
+### Conditions
+
+| # | Condition | Owner |
+|---|---|---|
+| **C-59** | The disclosure delimiters carry a **per-run nonce**, read by the consumer from the begin line. The containment check refuses content containing the nonce. Tests match it as a pattern | F1, with F6 restating the read-the-nonce rule |
+| **C-60** | Where a normalization is still needed anywhere, it uses **`String.prototype.trim()`**, not a hand-rolled ASCII trim. Q-81 forbids dependencies, not stdlib correctness | F1 |
+
+**Verdict: `REVISE-SPEC`.** A carried CRITICAL forecloses a pass — for the
+third time, and correctly. **What changed in this round is the shape of
+the fix**: rounds 1 and 2 patched a comparison, and this one removes the
+need for one. **A round 4 must still confirm it**; a reviewer who
+recommends a structural change does not get to certify it in the same
+breath.

@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 1.3
+**Version:** 1.4
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.4** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 1.4 | 2026-09-01 | **Mode A rounds 2 and 3.** T-0806 is rewritten twice over: round 2 specified the sentinel comparison, round 3 **deleted it** in favour of a **per-run nonce** (C-59), because three rounds of tightening the emitter's matching rule were beaten three times by a slightly wider consumer normalization — the last by `String.prototype.trim()` removing `U+00A0`. **The check becomes *does any row contain this run's nonce*.** T-0113 gains C-60: any surviving normalization uses stdlib `trim()`, never a hand-rolled ASCII one — **Q-81 forbids dependencies, not correctness.** Next free task id **T-1222**. |
 | 1.3 | 2026-09-01 | **Mode A over F2/F3/F6 folded — the F1 half.** Five tasks: **T-0113** (one control-character escaping function for every stream, C-50), **T-0114** (`E-DISCLOSURE-FORGERY`, catalogue **87 → 88**), **T-0806** (the disclosure containment check, **the CRITICAL**, at `init` **and** `validate` step 11 — no fifteenth step), **T-0211** (`skills` joins the reserved names at any `.claude` segment, C-53) and **T-1221** (fixtures for both, plus marking `compare.ts` security-relevant, C-55). **T-0806 is C-9's marker-lex check restored** — Q-45 removed it while anchors were inert and recorded the obligation to bring it back when something started reading markers; F1 v3.3 created such a marker and did not consult it. Next free task id **T-1222**. |
 | 1.2 | 2026-09-01 | **Q-82 — add-on packs.** `coding`'s two backend scaffolds move to `addons/` as v1.1 add-ons, which leaves **`writing-workstream` as the only scaffold in the product** and **no v1.0 pack shipping an executable at all**. Six rules lose their only bundled-pack subject — scaffold *composition* and exclusivity, `executableRoots`, `executable: true` (a security gate C-34 showed fails **open** on a typo), `E-EXEC-DEST-FORBIDDEN`, US-13's `0755` disclosure and `verify`'s mode comparison. **No rule is weakened and none is removed**; what changes is that the adversarial fixture suite becomes their **sole** coverage, so **T-1220** adds the four fixtures that were previously redundant with the bundled packs. Next free task id **T-1221**. |
 | 1.1 | 2026-09-01 | **F1 v3.0 fold, and nine of the fourteen ⚠️ entries unblock.** **Q-81 ratified the dependency posture**, which is a single answer that clears **U-1, U-2, U-3, U-6, U-8 and U-10** at once — each of those tasks stops being "choose, then build" and becomes "build". **U-4 clears differently and the resolution matters more than the clearing**: `collisionKey` folds **ASCII only**, so T-0202 must *not* reach for `toLowerCase()` or hand-roll a Unicode fold, and a test pins the narrowing. **U-11 clears because F1 v3.0 allocated the code it was waiting for** — `W-LINK-FALLBACK`. **Five entries remain and each blocks real work**: U-5, U-7, U-12 (×2), U-13 (×2). **Six new tasks** for what v3.0 added: **T-0111** (nine new codes), **T-0112** (`--dry-run` reserved), **T-0410** (the fill-expected set), **T-1005** (`filled`/`unfilled`), **T-1110** (journal v3), **T-1219** (the zero-dependency assertion). **T-1002 is rewritten in place** — six states, not four. Next free task id **T-1221** within E-12; **E-13** was the next free epic and is now claimed by F5. |
@@ -1019,13 +1020,21 @@ E-11's pre-write summary (F2 renders it).
   *Depends on: T-0803, T-0804.*
 
 
-- [ ] **T-0806** `[Implementer]` **The disclosure containment check**
-  (C-49, **CRITICAL**). Before `init` emits the block, scan the assembled
-  rows for **either sentinel line**; a match is `E-DISCLOSURE-FORGERY`,
-  exit 2, **zero bytes**, naming the offending path. `validate` runs the
-  identical scan at **step 11**, over the same rendered set, so a pack
-  cannot ship the fault at all. **No fifteenth validate step** — it joins
-  step 11 rather than renumbering the runner.
+- [ ] **T-0806** `[Implementer]` **The disclosure nonce and its
+  containment check** (C-49, C-59, **the CRITICAL**). Generate a **per-run
+  nonce** — ≥ 64 bits from `node:crypto`, lowercase hex — emit it on both
+  delimiter lines, and refuse any row containing it:
+  `E-DISCLOSURE-FORGERY`, exit 2, **zero bytes**. `validate` runs the same
+  refusal at **step 11** over the rendered set. **No fifteenth validate
+  step.**
+  **Do not implement a string-matching rule here, and read why before
+  deciding otherwise.** Three security rounds tried: exact match, beaten
+  by a trailing space; trim-and-fold, beaten by a non-breaking space
+  because `String.prototype.trim()` removes Unicode whitespace and the
+  rule said ASCII. **The emitter cannot enumerate every way a reader might
+  call two strings the same.** The nonce changes the property from *"our
+  matching dominates every consumer's"* — unfalsifiable — to *"a pack
+  cannot predict a random value"*.
   **Read the reasoning before implementing, because the check looks
   paranoid and is not.** US-13 prints whole agent frontmatter blocks
   **verbatim and multi-line**, so a pack shipping a frontmatter line

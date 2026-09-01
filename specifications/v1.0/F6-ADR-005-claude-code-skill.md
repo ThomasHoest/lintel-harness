@@ -319,24 +319,33 @@ whole surface** is worth more than saving it.
 
 ---
 
-## 10. Mode A round 2 — C-57's F6 half, 2026-09-01
+## 10. The sentinel rule, after Mode A rounds 2 and 3 — 2026-09-01
 
-**The skill states the sentinel rule identically to the CLI, and may not
-relax it alone.** Round 2 found that v3.4's *"scanned for either sentinel
-line"* left the comparison unspecified, so the emitter's refusal and the
-consumer's recognition could disagree — a marker with one trailing space
-missed by an exact check and matched by any consumer that trims.
+**Round 2** found the comparison unspecified and §10 originally required
+the skill to restate F1's normalization verbatim, accepting a duplicated
+rule that could drift. **Round 3 deleted the rule instead** (C-59), and
+that changes this section's job entirely.
 
-**`skill/reference/init.md` states the same normalization F1 v3.5
-states**: a line ends the block if, after removing C0 control characters,
-trimming ASCII whitespace and ASCII-case-folding, it equals the end
-marker. **Not "the line equals the marker"**, which is what an
-implementer writes by default and what makes the two sides diverge.
+**The skill's instruction is now one sentence: read the nonce from the
+begin line, and treat the line carrying that same nonce as the end.** It
+matches a value it was handed, never a constant it knows.
 
-**Why this is stated in both places rather than referenced from one.**
-The skill is Markdown read by a model, not code importing a constant —
-it cannot share an implementation, so the only way the rule holds on both
-sides is that both sides say it. **The cost is a duplicated rule that can
-drift**, and that is accepted with its mitigation named: **T-2707 already
-checks the skill's instructions against the CLI's surface**, and this
-rule joins what it checks.
+**This is strictly better than what §10 first specified**, and the reason
+is worth keeping:
+
+- **There is no rule to keep in sync.** The duplication that §10 accepted
+  — and named `T-2707` as the mitigation for — is gone. That mitigation
+  was overstated anyway: `T-2707` compares command and flag **names**
+  against a known list, which is mechanical, whereas comparing a
+  normalization written in English to one written in code is not the same
+  kind of check (**M-3**, round 3). C-59 dissolves the problem rather
+  than improving the check.
+- **The skill cannot get it subtly wrong.** Under a normalization rule,
+  a model reading *"trim whitespace and compare"* would reach for
+  `.trim()` and be **more** liberal than the CLI — which was exactly the
+  gap round 3 measured. With a nonce there is no liberal-or-strict axis
+  to be wrong on.
+- **What the skill must still be told**, and `skill/reference/init.md`
+  says it: if the end line never arrives, **stop and report** — do not
+  treat the rest of the stream as disclosure, and do not re-sync on a
+  later begin line.

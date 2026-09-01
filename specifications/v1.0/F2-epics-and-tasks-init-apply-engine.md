@@ -1,5 +1,5 @@
 # Epics & Tasks: `harness init` (Lintel Harness v1.0 — Feature 2)
-**Version:** 1.0
+**Version:** 1.1
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F2-spec-init-apply-engine.md` (US-39…US-56) · `F2-ADR-003-init-apply-engine.md` (**PROCEED** — authoritative for the file plan, the resolution order and the interface contract) · `F1-spec-pack-format-and-manifest.md` **v3.3** (the engine, the 87-code catalogue, and the disclosure sentinels) · `F1-ADR-001` (amended) · `general/interaction-model.md` §11
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown against `F2-ADR-003`. Claims **E-20…E-22** and **T-2001…T-2210**. |
+| 1.1 | 2026-09-01 | **Mode A rounds 1–3.** The disclosure delimiters carry a **per-run nonce** (C-59), so T-2102 emits it and **T-2203 matches it as a pattern, not verbatim** — a test asserting the block byte-for-byte across two runs would now fail, correctly. F1's determinism guarantee covers applied trees and manifests, **not stdout**, so nothing G-F1-4 promises is weakened. |
 
 ---
 
@@ -135,10 +136,12 @@ journal, lock).
   *Depends on: F1 T-1103, T-1104, T-2001.*
 
 - [ ] **T-2102** `[Implementer]` Render the disclosure to **stderr, wrapped
-  in F1 v3.3's two sentinel lines** — `--- lintel disclosure begin ---`
-  and `--- lintel disclosure end ---` — with the rows in §US-13's order
-  and **nothing else between them**. The lines are **fixed, versionless
-  and countless**. This is what makes **IM-10 meetable**: it has required
+  in F1 v3.6's two delimiter lines carrying a per-run nonce** —
+  `--- lintel disclosure begin {nonce} ---` and
+  `--- lintel disclosure end {nonce} ---` — with the rows in §US-13's
+  order and **nothing else between them**. The nonce is ≥ 64 bits from
+  `node:crypto`, generated **once per invocation**, identical on both
+  lines, and refused if it appears in any row (T-0806). This is what makes **IM-10 meetable**: it has required
   a contiguous unmodified substring since it was written, and until F1
   v3.3 nothing fixed where the block started or stopped.
   *Depends on: F1 T-0804, T-2101.*
@@ -206,9 +209,12 @@ produce what they claim).
 
 - [ ] **T-2203** `[TestWriter]` The disclosure capture, from a consumer's
   position: run `init`, capture stderr, assert the two sentinel lines
-  appear **exactly once each, in order**, that every US-13 row lies
-  between them, and that **nothing else does**. This is F6's IM-10
-  standing in for itself before F6 exists.
+  appear **exactly once each, in order**, **carrying the same nonce**,
+  that every US-13 row lies between them, and that **nothing else does**.
+  **Match the nonce as a pattern, never verbatim** — it differs per run
+  by design (C-59), and a test pinning the block byte-for-byte would fail
+  correctly rather than reveal a defect.
+  This is F6's IM-10 standing in for itself before F6 exists.
   *Depends on: T-2102.*
 
 - [ ] **T-2204** `[TestWriter]` Determinism through `init`: the same pack,
