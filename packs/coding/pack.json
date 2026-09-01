@@ -5,33 +5,88 @@
   "title": "Coding — a gated spec process, 10 roles, 2 agent teams, targets",
   "minCliVersion": "1.0.0",
   "recipe": "recipe.json",
-
-  "executableRoots": ["infrastructure/backend-deploy/"],
-
-  "anatomy": {
-    "process":               { "paths": ["specifications/README.md"] },
-    "roles":                 { "paths": ["agents/*.md"] },
-    "documentTemplates":     { "paths": ["specifications/*.template.md"] },
-    "conventions":           { "paths": ["specifications/conventions.md"] },
-    "coordination":          { "paths": ["agent-teams/*.md"] },
-    "behaviouralGuidelines": { "paths": ["CLAUDE.md.template"] },
-    "folderScaffolding":     { "declaredBy": "recipe" },
-    "skillsAndAutomations":  { "paths": ["commands/*.md"] },
-    "autonomyContract":      { "paths": ["targets/*.md"] }
-  },
-
-  "parameters": [
-    { "id": "projectName", "type": "string", "prompt": "Project name",
-      "required": true, "pattern": "^[\\p{L}\\p{N} ._-]{1,64}$", "maxLength": 64 },
-    { "id": "stack", "type": "string",
-      "prompt": "Primary stack, one line (appears in CLAUDE.md)",
-      "default": "", "pattern": "^[\\p{L}\\p{N} ./+_-]{0,120}$", "maxLength": 120 }
+  "executableRoots": [
+    "infrastructure/backend-deploy/"
   ],
-
+  "anatomy": {
+    "process": {
+      "paths": [
+        "specifications/README.md"
+      ]
+    },
+    "roles": {
+      "paths": [
+        "agents/*.md"
+      ]
+    },
+    "documentTemplates": {
+      "paths": [
+        "specifications/*.template.md"
+      ]
+    },
+    "conventions": {
+      "paths": [
+        "specifications/conventions.md"
+      ]
+    },
+    "coordination": {
+      "paths": [
+        "agent-teams/*.md"
+      ]
+    },
+    "behaviouralGuidelines": {
+      "paths": [
+        "CLAUDE.md.template"
+      ]
+    },
+    "folderScaffolding": {
+      "declaredBy": "recipe"
+    },
+    "skillsAndAutomations": {
+      "paths": [
+        "commands/*.md"
+      ]
+    },
+    "autonomyContract": {
+      "paths": [
+        "targets/*.md"
+      ]
+    }
+  },
+  "parameters": [
+    {
+      "id": "projectName",
+      "type": "string",
+      "prompt": "Project name",
+      "required": true,
+      "pattern": "^[\\p{L}\\p{N} ._-]{1,64}$",
+      "maxLength": 64
+    },
+    {
+      "id": "stack",
+      "type": "string",
+      "prompt": "Primary stack, one line (appears in CLAUDE.md)",
+      "default": "",
+      "pattern": "^[\\p{L}\\p{N} ./+_-]{0,120}$",
+      "maxLength": 120
+    }
+  ],
   "scaffolds": [
-    { "id": "backend-azure", "category": "backend",
-      "description": "Azure Static Web App + Neon Postgres, Bicep + scripts" },
-    { "id": "backend-aws", "category": "backend",
-      "description": "AWS Lambda + CDK" }
-  ]
+    {
+      "id": "backend-azure",
+      "category": "backend",
+      "description": "Azure Static Web App + Neon Postgres, Bicep + scripts"
+    },
+    {
+      "id": "backend-aws",
+      "category": "backend",
+      "description": "AWS Lambda + CDK"
+    }
+  ],
+  "provenance": {
+    "kind": "migrated",
+    "source": "template/ in this repository",
+    "commit": "2644096eafc3f95d5af2e7ea68d809144b270364",
+    "note": "Extracted from the Voxio/Lintel codebase into template/, then renamed to packs/coding/ under the two-phase model (Q-39). US-24 enumerates every declared difference."
+  }
 }

@@ -42,16 +42,17 @@ copies and giving this pack one is a **named v1.1 task**.
 ## What the recipe produces
 
 Phase 1 copies this whole folder verbatim to `.harness/pack/`. Phase 2 runs
-`recipe.json` — twelve declared steps over six primitives, seven unconditional
-and five inside the scaffold.
+`recipe.json` — thirteen declared steps over six primitives, eight
+unconditional and five inside the scaffold.
 
 | Step | Primitive | From (payload) | To (project) |
 |---|---|---|---|
 | Agents | `copy` | `agents/` | `.claude/agents/` (8 files) |
-| Writing guide | `strip-suffix` | `writing-guide/*.template.md` | `writing-guide/*.md` (4 files) |
+| Writing guide — reference | `strip-suffix` | `writing-guide/{README,ai-tells,bilingual-publishing}.template.md` | `writing-guide/*.md` (3 files) |
+| Writing guide — voice | `strip-suffix`, `fillExpected` | `writing-guide/tone-of-voice.template.md` | `writing-guide/tone-of-voice.md` — shipped to be filled in |
 | Guide index | `rename` | `templates/index.template.md` | `writing-guide/index.md` |
 | Front door | `rename` | `templates/home.template.md` | `Home.md` |
-| Project brief | `rename` | `templates/project-brief.template.md` | `project-brief.md` |
+| Project brief | `rename`, `fillExpected` | `templates/project-brief.template.md` | `project-brief.md` — shipped to be filled in |
 | Answers | `substitute` | — | `writing-guide/*.md`, `Home.md`, `project-brief.md` |
 | Onboarding | `generate` | `CLAUDE.md.template` | `CLAUDE.md`, with inert anchors |
 | Corpus | `copy` ×4, scaffold only | `scaffolds/writing-workstream/{sources,analyses,notes,tasks}/` | `sources/` (with `_scouting/`, `inbox/`), `analyses/`, `notes/`, `tasks/` |

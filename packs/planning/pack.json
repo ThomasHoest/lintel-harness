@@ -5,21 +5,18 @@
   "title": "Planning — portfolio and roadmap management as a calibrated decision loop",
   "minCliVersion": "1.0.0",
   "recipe": "recipe.json",
-
   "provenance": {
     "kind": "authored",
-    "knowledgeBase": [
-      "base-deck-v2.1.md — slides 8 (the loop), 12 (horizon determinants), 17 (the five practices), appendices A3 and B3 (the filled templates)",
-      "simulated-companies.md — the two calibration poles",
-      "specifications/v1.0/research-planning-pack-framing.md"
-    ],
-    "note": "Authored, not migrated. The loop, the absorption/security gate, the horizon framework and the four template field lists are taken from the knowledge base. The surrounding evidence — magnitudes, vendor statistics and citations — is deliberately not taken: the same critic pass that found the templates sound marked that material for heavy revision."
+    "source": "specifications/v1.0/research-planning-pack-framing.md",
+    "knowledgeBase": "base-deck-v2.1.md (slides 8 the loop, 12 horizon determinants, 17 the five practices, appendices A3 and B3) and simulated-companies.md (the two calibration poles)",
+    "note": "Authored, not migrated. The loop, the absorption gate, the horizon framework and the template field lists are taken from the knowledge base; the surrounding evidence deliberately is not."
   },
-
   "anatomy": {
     "process": {
       "status": "present",
-      "paths": ["process.md"]
+      "paths": [
+        "process.md"
+      ]
     },
     "roles": {
       "status": "provisional",
@@ -35,19 +32,27 @@
     },
     "documentTemplates": {
       "status": "present",
-      "paths": ["templates/*.md"]
+      "paths": [
+        "templates/*.md"
+      ]
     },
     "conventions": {
       "status": "present",
-      "paths": ["conventions.md"]
+      "paths": [
+        "conventions.md"
+      ]
     },
     "coordination": {
       "status": "present",
-      "paths": ["coordination.md"]
+      "paths": [
+        "coordination.md"
+      ]
     },
     "behaviouralGuidelines": {
       "status": "present",
-      "paths": ["CLAUDE.md.template"]
+      "paths": [
+        "CLAUDE.md.template"
+      ]
     },
     "folderScaffolding": {
       "status": "present",
@@ -71,7 +76,6 @@
       ]
     }
   },
-
   "parameters": [
     {
       "id": "constraintFloor",
@@ -79,7 +83,10 @@
       "prompt": "What is this organisation's constraint floor? high-floor: a long-lead physical or regulatory constraint binds — clearance-gated programmes, hardware, certification. near-zero-floor: build is near-free, releases are continuous, and competitive substitution is the fastest-moving constraint.",
       "required": true,
       "flag": "calibration",
-      "values": ["high-floor", "near-zero-floor"]
+      "values": [
+        "high-floor",
+        "near-zero-floor"
+      ]
     }
   ]
 }

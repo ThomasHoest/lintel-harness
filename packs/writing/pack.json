@@ -5,27 +5,39 @@
   "title": "Writing — a nine-stage research-and-drafting process, 8 roles, a voice guide",
   "minCliVersion": "1.0.0",
   "recipe": "recipe.json",
-
   "folderReadme": "index.md",
-
   "anatomy": {
     "process": {
-      "paths": ["CLAUDE.md.template"]
+      "paths": [
+        "CLAUDE.md.template"
+      ]
     },
     "roles": {
-      "paths": ["agents/*.md"]
+      "paths": [
+        "agents/*.md"
+      ]
     },
     "documentTemplates": {
-      "paths": ["templates/post.template.md"]
+      "paths": [
+        "templates/post.template.md"
+      ]
     },
     "conventions": {
-      "paths": ["CLAUDE.md.template", "writing-guide/*.template.md"]
+      "paths": [
+        "CLAUDE.md.template",
+        "writing-guide/*.template.md"
+      ]
     },
     "coordination": {
-      "paths": ["CLAUDE.md.template"]
+      "paths": [
+        "CLAUDE.md.template"
+      ]
     },
     "behaviouralGuidelines": {
-      "paths": ["CLAUDE.md.template", "writing-guide/*.template.md"]
+      "paths": [
+        "CLAUDE.md.template",
+        "writing-guide/*.template.md"
+      ]
     },
     "folderScaffolding": {
       "declaredBy": "recipe"
@@ -39,7 +51,6 @@
       "reason": "The pack has no target contract, no readiness gate, no autonomy envelope, no abort criteria, no work log and no SUCCESS/ABORT termination. What it has instead is a supervision posture — no auto-chaining, and publishing is unconditionally human-gated — which says what an agent may not do alone rather than what it may do alone and how it stops. Closing this part means gaining the targets contract, which is writing@1.1 work."
     }
   },
-
   "parameters": [
     {
       "id": "projectName",
@@ -66,12 +77,17 @@
       "maxLength": 64
     }
   ],
-
   "scaffolds": [
     {
       "id": "writing-workstream",
       "category": "workstream",
       "description": "The shared research corpus (sources, analyses, notes, tasks) plus a starter workstream with its outline, draft, review and published stages — every folder carrying an index.md"
     }
-  ]
+  ],
+  "provenance": {
+    "kind": "migrated",
+    "source": "../AIImpactOnOrganizationsAndLeadership/",
+    "commit": "9f7b4f16fa91e911d697b626203e1979cc68902e",
+    "note": "Extracted from the research project that grew the way of working. US-25 requires the pack to carry nothing project-specific; the voice guide's sample reference is a declared placeholder."
+  }
 }

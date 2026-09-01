@@ -792,7 +792,14 @@ agree that **US-39** is next free, so nothing here is renumbered.
   parts. **The cap is a legibility budget, not a content budget:** it
   exists so a newcomer can read the page in one sitting, and it is raised
   whenever a pack's real content outgrows it rather than met by deleting
-  substance. `coding` is 95 lines, `writing` 150 and `planning` 148.
+  substance. `coding` is **120** lines, `writing` 151 and `planning` 148.
+  **`coding`'s README was rewritten at v3.0** — through v2.9 it was 95
+  lines that met **one** of this story's five criteria, naming none of the
+  nine parts, stating no version, no `minCliVersion`, no gaps and no
+  self-containment, and carrying a 51-line folder listing where a
+  twenty-line produced-tree block belongs. It was the pack's own source
+  tree described to a reader who has not got it, rather than the applied
+  result described to one who has.
 - Each README states that pack's gaps explicitly — `coding` names its
   thin parts 5 and 8; `writing` names its absent parts 8 and 9 and its
   thin part 3; `planning` names its provisional role set.
@@ -1270,8 +1277,20 @@ Two things follow, both v1.0 facts:
   `specifications/v1.0/research-planning-pack-framing.md` — so a later
   source revision can be diffed against what shipped. **`provenance` is a
   defined optional field of the format** (F1 US-1 and §F1.3, Q-60): a
-  string or an object of strings, declared and never interpreted. It was
-  defined there because until F1 v2.6 it was an *unknown* top-level key,
+  string or an object of strings, **each at most 200 characters with no
+  newline**, declared and never interpreted.
+  **All three packs now declare a conforming `provenance`, and until v3.0
+  none did.** `coding` and `writing` declared **none at all** — the exact
+  condition the field was added to catch, passing `validate` silently
+  because F1 has no code for absence, so the requirement above was unmet
+  by two of three packs and nothing said so. `planning` declared one and
+  it was **invalid**: `knowledgeBase` was an **array** and `note` ran to
+  **347** characters against the 200 limit, either of which is
+  `E-UNKNOWN-VALUE`, exit 2, zero bytes. **The pack that had tried was
+  the only one that would have failed the apply**, which is the shape
+  worth noting: an absent optional field is silent, a malformed one is
+  fatal, and the silence is what let both survive. It was
+  defined in F1 because until v2.6 it was an *unknown* top-level key,
   so every bundled pack tripped F1's unknown-key warning — which is
   **`defect`** class — for doing exactly what this NFR requires. A test
   may assert this by validating all three packs and requiring no
