@@ -224,14 +224,38 @@ Behaviourally harmless, which is why it survived four security reviews.
 category branches are **fixture-covered only**, rather than leaving a
 reader to assume an untested branch is a tested one.
 
-## 4. Waves 2 and 3
+## 4. Waves 2 and 3 — BOTH DONE
 
-**Wave 2** — ADRs for F2, F3, F6 (parallel), plus F5's epics once §3 is
-done.
-**Wave 3** — epics for F2, F3, F6.
+**Wave 2 — ADRs for F2, F3, F6.** `F2-ADR-003` (`PROCEED`),
+`F3-ADR-004` (`PROCEED`), `F6-ADR-005` (issued `REVISE SPEC`, conditions
+cleared the same day, now `PROCEED`). **Q-65…Q-78 all resolved**; three
+of them turned out to be answered already by F1's v3.0 fold.
 
-Then a **Mode A security pass over F2, F3 and F6**, which have never had
-one. F1's four rounds do not cover them.
+**Wave 3 — epics for F2, F3, F6.** E-20…E-27, **199 tasks** across five
+features, **E-01…E-27 contiguous with no duplicate epic or task id**.
+Blocks were reserved before writing, which is the fix for the three
+collisions this project hit earlier.
+
+**Three things in those documents that a planner will otherwise miss:**
+
+- **F2 is meant to be small.** Four modules, no engine code, **no new
+  error code**. A task that seems to need one has misread the boundary.
+  `T-2206` asserts it: run a full apply with `executeApply` stubbed and
+  require the project untouched.
+- **F3's classification defect is a data-loss defect**, because unlike
+  `verify` it *writes* on the result. `T-2303` asserts `classify.ts` and
+  `verify` agree on a shared fixture; `T-2405` asserts a corrupted payload
+  produces zero bytes written.
+- **F6's E-27 tests the CLI, not the skill.** Judgment is not assertable
+  and no task pretends otherwise. `T-2703`'s second half is the sharp one:
+  `expectedNew` must differ from the payload file wherever a step touched
+  the path, which is what distinguishes rendered output from payload
+  source — a naive implementation returning the payload passes the first
+  half alone.
+
+**One blocking fold, carried as `T-2301`:** F3's §F3.3 disposition table
+must go from six rows to four before its tasks are implemented, or they
+will build two dispositions nothing distinguishes.
 
 ## 5. Counters — next free
 
