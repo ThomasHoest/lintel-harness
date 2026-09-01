@@ -1,0 +1,263 @@
+# Security review — Mode A, ADR gate: F2, F3 and F6
+
+**Status:** Complete
+**Date:** 2026-09-01
+**Mode:** A — architectural validation at the ADR gate
+**Subjects:** `F2-ADR-003` (`PROCEED`) · `F3-ADR-004` (`PROCEED`) · `F6-ADR-005` (`PROCEED`, conditions cleared) · their specs, and `F1-spec` **v3.3** where these three depend on it
+**Verdict:** **REVISE-SPEC** — one CRITICAL, three HIGH, two MEDIUM, one LOW. See §5.
+
+---
+
+## 0. Why this review exists, and what it is not
+
+**F1 had four Mode A rounds. F2, F3 and F6 have had none.** F1's rounds
+bounded what a **pack** can do to a machine through the apply engine.
+They did not examine what `init`, `update` and the skill do *around* that
+engine, and three of this review's findings live in exactly that gap —
+in output, in deletion and in a write that leaves the project root.
+
+**Threat model is F1 §7.0's, unchanged**: a local developer CLI, no
+network, no registry, and **packs bundled with the published CLI** (Q-2).
+That last clause matters for severity and is applied honestly below — a
+finding whose adversary is a hostile pack is bounded at v1.0 because the
+three bundled packs are authored by this project. It is **not** bounded
+at v1.1, when `contribute` (F4) exists and packs arrive from elsewhere.
+
+**Where that reasoning does *not* apply** is stated at C-1, and it is the
+reason this review returns `REVISE-SPEC` rather than a pass with
+conditions.
+
+---
+
+## 1. CRITICAL
+
+### C-1 — The disclosure block can be truncated by pack content, and the control it defeats is the one that exists because pack content is untrusted
+
+**F1 v3.3** delimits `init`'s security disclosure with two fixed lines:
+
+```
+--- lintel disclosure begin ---
+--- lintel disclosure end ---
+```
+
+**The rows between them include verbatim, multi-line, pack-authored
+content.** US-13 requires the disclosure to print *"every pack-shipped
+`.claude/agents/*.md` and its whole frontmatter block, verbatim … never
+summarised, never truncated"*.
+
+A pack ships an agent file whose frontmatter contains the line
+`--- lintel disclosure end ---`. Any consumer that reads to the end
+marker — the user's eye, or F6 obeying IM-10 — stops there. **Everything
+after it is invisible**: the `0755` paths, the `tools:` grants on agents
+declared later in the block, the substituted values. The truncated block
+is well-formed, correctly delimited, and shorter. **Nothing looks wrong.**
+
+**Why this is CRITICAL and not HIGH, despite the bundled-pack threat
+model.**
+
+1. **The control's entire purpose is to be trustworthy against pack
+   content.** The disclosure exists because a pack is not trusted; a
+   delimiter that pack content can forge is not a control, it is a
+   convention. Bounding it by "our packs are friendly" removes the reason
+   the disclosure exists.
+2. **It is a regression against a recorded condition.** `C-9 —
+   substitution may not forge a marker` was raised in F1's own rounds. Its
+   marker-lex half was **removed at Q-45** on the explicit ground that
+   *"anchors are inert, so a forged one hijacks nothing"*, with a
+   **v1.1 obligation to restore the lex check when something starts
+   reading markers**. F1 v3.3 introduced a marker that **something reads
+   immediately** — F6, by IM-10 — and did not consult that obligation.
+   The condition was recorded, the trigger arrived, and the check was not
+   restored.
+3. **F6 is required to relay the block faithfully**, so the truncation
+   propagates from the CLI into the conversation the user is having, with
+   the skill's authority behind it.
+
+**Required.** Pick one, and state it in F1:
+
+- **(a) Containment check.** Before emitting, `init` scans the assembled
+  rows for either sentinel line and fails with a code if found —
+  fail-closed, zero bytes, on the reasoning F1 applies everywhere else to
+  a value in a behaviour-selecting position. `validate` should raise the
+  same finding so a pack cannot ship the fault at all.
+- **(b) Length-prefixed block.** The begin line carries a byte count and
+  the consumer reads exactly that many bytes. Robust, but it makes the
+  delimiter carry a number — which F1 v3.3 explicitly rejected, and the
+  rejection was right for other reasons.
+
+**(a) is recommended**, and it is what C-9's lex check was. **This
+finding is mine**: F1 v3.3 was written in this session, and the
+obligation it should have consulted is in the same document.
+
+---
+
+## 2. HIGH
+
+### H-1 — No rule anywhere bounds control characters in CLI output carrying pack content
+
+`E-SUBST-NEWLINE` bans `\n`, `\r`, `U+2028` and `U+2029` in a **substituted
+value written into a file**. **Nothing bounds what reaches a terminal.**
+The disclosure prints applied paths, parameter values and whole
+frontmatter blocks; `promptFor` renders a pack-authored `prompt` string;
+`update`'s report prints paths and, at M-2, file content.
+
+ANSI escapes in any of those can clear the screen, reposition the cursor
+over text already printed, or recolour a warning into invisibility — so a
+pack can **erase the disclosure it just triggered**, or make a prompt ask
+a different question from the one being answered.
+
+**Required.** F1 states a single output rule: **C0 control characters
+other than `\n` and `\t`, and `U+2028`/`U+2029`, are escaped or refused in
+every diagnostic, prompt and disclosure row.** One rule, stated once,
+applied by `src/diag/` — not per call site, which is how half of them get
+missed.
+
+### H-2 — `update`'s delete path has no write-time confinement re-check
+
+**C-14 requires `executeApply` to re-run confinement immediately before
+each write**, because the plan's `lstat` is stale by the time the write
+happens. `F3-ADR-004` introduces **deletion** — payload orphans, journal
+`intent: "delete"` — and states no equivalent.
+
+Between plan and execute, a path that was an ordinary file can become a
+**symlink**. Deleting a symlink removes the link, not the target, so this
+is not arbitrary file deletion — but `update` also **backs up the
+pre-apply bytes** into `journal.d/` before removing, and reading through a
+symlink to capture them reaches outside the project. **The delete path
+needs the same `confineAtWrite()` treatment as the write path**, and the
+absence is a gap in a control C-14 states as absolute.
+
+**Required.** F3 states that deletion re-confines immediately before
+acting, with `lstat` on the target, and that a path whose type changed
+since planning is refused rather than deleted.
+
+### H-3 — `skill install --user` leaves the project root, and no rule follows it there
+
+Every confinement guarantee in F1 is expressed against the project root.
+`F6-ADR-005` §3.1 gives `skill install` a `--user` flag that writes to the
+**user profile** — the only write in the product that deliberately leaves
+that root, and therefore the only one no existing rule covers.
+
+`F6-epics` T-2606 says the destination is *"constructed and confined
+explicitly, never assembled from a string"*. **That is a task instruction,
+not a specified rule**, and a task is not where a confinement boundary
+belongs.
+
+**Required.** F6's spec states the `--user` root as a **second confinement
+root** with the same properties as the project root: resolved, `lstat`ed
+at every ancestor, no symlink followed, no traversal, and a branded path
+type that is the only way to obtain a destination under it. If that is
+more machinery than the flag is worth, **drop `--user`** — a
+project-local install is sufficient for v1.0 and costs nothing.
+
+### H-4 — A pack may ship `.claude/skills/**` and impersonate the official skill
+
+The reserved-destination class-2 list is `.github`, `.vscode`, `.idea`,
+`node_modules`, `.circleci`, `.devcontainer`, plus named basenames.
+**`.claude/skills/` is not reserved**, and no rule forbids a pack placing
+content there.
+
+A pack shipping `.claude/skills/lintel/SKILL.md` installs instructions
+that Claude Code will follow **under the harness's own name**, alongside
+or instead of the skill `skill install` places. The frontmatter checks
+(`E-CLAUDE-TOOL-GRANT`, `E-CLAUDE-PERMISSION-MODE`) bound what it may
+*declare*; they bound nothing about what it may *instruct*.
+
+**Bounded at v1.0** by the bundled-pack model, which is why this is HIGH
+and not CRITICAL. **Unbounded the moment F4 ships.**
+
+**Required.** Add `skills` to the reserved-destination names at any
+`.claude` segment, on exactly the reasoning that reserved
+`settings.json`: a pack may not install instructions into the agent
+runtime of the project it is applied to. `skill install` is a **CLI**
+write and is unaffected — the reservation binds recipe steps.
+
+---
+
+## 3. MEDIUM
+
+### M-1 — `expectedNew` puts unbounded pack content into `update`'s human report
+
+`F3-ADR-004` carries rendered bytes for every `kept-edited` path so F6 can
+show what the pack changed (Q-77). Correct for `--json`, where the bytes
+are escaped. **The human report has no such framing**, so it inherits both
+C-1 (marker forgery, if the report is ever delimited) and H-1 (control
+characters), and adds a third: a large file makes the report unreadable.
+
+**Required.** The human report prints a **bounded excerpt** — a stated
+line cap with an explicit truncation notice — and `--json` remains the
+complete channel. Never silently truncate: F1's own rule for the
+disclosure is *never summarised, never truncated, never counted*, and a
+report that quietly drops content while looking complete is the same
+fault this review opened with.
+
+### M-2 — `verify` and `update` share one comparison, and that is now a security-relevant coupling
+
+`F3-ADR-004` has `classify.ts` call `verify/compare.ts` — correct, and
+the alternative is worse. But it changes the risk class of that module:
+**`verify` reports, `update` writes.** A comparison defect that was a
+reporting bug is now a data-loss bug, and `verify` is simultaneously the
+acceptance test for **S7**.
+
+Not a defect. **Recorded so it is not rediscovered**, and so the fixture
+suite treats `compare.ts` as security-relevant rather than as reporting
+code. T-2303 (agreement on a shared fixture) and T-2405 (corrupt payload →
+zero bytes) are the right tests; they should be marked as such.
+
+---
+
+## 4. LOW
+
+### L-1 — `skill install --force` appears in a task and in no specification
+
+`F6-epics` T-2607 has an existing installation *"refused rather than
+overwritten unless `--force`"*. **`--force` is a reserved CLI flag** whose
+meaning F1 fixes for `init` — the pre-existing-path rule of US-13. Reusing
+the name for a different behaviour on a different command, specified
+nowhere, is how a flag acquires two meanings.
+
+**Required.** Either specify it in F6 with its own semantics stated, or
+drop it and refuse unconditionally.
+
+---
+
+## 5. Verdict
+
+**REVISE-SPEC.**
+
+A CRITICAL finding forecloses `SECURITY-PROCEED`, and this one is not a
+technicality: the disclosure is the product's only pre-write
+accountability mechanism, and **C-1 shows it can be defeated by the class
+of input it exists to describe.**
+
+**The three ADRs' architectural verdicts are not disturbed.** None of
+these findings says a feature is wrongly designed. C-1 and H-1 are about
+**output**, H-2 about a control not carried into a new operation, H-3
+about a boundary that was named in a task instead of a spec, and H-4
+about a denylist that did not grow when a new destination became
+meaningful. All are additive.
+
+**Conditions, in the order they should be met:**
+
+| # | Condition | Owner |
+|---|---|---|
+| **C-49** | The disclosure block is proof against forged delimiters — containment check, fail-closed, in `init` **and** in `validate` (C-1) | F1 |
+| **C-50** | One output rule for control characters, stated once and applied in `src/diag/` (H-1) | F1 |
+| **C-51** | Deletion re-confines immediately before acting, exactly as writing does (H-2) | F3 |
+| **C-52** | `--user` has a specified second confinement root with a branded type, **or is dropped** (H-3) | F6 |
+| **C-53** | `skills` joins the reserved names at any `.claude` segment (H-4) | F1 |
+| **C-54** | `update`'s human report bounds excerpt length with an explicit truncation notice (M-1) | F3 |
+| **C-55** | `compare.ts` is marked security-relevant in the fixture suite (M-2) | F1 |
+| **C-56** | `skill install --force` is specified or dropped (L-1) | F6 |
+
+**A note on C-1's provenance, because it bears on how the next round
+should read this document.** F1 v3.3 introduced the sentinels earlier in
+the same working session that produced these ADRs, to discharge a
+condition of `F6-ADR-005`. The obligation it should have consulted —
+C-9's, recorded in the same specification — was two thousand lines away
+in a disposition table nobody re-reads. **That is the failure mode this
+project has now hit four times**, and it is the argument for the
+fold-check rule applying to *security conditions* and not only to
+cross-cutting documents. A condition marked "v1.1 obligation" needs to be
+consulted by the change that creates its trigger, and nothing currently
+makes that happen.

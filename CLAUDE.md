@@ -445,7 +445,7 @@ are **all written and all Draft**. Nothing in `general/` is
 outstanding-as-unwritten; the standing risk there is staleness, which
 is what the next section is about.
 
-**The security gate is closed by decision, not by a passing verdict.**
+**The security gate is open, and on two axes.** F2/F3/F6's Mode A pass returned **`REVISE-SPEC`** on 2026-09-01 with a **CRITICAL** outstanding (C-49); nothing in that set is folded yet. Separately, for F1 and F5: **the gate is closed by decision, not by a passing verdict.**
 Four Mode A rounds ran: 2 CRITICAL → 2 CRITICAL → 0 CRITICAL/2 HIGH →
 0 CRITICAL/3 HIGH, with conditions holding 24/31 → 36/38. Round 4's
 HIGHs and MEDIUMs are folded into F1 v2.5 and F5 v2.4 — the fold
@@ -486,10 +486,16 @@ authoritative, verify it rather than trusting the assertion.
   list on purpose, and the blocker is no longer authoring: it is that
   there is no CLI to run. `ls .harness` is the check.
 - **No CLI source exists.** Not a line. Everything below assumes that.
-- **Every v1.0 feature now has a spec, an ADR and epics.** What is
-  outstanding is **no Mode A security pass over F2, F3 or F6** — F1's four
-  rounds do not cover them — and **ADR-002 has not been re-issued** against
-  F5 v3.1.
+- **Every v1.0 feature now has a spec, an ADR and epics.**
+- **F2/F3/F6's Mode A pass has run and returned `REVISE-SPEC`** —
+  **1 CRITICAL, 3 HIGH, 2 MEDIUM, 1 LOW**, conditions **C-49…C-56**
+  (`security-review-mode-a-F2-F3-F6.md`). The CRITICAL is **C-1**: the
+  disclosure block's delimiters can be forged by pack content, which
+  defeats the one control that exists *because* pack content is untrusted.
+  **It is a regression against C-9**, whose lex check Q-45 removed with a
+  v1.1 obligation to restore it when something started reading markers —
+  F1 v3.3 created such a marker and did not consult the obligation.
+- **ADR-002 has not been re-issued** against F5 v3.1.
 - **No epics-and-tasks document for F2, F3 or F6.** F1 and F5 both have one.
 - **Pack content no longer lags the spec** — this is the line that went
   stale last time, so it now says how to check itself. All three packs
