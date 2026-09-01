@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 1.8
+**Version:** 1.9
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 1.9 | 2026-09-01 | **T-0103 done — the catalogue stops being prose.** `src/diag/codes.ts` carries the `DiagnosticCode` union over all **88** codes, `Severity`, Q-60's `defect | notice` axis and the code→exit-class map. **It is derived from F1 §Error States rather than transcribed**, and `codes.test.ts` **re-derives it on every run and fails on divergence** — so the two cannot agree until they do not, which is the failure mode this project has recorded four times in prose and is here made mechanical. The extraction found the section **internally consistent**: 88 rows, 75 `E-`, 13 `W-`, every exit class present, **every `W-` code classified**, no duplicates. The fail-closed rule is tested rather than asserted: an unclassified warning resolves to **`defect`**. |
 | 1.8 | 2026-09-01 | **T-0102 done — the acceptance harness, and a layout constraint T-0101 created.** `tests/harness/cli.ts` gives the suite the two things F1 states as contracts and neither of which is observable from inside the process: **the exit class** (named, not numbered, at call sites) and **zero bytes written**, proved by a before/after snapshot of a real directory rather than by spot-checking paths the test thought of. The snapshot is built from **`readdir` entries**, so it reports the **on-disk spelling** — C-36's distinction, which a test composing its own paths cannot make on a case-insensitive volume, and which two fixtures turn on. **Three tsconfigs, because of the depth invariant T-0101 pinned:** `paths.ts` must compile one level inside its out root, so tests cannot be compiled to a different root alongside it — the app builds `src → dist` **excluding tests**, unit tests build to the same root, and `tests/` builds to `dist-tests/` and drives the **built artefact**. Production `dist/` contains **zero** test files. **The harness tests itself against the filesystem with no CLI in the picture**, because every acceptance test in F1, F2, F3 and F6 asserts through it. |
 | 1.7 | 2026-09-01 | **T-0101 done — the first code in the project, and it falsified a spec sentence.** `package.json`, `tsconfig.json`, `src/paths.ts` and eight passing tests. **§NFR's *empty `dependencies` object* is not assertable** — `npm install` normalises it away — so F1 v3.8 restates the requirement as *no runtime dependency declared*, empty **or absent**. **T-1219 is amended to match.** Also verified by running rather than by reading: `packs/` ships (121 files) and **`addons/` does not** (0), and the resolution does not move when `cwd` does. |
 | 1.6 | 2026-09-01 | **The ⚠️ register closes; every blocked task unblocks.** U-5, U-7 and U-9 were **already decided and the register had not caught up** — U-9 by `F2-ADR-003`, U-5 and U-7 by Q-81, since each named a dependency as its alternative. **U-12: `tsc` only**, no bundler, because the build must **type-check** and the path brands are compile-time controls; `packs/` resolves from `import.meta.url`, **never `process.cwd()`**. **U-13: GitHub Actions**, three platforms, **Windows not optional**. **T-0101 unblocks, and it was the prerequisite for every task in this document** — nothing in F1 is blocked any more. |
@@ -166,14 +167,20 @@ T-0103…T-0105 land.
 
 ### The diagnostic contract
 
-- [ ] **T-0103** `[Implementer]` `src/diag/codes.ts` — the single code taxonomy:
-  the `DiagnosticCode` union over F1 §Error States (**87 codes** at F1 v3.0, and that
+- [x] **T-0103** `[Implementer]` `src/diag/codes.ts` — the single code taxonomy:
+  the `DiagnosticCode` union over F1 §Error States (**88 codes** at F1 v3.8, and that
   table is the only catalogue), `Severity`, the **class** axis
   (`defect | notice`, Q-60) carried by every `W-` code, and the
   code→exit-class map over `0 | 1 | 2 | 3`. An unclassified `W-` code
   resolves to `defect` — fail-closed, deliberately (§Error States).
   Do not copy the table into this module's comments; derive it from the
   spec section and keep one copy.
+  **Done, and the "one copy" is enforced rather than intended:**
+  `codes.test.ts` re-parses §Error States on every run and fails on any
+  divergence — missing codes, invented codes, a moved exit class, a `W-`
+  code whose class changed. **The direction is fixed too:** a code present
+  in the module and absent from the table is the defect, because F1 owns
+  the only catalogue and no other document may invent a code.
   *Depends on: T-0101. Prerequisite for T-0104, T-0105 and every emitting module.*
 
 - [ ] **T-0104** `[Implementer]` `src/diag/catalogue.ts` — code → message
