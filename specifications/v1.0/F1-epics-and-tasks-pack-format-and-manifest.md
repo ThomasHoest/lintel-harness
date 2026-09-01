@@ -1,14 +1,15 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 1.0
+**Version:** 1.1
 **Status:** Draft
 **Date:** 2026-09-01
-**References:** `F1-spec-pack-format-and-manifest.md` (**v2.9** — authoritative for every acceptance criterion, the 78-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, 2026-08-31 — authoritative for the file-level plan and the public interface contract, *except where Q-54 overrides it*), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register, **U-1…U-14**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
+**References:** `F1-spec-pack-format-and-manifest.md` (**v3.0** — authoritative for every acceptance criterion, the **87**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
 
 **Amendment history**
 
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 1.1 | 2026-09-01 | **F1 v3.0 fold, and nine of the fourteen ⚠️ entries unblock.** **Q-81 ratified the dependency posture**, which is a single answer that clears **U-1, U-2, U-3, U-6, U-8 and U-10** at once — each of those tasks stops being "choose, then build" and becomes "build". **U-4 clears differently and the resolution matters more than the clearing**: `collisionKey` folds **ASCII only**, so T-0202 must *not* reach for `toLowerCase()` or hand-roll a Unicode fold, and a test pins the narrowing. **U-11 clears because F1 v3.0 allocated the code it was waiting for** — `W-LINK-FALLBACK`. **Five entries remain and each blocks real work**: U-5, U-7, U-12 (×2), U-13 (×2). **Six new tasks** for what v3.0 added: **T-0111** (nine new codes), **T-0112** (`--dry-run` reserved), **T-0410** (the fill-expected set), **T-1005** (`filled`/`unfilled`), **T-1110** (journal v3), **T-1219** (the zero-dependency assertion). **T-1002 is rewritten in place** — six states, not four. Next free task id **T-1220** within E-12; **E-13** remains the next free epic. |
 
 ---
 
@@ -46,13 +47,18 @@ epic-derived `T-XXYY` (`CLAUDE.md` §counters), beginning at **T-0101**.
 
 **Read the two boxes before starting.**
 
-> **The ⚠️ register is open, and it blocks real work.** `technology-choices.md`
-> §6 holds fourteen entries. Nine of them (**U-1, U-2, U-3, U-4, U-5, U-6,
-> U-7, U-8, U-10, U-12**) each block at least one task below, and **U-14**
-> — whether §7.1's dependency posture is ratified — governs six of them at
-> once. A blocked task is marked **⚠️ BLOCKED (U-n)** with the entry named.
-> Those tasks cannot be estimated, and several cannot be fully specified,
-> until the entry is closed. Do not silently assume a library.
+> **The ⚠️ register is mostly closed, and what remains still blocks real
+> work.** `technology-choices.md` §6 holds fourteen entries. **Nine are
+> closed** — U-1, U-2, U-3, U-4, U-6, U-8, U-10, U-11 and U-14 — almost
+> all of them by **Q-81** ratifying §7.1's zero-runtime-dependency
+> posture, which was the entry governing the others. **Five remain and
+> each blocks at least one task below**: U-5 (the two-pass argv walk),
+> U-7 (`pattern` source inspection), U-12 (build and packaging, ×2) and
+> U-13 (CI provider, ×2). A blocked task is marked **⚠️ BLOCKED (U-n)**;
+> a cleared one is marked **✅ UNBLOCKED (U-n, closed by …)** and **keeps
+> the resolution**, because several of them resolved to something other
+> than the obvious answer — U-4 above all. Do not silently assume a
+> library, and do not read a ✅ as "any approach will do".
 
 > **The ADR predates three folds in the spec.** The ADR is PROCEED and its
 > file-level plan and interface contract stand, but F1 moved from v2.1 to
@@ -111,17 +117,20 @@ T-0103…T-0105 land.
   destination). The build must **type-check** rather than strip — the path
   brands of E-02 and the total `RecipeStep` union of E-04 are compile-time
   controls, not decoration.
-  **⚠️ BLOCKED (U-12** — build route and the packaging half; **U-14** —
-  the §7.1 dependency posture is proposed, not ratified).
+  **⚠️ BLOCKED (U-12** — build route and the packaging half.) **U-14 is
+  closed (Q-81): zero runtime dependencies**, so `package.json` declares
+  `"dependencies": {}` and T-1219 asserts it. **No `vitest.config.ts`.**
   *No dependencies. Prerequisite for every task in this document.*
 
 - [ ] **T-0102** `[Implementer]` Add the test-runner configuration and the
   scripts that run unit, integration and fixture suites. The runner must
   assert on the **process exit class**, and for two fixtures on **file mode
   and directory-entry name** with no code involved (US-16, C-36).
-  **⚠️ BLOCKED (U-10** — the runner is explicitly *not* to be inherited from
-  the `vitest.config.ts` row in the ADR's file plan; the choice is to be
-  taken. Depends on **U-14**.)
+  **✅ UNBLOCKED (U-10, closed by Q-81): the runner is `node:test`.** It
+  ships with Node 22, so it is a dependency in neither budget, and it
+  needs no config file — the ADR's `vitest.config.ts` row is superseded.
+  The task is now to write the npm scripts and the fixture harness, not
+  to choose.
   *Depends on: T-0101. Prerequisite for every `[TestWriter]` task.*
 
 ### The diagnostic contract
@@ -199,6 +208,30 @@ T-0103…T-0105 land.
   command; and `--accept-hooks` reaching `E-CLI-UNKNOWN-FLAG`, exit 1.
   *Depends on: T-0107 for the alias half; the rest runs in parallel.*
 
+
+- [ ] **T-0111** `[Implementer]` `src/diag/codes.ts` + `catalogue.ts` — the
+  **nine codes F1 v3.0 added**, taking the catalogue from 78 to **87**.
+  Four for `update`, which **F3 fires and F1 only defines**:
+  `E-UPDATE-AVAILABLE` (exit 1, and the one place in this catalogue where
+  exit 1 reports a question answered rather than a fault — a CI job gates
+  on "this project is behind" without parsing output),
+  `E-UPDATE-NOT-NEWER`, `E-UPDATE-PARAM-UNANSWERED`,
+  `E-UPDATE-SCAFFOLD-DROPPED`. Four for `init`, likewise F2's to fire:
+  `E-CLI-UNKNOWN-PACK`, `E-CLI-PACK-MISSING`, `E-SET-UNKNOWN-PARAM`,
+  `E-PARAM-UNANSWERABLE`. One notice: **`W-LINK-FALLBACK`** (see T-1105).
+  Each carries its exit class and its message template; the `DiagnosticCode`
+  union grows in the same change, by US-1's closed-enumeration rule.
+  *Depends on: T-0104. Prerequisite for T-1105, and for F2's and F3's CLI work.*
+
+- [ ] **T-0112** `[Implementer]` `src/cli/flags.ts` — the reserved-flag list
+  is **nine**, not eight: `--set`, `--scaffold`, `--json`, `--strict`,
+  `--force`, `--rollback`, `--all`, **`--dry-run`**. `--dry-run` is reserved
+  **although no F1 command accepts it** — it is `update`'s read-only mode,
+  which is F3's — and the list's own rule is that a flag is reserved whether
+  or not the command being run accepts it. Without it a pack may declare
+  `"flag": "dry-run"` first and shadow a read-only mode when F3 ships, which
+  is the `--accept-permissions` mistake avoided rather than repeated.
+  *Depends on: T-0107.*
 ---
 
 ## E-02 — Path confinement, branded paths and the bounded walk
@@ -234,9 +267,16 @@ E-11. E-09's steps 6 and 7 are this epic's rules, run at validate time.
   `E-TARGET-EXISTS`, for `--force`'s byte-identity test and for the journal's
   `preExisting` determination — **N-5**, and rollback safety rides on it
   (C-13, C-20).
-  **⚠️ BLOCKED (U-4** — the case-fold half. `toLowerCase()` is not Unicode full
-  folding; the fold must be at least as aggressive as the case-insensitive
-  filesystems it guards, and the divergence must be written down.)
+  **✅ UNBLOCKED (U-4, closed by Q-81), and read the resolution before
+  implementing:** the fold is **ASCII only** — `A`–`Z` to `a`–`z`, no
+  other character altered — after NFC. **Do not reach for `toLowerCase()`
+  and do not hand-roll a Unicode fold.** A partial Unicode fold is
+  aggressive on the pairs it covers and silent on the rest while
+  reporting equal confidence for both; an ASCII fold is wrong in a
+  knowable way, and the whole of that limit is *every non-ASCII case pair
+  is uncovered*. Recorded as **F1 known limit 17**; a test asserts that
+  `ÉTUDE.md` and `étude.md` do **not** collide, so the narrowing is
+  pinned rather than merely documented.
   *Depends on: T-0201. Prerequisite for T-0203, T-0405, T-1108.*
 
 - [ ] **T-0203** `[Implementer]` **Stage 2** — the reserved-destination denylist
@@ -337,9 +377,11 @@ reader), E-09 (steps 1, 2, 9, 10).
   replaces rather than wraps. **SEC (C-25):** the threat model's actor 1 is
   caught by "a JSON diff review", and a parser that keeps the *last* duplicate
   while a human reads the *first* voids that control by name.
-  **⚠️ BLOCKED (U-1** — what replaces `JSON.parse`; source positions the stdlib
-  discards are required, and no runtime dependency may be added under §7.1.
-  Depends on **U-14**.)
+  **✅ UNBLOCKED (U-1, closed by Q-81): hand-rolled.** A token pass that
+  tracks line and column, rejecting a duplicate key at **any depth** and
+  reporting both line numbers. `JSON.parse` collapses duplicates before a
+  reviver sees them, which is why this is the one stdlib call the design
+  replaces rather than wraps.
   *Depends on: T-0105. Prerequisite for T-0303, T-0402, T-0704.*
 
 ### The schema
@@ -368,17 +410,20 @@ reader), E-09 (steps 1, 2, 9, 10).
   **Known limit 15 (C-47) is accepted, not fixed:** `AnatomyDecl.declaredBy` is
   a behaviour-selecting value outside the closed six, so `"declaredBy": "payload"`
   is unhandled. Do not invent a rule for it; leave it as F1 §F1.9 records it.
-  **⚠️ BLOCKED (U-2** — what validates `pack.json` / `recipe.json`. Findings
-  must be F1 codes emitted in US-16's fixed order, which rules out most
-  off-the-shelf validators' own error shapes. Depends on **U-14**.)
+  **✅ UNBLOCKED (U-2, closed by Q-81): hand-rolled.** Which is what the
+  constraint wanted anyway — findings must be F1 codes emitted in US-16's
+  fixed order, and an off-the-shelf validator's own error shape and
+  ordering would have had to be translated away. The schemas are closed
+  enumerations this spec already states.
   *Depends on: T-0301, T-0302, T-0201.*
 
 - [ ] **T-0304** `[Implementer]` Semver parse and compare, used by
   `E-PACK-CLI-TOO-OLD` (exit 1) and `E-PACK-FORMAT-NEWER` (exit 2). Total and
   deterministic across platforms; **no range arithmetic** is needed —
   `minCliVersion` is a floor.
-  **⚠️ BLOCKED (U-8** — one well-known dependency against ~30 lines, under a
-  §7.1 posture that is not ratified. Depends on **U-14**.)
+  **✅ UNBLOCKED (U-8, closed by Q-81): those ~30 lines**, in
+  `src/semver/compare.ts`. Parse and total compare only — **no range
+  arithmetic**, because `minCliVersion` is a floor, not a range.
   *Depends on: T-0302.*
 
 - [ ] **T-0305** `[Implementer]` `src/pack/load-pack.ts` — resolve `packs/<name>/`
@@ -398,9 +443,12 @@ reader), E-09 (steps 1, 2, 9, 10).
   `readonly AppliedPath[]` — and the matcher takes no filesystem handle, so
   "resolve against disk" is not expressible.** Bounded against author-supplied
   patterns.
-  **⚠️ BLOCKED (U-3** — the dialect: `*` vs `**`, character classes, braces,
-  negation. It must be small enough that `pack info` renders an apply
-  completely, which is G-F1-9. Depends on **U-14**.)
+  **✅ UNBLOCKED (U-3, closed by Q-81): hand-rolled, and the dialect is
+  therefore this project's to state rather than a library's to imply.**
+  Choose the smallest dialect that serves `exclude`, `in` and anatomy
+  `paths`, and state it in the spec — it must be small enough that
+  `pack info` renders an apply completely (G-F1-9). The matcher takes
+  **no filesystem handle** (C-27).
   *Depends on: T-0201. Prerequisite for T-0307, T-0404, T-0501.*
 
 ### Anatomy, parameters, scaffolds
@@ -507,7 +555,8 @@ therefore has to land before any destination rule can be trusted.
   position the rule exists to close), and `E-RECIPE-TOO-MANY-STEPS` over the
   **total declared** count before any `when` filtering (**C-30** — an
   inspectability control, not a DoS control).
-  **⚠️ BLOCKED (U-2** — the same register entry as `pack.json`'s validator.)
+  **✅ UNBLOCKED (U-2, closed by Q-81)** — the same resolution as
+  `pack.json`'s validator: hand-rolled, F1 codes, US-16's order.
   *Depends on: T-0301, T-0401.*
 
 - [ ] **T-0403** `[Implementer]` `src/recipe/ops/index.ts` — the **closed
@@ -583,6 +632,21 @@ therefore has to land before any destination rule can be trusted.
   handle and produces the same set twice.
   *Depends on: T-0404.*
 
+
+- [ ] **T-0410** `[Implementer]` `src/recipe/plan-steps.ts` — resolve the
+  **fill-expected set** beside the adapt-expected set (T-0407), by the same
+  write-set quantifier and at plan time from the recipe alone. A step
+  declaring `"fillExpected": true` contributes every applied path in its
+  write set. **Two validation rules, both `E-RECIPE-STEP-INVALID`, exit 2**:
+  an empty write set under the declaration, and — new — a step declaring
+  **both** `fillExpected` and `adaptExpected`, which is an authoring mistake
+  because a file is either the skill's to adapt or the user's to fill and a
+  step claiming both has not decided which. `fillExpected` is US-1's **fifth**
+  boolean-typed field, so `"true"` as a string is `E-UNKNOWN-VALUE`, exit 2 —
+  and here a non-boolean does more than mis-report a state: it silently
+  disarms the prohibition that stops `update` overwriting a filled
+  `project-brief.md`. Q-79.
+  *Depends on: T-0407, T-0405. Prerequisite for T-1002, T-1005, and F3's classifier.*
 ---
 
 ## E-05 — The six primitives — phase 2 rendering
@@ -844,9 +908,14 @@ E-11's pre-write summary (F2 renders it).
   on an unparsed block**, and reproduce the block **verbatim** for the
   disclosure (no re-serialise), and it must be narrow enough to audit: a full
   YAML engine is a large surface admitted into the gate-computing process.
-  **⚠️ BLOCKED (U-6** — how `.claude/` frontmatter is read. Two error codes and
-  US-13's disclosure row 4 ride on this entry, and it names both `architect`
-  and `securityreviewer` as owners.)
+  **✅ UNBLOCKED (U-6, closed by Q-81): hand-rolled, in
+  `src/claude/frontmatter.ts`** — its own module in the ADR's amended file
+  plan, because **three** codes ride on it (`E-CLAUDE-TOOL-GRANT`,
+  `E-CLAUDE-PERMISSION-MODE`) plus US-13's disclosure row 4. It must
+  report a **line number**, fail **closed** on an unparsed block, and
+  reproduce the block **verbatim** for the disclosure — never
+  re-serialise, since the disclosure's whole value is showing what is
+  actually there.
   *Depends on: T-0105. Prerequisite for T-0802, T-0803, T-0804.*
 
 - [ ] **T-0802** `[Implementer]` The **pinned constant** in
@@ -1045,9 +1114,9 @@ the thing that closes it.**
   reported. Q-52, C-29.
   *Depends on: T-0208, T-0604, T-0704, T-0308, T-0405.*
 
-- [ ] **T-1002** `[Implementer]` `src/verify/compare.ts` — **four** states per
+- [ ] **T-1002** `[Implementer]` `src/verify/compare.ts` — **six** states per
   recomputed path, and the enumeration is **closed**: `match`, **`adapted`**,
-  `differs`, `missing`. Normalized comparison for text and raw for binary, so a
+  **`filled`**, **`unfilled`**, `differs`, `missing`. Normalized comparison for text and raw for binary, so a
   CRLF checkout and an added BOM both read `match`; the executable bit compared
   **where the platform represents it**, with `modeChecked: false` on Windows so
   the report says so rather than implying a check ran. A differing path is
@@ -1058,6 +1127,17 @@ the thing that closes it.**
   the exit code, and **a path outside the set behaves exactly as it did before
   the state existed** — there is no flag, no environment variable and no
   project-level or pack-level form of it. Q-56.
+  **`filled` and `unfilled` (Q-79) invert that rule and the inversion is
+  the thing to get right**: a path in the **fill-expected set** (T-0410)
+  reports **`filled`** when it differs and **`unfilled`** when it matches
+  byte for byte. Neither fails, neither counts toward
+  `E-VERIFY-MISMATCH`, neither moves the exit code — but `unfilled` is
+  the one state that reports *matching* as the finding, because a
+  fill-expected path that still equals what shipped means the user has
+  not filled in the template. **Implementing it the same way round as
+  `adapted` would silently report every unfilled brief as `match`**,
+  which is the defect Q-79 exists to fix. `unfilled` is class `notice`
+  and `--strict` does **not** promote it.
   **Superseded from the ADR:** its `VerifyState` is
   `match | partial | differs | missing` with `ownedKeysChecked`, and C-22's
   narrowing is **deliberately not applied** because its premise —
@@ -1089,6 +1169,19 @@ the thing that closes it.**
   entry.
   *Depends on: T-1003. The `CLAUDE.md` cases need a real pack — see T-1218.*
 
+
+- [ ] **T-1005** `[TestWriter]` Acceptance tests for the fill-expected states
+  in `tests/integration/verify-fill.test.ts`, and this is the test that makes
+  **S7 reachable**: apply a pack, fill `project-brief.md` with arbitrary
+  content, and require **exit 0** with that path reported **`filled`**.
+  Then a second run with the brief untouched, requiring exit 0 and
+  **`unfilled`** — *not* `match`, which is the assertion that catches the
+  inversion being implemented the same way round as `adapted`. Then a
+  `--strict` run over the same project, requiring `unfilled` **not** to be
+  promoted and the exit to stay 0. Through F1 v2.9 the first of these three
+  was impossible: a filled brief reported `differs` and `verify` exited 1, so
+  the S7 gate passed only on a project nobody had finished setting up.
+  *Depends on: T-1003, T-0410. Needs a real pack — see T-1218.*
 ---
 
 ## E-11 — The write path F2 and F3 drive — journal, lock, plan, execute, rollback
@@ -1114,11 +1207,13 @@ neither is in scope here.
   `open(dest,'wx')` then `rename`, and **record the narrowed guarantee in the
   run's diagnostics** rather than claiming the stronger one. `E-TARGET-RACE` on
   any confirmation failing. Takes `WritablePath`, never `string`. C-14.
-  **⚠️ Unresolved (U-11, and it is recorded as an F1 spec defect, not a
-  technology choice):** F1 declares its codes the **only** CLI error model, and
-  **no `W-` code exists for the narrowed-guarantee diagnostic** — so as written
-  it is assertable only by string-matching. It needs a classified `W-` code (a
-  **notice**: the state is real and nothing is fixable). Do not invent one
+  **✅ RESOLVED (U-11), and the code now exists: `W-LINK-FALLBACK`**,
+  class **`notice`** — the CLI reports a narrowed guarantee it could not
+  avoid, and no pack or user change would clear it. Allocated in F1 v3.0,
+  which closes a gap US-13 had carried since v2.0: the requirement to
+  "record the narrowed guarantee" was assertable only by string-matching
+  a message, the one thing §Error States forbids. Emit the code; do not
+  invent one
   here; report it to the spec owner.
   *Depends on: T-0205, T-0207.*
 
@@ -1218,6 +1313,24 @@ neither is in scope here.
   there is no code.
   *Depends on: T-1106, T-1107, T-1108.*
 
+
+- [ ] **T-1110** `[Implementer]` `src/fs/journal.ts` — **journal version 3**
+  (Q-62). Two additions, each with a failure it prevents. **`intent: 'write'
+  | 'delete'` per entry**, because `update` deletes payload orphans and the
+  five-case rollback table models overwriting and creating but **not**
+  deleting: a `delete` entry records `preExisting: true`, the pre-apply hash
+  and mode, and a backup, carries **no** intended hash, and rollback restores
+  it unconditionally. `init` writes `'write'` on every entry, so the field is
+  uniform rather than optional. **`command: 'init' | 'update'` on the
+  journal**, because `E-JOURNAL-PRESENT`'s remedy line is rendered from it —
+  through v2.9 it said `init --rollback` unconditionally, which after a
+  crashed `update` sends the user to a command that answers
+  `E-ALREADY-APPLIED` and leaves the journal exactly where it was. **A
+  remedy that cannot work is worse than none, because the user believes they
+  tried it.** Any `version` other than `3` is `E-JOURNAL-UNREADABLE`, exit 2;
+  there is no version-2 journal to be compatible with, since a journal lives
+  only between the start and end of one run.
+  *Depends on: T-1101. Prerequisite for F3's write path.*
 ---
 
 ## E-12 — The adversarial fixture suite and the bundled-pack acceptance gate
@@ -1247,8 +1360,8 @@ for the applying fixtures E-11.
   stopped testing what it was written for. Two fixtures assert on **file mode**
   and on the **on-disk directory-entry name** with no code involved, so the
   runner must expose both.
-  **⚠️ BLOCKED (U-10** — the test runner. US-16 calls this suite its most
-  important criterion, and the runner choice gates it.)
+  **✅ UNBLOCKED (U-10, closed by Q-81): `node:test`.** US-16 calls this
+  suite its most important criterion; nothing gates it now.
   *Depends on: T-0102, T-0905. Prerequisite for T-1202–T-1213.*
 
 ### The fixtures — one per row of US-16's table
@@ -1437,6 +1550,17 @@ for the applying fixtures E-11.
   **⚠️ BLOCKED in part (U-13** — the cross-platform matrix needs the CI runner.)
   *Depends on: T-1104, T-1106, T-1003.*
 
+
+- [ ] **T-1219** `[TestWriter]` The **zero-dependency assertion** (Q-81), in
+  `tests/integration/packaging.test.ts`: the published `package.json`
+  declares `"dependencies": {}`, and the test reads the packed artefact
+  rather than the working tree so a transitive arrival is caught too. **This
+  is a requirement, not a preference** — the product's security argument is
+  about what runs with the user's filesystem access, and a runtime dependency
+  is code inside that boundary no pack rule governs. Pair it with the
+  `collisionKey` narrowing test named in T-0202, so the two halves of Q-81 —
+  what was refused and what was conceded — are both pinned.
+  *Depends on: T-0101, T-0102, T-0202.*
 ---
 
 ## Cross-epic notes

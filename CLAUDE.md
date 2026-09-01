@@ -329,9 +329,9 @@ counter anywhere in this file, that is the bug, and this section wins.
 | Open question | **Q-82** | `Q-N`, **project-monotonic, not per document**. An id is never reused, and it keeps its number when it moves to a Resolved Decisions table. **Q-1…Q-63, Q-79, Q-80 and Q-81 are resolved** — the register is `specifications/project-brief.md` §12, which holds the decision and the rationale for each. This file does not restate them. **Q-64 is reserved**, not free (see Q-63). **Q-65…Q-78 are open**, each feature-local to F2, F3 or F6 and resolvable in its own ADR. |
 | User story | **US-99** | `US-N`, project-monotonic across features. **F1 and F5 each state their own range in their §User Stories**, — read them there rather than trusting a list here. F2, F3 and F6 now hold stories too (US-39…US-98). **Retired and never reusable:** US-5, US-6, US-7, US-11, US-12 (F1); US-22, US-23 (F5). |
 | Epic | **E-13** | `E-NN`, per feature. **F1 holds E-01…E-12**; no other feature has epics yet. |
-| Task | **T-13xx** | Scheme A, epic-derived `T-XXYY`. **F1 holds T-0101…T-1218** (106 tasks). |
+| Task | **T-1220** | Scheme A, epic-derived `T-XXYY`, so the next free id is per epic. **F1 holds T-0101…T-1219** (112 tasks, six added by the v3.0 fold). |
 | ADR | — | **`F1-ADR-001`** (verdict `PROCEED`) and **`F5-ADR-002`** (verdict `REVISE SPEC`) are written. ADRs are feature-prefixed and numbered per feature, so there is no project-wide next-free id. Epic-scoped ADRs use `ADR-EXX`. |
-| Error code | — | F1's catalogue is the **only** one, and it holds **78** at v2.9. No other document may invent a code. **F3's spec requests four more and F2 needs four that do not exist** — none are allocated until the F1 fold lands. |
+| Error code | — | F1's catalogue is the **only** one, and it holds **87** at v3.0. No other document may invent a code. The nine added by the fold are four for `update` (F3 fires them), four for `init` (F2's) and one notice, `W-LINK-FALLBACK`. |
 
 ---
 

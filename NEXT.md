@@ -127,6 +127,33 @@ all six rows.
   `validate` silently because F1 has no code for absence), and
   `packs/coding/README.md` fails four of US-28's five criteria.
 
+## 3b. Done since — pack work and F1's epics
+
+**Pack conformance — DONE.** All three packs declared a **non-conforming
+`provenance`**, in opposite directions: `coding` and `writing` declared
+**none** (silent, because F1 has no code for absence), and `planning`
+declared one that was **invalid** — `knowledgeBase` an array, `note` 347
+chars against a 200 limit, either of which is `E-UNKNOWN-VALUE`, exit 2.
+**The pack that had tried was the only one that would have failed the
+apply.** All three now conform.
+
+**`coding`'s README — DONE.** It met **one** of US-28's five criteria.
+Rewritten to 120 lines against the house style the other two follow.
+`writing`'s README corrected for the 7 → 8 step split.
+
+**Checked and deliberately left:** anatomy `status` omissions in `coding`
+and `writing` are **legal** — `status` defaults to `present`, and the
+packs declaring non-default states carry their required `reason`/`note`.
+Not a defect; do not "fix" it.
+
+**F1's epics — DONE, at v1.1.** Six new tasks (T-0111, T-0112, T-0410,
+T-1005, T-1110, T-1219), T-1002 rewritten for six states, and **nine of
+the fourteen ⚠️ entries unblocked**. The ✅ markers **keep their
+resolutions**, because several resolved to something other than the
+obvious answer — U-4 above all, where the instruction is now *do not
+reach for `toLowerCase()` and do not hand-roll a Unicode fold*. **Five
+still block**: U-5, U-7, U-12 (×2), U-13 (×2).
+
 ## 4. Waves 2 and 3
 
 **Wave 2** — ADRs for F2, F3, F6 (parallel), plus F5's epics once §3 is
