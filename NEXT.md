@@ -154,6 +154,30 @@ obvious answer — U-4 above all, where the instruction is now *do not
 reach for `toLowerCase()` and do not hand-roll a Unicode fold*. **Five
 still block**: U-5, U-7, U-12 (×2), U-13 (×2).
 
+## 3c. F5's epics — DONE
+
+`F5-epics-and-tasks-template-packs.md`, **E-13…E-19, 32 tasks**, all
+fifteen stories covered.
+
+**It is not shaped like F1's, and the preamble says why.** F1 builds a
+program that does not exist; **F5's deliverable already exists**, so the
+work is conformance and verification — *run the check the spec has always
+promised, then fix what it finds*. Every `[Implementer]` task that
+follows a check is written as **fix what it found**, with its size
+explicitly unknown until the check has run once. Planning against this
+document without reading that preamble will produce fictional estimates.
+
+**E-15 is the one to read first.** US-24's migration diff has **never
+been run**, and widening the enumeration to ten classes did not make the
+new residue class true — it moved an untested claim to a new letter.
+T-1502's deliverable is **evidence, not a pass**, and T-1503 allows for
+the possibility that the enumeration approach has failed, which would be
+an ADR finding rather than a paperwork problem.
+
+**T-1906 re-issues ADR-002**, last on purpose, and must check Q-80's
+classes against T-1502's **actual output** rather than the enumeration's
+own text.
+
 ## 4. Waves 2 and 3
 
 **Wave 2** — ADRs for F2, F3, F6 (parallel), plus F5's epics once §3 is
