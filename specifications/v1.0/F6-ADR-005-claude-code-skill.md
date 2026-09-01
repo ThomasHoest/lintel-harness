@@ -4,7 +4,7 @@
 **Date:** 2026-09-01
 **Decides:** `F6-spec-claude-code-skill.md` (US-79…US-98, Q-75…Q-78; **Q-79 was resolved at project level** and is not re-opened here)
 **Reads:** `F1-spec-pack-format-and-manifest.md` **v3.2** · `F2-ADR-003` · `F3-ADR-004` · `general/interaction-model.md` (IM-1…IM-41) · `general/technology-choices.md` §9
-**Verdict:** **REVISE SPEC** — see §7. The revision is small and named; the architecture is sound.
+**Verdict:** **REVISE SPEC**, issued 2026-09-01 — **conditions cleared the same day; see §8.** The standing verdict is **PROCEED**. The revision is small and named; the architecture is sound.
 
 ---
 
@@ -202,7 +202,7 @@ surface. Both need the same fold as (1).
 
 ---
 
-## 7. Verdict
+## 7. Verdict as issued
 
 **REVISE SPEC.**
 
@@ -233,3 +233,34 @@ security pass**, and neither have F2 and F3. F1's four rounds do not
 cover them. The surface worth a reviewer's attention here is
 `skill install` — a command that writes into `.claude/`, which is the
 directory every pack rule in F1 exists to protect.
+
+---
+
+## 8. Conditions cleared — 2026-09-01
+
+All three conditions of §7 were met in the same pass that issued this
+ADR. **The verdict moves to `PROCEED`.** Recorded rather than
+back-edited, because a verdict that quietly changes its own text is worth
+less than one that shows what it required.
+
+| Condition | How it was met |
+|---|---|
+| **1 — F1 specifies the sentinel lines** | **F1 v3.3.** US-13 gains `--- lintel disclosure begin ---` / `--- lintel disclosure end ---` on stderr, **fixed, versionless and countless**, with the rows between them and nothing else. A test asserts both appear exactly once, in order. **IM-10 is meetable for the first time.** |
+| **2 — the surface folds to six, in one pass** | Nine sites across seven documents, in one commit: F1's `E-CLI-UNKNOWN-COMMAND` message and §Technical Context row (v3.3), `interaction-model.md` §11's table and **IM-38** (*three of five* → *three of six*), the master spec's surface row, F3's two message references, F1's epics, and this spec's coverage table. |
+| **3 — F6 restates the Q-79 row** | **F6 v1.1.** All five questions move to Resolved Decisions with their rationale, Q-79 marked resolved-at-project-level so §Open Questions no longer disagrees with brief §12. |
+
+**What the fold changed that was not on the list**, and is the reason
+condition 2 said *in one pass*: **IM-38's ratio moved, not just its
+count.** The writing set went two → three while the read-only set stayed
+at three. A reader carrying "three of five" forward would have kept a
+true-sounding sentence about a surface that no longer exists — the exact
+failure mode `CLAUDE.md`'s fold-check rule names, and the third time this
+project has hit it. `interaction-model.md` now says so explicitly rather
+than leaving the arithmetic to the reader.
+
+**Unchanged by this section.** The §5 conflicts are resolved, not
+withdrawn. **The note at the end of §7 stands**: this feature has still
+never had a **Mode A security pass**, and `skill install` — a command
+that writes into `.claude/`, the directory every pack rule in F1 exists
+to protect — is the surface most worth a reviewer's attention. Clearing
+an architectural verdict is not clearing a security gate.

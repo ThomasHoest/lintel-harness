@@ -410,7 +410,7 @@ own contract rather than inherit a heading whose reasoning was reversed.
   nothing — no applied path, no payload file, no manifest, no journal,
   **no lock**. This is Q-62's fold of `status`, and there is **no
   `status` command**: `lintel harness status` is `E-CLI-UNKNOWN-COMMAND`,
-  exit 1, whose message lists the five commands (F1 §Error States).
+  exit 1, whose message lists the six commands (F1 §Error States).
 - `--dry-run` emits the **same report** as the writing mode, from the
   same builder, with the dispositions phrased as what *would* happen.
   A test may assert the single-builder property structurally.
@@ -963,7 +963,7 @@ that adds it to the catalogue is a declaration nothing checks.
 | `--json` on the writing mode; `--dry-run` with `--rollback` | `E-FLAG-NOT-PERMITTED`, exit 1 (IM-41) |
 | A flag no command recognises | `E-CLI-UNKNOWN-FLAG`, exit 1 |
 | A positional given to `update` | `E-CLI-ARG-UNEXPECTED`, exit 1 (US-59) |
-| `lintel harness status` | `E-CLI-UNKNOWN-COMMAND`, exit 1, listing the five commands. **There is no `status` command** (US-63) |
+| `lintel harness status` | `E-CLI-UNKNOWN-COMMAND`, exit 1, listing the six commands. **There is no `status` command** (US-63) |
 
 ### Codes F3 needs and F1 does not have — **requested, not invented**
 

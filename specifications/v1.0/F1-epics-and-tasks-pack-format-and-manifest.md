@@ -165,7 +165,7 @@ T-0103…T-0105 land.
 - [ ] **T-0106** `[Implementer]` `src/cli/main.ts` — dispatch the **`harness`
   command group**: the binary is `lintel`, the group is the first positional
   and the command is the **second** (Q-63). `E-CLI-UNKNOWN-COMMAND` lists
-  **five** commands — `init, update, validate, verify, pack` (Q-62) — even
+  **six** commands — `init, update, skill, validate, verify, pack` (Q-62, `F6-ADR-005`) — even
   though F1 implements three; `init` is F2's and `update` is F3's, and each
   dispatches to a stub that reports "not implemented in this build" until its
   feature lands. Route `Diagnostic[]` → stderr → exit code.

@@ -331,7 +331,7 @@ counter anywhere in this file, that is the bug, and this section wins.
 | User story | **US-99** | `US-N`, project-monotonic across features. **F1 and F5 each state their own range in their §User Stories**, — read them there rather than trusting a list here. F2, F3 and F6 now hold stories too (US-39…US-98). **Retired and never reusable:** US-5, US-6, US-7, US-11, US-12 (F1); US-22, US-23 (F5). |
 | Epic | **E-20** | `E-NN`, per feature. **F1 holds E-01…E-12; F5 holds E-13…E-19.** F2, F3 and F6 have none. |
 | Task | per epic | Scheme A, epic-derived `T-XXYY`, so there is no single next-free id. **F1 holds T-0101…T-1219** (112 tasks); **F5 holds T-1301…T-1906** (32 tasks). Next free within F1's last epic is **T-1220**; F5's per-epic next-free values are listed at the end of its own document. |
-| ADR | — | Five written: **`F1-ADR-001`** (`PROCEED`, amended to F1 v3.2), **`F5-ADR-002`** (`REVISE SPEC`), **`F2-ADR-003`** (`PROCEED`), **`F3-ADR-004`** (`PROCEED`), **`F6-ADR-005`** (`REVISE SPEC`). ADRs are feature-prefixed and numbered per feature, so there is no project-wide next-free id. Epic-scoped ADRs use `ADR-EXX`. |
+| ADR | — | Five written: **`F1-ADR-001`** (`PROCEED`, amended to F1 v3.2), **`F5-ADR-002`** (`REVISE SPEC`), **`F2-ADR-003`** (`PROCEED`), **`F3-ADR-004`** (`PROCEED`), **`F6-ADR-005`** (issued `REVISE SPEC`, **conditions cleared, now `PROCEED`**). ADRs are feature-prefixed and numbered per feature, so there is no project-wide next-free id. Epic-scoped ADRs use `ADR-EXX`. |
 | Error code | — | F1's catalogue is the **only** one, and it holds **87** at v3.0. No other document may invent a code. The nine added by the fold are four for `update` (F3 fires them), four for `init` (F2's) and one notice, `W-LINK-FALLBACK`. |
 
 ---

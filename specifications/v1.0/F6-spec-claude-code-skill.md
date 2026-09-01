@@ -1,5 +1,5 @@
 # F6 — The Claude Code Skill Specification — Lintel Harness v1.0
-**Version:** 1.0
+**Version:** 1.1
 **Status:** Draft
 **Date:** 2026-09-01
 **Platform:** **Markdown under `.claude/skills/`, and nothing else** — no runtime, no build, no package, no dependency and no tests of its own (`general/technology-choices.md` §9). It ships in `@lintel/cli` with the binary it drives (`lintel`, command group `harness` — Q-63). The surfaces it acts on are a conversation and a filesystem.
@@ -12,6 +12,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial draft, written against **Q-57** (the conversational path is primary) and **Q-62** (`update` ships, and the skill reconciles the edited paths). Turns `general/interaction-model.md`'s cross-cutting requirements into feature-level acceptance criteria for a component with no runtime: twenty stories, **US-79…US-98**, each criterion tagged by the kind of check that can verify it. Fixes the faithful-relay rule as a **byte containment** obligation over `init`'s whole captured output (§6.2), and the post-`update` reconciliation as a **decision-provenance** obligation (§6.3). Records five questions, **Q-75…Q-79**, four of which are gaps this spec found in documents it depends on rather than choices it is deferring. |
+| 1.1 | 2026-09-01 | **`F6-ADR-005` folded — all five questions resolved, and the surface is six.** **Q-75:** the skill ships **inside `@lintel/cli`** and is installed by a new command, **`lintel harness skill install [--user]`** — one package, one version, so *"which CLI does this skill expect"* answers itself; a session confirms with `lintel --version` first and **reports a mismatch rather than adapting to it**. **Q-76:** `init` wraps the disclosure in **two fixed sentinel lines** on stderr (F1 v3.3), which is what finally makes **IM-10 meetable** — it fixed the block's rows and never its boundaries, so it had been unmeetable since it was written, and this spec is what found that. **Q-77:** `update`'s report carries the **rendered bytes** of each edited path's new content, not a diff and not a payload pointer (`F3-ADR-004` §3.2) — the skill rendering it itself is what IM-5 forbids. **Q-78:** **`update` exits `0`** with edited paths outstanding, decided jointly with F3; an exit of 1 would stop the skill under IM-7 exactly when IM-31 gives it work, disabling the reconciliation Q-62 created the feature for. The gating signal is `--dry-run`, which exits 1. **Q-79 is no longer this feature's**: it was resolved at project level as `fillExpected` plus two `verify` states, and is recorded in brief §12. **The command surface becomes six** and this document's coverage table moves with it: `skill install` **writes**, so IM-38 is *three of six*, not *three of five*. **No story is added or retired; next free story id US-99.** |
 
 ---
 
@@ -132,8 +133,8 @@ Only settled decisions. Anything unsettled is in §Open Questions or in
 | The skill's form | **Markdown under `.claude/skills/`**, one directory holding a `SKILL.md` and any reference files it needs, all Markdown | `technology-choices.md` §9. No runtime means no build, no dependency, no version of its own and nothing to keep in sync but words |
 | Its identifier | **`lintel-harness`**, fixed here and nowhere else | One name for the one skill; the packaging that carries it is Q-75 |
 | What it wraps | **`init` and `update`, and nothing else** | IM-3, Q-1, Q-62 — those are the two commands with judgment work on the far side of them (IM-38) |
-| Its coupling to the CLI | The **`init`/`update` argument surface**, the **`E-`/`W-` codes** and the **four exit classes** | Master spec §Feature Dependencies (F6 → F2, F6 → F3). Prose cannot declare a `minCliVersion`, so the coupling is the contract, not a manifest field |
-| Versioning | **None of its own.** It ships in the same package and the same release as the CLI it drives, so *"which CLI does this skill expect"* has one answer rather than a compatibility matrix | `technology-choices.md` §9. §NFR *Versioning* states what this costs and what must hold if the skill is ever distributed separately (Q-75) |
+| Its coupling to the CLI | The **`init`/`update` argument surface**, `init`'s **two disclosure sentinel lines** (F1 v3.3), the **`E-`/`W-` codes** and the **four exit classes** | Master spec §Feature Dependencies (F6 → F2, F6 → F3). Prose cannot declare a `minCliVersion`, so the coupling is the contract, not a manifest field |
+| Versioning | **None of its own**, and it is **installed by `lintel harness skill install`** rather than copied by hand (Q-75). It ships in the same package and the same release as the CLI it drives, so *"which CLI does this skill expect"* has one answer rather than a compatibility matrix | `technology-choices.md` §9. §NFR *Versioning* states what this costs and what must hold if the skill is ever distributed separately (Q-75) |
 | Branching | **On the code and the exit class, never on prose** | IM-6, IM-16, IM-39; F1 §Error States is the only catalogue and the code is the stable contract. A skill that pattern-matched a message would break on a wording fix |
 | How it runs `init` | **Non-interactively**, every required answer supplied by `--set <id>=<value>` or a pack-declared `flag` alias, every scaffold by `--scaffold` | IM-8, IM-2. Intent-gathering happens in the conversation *before* the invocation, never by answering a prompt mid-run |
 | How it relays the disclosure | **Byte containment of the whole captured output**, wrapped at most in a fence, before any commentary and before any write | IM-10, IM-11; §6.2. Relaying the whole capture rather than an extracted block is what makes the test possible without a delimiter the CLI does not define (Q-76) |
@@ -1092,12 +1093,17 @@ principle to be applied in good faith.
 
 ## Open Questions
 
-Feature-specific questions only. **Q-75…Q-79** is the block reserved for
-F6; ids are project-monotonic and keep their number when they move to
-Resolved Decisions. **Four of the five are gaps this spec found in
-documents it depends on**, not choices this feature is deferring, and
-each is written so the finding survives even if the question is answered
-somewhere else.
+**All five are resolved.** Q-75…Q-78 by **`F6-ADR-005`** (Q-77 and Q-78
+jointly with `F3-ADR-004`), and **Q-79 at project level** — it left this
+block and is recorded in brief §12 as `fillExpected` plus two `verify`
+states.
+
+The framing this section carried while they were open is worth keeping,
+because it turned out to be right: **four of the five were gaps this spec
+found in documents it depends on**, not choices this feature was
+deferring. Q-76 is the clearest case — **IM-10 had been unmeetable since
+the day it was written**, and it took the first consumer to notice. The
+question tables below are kept as the record of what was asked.
 
 | # | Question | Owner | Default assumption |
 |---|---|---|---|
@@ -1111,12 +1117,13 @@ somewhere else.
 
 ## Resolved Decisions
 
-None yet. **Q-75…Q-79 are all open**, and each keeps its id when it
-moves here.
-
-| # | Question | Decision | Date |
-|---|---|---|---|
-| — | — | — | — |
+| # | Decision | Date |
+|---|---|---|
+| **Q-75** | **Ships inside `@lintel/cli`; installed by `lintel harness skill install [--user]`.** One package, one release, so version agreement is structural rather than asserted. A session runs `lintel --version` first and **reports a mismatch rather than adapting to it** — a Markdown file cannot introspect its own package, so reporting is the only honest option. **Rejected:** a separate package (two versions that can disagree, when the skill's entire correctness depends on matching the CLI) and documenting a manual copy out of `node_modules` (the hand-application this product exists to replace, in the repo that exists to replace it). `F6-ADR-005` §3.1. | 2026-09-01 |
+| **Q-76** | **Two fixed sentinel lines around the disclosure**, on stderr, versionless and countless (F1 v3.3). **Rejected:** giving `init` a `--json` — a second output contract and a schema to version, for a command whose output is otherwise prose and whose only machine consumer is a Markdown file; and matching the block's first and last row text — which makes a consumer's capture depend on wording F1 is free to change, the string-matching §Error States forbids one layer up. **What this found is worth more than the answer:** IM-10 required a contiguous unmodified substring while nothing fixed the block's boundaries, so **it was unmeetable from the day it was written**. `F6-ADR-005` §3.2. | 2026-09-01 |
+| **Q-77** | **Yes — the rendered bytes**, in `UpdateEntry.expectedNew`, not a diff and not a pointer into `.harness/pack/`. The payload is pre-substitution, pre-rewrite and pre-generate, so it is not what the pack produces; and the skill rendering it is exactly what IM-5 forbids. Bytes rather than a diff because a diff format is a presentation decision the skill is better placed to make, and would become a compatibility surface the moment anything parsed it. `F3-ADR-004` §3.2. | 2026-09-01 |
+| **Q-78** | **`update` exits `0`** when edited paths remain; `--dry-run` exits **1** when an update is available. **The rule: the writing command reports, the read-only mode gates.** An exit of 1 on outstanding edits looks like the safer choice and **disables this feature** — IM-7 stops the skill on any non-zero exit and IM-31 requires it to reconcile exactly those paths, so the skill would halt precisely when it had work to do. Accepted cost: a script checking only `update`'s exit code learns nothing about edited paths; it gets a report and `--json` counts. Decided jointly with `F3-ADR-004` §3.1. | 2026-09-01 |
+| **Q-79** | **Resolved at project level, not here.** `fillExpected` plus two `verify` states, `filled` and `unfilled`; four applied paths declared across the three packs. The id keeps its number and the rationale is in brief §12. **This spec was right that the set was too narrow** — a filled `project-brief.md` reported `differs` and failed the S7 gate, which passed only because nobody had filled one. | 2026-09-01 |
 
 ---
 
@@ -1166,7 +1173,7 @@ carried by a story here, or binds the CLI and is named as such.
 | IM-35 | `update`'s read-only mode | US-94 |
 | IM-36 | There is no `contribute` | US-98 |
 | IM-37 | Both entry points give the same answer | US-98 |
-| IM-38 | Three of five commands cannot write | US-85, §6.1 step 3 |
+| IM-38 | Three of **six** commands cannot write — `skill install` is a write (`F6-ADR-005`) | US-85, §6.1 step 3 |
 | IM-39 | An exit class means the same everywhere | US-86 |
 | IM-40 | `update` is determined by a previous run | US-94 |
 | IM-41 | No flag downgrades an integrity check | US-83, US-98 |

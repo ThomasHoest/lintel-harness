@@ -579,7 +579,7 @@ produce a project that `verify` can no longer vouch for.
 ## 11. The command surface
 
 The sections above describe what using the CLI is *like*. This one says
-what it **is**: the five commands, what each takes, what each may touch,
+what it **is**: the six commands, what each takes, what each may touch,
 and how each ends. It is a **reference, and descriptive** — the owning
 feature spec is authoritative for every command, and **F1 §Error States
 is the product's only message catalogue.** It is cited here and
@@ -596,16 +596,16 @@ binary, one prefix, whatever group emitted them (F1 §Technical Context).
 Four facts about the surface matter more than any single command, and
 the first three are visible in the table below rather than argued for.
 
-| | `init` | `update` | `validate` | `verify` | `pack info` |
-|---|---|---|---|---|---|
-| **Owner** | F2 | F3 | F1 | F1 | F1 |
-| **Writes the project** | **yes** | **yes** — except in its read-only mode | **never** | **never** | **never** |
-| **Takes the project lock** | yes | F3's to state | no | no | no |
-| **Needs a completed apply** | no — refuses one (`E-ALREADY-APPLIED`) | **yes** | no | **yes** | no |
+| | `init` | `update` | `skill install` | `validate` | `verify` | `pack info` |
+|---|---|---|---|---|---|---|
+| **Owner** | F2 | F3 | **F6→F1** | F1 | F1 | F1 |
+| **Writes the project** | **yes** | **yes** — except in its read-only mode | **yes** — `.claude/skills/lintel/`, or the user profile under `--user` | **never** | **never** | **never** |
+| **Takes the project lock** | yes | F3's to state | no — it writes no applied path and touches no manifest | no | no | no |
+| **Needs a completed apply** | no — refuses one (`E-ALREADY-APPLIED`) | **yes** | no | no | **yes** | no |
 | **Reads** | the bundled pack | the manifest, the local payload **and** the bundled pack | one pack, or all of them | the manifest and the local payload | one pack |
 | **Network** | none | none | none | none | none |
 
-**IM-38 — Three of the five commands cannot write, and the guarantee is
+**IM-38 — Three of the six commands cannot write, and the guarantee is
 structural rather than behavioural.** `validate`, `verify` and
 `pack info` write nothing, take no lock, make no network request and do
 not need the CLI that performed an apply to still be installed (Q-53, F1
@@ -614,7 +614,20 @@ US-16, US-29, US-33). This is the product's safety story in one glance:
 running one to find out where you stand is never a decision. Neither
 entry point may present a read-only command as having changed anything,
 and the skill may run any of the three without asking, because there is
-nothing to ask about. The two writing commands are exactly the two the
+nothing to ask about.
+
+**The count moved from five to six at `F6-ADR-005`**, and the ratio
+matters more than either number: **`skill install` writes**, so the
+writing set grew from two to three while the read-only set stayed at
+three. A reader who remembers "three of five" should not carry it
+forward. `skill install` writes only under `.claude/skills/`, takes no
+lock and touches no applied path or manifest — but it **is** a write, it
+**is** subject to F1's confinement gate like any other, and calling it
+read-only because it is small is the exemption this document exists to
+refuse. **The product's own tooling does not get a carve-out from the
+rule it imposes on packs** (C-5).
+
+The two *project-writing* commands are exactly the two the
 skill wraps (IM-3), and that is not a coincidence — judgment work exists
 on the far side of a write and nowhere else.
 
