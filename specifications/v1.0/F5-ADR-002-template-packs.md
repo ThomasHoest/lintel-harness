@@ -1,6 +1,6 @@
 # ADR-002 — Template packs: a pack-authoring contract, three deliberately unequal packs, and a specification the packs have overtaken
 
-**Status:** Accepted — **re-issued 2026-09-01 against F5 v3.1; see §9. Standing verdict: `PROCEED` with two conditions.**
+**Status:** Accepted — **re-issued 2026-09-01 against F5 v3.1 (§9); both conditions discharged the same day (§10, §11). Standing verdict: `PROCEED`.**
 **Date:** 2026-09-01
 **Deciders:** `architect` (this ADR) · escalations to Thomas Andersen
 **Refs:** `F5-spec-template-packs.md` **v2.9** · `F1-spec-pack-format-and-manifest.md` **v2.9** (**authoritative for the format**) · `F1-ADR-001-pack-format-and-manifest.md` · `specifications/general/pack-application.md` (**authoritative** — the two-phase model) · `specifications/general/pack-inventory.md` · `specifications/project-brief.md` §12 (Q-1…Q-63, all resolved; **Q-64 reserved**) · `packs/coding/`, `packs/writing/`, `packs/planning/` (the three built packs) · `packs/coding/specifications/adr-feature.template.md`
@@ -959,3 +959,66 @@ not move**: `PROCEED` was issued on the six v2.9 findings being addressed,
 and condition 2 was always a gate on F5 being **Accepted**, not on this
 ADR proceeding. **F5 stays `Draft` until `T-1503` adjudicates the two
 unplaceable classes.**
+
+---
+
+## 11. Condition 1 discharged, and `T-1503`'s adjudication — 2026-09-01
+
+**Both conditions are now met, and the check that met condition 2 found
+the error that condition 1 was about.** That is the right order and it is
+worth noticing: §9 asked for class (k) *and* for the check to run, and
+running it is what showed class (k) was needed for a second, unforeseen
+reason.
+
+### `T-1503` — neither difference was a migration bug, and neither needed a new class
+
+**Difference 1 — `CLAUDE.md.template` and `README.md`.** Class (h)
+claimed both as **net-new authoring**. Both exist in the source.
+
+- `CLAUDE.md.template` carries **0 region anchors and 0 parameter tokens**
+  at `807d67d` and **6 and 2** in the shipped pack — so its entire
+  difference is **classes (g) and (f), which already name it**. (h)
+  claimed it a third time.
+- `README.md` is the Voxio-era *"Project Starter Pack"* in the source and
+  the US-28 rewrite in the pack, **recorded in F5 v3.0's change history**
+  — which is precisely **class (k)**.
+
+**Adjudication: a class error.** (h) is corrected to its two real members.
+**And the error is the same one this criterion exists to catch:** class
+(h) was written from **`ls packs/coding/`** rather than from a diff —
+membership asserted without checking — **inside the change that widened
+the enumeration because an empty class had been asserted without
+checking.** Recorded, not quietly fixed.
+
+**Difference 2 — the seven `infrastructure/` files.** Class (c) described
+`infrastructure/backend-deploy/` → `scaffolds/backend-azure/`, true when
+written. **Q-82 then moved that tree out of `packs/` entirely, and Q-82
+is recorded in F5 v3.1's change history** — which is exactly what class
+(k) admits. **Adjudication: already covered.** Class (c) is narrowed to
+the restructure as it stood at migration time.
+
+**T-1503's third option — *the enumeration approach has failed* — is
+explicitly not taken.** It works. Nothing had run it.
+
+### Condition 2, the `writing` half
+
+US-25's assertions are greps rather than a tree diff, and they ran:
+**zero** for `/Users/`, **zero** for the owner's name, **zero** research
+files under the scaffold tree, the voice guide's sample reference a
+declared placeholder — and **one** hit for the host project's name, in
+`pack.json`'s **`provenance.source`**.
+
+**That one hit exposed a contradiction between two of F5's own
+requirements.** §NFR *Provenance* **requires** the source path recorded;
+for `writing` that path **is** the host project's name, which US-25
+**forbids**. Satisfying either violated the other. US-25 now excludes
+`provenance` explicitly. **A requirement that cannot be satisfied
+alongside its neighbour is only visible when something runs both**, which
+is the same lesson as class (j).
+
+### Standing verdict
+
+**`PROCEED`, both conditions discharged.** **F5's spec moves to
+`Accepted`.** Class (j) is empty **for the first time on evidence rather
+than by assertion** — and that distinction is what the last four
+revisions of this criterion were about.

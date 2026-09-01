@@ -1,6 +1,6 @@
 # F5 — Template Packs Specification — Lintel Harness v1.0
-**Version:** 3.3
-**Status:** Draft — **and deliberately not Accepted.** `T-1502` ran on 2026-09-01 and found **two differences the ten-class enumeration cannot place** (§Change history v3.3, `F5-ADR-002` §10). `T-1503` must adjudicate them first. Every other gate is met.
+**Version:** 3.4
+**Status:** Accepted — `T-1502` ran and `T-1503` adjudicated its two findings on 2026-09-01; both were class errors rather than migration bugs (`F5-ADR-002` §11). **Class (j) is empty on evidence rather than by assertion.**
 **Date:** 2026-09-01
 **Platform:** Pack content is plain files — Markdown, JSON, shell/PowerShell, Bicep, CDK TypeScript — bundled with the Node/TypeScript CLI and consumed by Claude Code's `.claude/` conventions. No runtime of its own.
 **Design spec:** n/a (no UI)
@@ -31,6 +31,7 @@
 | **3.1** | **2026-09-01** | **Q-82 — add-on packs, and `coding` loses both backend scaffolds.** An **add-on** is a composable unit that is *not* a way of working — an infrastructure kit, or `presentation` (Q-28). A project holds **one pack and zero or more add-ons**. The mechanism is **v1.1 and undesigned**; `backend-azure` and `backend-aws` move to **`addons/`** at the repository root, **not** under `packs/`, because `packs/` means *what ships at v1.0* and `validate --all`, `find packs -name pack.json` and E-13 all rely on that. **`coding` now declares no scaffolds and no `executableRoots`**, its recipe has **no branches**, and all fifteen of its steps run on every apply. **This supersedes Q-17's count**: v1.0 ships **one** scaffold, `writing-workstream`, not three. **Two costs are accepted and neither is hidden.** *(1)* **Scaffold exclusivity has no bundled subject** — the two backends were the only pair in the product sharing a `category` — and, more consequentially, **no v1.0 apply composes two scaffolds at all**, so the step-merge path is ordinary success-path code that nothing real exercises. *(2)* **No v1.0 pack ships an executable.** All four were in the Azure branch (one in the AWS branch), so `executableRoots`, `executable: true` — a security gate C-34 showed fails **open** on a typo — `E-EXEC-DEST-FORBIDDEN`, US-13's `0755` disclosure and `verify`'s mode comparison all lose their only real instance. **Every rule stands; only its bundled coverage is gone**, and F1's **T-1220** adds the four fixtures that were previously redundant with these scaffolds. US-37 and US-21's backend half **defer to v1.1 with the mechanism**. |
 | **3.2** | **2026-09-01** | **`F5-ADR-002` re-issued `PROCEED`; US-24 gains class (k), and one pack edit is recorded.** The ADR's six v2.9 findings are all addressed and were **checked against the packs rather than against this document's own text** — which is the discipline the original finding demanded, since what §8 caught was a completeness claim that had never met a diff. **Condition 1 folded: US-24 gains class (k), a post-migration change recorded in this document's change history**, with the history as its audit trail. **The alternative was a class per improvement**, which turns the enumeration into a changelog with extra steps — the pack is product under active development, and F5's whole job is to improve it, so *"has the pack diverged from its source"* will always answer *yes, and increasingly*. Class (k)'s first member: **`packs/coding/specifications/README.md` gains a security-condition fold rule**, folding the Mode A review's closing argument — that a change creating a deferred condition's **trigger** must consult that condition, in the same change. It sits beside the existing fold-check rule because it is the same failure one layer down: that rule exists because a *summary* stays fluent after what it summarises changes; this exists because a *deferral* stays reasonable after its premise stops holding. **Condition 2 is not folded and cannot be by writing**: `T-1502` must **run**. Class (j)'s emptiness remains an untested claim of exactly the kind class (e)'s was. |
 | **3.3** | **2026-09-01** | **US-24's check has been run for `coding`, and it found two errors in the enumeration on its first execution.** ADR-002's condition 2 is **discharged for the `coding` half**; `writing`'s still needs the host repository. **The source commit recorded in `packs/coding/pack.json` was wrong** and is corrected: `2644096` is the commit that **removed** `template/`, so the source tree lives at its parent **`807d67d`**. A provenance pointing at the commit that deleted the thing it points to is the kind of defect only running the check finds. **Result: 38 source files, 41 shipped, 32 differences** — 7 only-in-source, 10 only-in-shipped, 15 modified. **Two are not placeable in the ten classes**, recorded rather than reclassified by fiat: **(1) `CLAUDE.md.template` and `README.md` are *modified*, not net-new** — class (h) lists both as net-new authoring, and the diff shows they were migrated and then edited; **(2) the seven `infrastructure/backend-deploy/**` files are gone from the pack entirely**, which class (c) does not describe — it says that tree became `scaffolds/backend-azure/`, and **Q-82 then moved it out of `packs/` altogether**, a second restructure the class predates. **Class (j) was not empty**, exactly as F5 v3.0 warned it might not be and exactly as ADR-002 §9 declined to treat as discharged. **T-1503's adjudication is now real work with real inputs**, and F5 stays **Draft** until it lands. |
+| **3.4** | **2026-09-01** | **`T-1503` adjudicated; both unplaceable differences were **class errors, not migration bugs**, and neither needed a new class.** **(1) Class (h) named two files that are not net-new.** `CLAUDE.md.template` exists in the source with **0 anchors and 0 tokens** and ships with **6 and 2** — so its difference is **classes (g) and (f), which already name it**; (h) claimed it a third time. `README.md` exists in the source as the Voxio-era *"Project Starter Pack"* and ships as the US-28 rewrite recorded in **v3.0's own change history** — **class (k)**. **Class (h) is exactly two files**: `specifications/README.template.md` and `specifications/project-brief.template.md`. **The error is instructive and is recorded rather than quietly fixed: (h) was written from a directory listing rather than from a diff** — asserting membership without checking, which is the *precise* failure US-24 exists to prevent, committed inside the change that widened it. **(2) The seven `infrastructure/` files are class (k)**, not a gap: Q-82 moved them to `addons/` and **is recorded in v3.1's change history**, which is exactly what (k) requires. Class (c) is narrowed to the restructure as it stood at migration time. **The enumeration approach has not failed** — T-1503's third option is explicitly not taken. **It works; it had simply never been run**, which was the whole finding. **`writing`'s half also ran**: US-25's greps return **zero** for `/Users/`, the owner's name and research content, and **one** hit for the host project name — `pack.json`'s `provenance.source`. **That single hit exposed a contradiction between two of this document's own requirements**: §NFR *Provenance* **requires** the source path recorded, and US-25 **forbids** the host project's name. US-25 now **excludes `provenance`** explicitly. **Condition 2 of `F5-ADR-002` is discharged in full; class (j) is empty for the first time on evidence.** |
 
 ---
 
@@ -624,7 +625,9 @@ agree that **US-39** is next free, so nothing here is renumbered.
   named by file and heading; (b) an added `pack.json`, `recipe.json` or
   `applied-readmes/` file; (c) the declared restructure —
   `infrastructure/backend-deploy/` → `scaffolds/backend-azure/`, and the
-  `/target` command moving into `commands/`; (d) **the brief wire-up**,
+  `/target` command moving into `commands/` — **as the restructure stood
+  at migration time**; the second hop, `scaffolds/backend-azure/` →
+  `addons/backend-azure/` at Q-82, is **class (k)**; (d) **the brief wire-up**,
   enumerated below; **(e) payload-side path repointing**; **(f)
   parameter-token insertion**; **(g) region anchors**; **(h) net-new
   authoring beyond class (b)**; **(i) Q-59's `securityreviewer`
@@ -668,12 +671,21 @@ agree that **US-39** is next free, so nothing here is renumbered.
   change to migrated content — stated as its own class anyway, because
   the anchors are the one difference a reader is most likely to mistake
   for drift.
-- **Class (h) — net-new authoring beyond class (b) —** is the pack's own
-  `README.md`, `CLAUDE.md.template`, the six files under
-  `applied-readmes/`, and the two `.template.md` files under
-  `specifications/`. Class (b) covered only `pack.json`, `recipe.json`
-  and `applied-readmes/`; everything else a pack needs in order to *be* a
-  pack had no class, which is the gap that made (e) look empty.
+- **Class (h) — net-new authoring beyond class (b) — is exactly two
+  files**: `specifications/README.template.md` and
+  `specifications/project-brief.template.md`. Nothing else in the shipped
+  pack is absent from the source.
+  **Corrected at v3.4, and the error is kept because it is the same one
+  this criterion exists to catch.** Through v3.3 this class also claimed
+  `README.md` and `CLAUDE.md.template`. **Both exist in the source.**
+  `CLAUDE.md.template` carries **0 anchors and 0 tokens** there and **6
+  and 2** in the pack, so its difference is **classes (g) and (f) — which
+  already name it**; `README.md` is the Voxio-era *"Project Starter
+  Pack"*, rewritten for US-28 and recorded in v3.0's change history, so it
+  is **class (k)**. **This class was written from a directory listing
+  rather than from a diff** — membership asserted without checking, inside
+  the very change that widened the enumeration for asserting an empty
+  class without checking.
 - **Class (i) — the `securityreviewer` generalisation** (Q-59). Hardcoded
   `reference/thoughtpartner/reference/*.md` paths and requirement ids
   R-27/R-28/R-29 become project-relative. **The brief recorded this as a
@@ -739,7 +751,16 @@ agree that **US-39** is next free, so nothing here is renumbered.
 **Acceptance criteria:**
 - Grepping `packs/writing/` for `/Users/`, for the host project's name,
   and for the owner's personal name returns zero hits outside a declared
-  placeholder.
+  placeholder **and outside `pack.json`'s `provenance`**.
+  **The `provenance` exclusion is not a loophole — it resolves a
+  contradiction between two requirements of this document** (found by
+  running the check, 2026-09-01). §NFR *Provenance* **requires** each
+  `pack.json` to record the source path, which for `writing` **is** the
+  host project's name; this criterion **forbids** that name. Without the
+  exclusion, satisfying either requirement violates the other. **Ran
+  clean otherwise:** zero for `/Users/`, zero for the owner's name, zero
+  research files under the scaffold tree, and the voice guide's sample
+  reference is the declared `{{VOICE SAMPLES — …}}` placeholder.
 - No file under the pack's scaffold tree contains research content — only
   `index.md` scaffolding and the declared templates.
 - The voice guide migrates with its voice-sample reference converted to a

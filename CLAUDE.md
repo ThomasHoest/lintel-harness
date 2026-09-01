@@ -492,12 +492,11 @@ authoritative, verify it rather than trusting the assertion.
   controls), `packs/` resolves from `import.meta.url` and **never
   `process.cwd()`**, and CI is **GitHub Actions** across three platforms
   with **Windows not optional**.
-- **F1, F2, F3 and F6 are Accepted, spec and ADR. All five ADRs are
-  Accepted.** **F5's spec stays `Draft` on purpose:** `T-1502` ran on
-  2026-09-01 and found **two differences US-24's ten-class enumeration
-  cannot place**, so `T-1503` must adjudicate before it can be Accepted.
-  **F5 is pack content, so this blocks no code** — F1 through F6 are clear
-  to implement.
+- **Every v1.0 spec and ADR is `Accepted`.** F5 was the last, and it took
+  running `T-1502` and adjudicating with `T-1503`: both unplaceable
+  differences were **class errors, not migration bugs**, and **class (j)
+  is now empty on evidence rather than by assertion** — the distinction
+  four revisions of that criterion were about.
 - **`T-2301` was rewritten, not executed.** It said *fold F3's disposition
   table from six rows to four*; that instruction came from an error in
   `F3-ADR-004` and **executing it would have deleted correct
