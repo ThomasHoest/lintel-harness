@@ -2,7 +2,7 @@
 **Version:** 1.1
 **Status:** Draft
 **Date:** 2026-09-01
-**References:** `F5-spec-template-packs.md` (**v3.1** — authoritative for every acceptance criterion, the three pack outlines and the ten-class difference enumeration), `F5-ADR-002-template-packs.md` (**REVISE SPEC** against v2.9 — **its findings are folded and its verdict has not been re-issued**; see the note below), `F1-spec-pack-format-and-manifest.md` (**v3.2** — the format every task here conforms to, and the 87-code catalogue), `F1-ADR-001-pack-format-and-manifest.md` (amended 2026-09-01), `specifications/general/pack-inventory.md`, `specifications/general/pack-application.md`, `CLAUDE.md`
+**References:** `F5-spec-template-packs.md` (**v3.2** — authoritative for every acceptance criterion, the three pack outlines and the ten-class difference enumeration), `F5-ADR-002-template-packs.md` (**REVISE SPEC** against v2.9 — **its findings are folded and its verdict has not been re-issued**; see the note below), `F1-spec-pack-format-and-manifest.md` (**v3.6** — the format every task here conforms to, and the 88-code catalogue), `F1-ADR-001-pack-format-and-manifest.md` (amended 2026-09-01), `specifications/general/pack-inventory.md`, `specifications/general/pack-application.md`, `CLAUDE.md`
 
 **Amendment history**
 
@@ -410,4 +410,4 @@ E-12** (the fixture suite and CI).
 | Task | **T-1301…T-1906** | per epic; **T-1305**, **T-1407**, **T-1507**, **T-1605**, **T-1704**, **T-1804**, **T-1907** |
 | Story | none — F5's stories are US-17…US-21, US-24…US-28, US-34…US-38 | **US-99** |
 | Question | none opened | **Q-82** |
-| Error code | none invented — F1's catalogue is the only one, and it holds **87** | — |
+| Error code | none invented — F1's catalogue is the only one, and it holds **88** | — |

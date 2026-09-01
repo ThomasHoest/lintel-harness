@@ -2,7 +2,7 @@
 **Version:** 1.1
 **Status:** Draft
 **Date:** 2026-09-01
-**References:** `F2-spec-init-apply-engine.md` (US-39…US-56) · `F2-ADR-003-init-apply-engine.md` (**PROCEED** — authoritative for the file plan, the resolution order and the interface contract) · `F1-spec-pack-format-and-manifest.md` **v3.3** (the engine, the 87-code catalogue, and the disclosure sentinels) · `F1-ADR-001` (amended) · `general/interaction-model.md` §11
+**References:** `F2-spec-init-apply-engine.md` (US-39…US-56) · `F2-ADR-003-init-apply-engine.md` (**PROCEED** — authoritative for the file plan, the resolution order and the interface contract) · `F1-spec-pack-format-and-manifest.md` **v3.3** (the engine, the 88-code catalogue, and the disclosure sentinels) · `F1-ADR-001` (amended) · `general/interaction-model.md` §11
 
 **Amendment history**
 
@@ -249,4 +249,4 @@ produce what they claim).
 | Task | **T-2001…T-2206** | **T-2007**, **T-2108**, **T-2207** |
 | Story | none — F2's are US-39…US-56 | **US-99** |
 | Question | none opened; Q-65…Q-69 resolved in `F2-ADR-003` | **Q-84** |
-| Error code | **none invented.** Every code here is F1's | catalogue holds **87** |
+| Error code | **none invented.** Every code here is F1's | catalogue holds **88** |

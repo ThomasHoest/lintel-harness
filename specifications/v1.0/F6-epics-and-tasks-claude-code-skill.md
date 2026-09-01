@@ -227,4 +227,4 @@ the skill is unimplementable no matter how well written.
 | Task | **T-2601…T-2708** | **T-2608**, **T-2709** |
 | Story | none — F6's are US-79…US-98 | **US-99** |
 | Question | none opened; Q-75…Q-78 resolved in `F6-ADR-005`, Q-79 at project level | **Q-84** |
-| Error code | **none invented.** `skill install` raises existing F1 codes only | catalogue holds **87** |
+| Error code | **none invented.** `skill install` raises existing F1 codes only | catalogue holds **88** |

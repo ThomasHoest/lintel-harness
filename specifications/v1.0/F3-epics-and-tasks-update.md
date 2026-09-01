@@ -300,4 +300,4 @@ instead.
 | Task | **T-2301…T-2507** | **T-2309**, **T-2407**, **T-2508** |
 | Story | none — F3's are US-59…US-72 | **US-99** |
 | Question | none opened; Q-70…Q-74 and Q-78 resolved in `F3-ADR-004` | **Q-84** |
-| Error code | **none invented.** The four `E-UPDATE-*` are F1's, allocated at v3.0 | catalogue holds **87** |
+| Error code | **none invented.** The four `E-UPDATE-*` are F1's, allocated at v3.0 | catalogue holds **88** |
