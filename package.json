@@ -1,0 +1,35 @@
+{
+  "name": "@lintel/cli",
+  "version": "0.1.0",
+  "description": "Harness template generator \u2014 applies a way of working to a project, and updates it later.",
+  "type": "module",
+  "bin": {
+    "lintel": "./dist/cli/main.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist",
+    "packs"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "typescript": "^5.6.0"
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test dist/**/*.test.js",
+    "prepublishOnly": "npm run build"
+  },
+  "license": "UNLICENSED",
+  "private": true
+}

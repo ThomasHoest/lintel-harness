@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 1.6
+**Version:** 1.7
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 1.7 | 2026-09-01 | **T-0101 done — the first code in the project, and it falsified a spec sentence.** `package.json`, `tsconfig.json`, `src/paths.ts` and eight passing tests. **§NFR's *empty `dependencies` object* is not assertable** — `npm install` normalises it away — so F1 v3.8 restates the requirement as *no runtime dependency declared*, empty **or absent**. **T-1219 is amended to match.** Also verified by running rather than by reading: `packs/` ships (121 files) and **`addons/` does not** (0), and the resolution does not move when `cwd` does. |
 | 1.6 | 2026-09-01 | **The ⚠️ register closes; every blocked task unblocks.** U-5, U-7 and U-9 were **already decided and the register had not caught up** — U-9 by `F2-ADR-003`, U-5 and U-7 by Q-81, since each named a dependency as its alternative. **U-12: `tsc` only**, no bundler, because the build must **type-check** and the path brands are compile-time controls; `packs/` resolves from `import.meta.url`, **never `process.cwd()`**. **U-13: GitHub Actions**, three platforms, **Windows not optional**. **T-0101 unblocks, and it was the prerequisite for every task in this document** — nothing in F1 is blocked any more. |
 | 1.5 | 2026-09-01 | **Mode A round 4 — C-61, C-62; the CRITICAL closes and the review returns `SECURITY-PROCEED`.** T-0806 refuses the delimiter **shape** as well as this run's nonce, which is what keeps `E-DISCLOSURE-FORGERY` **reachable** — the nonce alone made it probabilistically unfireable, and an untriggerable check rots. T-0806 also states the nonce's **scope**: `init`'s block only, so `pack info --json` stays deterministic. **T-1221 gains the two fixtures that assert both.** |
 | 1.4 | 2026-09-01 | **Mode A rounds 2 and 3.** T-0806 is rewritten twice over: round 2 specified the sentinel comparison, round 3 **deleted it** in favour of a **per-run nonce** (C-59), because three rounds of tightening the emitter's matching rule were beaten three times by a slightly wider consumer normalization — the last by `String.prototype.trim()` removing `U+00A0`. **The check becomes *does any row contain this run's nonce*.** T-0113 gains C-60: any surviving normalization uses stdlib `trim()`, never a hand-rolled ASCII one — **Q-81 forbids dependencies, not correctness.** Next free task id **T-1222**. |
@@ -122,7 +123,7 @@ T-0103…T-0105 land.
 
 ### Package and build
 
-- [ ] **T-0101** `[Implementer]` Create `package.json`, `tsconfig.json` and the
+- [x] **T-0101** `[Implementer]` Create `package.json`, `tsconfig.json` and the
   build script for `@lintel/cli`: ESM, binary `lintel`, `engines.node >= 22`,
   `packs/` included in the published artefact and resolvable relative to the
   installed module (Q-2; F1 US-3 stage 2 reserves that resolved directory as a
@@ -1652,10 +1653,15 @@ for the applying fixtures E-11.
   *Depends on: T-1104, T-1106, T-1003.*
 
 
-- [ ] **T-1219** `[TestWriter]` The **zero-dependency assertion** (Q-81), in
-  `tests/integration/packaging.test.ts`: the published `package.json`
-  declares `"dependencies": {}`, and the test reads the packed artefact
-  rather than the working tree so a transitive arrival is caught too. **This
+- [x] **T-1219** `[TestWriter]` The **zero-dependency assertion** (Q-81),
+  in `src/package.test.ts`: the published `package.json` declares **no
+  runtime dependency** — `dependencies` **empty or absent**.
+  **Not a literal `{}`, and that is the correction T-0101 produced:**
+  `npm install` **normalises an empty `dependencies` object away**, so a
+  test asserting the literal form fails on a correct package (F1 v3.8).
+  The test also refuses a bundler in `devDependencies`, because U-12 chose
+  `tsc` on the ground that the build must **type-check rather than
+  strip**, and asserts `packs` ships while **`addons` does not**. **This
   is a requirement, not a preference** — the product's security argument is
   about what runs with the user's filesystem access, and a runtime dependency
   is code inside that boundary no pack rule governs. Pair it with the
