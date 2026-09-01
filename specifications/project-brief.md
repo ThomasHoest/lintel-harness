@@ -339,7 +339,7 @@ spec.
 
 ## 9. Open questions
 
-**Q-65…Q-78 remain open** from the wave-1 specs, each feature-local and resolvable in its own ADR. Q-79…Q-82 are resolved. Q-1…Q-63 are resolved — see §12. Next free ID is **Q-84**. **Q-64 stays reserved** for the packaging question Q-63 names and is not free.
+**Q-65…Q-78 are resolved** by wave 2's ADRs — `F2-ADR-003` (Q-65…Q-69), `F3-ADR-004` (Q-70…Q-74, and Q-78 jointly) and `F6-ADR-005` (Q-75…Q-78). **Three were answered by events**: F1 v3.0's fold allocated the codes Q-66, Q-67, Q-68 and Q-70 were waiting on, and took journal version 3 for Q-71. Q-79…Q-82 are resolved. Q-1…Q-63 are resolved — see §12. Next free ID is **Q-84**. **Q-64 stays reserved** for the packaging question Q-63 names and is not free.
 
 **One question is open at the project level rather than inside a feature, and it is not resolvable before F7 is specified:**
 
