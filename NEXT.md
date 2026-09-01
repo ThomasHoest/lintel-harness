@@ -4,52 +4,81 @@ Picked up cold, this is what to do and in what order. Delete when spent.
 
 ---
 
-## 0. Uncommitted right now
+## 0. State
 
-Six files, none committed:
+Wave 1 is committed and pushed (`27c6d93`). The three §1 decisions are
+**taken** and recorded in `specifications/project-brief.md` §12 as
+**Q-79, Q-81 and Q-80**. `CLAUDE.md`'s counter table is current.
 
-```
-specifications/v1.0/F1-epics-and-tasks-pack-format-and-manifest.md
-specifications/v1.0/F2-spec-init-apply-engine.md
-specifications/v1.0/F3-spec-update.md
-specifications/v1.0/F6-spec-claude-code-skill.md
-specifications/v1.0/F5-ADR-002-template-packs.md
-token-efficiency-notes.md
-```
+Uncommitted: `NEXT.md`, `CLAUDE.md`, `specifications/project-brief.md`.
 
-Commit these first. Nothing else is pending; the tree was clean before
-wave 1.
+## 1. The three decisions — taken, now fold them
 
-## 1. Three decisions — take these before commissioning anything
+All three are decided. What remains is the fold, and each one reaches
+further than the document that raised it. **Fold all three in the same
+pass as §2** — they touch the same files.
 
-Each is cheap to answer and each unblocks work that is otherwise
-guesswork. **Answering them first is the single biggest saving
-available.**
+### Q-79 — a distinct ship-to-be-filled state
 
-**Q-79 — the adapt-expected set is too narrow, and it breaks the release gate.**
-F5 asserts no applied path other than the generated `CLAUDE.md` is
-adapt-expected. But `project-brief.md` (user fills) and the voice guide
-(skill fills) are ship-to-be-filled. A filled file reports `differs`, so
-`verify` exits 1 and **S7 is unreachable on any real project** — it
-passes today only because nobody has filled the brief. Either widen
-adapt-expected to cover ship-to-be-filled files, or S7 needs restating.
+Chosen over marking the files `adaptExpected`, because a filled
+`project-brief.md` and an adapted `CLAUDE.md` are different situations
+and the report should say which.
 
-**U-14 — ratify or reject the zero-runtime-dependency posture.**
-`general/technology-choices.md` §7.1 proposes it but records it as
-unratified. It governs **six of F1's fourteen blocked tasks at once**:
-strict JSON (U-1), schema validation (U-2), glob (U-3), frontmatter
-(U-6), semver (U-8), test runner (U-10). One answer turns each into
-"hand-roll" or "take a library".
+- **F1** — a new per-step declaration, and a **fifth `verify` state**
+  alongside `match | adapted | differs | missing`. Neither the new state
+  nor `adapted` is a failure. **Name both in F1**; nothing downstream
+  should invent them.
+- **F1** — `update` must **never** overwrite a path in this state. This
+  is a second, separate bug the decision fixes: without it a filled
+  brief is replaced by a fresh template.
+- **F5** — declare the paths, per pack: `project-brief.md` in all three,
+  the voice guide in `writing`. **Check `planning`'s `background/`
+  READMEs** — seven subfolders of ship-to-be-filled material is exactly
+  this shape, and F5 has never classified them.
+- **ADR-001** — `VerifyState` changes again; it is already six versions
+  behind (see §2).
+- **`general/`** — `pack-application.md` and `interaction-model.md` both
+  carry the state table. This is the fold-check rule, and this decision
+  is precisely the shape that goes stale silently: a closed enumeration.
 
-**Q-80 — does US-24's difference enumeration widen, or does `coding` revert?**
-F5's ADR found class (e) is not empty: 38 changed paths, at least four
-unadmitted classes. It recommends widening but did not decide. This is
-Q-6's territory, so it belongs in the brief. **F5's epics are blocked
-until this and the ADR's other findings are resolved.**
+### Q-81 — zero runtime dependencies, `collisionKey` narrowed
 
-Sixteen further questions are open (Q-65…Q-80) from wave 1. Most are
-feature-local and can be resolved inside their own ADR; the three above
-are not.
+U-14 ratified. Strict JSON, schema validation, glob, semver, the
+frontmatter reader and the test runner are hand-rolled or stdlib
+(`node:test` ships with Node 22).
+
+- **`general/technology-choices.md`** — §7.1 becomes ratified, and
+  **register entries U-1, U-2, U-3, U-4, U-6, U-8, U-10 and U-14
+  close**. Six of the fourteen remain; name them explicitly so the
+  register does not read as fully closed.
+- **F1 epics** — **eight of the fourteen blocked tasks unblock.** This is
+  the largest single unblocking available.
+- **F1 §Security** — `collisionKey` narrows to **NFC plus ASCII
+  case-folding, with the limit documented**. Do not let this land as a
+  quiet edit: it is a deliberate narrowing of a security control, and
+  the reasoning (a stated limit beats a hand-rolled approximation) has
+  to survive in the spec, not only in the brief. Worth a line in the
+  known-limits list.
+
+### Q-80 — the difference enumeration widens
+
+Widened, not reverted: the region anchors and parameter tokens the old
+enumeration failed to admit are **required by F1**, so `coding` cannot
+both satisfy the format and fit the enumeration as written.
+
+- **F5 US-24** — admit five further classes, **each enumerated by
+  file**: payload-side path repointing, parameter-token insertion into
+  migrated content, region anchors, net-new authoring beyond class (b),
+  and Q-59's `securityreviewer` generalisation. The enumeration is worth
+  running only because it compares against a list rather than a
+  judgement — keep it a list.
+- This resolves **ADR-002's opened question only.** Its other findings
+  are §3, and F5's epics stay blocked until those land too.
+
+**Still open: Q-65…Q-78** from wave 1. Each is feature-local to F2, F3
+or F6 and resolvable inside its own ADR — none needs a session-level
+decision. Next free question is **Q-82**; **Q-64 is reserved**, not
+free.
 
 ## 2. The batched F1 + ADR-001 fold
 
@@ -124,7 +153,7 @@ one. F1's four rounds do not cover them.
 
 | | |
 |---|---|
-| Question | **Q-81** |
+| Question | **Q-82** |
 | User story | **US-99** |
 | Epic | **E-13** |
 | Task | **T-13xx** (Scheme A, epic-derived) |
@@ -133,8 +162,8 @@ Retired, never reusable: **US-5, US-6, US-7, US-11, US-12** (F1),
 **US-22, US-23** (F5). US-11 and US-12 covered drift reporting and the
 merge base — F3 re-covers that ground under fresh ids, deliberately.
 
-`CLAUDE.md`'s counter table still reads "none" for Epic and Task. It
-needs **E-12 / T-1218** recording from wave 1.
+`CLAUDE.md`'s counter table is **now current** — Q-82, US-99, E-13,
+T-13xx, both ADRs, and the 78-code catalogue at v2.9.
 
 ## 6. How to spend less doing it
 
