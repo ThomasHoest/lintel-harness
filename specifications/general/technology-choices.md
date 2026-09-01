@@ -78,17 +78,17 @@ because the honest answer is often *the exclusion is Firm and the replacement is
 | Schema validation | **Hand-rolled** structural validator for `pack.json` / `recipe.json`, closed enumerations, JSON-boolean typing | **Firm** (Q-81) · behind a port (`src/pack/schema.ts`, `src/recipe/schema.ts`) | F1 US-1 (C-16, C-34), US-31 |
 | Glob matching | **One** matcher, taking no filesystem handle, for `exclude`, `in` and anatomy `paths` | **Firm — hand-rolled, dialect this project's to state** (Q-81) **· behind a port** (`src/recipe/glob.ts`) | C-27; F1 US-4, ADR file plan |
 | Path normalisation (`collisionKey`) | NFC via `String.prototype.normalize`, then an **ASCII-only** case fold | **Firm** (Q-81) — the narrowing is F1 known limit 17 | F1 US-3 stage 1, N-5 |
-| Argv parsing | Two-pass walk: pass 1 defers unknown tokens, pass 2 re-parses with the pack's `parameters[].flag` aliases registered | **Firm on the algorithm · ⚠️ pending on what implements it** | F1 US-8; ADR `src/cli/flags.ts` |
+| Argv parsing | **Hand-rolled** two-pass walk: pass 1 defers unknown tokens, pass 2 re-parses with the pack's `parameters[].flag` aliases registered | **Firm** (Q-81) — hand-rolled, because every off-the-shelf parser assumes a static grammar and this one is not known until the pack resolves | F1 US-8; ADR `src/cli/flags.ts` |
 | `.claude/` frontmatter reading | **Hand-rolled** — a security gate rides on it, and it must fail closed with a line number | **Firm** (Q-81) | F1 US-3 (`E-CLAUDE-TOOL-GRANT`, `E-CLAUDE-PERMISSION-MODE`), US-13 disclosure row 4 |
-| Parameter `pattern` validation | *not chosen* — must reject backreference and lookaround by inspecting the source | ⚠️ pending | C-7; F1 US-8 (`E-PARAM-PATTERN-INVALID`) |
-| Interactive prompting | *not chosen* | ⚠️ pending — F2's, and F2 has no spec | F1 §Introduction ("F2 owns interactive prompting"), US-8 |
+| Parameter `pattern` validation | **Hand-rolled source inspection** — decided before compilation, so author input never reaches the regex engine to be classified | **Firm** (Q-81) | C-7; F1 US-8 (`E-PARAM-PATTERN-INVALID`) |
+| Interactive prompting | **`node:readline/promises`**, prompts to **stderr**, active **iff `stdin` and `stderr` are both TTYs**, no flag | **Firm** (`F2-ADR-003`) | F1 §Introduction ("F2 owns interactive prompting"), US-8 |
 | Text encoding & binary detection | UTF-8 only; a file is binary when it is not valid UTF-8 or its first 8 KB hold a NUL | **Firm** | F1 §NFR *Encoding*, *Binary files* |
 | Diagnostics & `--json` output | Stdlib serialisation; `src/diag/catalogue.ts` is the only place user-facing text exists | **Firm** | F1 §Error States; ADR file plan |
 | Test runner | **`node:test`** — in the stdlib, so not a dependency in either budget. The ADR's `vitest.config.ts` is superseded | **Firm** (Q-81) | ADR file-level plan; F1 US-16 |
 | Adversarial fixture packs | Shipping requirement, run in CI, asserted on **exact code and exit class** | **Firm** | F1 US-16 |
-| Build (TypeScript → something `npx` runs) | *not chosen* | ⚠️ pending | Q-16; ADR file plan (`tsconfig.json`) |
-| Pack bundling into the artefact | Packs ship inside the package; the CLI resolves them relative to its own install directory | **Firm on the requirement · ⚠️ pending on the mechanism** (U-12) | Q-2; F1 US-3 stage 2 (the install dir is itself a reserved destination) |
-| CI | `lintel harness validate --all --strict` exits 0 over the three bundled packs, plus the fixture suite | **Firm on the command · ⚠️ pending on the runner** | F1 US-16 |
+| Build (TypeScript → something `npx` runs) | **`tsc` only** — ESM + declarations, no bundler, because the build must **type-check** and the path brands are compile-time controls | **Firm** (U-12) | Q-16; ADR file plan (`tsconfig.json`) |
+| Pack bundling into the artefact | Packs ship inside the package; the CLI resolves them relative to its own install directory | **Firm** (U-12) — `files` in `package.json`, resolved by `new URL('../packs/', import.meta.url)`, **never `process.cwd()`** | Q-2; F1 US-3 stage 2 (the install dir is itself a reserved destination) |
+| CI | `lintel harness validate --all --strict` exits 0 over the three bundled packs, plus the fixture suite | **Firm** (U-13) — GitHub Actions, three-platform matrix, **Windows not optional** | F1 US-16 |
 | The skill (F6) | Markdown under `.claude/skills/`, no runtime of its own | **Firm** | Q-1, Q-57; master spec §F6 |
 | Datastore · server · hosting · auth · telemetry · network at runtime | **None.** See §2 | **Firm** | F1 §NFR *No network*, *Offline privacy*; brief §10 |
 | Pack content stacks (Bicep + Neon, CDK + Lambda, Markdown, shell/PowerShell) | **Pack content, not the harness's stack.** See §8 | **Firm** | Q-8, Q-8a, Q-17; F5 §Platform |
@@ -328,7 +328,7 @@ all three v1.0 packs is ASCII, so no shipped pack is affected, and the v1.1 obli
 is a full fold — or a vetted dependency admitted for this single purpose — **before any
 pack ships a non-ASCII applied path**. ✅ **U-4 closed.**
 
-### 4.7 Argument parsing — ⚠️ pending
+### 4.7 Argument parsing — **settled by Q-81: hand-rolled**
 
 `parameters[].flag` lets a pack declare a CLI alias (`--calibration high-floor` ≡
 `--set constraintFloor=high-floor`), registered from `pack.json` data at parse time so
@@ -348,7 +348,12 @@ must own a reserved-flag list independent of the command being run (a flag is re
 whether or not this command accepts it — F1 US-8); and every failure must be one of the
 four `E-CLI-*` codes plus `E-FLAG-NOT-PERMITTED`. `parseArgs` with `strict: false` on
 pass 1 and `strict: true` on pass 2 is a plausible stdlib route and has not been
-evaluated. ⚠️ **U-5.**
+evaluated. ✅ **U-5 closed by Q-81.** The alternative this section weighed was an
+off-the-shelf parser, and **every candidate assumes a static grammar** — including
+`node:util`'s `parseArgs`, which either throws or mis-binds on an unknown token in pass 1.
+That is not a shortcoming to work around: **the grammar genuinely is not known until the
+pack is resolved.** With dependencies forbidden, the walk is hand-rolled, and the
+constraint column above is its specification.
 
 ### 4.8 `.claude/` frontmatter reading — **settled by Q-81: hand-rolled**, and a gate rides on it
 
@@ -378,7 +383,7 @@ the recommendation this document offers rather than decides. ✅ **U-6 closed by
 Q-81** — hand-rolled, and the fail-closed-with-a-line-number requirement is the
 reason: it is a security-relevant reader, and three codes ride on it.
 
-### 4.9 Parameter `pattern` validation — ⚠️ pending
+### 4.9 Parameter `pattern` validation — **settled by Q-81: source inspection, hand-rolled**
 
 Every `string` parameter must declare an anchored `pattern` (C-7): begins `^`, ends `$`,
 ≤ 200 characters, **no backreference, no lookaround**, with `maxLength` (default 256,
@@ -391,7 +396,12 @@ contains a backreference or a lookaround — that needs the *source* inspected.
 must not itself be a backtracking scan over author-supplied input, and must run at
 validate time in CI with no project. A conservative scan that rejects the constructs
 outright — including any it cannot classify — is fail-closed and is the shape this
-document recommends; a regex-AST parser is the alternative and is a dependency. ⚠️ **U-7.**
+document recommends; a regex-AST parser is the alternative and is a dependency.
+✅ **U-7 closed by Q-81** — the dependency is refused, so the check is **source-text
+inspection, hand-rolled**. That is also the *stronger* answer independent of the posture:
+the rule must be decided **before** compilation, and a check that compiles the pattern to
+inspect it has already run author-controlled input through the regex engine, which is the
+thing `maxLength` and the anchoring rule exist to bound.
 
 ### 4.10 Semver — **settled by Q-81: hand-rolled**
 
@@ -406,7 +416,7 @@ while strict-semver parsing that ignores ranges (which this product never needs,
 `minCliVersion` is a floor and not a range) is about thirty lines. ✅ **U-8 closed by
 Q-81** — those thirty lines, not the dependency.
 
-### 4.11 Interactive prompting — ⚠️ pending, and it is F2's
+### 4.11 Interactive prompting — **settled by `F2-ADR-003`**
 
 `init` collects parameter answers "by prompt or `--set`" (F1 US-8), and F1 says plainly
 that **F2 owns the CLI surface and the interactive prompting**. F2 has no spec, no ADR
@@ -416,7 +426,12 @@ TTY — CI and the F6 skill both drive `init` non-interactively, and Q-57 makes 
 the *normal* path; (b) surface `init`'s pre-write disclosure **faithfully rather than
 summarised** (Q-57 records this as a design burden); and (c) add no dependency that
 writes to the terminal outside the diagnostics catalogue, which F1 declares is the only
-place user-facing text exists. `node:readline/promises` is the stdlib route. ⚠️ **U-9.**
+place user-facing text exists. `node:readline/promises` is the stdlib route.
+✅ **U-9 closed by `F2-ADR-003`**, which settles all three halves: `node:readline/promises`;
+**prompts to stderr, never stdout**, so the summary stays machine-readable and F6's
+disclosure capture is not position-dependent; and prompting **iff `stdin` and `stderr` are
+both TTYs**, with **no flag** — a flag needs a default, either default is wrong for
+somebody, and it can be passed in contradiction to reality.
 
 ### 4.12 Text, encoding and binary detection — **Firm**
 
@@ -459,7 +474,7 @@ does not forbid it — but it should be *taken*, not inherited from a table row.
 **U-10 closed by Q-81**: `node:test`, which ships with Node 22 and is not a
 dependency in either budget.
 
-### 5.2 Build — ⚠️ pending
+### 5.2 Build — **`tsc` only, no bundler (U-12)**
 
 TypeScript has to become something `npx @lintel/cli` runs. Three routes exist and
 none has been chosen: `tsc` emitting ESM JavaScript plus declarations; a bundler
@@ -473,7 +488,39 @@ installed module (§5.3); (c) keep the published artefact small and legible enou
 `packs/` inside it is inspectable, since Q-2's whole argument is that the pack and the
 CLI ship as one auditable thing; and (d) hold `engines.node >= 22` (Q-16). Type stripping
 additionally has stability and syntax caveats worth checking against the pinned Node
-floor before it is chosen. ⚠️ **U-12.**
+floor before it is chosen.
+
+✅ **U-12 decided: `tsc` only, no bundler, and `packs/` resolved from
+`import.meta.url`.**
+
+**`tsc` emitting ESM plus declarations.** The deciding constraint is the one this
+section already states: the build must **type-check, not merely strip**, because the
+path brands (`AppliedPath`, `HarnessPath`) and the total `RecipeStep` union are
+**compile-time security controls** — C-14's "a path that skipped the gate is a compile
+error" is only true if something compiles. **`tsc` satisfies that by being the tool**,
+rather than by a second `tsc --noEmit` step alongside a stripper, which is a check
+someone can drop from CI without the build failing.
+
+**Rejected: a bundler.** `esbuild` and `tsup` **strip types rather than checking them**,
+so the compile-time control would depend on a separate invocation nobody's build breaks
+without. A bundle also collapses the module boundaries this design leans on — `ops/index.ts`
+as the closed registry, `confine.ts` as the only constructor of `AppliedPath` — and those
+boundaries are read by reviewers, not just by the compiler. **For a CLI there is nothing
+to win**: no bytes over a network, no cold-start budget.
+
+**Rejected: Node type stripping** (`--experimental-strip-types`). Same defect — it strips
+— plus it publishes `.ts` and pins the product to an experimental flag for no gain.
+
+**`typescript` is a dev dependency, which §7.1 permits**; `dependencies` stays `{}`
+(Q-81, asserted by T-1219).
+
+**The packaging half, and one line of it is security-relevant.** `packs/` ships as plain
+files via `package.json`'s `files`, and the CLI resolves it **install-relative** with
+`new URL('../packs/', import.meta.url)` — stdlib, ESM-native, no dependency.
+**Not `process.cwd()`**, and that is not a style note: resolving packs against the working
+directory would let a **user's project shadow the bundled packs** by placing a `packs/`
+directory of its own, which is arbitrary content entering the apply through the one input
+F1 treats as trusted. **Not `__dirname`** either, which does not exist in ESM.
 
 ### 5.3 Distribution and pack bundling — **Firm on the requirement**
 
@@ -494,7 +541,7 @@ that directory from its own installed location — the same `realpath` the confi
 gate reserves as a destination, so this resolution is security-relevant and should have
 one owner rather than being recomputed at each call site.
 
-### 5.4 CI — **Firm on the command, ⚠️ pending on the runner**
+### 5.4 CI — **Firm on the command; GitHub Actions on the runner (U-13)**
 
 The command set is fixed by F1 US-16: `validate --all --strict` over the three bundled
 packs, exit 0; plus the fixture suite asserting exact codes and exit classes; plus the
@@ -503,7 +550,25 @@ and no provider is chosen. Note the mild irony worth stating once so nobody trip
 `.github`, `.circleci`, `.gitlab-ci.yml`, `Jenkinsfile` and their kin are **reserved
 destinations a pack may never write** (F1 US-3 stage 2) — that rule is about what a
 *pack* does to a *user's* project and says nothing about this repository choosing a CI
-provider for itself. ⚠️ **U-13.**
+provider for itself.
+
+✅ **U-13 decided: GitHub Actions.**
+
+The repository is on GitHub, its `runs-on` matrix covers **macOS, Linux and Windows** —
+which is exactly G-F1-7's three platforms and the reason the constraint column names
+them — and no other provider is in use anywhere in this project. **There is no
+interesting trade here**, and pretending otherwise would be the speculation this document
+refuses elsewhere.
+
+**Two workflow requirements, because they are the substance rather than the vendor:**
+the matrix runs `lintel harness validate --all --strict` over the three bundled packs
+**and** the adversarial fixture suite, on all three platforms; and **the Windows leg is
+not optional**, since the executable bit, `collisionKey`'s case folding and the CRLF
+normalization are precisely the rules that differ there. A green Linux-only run would
+assert almost nothing this project worries about.
+
+**This blocks the release gate, not implementation** — the register said so, and it is
+why U-13 was left last.
 
 ---
 
@@ -516,9 +581,18 @@ without them. **No question is opened for any of these** — they are choices to
 inside a settled decision, not decisions awaiting the owner. The one exception was
 U-14, and **it has been ratified** (Q-81).
 
-**Nine of the fourteen are closed** — marked ✅ — and **five remain open**: U-5, U-7,
-U-9, U-12 and U-13. Read the ✅ rows as history: the constraint column still states what
-had to be true, which is what makes the resolution checkable.
+**All fourteen are closed** — marked ✅. Read the ✅ rows as history: the constraint
+column still states what had to be true, which is what makes each resolution checkable.
+
+**Three of the last five were already decided and the register had not caught up**, which
+is worth recording because it is the same staleness this document warns about. **U-9**'s
+owner column read *"F2, which has no spec — this is downstream of that gap"*; F2 now has
+a spec **and** `F2-ADR-003`, which settles prompting entirely. **U-5** and **U-7** each
+named a **dependency** as their alternative — a parser for argv, a regex-AST parser for
+`pattern` — and **Q-81 forbade dependencies**, so both resolved the same way U-1, U-2 and
+U-3 did, at the same moment, and nobody moved the rows. **Only U-12 and U-13 were
+genuinely open**, and only U-12 blocked implementation: `T-0101` waits on it, and `T-0101`
+is the prerequisite for every task in F1.
 
 | # | Unclarity | The constraint that decides it | Owner / unblocks |
 |---|---|---|---|
@@ -526,15 +600,15 @@ had to be true, which is what makes the resolution checkable.
 | ✅ **U-2** | What validates `pack.json` / `recipe.json` | Unknown **keys** warn while unknown **values in a behaviour-selecting position** are fatal (C-16); boolean fields must be JSON literals with **no coercion** (C-34); findings must be F1 codes emitted in US-16's fixed fourteen-step order | `architect` · blocks `src/pack/schema.ts`, `src/recipe/schema.ts` |
 | ✅ **U-3** | The glob **dialect** (`*` vs `**`, classes, braces, negation) | One matcher for `exclude`, `in` and anatomy `paths`; **no filesystem handle** (C-27); small enough that `pack info` renders an apply completely (G-F1-9); bounded against author-supplied patterns | `architect` · blocks `src/recipe/glob.ts` |
 | ✅ **U-4** | The case-fold half of `collisionKey` | Identical and unconditional on **every platform**; stable across Node versions; **at least as aggressive** as the case-insensitive filesystems it guards, since the dangerous direction is a missed collision. `toLowerCase()` ≠ Unicode full folding and the divergence must be written down, not discovered | `architect` + `securityreviewer` · blocks `src/security/confine.ts`; rollback safety (N-5) rides on it |
-| **U-5** | What implements the two-pass argv walk | Pass 1 must **defer unknown tokens without judging them**; pass 2 re-parses with a grammar extended at runtime from `pack.json`; reserved-flag list is global, not per-command; every failure maps to an `E-CLI-*` code | F2 (with F1's `flags.ts`) · blocks `src/cli/flags.ts` |
+| ✅ **U-5** | What implements the two-pass argv walk | Pass 1 must **defer unknown tokens without judging them**; pass 2 re-parses with a grammar extended at runtime from `pack.json`; reserved-flag list is global, not per-command; every failure maps to an `E-CLI-*` code | F2 (with F1's `flags.ts`) · blocks `src/cli/flags.ts` |
 | ✅ **U-6** | How `.claude/` frontmatter is read | Must report a **line**; must fail **closed** on an unparsed block; must reproduce the block **verbatim** for the disclosure (no re-serialise); must be narrow enough to audit. A full YAML engine is a large surface admitted into the gate-computing process | `architect` + `securityreviewer` · blocks `E-CLAUDE-TOOL-GRANT`, `E-CLAUDE-PERMISSION-MODE`, US-13 disclosure row 4 |
-| **U-7** | How `pattern` is checked for backreference / lookaround | Must be decided from the **source text**, not from compilation; must not itself backtrack over author input; runs at validate time with no project; fail closed on anything unclassifiable | `architect` · blocks `E-PARAM-PATTERN-INVALID` |
+| ✅ **U-7** | How `pattern` is checked for backreference / lookaround | Must be decided from the **source text**, not from compilation; must not itself backtrack over author input; runs at validate time with no project; fail closed on anything unclassifiable | `architect` · blocks `E-PARAM-PATTERN-INVALID` |
 | ✅ **U-8** | Semver parse and compare | Total, deterministic across platforms, no range arithmetic needed (`minCliVersion` is a floor); weigh one well-known dependency against ~30 lines under §7.1 | `architect` · blocks `E-PACK-CLI-TOO-OLD`, `E-PACK-FORMAT-NEWER` |
-| **U-9** | Interactive prompting | Must work with **no TTY** (CI and the F6 skill both drive `init` non-interactively — Q-57); must surface the pre-write disclosure **faithfully, not summarised**; no terminal text outside the diagnostics catalogue | **F2**, which has no spec — this is downstream of that gap |
+| ✅ **U-9** | Interactive prompting | Must work with **no TTY** (CI and the F6 skill both drive `init` non-interactively — Q-57); must surface the pre-write disclosure **faithfully, not summarised**; no terminal text outside the diagnostics catalogue | **F2**, which has no spec — this is downstream of that gap |
 | ✅ **U-10** | Test runner | Must assert on the **process exit class** and, for two fixtures, on **file mode and directory-entry name** with no code involved; must run the cross-platform matrix of G-F1-7; should not require a build first. A dev dependency, so §7.1 permits one — but the choice should be taken, not inherited from `vitest.config.ts` sitting in a file plan | `implementer` + `testwriter` · blocks the fixture suite, which US-16 calls its most important criterion |
 | ✅ **U-11** | No `W-` code for the `link` → `open(dest,'wx')`+`rename` fallback | F1 US-13 requires the run's diagnostics to "record the narrowed guarantee", and F1 declares its codes **the only** CLI error model — so this diagnostic is currently only assertable by string-matching. Needs a classified `W-` code (a **notice**: the state is real and nothing is fixable) | **F1 defect** — report to the spec owner; not a technology choice |
-| **U-12** | Build route (`tsc` / bundler / Node type stripping) **and the packaging half with it**: getting `packs/` into the artefact, and resolving it install-relative | Must **type-check**, not merely strip — the path brands and the total `RecipeStep` union are compile-time controls; must include `packs/` in the published package (Q-2) and resolve it from the installed module, which is the same `realpath` the gate reserves as a destination; must keep the artefact inspectable (Q-2's audit argument); must honour `engines.node >= 22` | `architect` · blocks the first publish |
-| **U-13** | CI provider and workflow | Must run `validate --all --strict` + the fixture suite on the three platforms of G-F1-7. Unrelated to the reserved-destination rules, which govern what a **pack** writes into a **user's** project | Owner · blocks the release gate, not implementation |
+| ✅ **U-12** | Build route (`tsc` / bundler / Node type stripping) **and the packaging half with it**: getting `packs/` into the artefact, and resolving it install-relative | Must **type-check**, not merely strip — the path brands and the total `RecipeStep` union are compile-time controls; must include `packs/` in the published package (Q-2) and resolve it from the installed module, which is the same `realpath` the gate reserves as a destination; must keep the artefact inspectable (Q-2's audit argument); must honour `engines.node >= 22` | `architect` · blocks the first publish |
+| ✅ **U-13** | CI provider and workflow | Must run `validate --all --strict` + the fixture suite on the three platforms of G-F1-7. Unrelated to the reserved-destination rules, which govern what a **pack** writes into a **user's** project | Owner · blocks the release gate, not implementation |
 | ✅ **U-14** | **The dependency posture of §7.1 is proposed, not ratified** | It governs U-1, U-2, U-3, U-6, U-8 and U-10 at once and cannot be derived from the specs — the ADR and `system-architecture.md` currently state it at two different scopes (§7.1). If the owner ratifies it, it takes **Q-62**; this document opens no question | **Owner** · ratification would settle six register rows in one line |
 
 
@@ -688,3 +762,4 @@ risk at all.
 |---|---|---|---|
 | v1.0 | 2026-09-01 | architect | Initial version. Adapts the template to a product with no backend, datastore, frontend or hosting (§0), states what it deliberately has none of (§2), records the settled runtime and the six stdlib-settled capabilities, and opens a **14-entry ⚠️ register** — each with the constraint that decides it — covering strict JSON parsing, schema validation, the glob dialect, the `collisionKey` case fold, the two-pass argv walk, frontmatter reading, `pattern` inspection, semver, prompting, the test runner, the build, CI, an F1 defect (no `W-` code for the `link` fallback), and the unratified dependency posture. No question opened; next free remains **Q-62**. |
 | v1.1 | 2026-09-01 | specwriter | **Q-81 ratifies §7.1, and nine of the fourteen ⚠️ entries close.** The dependency posture is no longer this document's proposal — **zero runtime dependencies** is the owner's decision and is now a **requirement** in F1 §NFR, assertable as an empty `dependencies` object. **U-1, U-2, U-3, U-6, U-8 and U-10 close on the single answer** the posture supplies: hand-roll it, or use the stdlib (`node:test` ships with Node 22, so the runner is not a dependency in either budget, and the ADR's `vitest.config.ts` is superseded). **U-4 did not close that way and is the honest part of this fold**: §4.6 asked for a fold that is identical across platforms, stable across Node versions and at least as aggressive as the filesystems it guards — and Q-81 answers it by **narrowing `collisionKey` to NFC plus ASCII case-folding**, recorded as F1 known limit 17, on the ground that a hand-rolled partial Unicode fold is aggressive on the pairs it covers and silent on the rest while reporting equal confidence for both. Wrong in a knowable way beats wrong in an unknowable one. **U-11 closes separately in the same F1 v3.0 fold**, by the allocation of `W-LINK-FALLBACK`. **Five remain, and all five are work rather than decisions**: U-5, U-7, U-9, U-12, U-13. The §1 status table and the section headings for every closed item move off ⚠️ in this pass, so the register and the prose cannot disagree. |
+| v1.2 | 2026-09-01 | **The ⚠️ register closes — all fourteen.** **Three were already decided and the rows had not moved**, which is the same staleness this document warns about, found by asking whether the project was ready to implement. **U-9** was marked *downstream of F2 having no spec*; F2 has had both a spec and an ADR since. **U-5** and **U-7** each named a **dependency** as their alternative, and **Q-81 refused dependencies** — so both resolved with U-1, U-2 and U-3 and nobody noticed. **Two were genuinely open, and only one blocked code.** **U-12: `tsc` only, no bundler.** The build must **type-check, not strip**, because the path brands and the total `RecipeStep` union are compile-time controls — C-14's *"a path that skipped the gate is a compile error"* is only true if something compiles; a bundler would make that depend on a separate `--noEmit` run nobody's build breaks without. `packs/` ships via `files` and resolves from **`import.meta.url`, never `process.cwd()`** — resolving against the working directory would let a **user's project shadow the bundled packs**. **U-13: GitHub Actions**, three-platform matrix, **Windows not optional**, since the executable bit, `collisionKey` and CRLF normalization are exactly what differs there. |

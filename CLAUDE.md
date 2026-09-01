@@ -486,6 +486,17 @@ authoritative, verify it rather than trusting the assertion.
   list on purpose, and the blocker is no longer authoring: it is that
   there is no CLI to run. `ls .harness` is the check.
 - **No CLI source exists.** Not a line. Everything below assumes that.
+- **The ⚠️ register is closed — all fourteen** (`general/technology-choices.md`
+  §6), so **no task in any feature is blocked**. The build is **`tsc` only**
+  (it must type-check, not strip — the path brands are compile-time
+  controls), `packs/` resolves from `import.meta.url` and **never
+  `process.cwd()`**, and CI is **GitHub Actions** across three platforms
+  with **Windows not optional**.
+- **The remaining gates before code are procedural, not open questions:**
+  every spec and ADR is still `Draft` and the process requires **Accepted**;
+  **T-2301** (F3's six-row disposition table → four) must land before F3's
+  tasks; and **T-1502** (the migration diff, never run) before F5 is
+  Accepted.
 - **Every v1.0 feature now has a spec, an ADR and epics.**
 - **F2/F3/F6's Mode A pass ran to four rounds and returned
   `SECURITY-PROCEED`** (`security-review-mode-a-F2-F3-F6.md`).

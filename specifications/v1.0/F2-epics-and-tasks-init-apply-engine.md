@@ -220,8 +220,7 @@ produce what they claim).
 - [ ] **T-2204** `[TestWriter]` Determinism through `init`: the same pack,
   answers and scaffolds into two empty directories produce **byte-identical
   trees and manifests**, by recursive comparison with no exclusions.
-  **⚠️ BLOCKED in part (U-13** — the cross-platform matrix needs the CI
-  runner.)
+  **✅ UNBLOCKED (U-13): GitHub Actions, three-platform matrix — the Windows leg is where the executable bit and CRLF normalization actually differ)
   *Depends on: F1 T-1218, T-2201.*
 
 - [ ] **T-2205** `[TestWriter]` `--rollback` after a forced mid-write

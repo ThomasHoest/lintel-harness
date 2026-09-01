@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 1.5
+**Version:** 1.6
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 1.6 | 2026-09-01 | **The ⚠️ register closes; every blocked task unblocks.** U-5, U-7 and U-9 were **already decided and the register had not caught up** — U-9 by `F2-ADR-003`, U-5 and U-7 by Q-81, since each named a dependency as its alternative. **U-12: `tsc` only**, no bundler, because the build must **type-check** and the path brands are compile-time controls; `packs/` resolves from `import.meta.url`, **never `process.cwd()`**. **U-13: GitHub Actions**, three platforms, **Windows not optional**. **T-0101 unblocks, and it was the prerequisite for every task in this document** — nothing in F1 is blocked any more. |
 | 1.5 | 2026-09-01 | **Mode A round 4 — C-61, C-62; the CRITICAL closes and the review returns `SECURITY-PROCEED`.** T-0806 refuses the delimiter **shape** as well as this run's nonce, which is what keeps `E-DISCLOSURE-FORGERY` **reachable** — the nonce alone made it probabilistically unfireable, and an untriggerable check rots. T-0806 also states the nonce's **scope**: `init`'s block only, so `pack info --json` stays deterministic. **T-1221 gains the two fixtures that assert both.** |
 | 1.4 | 2026-09-01 | **Mode A rounds 2 and 3.** T-0806 is rewritten twice over: round 2 specified the sentinel comparison, round 3 **deleted it** in favour of a **per-run nonce** (C-59), because three rounds of tightening the emitter's matching rule were beaten three times by a slightly wider consumer normalization — the last by `String.prototype.trim()` removing `U+00A0`. **The check becomes *does any row contain this run's nonce*.** T-0113 gains C-60: any surviving normalization uses stdlib `trim()`, never a hand-rolled ASCII one — **Q-81 forbids dependencies, not correctness.** Next free task id **T-1222**. |
 | 1.3 | 2026-09-01 | **Mode A over F2/F3/F6 folded — the F1 half.** Five tasks: **T-0113** (one control-character escaping function for every stream, C-50), **T-0114** (`E-DISCLOSURE-FORGERY`, catalogue **87 → 88**), **T-0806** (the disclosure containment check, **the CRITICAL**, at `init` **and** `validate` step 11 — no fifteenth step), **T-0211** (`skills` joins the reserved names at any `.claude` segment, C-53) and **T-1221** (fixtures for both, plus marking `compare.ts` security-relevant, C-55). **T-0806 is C-9's marker-lex check restored** — Q-45 removed it while anchors were inert and recorded the obligation to bring it back when something started reading markers; F1 v3.3 created such a marker and did not consult it. Next free task id **T-1222**. |
@@ -51,18 +52,25 @@ epic-derived `T-XXYY` (`CLAUDE.md` §counters), beginning at **T-0101**.
 
 **Read the two boxes before starting.**
 
-> **The ⚠️ register is mostly closed, and what remains still blocks real
-> work.** `technology-choices.md` §6 holds fourteen entries. **Nine are
-> closed** — U-1, U-2, U-3, U-4, U-6, U-8, U-10, U-11 and U-14 — almost
-> all of them by **Q-81** ratifying §7.1's zero-runtime-dependency
-> posture, which was the entry governing the others. **Five remain and
-> each blocks at least one task below**: U-5 (the two-pass argv walk),
-> U-7 (`pattern` source inspection), U-12 (build and packaging, ×2) and
-> U-13 (CI provider, ×2). A blocked task is marked **⚠️ BLOCKED (U-n)**;
-> a cleared one is marked **✅ UNBLOCKED (U-n, closed by …)** and **keeps
-> the resolution**, because several of them resolved to something other
-> than the obvious answer — U-4 above all. Do not silently assume a
-> library, and do not read a ✅ as "any approach will do".
+> **The ⚠️ register is closed — all fourteen entries — and no task below
+> is blocked.** `technology-choices.md` §6 has the resolutions; each ✅
+> marker in this document **keeps its own**, because several resolved to
+> something other than the obvious answer and a bare ✅ would lose that.
+>
+> **Read the resolutions, not just the ticks.** Three are easy to get
+> wrong by picking the default: **U-4** — `collisionKey` folds **ASCII
+> only**; do not reach for `toLowerCase()` and do not hand-roll a Unicode
+> fold. **U-12** — the build is **`tsc`, not a bundler**, because it must
+> **type-check rather than strip**; the path brands are compile-time
+> controls and a stripper makes that depend on a separate `--noEmit` run
+> nobody's build breaks without. **U-12 again** — `packs/` resolves from
+> `import.meta.url`, **never `process.cwd()`**, or a user's project can
+> shadow the bundled packs.
+>
+> **Q-81 is what closed most of them**, and its shape is worth carrying:
+> where a row weighed a dependency against hand-rolling, the posture
+> decided it. **Do not silently assume a library**, and do not read a ✅
+> as "any approach will do".
 
 > **The ADR predates three folds in the spec.** The ADR is PROCEED and its
 > file-level plan and interface contract stand, but F1 moved from v2.1 to
@@ -121,9 +129,15 @@ T-0103…T-0105 land.
   destination). The build must **type-check** rather than strip — the path
   brands of E-02 and the total `RecipeStep` union of E-04 are compile-time
   controls, not decoration.
-  **⚠️ BLOCKED (U-12** — build route and the packaging half.) **U-14 is
-  closed (Q-81): zero runtime dependencies**, so `package.json` declares
-  `"dependencies": {}` and T-1219 asserts it. **No `vitest.config.ts`.**
+  **✅ UNBLOCKED (U-12 and U-14, both closed).** `dependencies` is `{}`
+  (Q-81, asserted by T-1219) and **no `vitest.config.ts`**. The build is
+  **`tsc` only** — ESM plus declarations, no bundler — because it must
+  **type-check, not strip**: the path brands and the total `RecipeStep`
+  union are compile-time controls, and C-14's *"a path that skipped the
+  gate is a compile error"* is only true if something compiles.
+  **`packs/` ships via `files` and resolves with
+  `new URL('../packs/', import.meta.url)` — never `process.cwd()`**, which
+  would let a user's project shadow the bundled packs.
   *No dependencies. Prerequisite for every task in this document.*
 
 - [ ] **T-0102** `[Implementer]` Add the test-runner configuration and the
@@ -187,7 +201,11 @@ T-0103…T-0105 land.
   list (global, not per-command), the four `E-CLI-*` codes and
   `E-FLAG-NOT-PERMITTED`. `--accept-permissions` and `--accept-hooks` are
   **not** reserved and reach `E-CLI-UNKNOWN-FLAG` by the general rule (Q-54).
-  **⚠️ BLOCKED (U-5** — what implements the two-pass walk.)
+  **✅ UNBLOCKED (U-5, closed by Q-81): hand-rolled.** Every off-the-shelf
+  parser — `node:util`'s `parseArgs` included — assumes a **static
+  grammar** and throws or mis-binds on an unknown token in pass 1. That is
+  not a shortcoming to route around: the grammar genuinely is not known
+  until the pack resolves.
   *Depends on: T-0106. Prerequisite for T-0905, T-0906, T-1003.*
 
 - [ ] **T-0108** `[Implementer]` `src/index.ts` — the library entry, re-exporting
@@ -467,7 +485,12 @@ reader), E-09 (steps 1, 2, 9, 10).
   `E-RECIPE-MISSING`, one escaping the pack directory is
   `E-PAYLOAD-PATH-INVALID`). Uses `src/fs/walk.ts`. Resolves **no** shared
   reference — there are none (Q-48).
-  **⚠️ BLOCKED (U-12** — install-relative resolution is the packaging half of
+  **✅ UNBLOCKED (U-12): `new URL('../packs/', import.meta.url)`.** Not
+  `process.cwd()` — resolving against the working directory would let a
+  user's project shadow the bundled packs, which is untrusted content
+  entering through the one input F1 treats as trusted. Not `__dirname`,
+  which does not exist in ESM. *(Superseded note: install-relative
+  resolution was the packaging half of
   the build entry, and it is the same `realpath` the gate reserves as a
   destination.)
   *Depends on: T-0301, T-0208, T-0303.*
@@ -510,7 +533,12 @@ reader), E-09 (steps 1, 2, 9, 10).
   only**, and `E-MANIFEST-ANSWER-INVALID`, exit 2, on **every read-back from
   the manifest**. Exports the combination enumeration used by E-09
   (`E-PARAM-COMBINATORICS` above 32). C-7, C-29.
-  **⚠️ BLOCKED (U-7** — how `pattern` is checked for backreference and
+  **✅ UNBLOCKED (U-7, closed by Q-81): source-text inspection,
+  hand-rolled.** The alternative was a regex-AST **dependency**, and the
+  hand-rolled answer is stronger anyway — a check that compiles the
+  pattern to classify it has already run author input through the regex
+  engine, which is what `maxLength` and the anchoring rule exist to
+  bound. *(Superseded note: the open question was
   lookaround. It must be decided from the **source text**, not from
   compilation, must not itself backtrack over author input, and must fail
   closed on anything unclassifiable.)
@@ -1563,7 +1591,11 @@ for the applying fixtures E-11.
   well as the exit code is what makes it testable). `--strict` and not bare
   `--all`, because every warning in the document is non-fatal by code and CI is
   the one place step 12's over-approximation is known empty.
-  **⚠️ BLOCKED on the runner (U-13** — CI provider and workflow; it must run
+  **✅ UNBLOCKED (U-13): GitHub Actions**, `runs-on` matrix over macOS,
+  Linux and Windows. **The Windows leg is not optional** — the executable
+  bit, `collisionKey`'s folding and CRLF normalization are exactly what
+  differs there, and a green Linux-only run asserts almost nothing this
+  project worries about. *(Superseded note: it must run
   this command **and** the fixture suite on the three platforms of G-F1-7.)
   *Depends on: T-0905, T-1201.*
 
@@ -1616,7 +1648,7 @@ for the applying fixtures E-11.
   which exists. F1's work is a **precondition** for it, not the thing that
   closes it. Build the harness for it here; leave the assertion to the change
   that can run it.
-  **⚠️ BLOCKED in part (U-13** — the cross-platform matrix needs the CI runner.)
+  **✅ UNBLOCKED (U-13): GitHub Actions**, three-platform matrix.
   *Depends on: T-1104, T-1106, T-1003.*
 
 

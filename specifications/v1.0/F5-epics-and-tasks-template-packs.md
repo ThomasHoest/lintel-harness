@@ -379,8 +379,7 @@ E-12** (the fixture suite and CI).
   applying the same pack twice into two empty directories with identical
   answers and scaffolds produces byte-identical trees and byte-identical
   manifests, on macOS, Linux and Windows, modulo the executable bit.
-  **⚠️ BLOCKED in part (U-13** — the cross-platform matrix needs the CI
-  runner, which is F1's T-1213 and is itself blocked.)
+  **✅ UNBLOCKED (U-13): GitHub Actions, three-platform matrix — the Windows leg is where the executable bit and CRLF normalization actually differ)
   *Depends on: F1 T-1218, T-1405.*
 
 - [ ] **T-1905** `[TestWriter]` `planning`'s **isolation** NFR: switching
