@@ -47,23 +47,37 @@ been revised. It belongs with §3, not before it.
   longer describes `update` as *merging* against a recomputed base.
   C-11 is now carried in full rather than half-deferred.
 
-**ADR-001 is still six versions behind and is now seven.** Unchanged
-from the original list — `VerifyState` (now `match | adapted | filled |
-unfilled | differs | missing`, and C-22's dead `ownedKeysChecked` still
-present), the four-command surface with no group, `adaptExpected` absent
-**and `fillExpected` with it**, no module for the `.claude/` frontmatter
-reader, surviving `ConsentInputs` / `src/security/consent.ts` after Q-54
-deleted the gate, `src/cli/main.ts` dispatching four commands. **Add:**
-the file plan needs the hand-rolled modules Q-81 now requires (strict
-JSON, schema, glob, semver, frontmatter) as *deliberate* modules rather
-than dependency wrappers, and **`vitest.config.ts` in the plan is
-superseded by `node:test`**.
+**ADR-001 — AMENDED, and now current against F1 v3.0.** A new
+supersession section (*What Q-62, Q-63, Q-79 and Q-81 supersede*) sits
+beside the Q-54 one, and **the contract types are rewritten to current
+rather than annotated** — a deliberate departure from this ADR's
+supersede-don't-delete convention, on the ground that the rest of §1 is a
+*record* but the interface contract is a thing people compile against.
+`VerifyState` six values, `StepChangeExpectation` (`adaptExpected` +
+`fillExpected`, mutually exclusive), journal v3 with `intent` and
+`command`, `ApplyInputs` with no `consent`. File plan: five commands
+under a group, `update.ts` un-deleted as F1→F3, **`src/claude/
+frontmatter.ts`** and **`src/semver/compare.ts`** added as deliberate
+modules, `consent.ts` renamed `disclosure.ts` (a file called `consent.ts`
+containing no consent is how a deleted gate gets rebuilt),
+`destination-policy.ts` struck, `vitest.config.ts` deleted for
+`node:test`, `confine.ts`'s fold narrowed to ASCII.
 
-**New, found during the fold and not previously listed:** **F1's epics
-need tasks for v3.0.** E-10's heading moved to six states and the code
-counts were corrected, but no task covers `fillExpected`, the two new
-states, the nine new codes or journal v3. Do this *after* ADR-001, since
-the ADR is what the tasks name files against.
+**Corrections found while amending, both worth knowing:**
+
+- **§6.5's to-do list is spent** — every item on it was fixed in later
+  passes. It is now marked as a record, not work. Do not work it.
+- **The master spec is NOT behind.** It is at **v1.0.2**, reads five
+  commands under the group, and its sequencing line is
+  `F1 → F2 → F5 → F3 → F6`. The claim in this file and in `CLAUDE.md`
+  that it "predates Q-62" was itself stale. **`CLAUDE.md` still says
+  it** — fix that line.
+
+**Next, and now unblocked:** **F1's epics need tasks for v3.0.** E-10's
+heading moved to six states and the code counts were corrected, but no
+task covers `fillExpected`, `filled`/`unfilled`, the nine new codes,
+journal v3, `src/claude/frontmatter.ts` or `src/semver/compare.ts`.
+Tasks name files against the ADR's file plan, which is why they waited.
 
 ## 3. F5 revision, then its epics
 

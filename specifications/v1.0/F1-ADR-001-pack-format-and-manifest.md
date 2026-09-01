@@ -1,6 +1,6 @@
 # ADR-001 — Pack format, recipe & manifest: a closed primitive set, a six-key manifest, and a pack that can only write text
 
-**Status:** Draft — **rewritten 2026-08-31 against the two-phase model (Q-39…Q-53)**, then **amended 2026-08-31** to apply the answered `.harness/README.md` escalation and to specify the Q-50 `validate` check, then **amended again 2026-08-31** to repair six conditions the rewrite silently lapsed and to fold the Mode A re-review's C-19…C-30, then **amended 2026-08-31 by Q-54**, which **overturns §3.8** and voids every part of this ADR that reasons about `merge-json` — see *What Q-54 supersedes* immediately below the amendment history, and read it before §1
+**Status:** Draft — **rewritten 2026-08-31 against the two-phase model (Q-39…Q-53)**, then **amended 2026-08-31** to apply the answered `.harness/README.md` escalation and to specify the Q-50 `validate` check, then **amended again 2026-08-31** to repair six conditions the rewrite silently lapsed and to fold the Mode A re-review's C-19…C-30, then **amended 2026-08-31 by Q-54**, which **overturns §3.8** and voids every part of this ADR that reasons about `merge-json` — see *What Q-54 supersedes* immediately below the amendment history, and read it before §1 — and then **amended 2026-09-01 against F1 v3.0** for Q-62, Q-63, Q-79 and Q-81, which is the larger of the two supersession boxes and the one a reader compiling against this contract needs: see *What Q-62, Q-63, Q-79 and Q-81 supersede*
 **Date:** 2026-08-31 (supersedes the 2026-08-30 original in full)
 **Deciders:** `architect` (this ADR) · escalations to Thomas Andersen
 **Refs:** `specifications/general/pack-application.md` (**authoritative** — the two-phase model) · `specifications/general/pack-inventory.md` (**authoritative** — the three packs, source and applied trees) · `F1-spec-pack-format-and-manifest.md` **v2.1** (this ADR's §6.1 folded) · `F5-spec-template-packs.md` **v2.0, second pass** (§6.2 folded) · `LintelHarnessSpecification-1.0.md` · `specifications/project-brief.md` §12 (Q-1…Q-53, **all resolved, authoritative**) · `packs/coding/specifications/conventions.md` · **security review of 2026-08-30** (Mode A over F1 v1.0 + ADR-001 original: `REVISE-SPEC`, S-1…S-14, conditions C-1…C-18 — re-dispositioned in §8)
@@ -24,6 +24,7 @@ exception to "one page".
 | **2026-08-31** | **Mode A re-review folded: C-19…C-30, and six lapses admitted** | **The re-review verified the carried conditions against F1 v2.2's actual text rather than against §8's table and found C-1, C-2, C-5, C-8, C-12 and C-16 measurably lapsed — the rewrite re-opened the original CRITICAL S-1 through a route the first review never saw, because the seven-primitive set post-dates it.** Root cause, single and stateable: every settings control was quantified over a step's **`to`**, and two of the seven primitives have none. **The model moves from `to`-keyed to WRITTEN-PATH-keyed** (§7.2.0, C-19) — the destination policy, the reserved-destination denylist and the executable rules are all evaluated over each step's **write set**. `policyFor` resolves by `collisionKey` on every platform (C-20). The `merge-json` destination's prior content is named a **fourth input** and `verify` gains a `partial` state (C-22, §7.9). **F-5 is decided: phase 2 renders entirely at plan time** (C-23, §3.6). **F-10 is decided: accepted with reasoning AND enumerated in the disclosure** (C-28, §3.7). `Recipe.formatVersion` joins the closed enumeration (C-24); authored JSON rejects duplicate keys (C-25); phase 1 writes `0644` (C-26); `in` globs get a normative resolution rule (C-27); manifest read-back gets its own class-2 code (C-29); recipes get a 256-step inspectability bound (C-30). Four new codes, one new module, **no new US or Q id**. §8 is rewritten with `LAPSED-AND-NOW-REPAIRED` as a category. Verdict: **`REVISE SPEC`** — §10. |
 | **2026-08-31** | **Escalation answered: `.harness/README.md` is dropped** | §3.4's escalated branch was answered **option C**, recorded in `project-brief.md` §12 as an amendment to Q-50: **`.harness/` is excluded from the folder-README rule as tool-owned, exactly as `.claude/` is.** There is no `.harness/README.md`, no CLI write that produces one, and **C-5 is absolute with no carve-out** — which is what §7.1's own argument asked for, since `.harness/pack/` is phase 2's input. `packs/coding/applied-readmes/harness.md` is deleted from disk; the folder holds five files. §6.1 change 3 is withdrawn; §1, §3.4, §4, §5, §7.1, §8 (C-5), the interface contract and the file-level plan are amended. **New in the same pass:** `validate` gains a mechanical Q-50 check (`W-FOLDER-README-MISSING`, US-16 order step 12) and `pack.json` gains `folderReadme` — see §3.5 and §6.1 changes 12–16. **Verdict re-examined in §10 and it moves**: the three folds it blocked on are all landed and verified (F1 v2.1, F5 v2.0's second pass, the master spec's 1.0.0 fold), so it stands at **`REVISE SPEC` narrowed to §6.1 changes 12–16 and §6.2 changes 10–11 — the new `validate` check this pass added, and nothing else.** A Mode A re-review is still required before implementation, separately from this verdict. |
 | **2026-08-31** | **Q-54 overturns §3.8 — `merge-json` is dropped from v1.0** | **§3.8 chose option A — keep the seven-primitive set — and recorded option B, dropping `merge-json`, as available and rejected. The re-reviewer took B, and the brief §12 records it as Q-54.** §3.8 is **restated as overturned** with its original argument kept verbatim as history, because a reversal that hides what it reversed is worth less. The primitive set is **six**: `copy`, `rename`, `strip-suffix`, `rewrite-path`, `substitute`, `generate`. Everything in this ADR that reasons about `merge-json` is **superseded, not deleted**: the destination policy and `DestinationPolicy.allowedOps`, `ownedKeys` and the ownable-key allowlist, the leaf-only rule, `policyFor`, the consent gate and `ConsentInputs`, `E-OWNEDKEY-FORBIDDEN` / `E-SETTINGS-MODE-FORBIDDEN` / `E-SETTINGS-CONSENT-REQUIRED` / `E-SUBST-IN-SECURITY-KEY` / `E-MERGE-JSON-INVALID` / `E-HOOKS-NOT-SUPPORTED`, `verify`'s `partial` state, and N-6. **§6.1 change 27's fixture list is corrected** — it named `merge-json` and `ownedKeys` fixtures that cannot exist — and now points at F1 v2.3's restated table, which is the one of record. **The verdict does not move in this pass** and is not re-examined here: the fold into F1 and a further Mode A pass decide it. **No new question, no new story, no new error code:** next free question id **Q-55**, next free story id **US-39**. |
+| **2026-09-01** | **F1 v3.0 — Q-62, Q-63, Q-79 and Q-81 folded; this ADR was six versions behind and is now current** | **This is a reconciliation, not a new decision.** F1 moved 2.1 → 3.0 while this ADR stood still, and four of those moves change the **contract**, which is the one part of an ADR that is not merely a record: downstream features compile against it. **Q-63** — the binary is `lintel` with `harness` as a **command group**, so `main.ts` dispatches a group then a command, and the surface is **five** commands, not four. **Q-62** — `update` is v1.0 and is **F3's**, so `src/cli/commands/update.ts` moves out of the *never planned* table and into the plan as F1→F3, exactly as `init.ts` is F1→F2; `src/manifest/drift.ts` stays deleted, because **Q-62 builds no merge engine** and classification is `verify`'s recomputation, not a drift module. **Q-79** — `RecipeStep` gains `adaptExpected` **and `fillExpected`**, and `VerifyState` becomes **six** values. **Q-81** — zero runtime dependencies becomes a *requirement*, which turns four "hand-rolled or a library" rows into hand-rolled modules, adds `src/semver/compare.ts` and `src/claude/frontmatter.ts` as **deliberate** modules rather than wrappers, deletes `vitest.config.ts` in favour of `node:test`, and narrows `collisionKey` in `confine.ts` to **ASCII** case-folding. **The contract types below are rewritten to current rather than annotated**, departing from this ADR's supersede-don't-delete convention on purpose: §1's other half is a *record*, but the contract is a thing people compile against, and a stale type with a footnote is a stale type. **The Q-54 box's convention is preserved for everything it covers.** **No new question, no new story, no new code:** the nine codes F1 v3.0 added are F1's to define and are named here only where a module raises them. Verdict unchanged and not re-examined — still `PROCEED`, and §10.1's superseded verdict stays where it is. |
 | **2026-08-31** | **Final Mode A pass folded — and the security gate is closed by decision, not by a verdict** | **Read this row before treating the set as cleared.** The **fourth** Mode A pass, run over **F1 v2.4 / F5 v2.2**, returned **`REVISE-SPEC`** — **3 HIGH, 3 MEDIUM, 4 LOW, and no CRITICAL**, with **36 of 38** conditions holding. **The HIGHs and MEDIUMs are folded:** C-39, C-40, C-41, C-43, C-45 and C-48 into **F1 v2.5**; C-42, C-44 and C-46 in this same pass, into `general/pack-application.md` (the *Reads from* cell and the flowchart node still stated the **execute-time** read C-23 ruled out, and the phase-1 sentence still said *"no validation beyond path confinement"*), `general/pack-inventory.md` (C-37 dispositioned by number; the *"created empty"* claims Q-50 makes impossible removed), `LintelHarnessSpecification-1.0.md` (C-37 cited in its residue-pass row; the determinism claim corrected to F1's **three** inputs) and **F5 v2.3** (C-40's F5-side evidence: the agent-frontmatter key list restated as descriptive of the runtime, `permissionMode` excluded from what a pack may declare, and the widened reserved-destination list confirmed against the **Azure** scaffold). **`C-47` and the remaining LOW residue are ACCEPTED for v1.0**, with their requirements and their tests recorded rather than waived — accepting a finding is a commitment to build it. **The gate closes by decision after four review rounds. No `SECURITY-PROCEED` verdict exists against any revision of F1, F5 or this ADR, and none is claimed here; a reader must not mistake this for a clean pass** — the standing security verdict of record is `REVISE-SPEC`. What the decision rests on is the **trajectory**, which is the honest form of the argument: **2 CRITICAL → 2 CRITICAL → 0 CRITICAL / 2 HIGH → 0 CRITICAL / 3 HIGH**, with conditions holding rising **24/31 → 36/38**, no lapsed condition in either of the last two rounds, and nothing in the fourth round that moves the architecture. **This row does not change §10's verdict line**, which is the lead's to set, and folding an ADR has never substituted for a verdict. **No new question, no new story, no new error code:** next free question id **Q-55**, next free story id **US-39**. |
 | **2026-09-01** | **Q-63 rename applied** | **The binary is `lintel`, `harness` is a command group, and the package is `@lintel/cli`** (brief §12 Q-63, amending Q-16). §1's platform sentence and the `package.json` row of the file-level plan carry the new names; the `src/cli/commands/*` rows now read `lintel harness <command>`. **§6.1's quoted catalogue rows are renamed with them, deliberately**: those rows are instructions to F1 and F1 has executed them, so leaving the two texts disagreeing would invite a later reader to re-fold a change already folded. What each row *decided* is untouched; only the spelling of the binary inside the quoted message strings moves. **No decision in this ADR is reopened, no condition changes disposition, and no verdict moves** — the standing security verdict of record remains `REVISE-SPEC`, as the row above states. No new question, no new story, no new error code: next free question id **Q-64** (reserved), next free story id **US-39**. |
 
@@ -76,6 +77,45 @@ exercised rather than dormant, which is the correction §3.8's option-A
 argument most needed. Where §7.4 or §8 says or implies that no v1.0 pack
 ships an executable file, **that is superseded**: F5 §NFR *Content
 integrity* and F1 US-3 carry the current statement.
+
+---
+
+## What Q-62, Q-63, Q-79 and Q-81 supersede — read this with the Q-54 box
+
+**This ADR was written against F1 v2.1. F1 is at v3.0.** Six spec
+versions of movement land here, and unlike the Q-54 box — which recorded
+a decision *reversed* — this one records a contract that fell **behind**.
+The distinction matters for how to read it: nothing below was ever
+argued for in this ADR and then overturned. It was decided elsewhere,
+correctly, while this document stood still.
+
+**F1 v3.0 is authoritative wherever the two disagree.** What changes:
+
+| What | Was, in this ADR | Is, at F1 v3.0 | Source |
+|---|---|---|---|
+| The command surface | Four commands, no group: `init`, `validate`, `verify`, `pack` | **Five commands under a group** — `lintel harness init \| update \| validate \| verify \| pack`. `main.ts` dispatches a **group** and then a command; the command is the **second** positional | Q-62, Q-63 |
+| `update` | *"Never planned; named so their absence is deliberate"* | **v1.0, and F3's.** `src/cli/commands/update.ts` is planned as **F1→F3**, exactly as `init.ts` is F1→F2. **`src/manifest/drift.ts` stays deleted**: Q-62 builds no merge engine, and classification is `verify`'s recomputation against a locally recomputed `expected_old`, not a drift module | Q-62 |
+| `VerifyState` | `match \| partial \| differs \| missing`, with `ownedKeysChecked` | **`match \| adapted \| filled \| unfilled \| differs \| missing`** — six. `partial` and `ownedKeysChecked` are gone with `merge-json` (Q-54 already said so); `adapted`, `filled` and `unfilled` are new | Q-54, Q-56, Q-79 |
+| `RecipeStep` | No per-step declaration of expected change | **`adaptExpected`** and **`fillExpected`**, optional booleans on every arm, **mutually exclusive** | Q-56, Q-79 |
+| The journal | Version **2**, entries with no `intent` | **Version 3**: every entry carries `intent: 'write' \| 'delete'`, and the journal records **which command wrote it** | Q-62 |
+| Dependency posture | *"no runtime dependency outside Node stdlib for hashing, JSON and fs"* — a scoped permission | **Zero runtime dependencies, as a requirement**, over the whole package. Four rows that read "hand-rolled *or* a library" become hand-rolled modules, and two new modules are named rather than assumed | Q-81 |
+| `collisionKey` | *"NFC + case-fold"*, unscoped | **NFC + ASCII case-fold**, a documented narrowing of a security control (F1 known limit 17) | Q-81 |
+| Test runner | `vitest.config.ts` in the file plan | **`node:test`.** It ships with Node 22, so it is not a dependency in either budget, and the config file is deleted | Q-81 |
+
+**The contract in §1 is rewritten to current, not annotated.** This
+departs from the convention the Q-54 box follows, and does so on
+purpose: the rest of §1 is a *record* of a decision, but the **public
+interface contract is a thing F2, F3, F5 and the test writer compile
+against**, and a stale type carrying a footnote is still a stale type.
+The Q-54 box's convention is untouched for everything it covers — those
+shapes stay visible as the record of what was decided and overruled,
+because they were argued here.
+
+**What does not change, and is worth saying because a reader of a
+six-version amendment will assume otherwise:** the planner/executor
+split, the path brands, `stepWriteSet()`, the plan-time render (C-23),
+the five-case rollback rule, the manifest's **six keys**, and the
+verdict. **`PROCEED` stands and is not re-examined in this pass.**
 
 ---
 
@@ -173,8 +213,10 @@ the third is new in this pass and is not yet folded:
 
 ### File-level plan
 
-Greenfield TypeScript, ESM, **Node ≥ 22** (Q-16), no runtime dependency
-outside Node stdlib for hashing, JSON and fs. Published as
+Greenfield TypeScript, ESM, **Node ≥ 22** (Q-16), **zero runtime
+dependencies** — a requirement over the whole package as of **Q-81**, not
+the scoped "for hashing, JSON and fs" permission this line used to carry.
+Published as
 `@lintel/cli`, binary `lintel`, with `harness` as a command group (Q-16 as
 amended by Q-63). Unit tests live alongside
 each module (`*.test.ts`, owned by `implementer`); the integration tree
@@ -198,7 +240,8 @@ These are not deferred. The concepts they implemented no longer exist.
 | `src/manifest/drift.ts` | Drift reporting is F3 (Q-42) |
 | `src/pack/shared.ts` | No `shared/` mechanism at v1.0 (Q-48) |
 | `src/security/content-policy.ts` | Its consumer is `contribute` (Q-42). **The obligation survives — see C-18 in §8** |
-| `src/cli/commands/status.ts` · `update.ts` · `contribute.ts` | Never planned; named so their absence is deliberate rather than forgotten (Q-42) |
+| `src/cli/commands/status.ts` · `contribute.ts` | Never planned; named so their absence is deliberate rather than forgotten. **`status.ts` stays deleted for a new reason** (Q-62): `status` is not a command, it is `update`'s read-only mode, so it is a flag branch inside `update.ts` and not a module. `contribute.ts` stays deleted with F4 (Q-42) |
+| ~~`src/cli/commands/update.ts`~~ | **No longer deleted (Q-62).** `update` returned to v1.0 as F3's; the module is in the plan below as **F1→F3**. The row is kept struck rather than removed so that a reader of the v2.1-era plan sees the reversal |
 
 #### The v1.0 plan
 
@@ -217,18 +260,19 @@ These are not deferred. The concepts they implemented no longer exist.
 
 | File | Action | Owner | Purpose |
 |---|---|---|---|
-| `package.json`, `tsconfig.json`, `vitest.config.ts` | New | F1 | `@lintel/cli`, bin `lintel`, `engines.node >= 22` (Q-16, amended by Q-63) |
+| `package.json`, `tsconfig.json` | New | F1 | `@lintel/cli`, bin `lintel`, `engines.node >= 22` (Q-16, amended by Q-63). **`dependencies` is `{}` and a test asserts it** (Q-81). **No `vitest.config.ts`** — the runner is `node:test`, which needs no config file and is not a dependency in either budget |
 | `src/index.ts` | New | F1 | Library entry; re-exports exactly the interface contract below |
 | **diagnostics** | | | |
 | `src/diag/codes.ts` | New | F1 | The single code taxonomy: `DiagnosticCode` union, severity, code→exit-class map |
 | `src/diag/catalogue.ts` | New | F1 | Code → message template. **The only place user-facing CLI text exists** |
 | `src/diag/diagnostic.ts` | New | F1 | `Diagnostic`, `DiagnosticBag`, `exitCodeFor()` |
 | **CLI** | | | |
-| `src/cli/main.ts` | New | F1→F2 | argv dispatch over **four** commands — `init`, `validate`, `verify`, `pack` — `Diagnostic[]` → stderr → exit code. `E-CLI-UNKNOWN-COMMAND` |
-| `src/cli/flags.ts` | New | F1→F2 | Per-command flag table, **two-pass parse** (pack-declared aliases resolve in pass 2), `--set`, `--scaffold`, `--json`, `--strict`, the four `E-CLI-*` codes and `E-FLAG-NOT-PERMITTED` |
+| `src/cli/main.ts` | New | F1→F2 | argv dispatch over a **group** and then **five** commands — `lintel harness init \| update \| validate \| verify \| pack` (Q-62, Q-63). The command is the **second** positional. `Diagnostic[]` → stderr → exit code. `E-CLI-UNKNOWN-COMMAND` is scoped to the command slot; **an unknown *group* has no code at v1.0** and is F1 known limit 16, recorded rather than invented |
+| `src/cli/flags.ts` | New | F1→F2 | Per-command flag table, **two-pass parse** (pack-declared aliases resolve in pass 2), `--set`, `--scaffold`, `--json`, `--strict`, the four `E-CLI-*` codes and `E-FLAG-NOT-PERMITTED`. **The reserved-flag list is nine** (Q-62): `--set`, `--scaffold`, `--json`, `--strict`, `--force`, `--rollback`, `--all`, `--dry-run`. `--dry-run` is reserved although no F1 command accepts it — it is `update`'s read-only mode, and a pack that has claimed the alias first would shadow it |
 | `src/cli/commands/validate.ts` | New | F1 | `lintel harness validate <pack> \| --all` (US-16) |
 | `src/cli/commands/verify.ts` | **New** | F1 | `lintel harness verify` (US-33, Q-53). Writes nothing, takes no lock |
 | `src/cli/commands/pack-info.ts` | New | F1 | `lintel harness pack info <name>` — renders `PackReport` (US-29) |
+| `src/cli/commands/update.ts` | **New (Q-62)** | F1→F3 | `lintel harness update [--dry-run]`. F1 ships the module boundary and the flag; **F3 owns the behaviour**, exactly as F2 owns `init`'s. `--dry-run` is the read-only mode that was formerly the `status` command |
 | **pack.json** | | | |
 | `src/pack/types.ts` | New | F1 | `PackJson`, `AnatomyDecl`, `ParameterDecl`, `ScaffoldDecl`. **No `Mapping`, no `SharedRef`, no `ComponentJson`** |
 | `src/pack/schema.ts` | New | F1 | Hand-rolled structural validator. Unknown **keys** → warning; unrecognised **values in a behaviour-selecting position** → `E-UNKNOWN-VALUE`, exit 2 (C-16) |
@@ -251,6 +295,8 @@ These are not deferred. The concepts they implemented no longer exist.
 | `src/recipe/plan-steps.ts` | **New** | F1 | Merge base steps with each selected scaffold's steps in **`pack.json`-declared scaffold order**; `when` filtering; the edit-before-place ordering check |
 | `src/recipe/glob.ts` | **New** | F1 | The one bounded glob matcher, used by `exclude`, `in` and anatomy `paths`. **SEC (C-27): an `in` glob's resolution domain is the plan's ordered written-set — `readonly AppliedPath[]` — and the matcher takes no filesystem handle, so "resolve against disk" is not expressible** |
 | `src/recipe/write-set.ts` | **New** | F1 | **SEC (C-19), and the keystone of the 2026-08-31 re-review fold.** `stepWriteSet(step, writtenSoFar)` — every applied path a step's bytes create or change, per op. The **only** input to the destination policy, the stage-2 denylist and the executable rules. Pure, project-free, total over the seven-arm union |
+| `src/claude/frontmatter.ts` | **New (Q-81)** | F1 | **SEC.** The `.claude/` frontmatter reader, hand-rolled and named as its own module because **three codes ride on it** — `E-CLAUDE-TOOL-GRANT`, `E-CLAUDE-PERMISSION-MODE` and US-13's disclosure row 4. Must report a **line number**, fail **closed** on an unparsed block, and reproduce the block **verbatim** for the disclosure (never re-serialise). Its absence from the v2.1 plan was a real gap, not a simplification |
+| `src/semver/compare.ts` | **New (Q-81)** | F1 | Hand-rolled parse and total compare — about thirty lines. **No range arithmetic**: `minCliVersion` is a floor, not a range. Consumers are `E-PACK-CLI-TOO-OLD`, `E-PACK-FORMAT-NEWER`, `W-PACK-NEWER-THAN-CLI` and, at F3, `E-UPDATE-NOT-NEWER` |
 | `src/json/parse-strict.ts` | **New** | F1 | **SEC (C-25).** The only parser for **authored** JSON — `pack.json`, `recipe.json`, `manifest.json`. Rejects a duplicate key at any depth: `E-JSON-DUPLICATE-KEY`. A hand-rolled token pass, because `JSON.parse` collapses duplicates before a reviver sees them — the one stdlib call this ADR replaces rather than wraps |
 | **phase 1 — the payload** | | | |
 | `src/payload/copy-payload.ts` | **New** | F1 | The verbatim copy. Raw bytes in, raw bytes out — no BOM handling, no EOL change, no suffix stripping. Journalled exactly as a phase-2 write is. **SEC (C-26): every payload file is written `0644` and directories `0755`; the source mode is never read.** Mode preservation would make phase 1 carry a permission decision derived from the authoring machine's umask, which is the one thing phase 1 must not do |
@@ -266,24 +312,24 @@ These are not deferred. The concepts they implemented no longer exist.
 | `src/manifest/write.ts` | New | F1 | Atomic write, byte-identical output |
 | **verify** | | | |
 | `src/verify/verify.ts` | **New** | F1 | Check `payloadDigest` **first, fail-closed**; then re-run phase 2 **entirely in memory** and compare to disk. `VerifyResult` |
-| `src/verify/compare.ts` | **New** | F1 | `match \| partial \| differs \| missing`; normalized comparison for text, raw for binary; the executable bit where the platform represents it. **SEC (C-22): at a `merge-json` destination the union is idempotent, so a whole-file comparison always agrees and a post-apply permission reads as `match`. Compare the recomputed OWNED KEYS instead — any mismatch is `differs`, all matching is `partial`, never `match`** |
+| `src/verify/compare.ts` | **New** | F1 | **`match \| adapted \| filled \| unfilled \| differs \| missing`** — six, and the enumeration is closed (Q-56, Q-79). Normalized comparison for text, raw for binary; the executable bit where the platform represents it. The state is chosen by whether the path is in the **adapt-expected** or **fill-expected** set, both resolved at plan time from the recipe alone. **The inversion is deliberate and is easy to implement backwards:** an adapt-expected path that matches is `match`, but a *fill-expected* path that matches is **`unfilled`** — it means the user has not filled in the template. **SEC (C-22) is void with `merge-json` (Q-54): there is no `partial` and no `ownedKeysChecked`** |
 | `src/apply/plan-phase2.ts` | **New** | F1 | **SEC (C-23), §3.6.** Renders every phase-2 step at **plan** time from planner-held payload bytes into `PlannedFile.bytes`. `execute.ts` reads no payload file. Named as its own module so that "the executor re-reads the payload" is a change someone has to make on purpose |
 | `tests/fixtures/adversarial/` | **New** | F1 | **SEC. One fixture pack per closed attack, each asserted to fail with a named code and exit class — the minimum set is F1 v2.3 US-16's table; see §6.1 change 27 for why this ADR no longer keeps a second copy of it.** The control that would have caught F-1 when a disposition table did not |
 | **security — carried forward** | | | |
-| `src/security/confine.ts` | Carried | F1 | **The only constructor of `AppliedPath`.** Anchored `to` grammar, NFC + case-fold `collisionKey`, resolve-and-`lstat` confinement, `confineAtWrite()`. C-4, C-6, C-14 |
+| `src/security/confine.ts` | Carried | F1 | **The only constructor of `AppliedPath`.** Anchored `to` grammar, **NFC + ASCII case-fold** `collisionKey` (Q-81 — a documented narrowing, F1 known limit 17: no Unicode fold ships, and two paths differing only in the case of a non-ASCII letter do not collide), resolve-and-`lstat` confinement, `confineAtWrite()`. **Also houses the reserved-destination denylist**, which moved here when `destination-policy.ts` lost its subject (Q-54). C-4, C-6, C-14 |
 | `src/security/harness-paths.ts` | **New** | F1 | **The only constructor of `HarnessPath`** — the CLI's own writes under `.harness/`, and the list is **five and complete**: `pack/**`, `manifest.json`, `journal.json`, `journal.d/**`, `lock`. Derived from paths already proven grammar-clean, so confined by construction. Closes the typing hole phase 1 opened |
-| `src/security/destination-policy.ts` | **Revised** | F1 | One table keyed by **destination**: the reserved-destination denylist (**extended: no recipe step writes under `.harness/`**), the `ownedKeys` allowlist and its security-relevant marks, the executable-root rules. C-1, C-5, C-12. **Revised for C-19/C-20/C-16:** every rule is evaluated over `stepWriteSet()`, **never over `step.to`**; `policyFor` resolves by `collisionKey` on every platform and is **total**; `allowedOps` is `readonly RecipeOp[] \| null` (the old `[] ⇒ merge-json only` encoding was a fail-open trap); `FORBIDDEN_AT_EVERY_DESTINATION` is a table-level floor no row may shrink |
-| `src/security/consent.ts` | Carried | F1→F2 | Builds `SecurityDisclosure` from a plan; `renderDisclosure()`; the gate that turns "no consent" into `E-SETTINGS-CONSENT-REQUIRED` before any write and **before the lock**. C-2 |
+| ~~`src/security/destination-policy.ts`~~ | **Not built (Q-54)** | — | One table keyed by **destination**: the reserved-destination denylist (**extended: no recipe step writes under `.harness/`**), the `ownedKeys` allowlist and its security-relevant marks, the executable-root rules. C-1, C-5, C-12. **Revised for C-19/C-20/C-16:** every rule is evaluated over `stepWriteSet()`, **never over `step.to`**; `policyFor` resolves by `collisionKey` on every platform and is **total**; `allowedOps` is `readonly RecipeOp[] \| null` (the old `[] ⇒ merge-json only` encoding was a fail-open trap); `FORBIDDEN_AT_EVERY_DESTINATION` is a table-level floor no row may shrink |
+| `src/security/disclosure.ts` | **Renamed from `consent.ts`** | F1→F2 | Builds `SecurityDisclosure` from a plan and renders it. **There is no gate** (Q-54): no `ConsentInputs`, no `E-SETTINGS-CONSENT-REQUIRED`, no gate call in `execute.ts` — a pack cannot write a settings file by any route, so there is nothing to consent to. **Renamed because the module was named after the half that was deleted**, and a file called `consent.ts` containing no consent is how the deleted gate gets rebuilt by someone tidying up. C-2 survives as the disclosure obligation only |
 | `src/security/secret-heuristic.ts` | Carried | F1 | `E-PARAM-SECRET-SUSPECTED` at validate time; `W-ANSWER-LOOKS-SECRET` at answer time. C-15 |
 | **filesystem** | | | |
 | `src/fs/project-paths.ts` | Revised | F1 | `.harness/` layout constants, POSIX + NFC normalization. All path safety lives in `security/` |
 | `src/fs/atomic-write.ts` | Carried | F1 | temp-then-rename, mode bits, created-directory tracking, **exclusive-create semantics and `E-TARGET-RACE`** (C-14) |
-| `src/fs/journal.ts` | Revised | F1 | `.harness/journal.json` **v2** (`preExisting`, `preHash`, `preMode`, `backup`) plus `.harness/journal.d/`. **Now covers phase-1 writes too.** C-13 |
+| `src/fs/journal.ts` | Revised | F1 | `.harness/journal.json` **v3** (Q-62): `command`, and per entry `intent: 'write' \| 'delete'`, `preExisting`, `preHash`, `preMode`, `backup`, plus `.harness/journal.d/`. **Covers phase-1 writes too.** `intent` exists because **`update` deletes** payload orphans and the five-case rollback table models no deletion; `command` exists because `E-JOURNAL-PRESENT`'s remedy has to name the command that crashed, and naming `init` after a crashed `update` sends the user to `E-ALREADY-APPLIED`. C-13 |
 | `src/fs/lock.ts` | Carried | F1 | Advisory `.harness/lock` with `{pid, host, startedAt, cli}`; exclusive-create acquire; the three-condition stale rule |
 | `src/fs/walk.ts` | Carried | F1 | The one bounded, non-symlink-following walk. Depth 32, 10 000 entries, skip list, `E-TRAVERSAL-LIMIT`. **Two call sites**: the phase-1 payload walk and the `verify` project scan. C-17 |
 | **apply** | | | |
 | `src/apply/plan.ts` | Revised | F1 | `ApplyInputs` → `ApplyPlan`. Pure: plans **both phases**, computes `payloadDigest` and the manifest, builds `SecurityDisclosure`, writes **nothing** |
-| `src/apply/execute.ts` | Revised | F1→F2 | consent gate → lock → journal → **phase 1** → **phase 2** → manifest → journal removal. The only writer. Re-confines immediately before each write (C-14) |
+| `src/apply/execute.ts` | Revised | F1→F2 | lock → journal → **phase 1** → **phase 2** → manifest → journal removal. The only writer. Re-confines immediately before each write (C-14). **No consent gate** (Q-54) |
 | `src/apply/rollback.ts` | Revised | F1→F2 | The five-case rule of §7.5, now covering phase-1 paths |
 | **validate** | | | |
 | `src/validate/validate-pack.ts` | Revised | F1 | The **14**-step ordered check runner of F1 US-16 → `PackReport`. Step 12 is the Q-50 folder-README check (§3.5) |
@@ -325,12 +371,24 @@ removes a control.
 > arms, not seven: the `merge-json` arm and its `ownedKeys` field are
 > gone. So are `DestinationPolicy`, `OwnedKey`, `policyFor`,
 > `checkOwnedKey`, `ConsentInputs`, `SecurityDisclosure.settings` and
-> `VerifyState`'s `partial`. Do **not** compile against them. F1 **v2.3**
-> is the contract of record; the shapes below are kept as the record of
-> what was decided and then overruled. **Everything not named in this box
-> stands unchanged** — the path brands (`AppliedPath`, `HarnessPath`,
-> `WritablePath`), `stepWriteSet()`, `collisionKey()`, the journal and
-> rollback types, and the planner/executor split.
+> `VerifyState`'s `partial`. Do **not** compile against them.
+>
+> **Updated 2026-09-01: the shapes below are now CURRENT, not historical.**
+> When this box was written the types beneath it were left stale on the
+> supersede-don't-delete convention, with F1 v2.3 named as the contract of
+> record. That was wrong for a *contract* — F2, F3, F5 and the test writer
+> compile against these declarations, and a stale type carrying a footnote
+> is a stale type. The declarations are **rewritten against F1 v3.0**:
+> `RecipeStep` is six arms plus `StepChangeExpectation`, `VerifyState` is
+> six values, the journal is version 3, and `ApplyInputs` has no `consent`.
+> **`MergeJsonStep` is the one shape deliberately left in place as
+> history**, and it is explicitly excluded from the `RecipeStep` union so
+> that leaving it cannot make it constructible. **F1 v3.0 is the contract
+> of record.** **Everything not named in either supersession box stands
+> unchanged** — the path brands (`AppliedPath`, `HarnessPath`,
+> `WritablePath`), `stepWriteSet()`, `collisionKey()` (whose *fold* is
+> narrowed by Q-81 but whose *signature and role* are not), the rollback
+> types, and the planner/executor split.
 
 ```ts
 // ── path confinement ────────────────────────────────────────────────────
@@ -547,9 +605,40 @@ export interface MergeJsonStep extends StepBase {
   ownedKeys: readonly OwnedKey[];
 }
 
+/** Q-54: SIX arms, not seven. MergeJsonStep above is kept as the record
+ *  of what was decided and overruled — it is NOT part of this union and
+ *  must not be constructed. */
 export type RecipeStep =
   | CopyStep | RenameStep | StripSuffixStep
-  | RewritePathStep | SubstituteStep | GenerateStep | MergeJsonStep;
+  | RewritePathStep | SubstituteStep | GenerateStep;
+
+/** Q-56 / Q-79. Optional on EVERY arm above; both default to false; both
+ *  are JSON booleans, so "true" is E-UNKNOWN-VALUE, exit 2, no coercion
+ *  and no truthiness (C-34). Each lands on every applied path in the
+ *  step's write set — quantified over stepWriteSet(), never over `to`,
+ *  because rewrite-path and substitute have no `to` and a rule written
+ *  over `to` would exempt exactly the two ops that change bytes after
+ *  placement.
+ *
+ *  They are MUTUALLY EXCLUSIVE on one step: E-RECIPE-STEP-INVALID,
+ *  exit 2. A file is either the skill's to adapt or the user's to fill,
+ *  and a step claiming both has not decided which. An empty write set
+ *  under either is E-RECIPE-STEP-INVALID too.
+ *
+ *  adaptExpected: something else rewrites this after the apply — the
+ *  generated CLAUDE.md, in all three packs.
+ *  fillExpected:  this shipped INCOMPLETE and the person who applied it
+ *  is expected to finish it — project-brief.md in every pack, writing's
+ *  voice guide.
+ *
+ *  SEC-adjacent (Q-79): fillExpected is not only a report state. It is a
+ *  PROHIBITION — `update` may never overwrite a path in the fill-expected
+ *  set, unconditionally, whatever the newer pack ships and under any
+ *  flag. A non-boolean here would silently disarm that. */
+export interface StepChangeExpectation {
+  adaptExpected?: boolean;
+  fillExpected?: boolean;
+}
 
 export interface Recipe {
   /** SEC (C-24). A behaviour-selecting position, and the SEVENTH entry in
@@ -859,19 +948,35 @@ export function canonicalJson(value: unknown): string;
  *  `partial` never means `match` and never means `differs`. It means:
  *  every key this pack CLAIMS is as this pack wrote it, and the rest of
  *  this file was not this pack's to claim and has not been checked. */
-export type VerifyState = 'match' | 'partial' | 'differs' | 'missing';
+/** Q-56 / Q-79. SIX values, and the enumeration is closed. `partial` is
+ *  GONE with merge-json (Q-54).
+ *
+ *  match     — recomputed and identical.
+ *  adapted   — differs, and a step declared adaptExpected. Not a failure.
+ *  filled    — differs, and a step declared fillExpected. Not a failure:
+ *              the user did what the pack asked.
+ *  unfilled  — IDENTICAL, and a step declared fillExpected. Not a
+ *              failure, and NOT `match`: it means the template is still a
+ *              template. Class `notice` (Q-60); --strict does not promote
+ *              it, because a --strict run that can never pass on a
+ *              freshly created project is useless.
+ *  differs   — changed, and nothing declared it would. FAILS.
+ *  missing   — not on disk. FAILS.
+ *
+ *  NOTE THE INVERSION, which is the easiest thing here to implement
+ *  backwards: for an adapt-expected path, matching is unremarkable and
+ *  reports `match`; for a fill-expected path, matching is the finding. */
+export type VerifyState =
+  | 'match' | 'adapted' | 'filled' | 'unfilled' | 'differs' | 'missing';
 export interface VerifyEntry {
   path: AppliedPath;
   state: VerifyState;
   /** false on Windows, where the bit is not represented. The report says
    *  so rather than implying a check ran. */
   modeChecked: boolean;
-  /** SEC (C-22). Present iff state === 'partial'. The owned keys `verify`
-   *  recomputed from (payload, answers) and deep-equal-checked against
-   *  the on-disk value. A mismatch on any one of them makes the entry
-   *  `differs`, not `partial`. Rendered by name, so the reader sees
-   *  exactly which keys were and were not covered. */
-  ownedKeysChecked?: readonly string[];
+  /* C-22's `ownedKeysChecked` is GONE with merge-json (Q-54). There is
+   * no partial verification: the recomputation identity is exact at
+   * every applied path, with no carve-out. */
 }
 export interface VerifyResult {
   /** Q-52. Checked FIRST and fail-closed: a mismatch makes the
@@ -879,7 +984,11 @@ export interface VerifyResult {
    *  E-PAYLOAD-DIGEST-MISMATCH (exit 2) is the whole report. */
   payload: { recorded: string; computed: string; ok: boolean };
   entries: readonly VerifyEntry[];
+  /** `differing` and `missing` are the ONLY counters that gate `ok`.
+   *  adapted, filled and unfilled are reported, counted separately and
+   *  never affect the exit code (Q-56, Q-79). */
   checked: number; differing: number; missing: number;
+  adapted: number; filled: number; unfilled: number;
   diagnostics: readonly Diagnostic[];
   ok: boolean;
 }
@@ -895,10 +1004,10 @@ export interface ApplyInputs {
   scaffolds: readonly string[];
   cliVersion: string;
   force?: boolean;                   // byte-identical collisions only
-  /** SEC (C-2). Absent ≡ {}: non-interactive, no blanket accept. There
-   *  is NO value of ApplyInputs that means "consent granted by default";
-   *  a caller cannot reach the permissive branch by forgetting a field. */
-  consent?: ConsentInputs;
+  /* Q-54: there is NO `consent` field and no ConsentInputs. A pack
+   * cannot write a settings file by any route, so there is nothing to
+   * consent to and no gate to forget. The disclosure survives; the gate
+   * does not. */
 }
 export interface PlannedFile {
   path: WritablePath;                // SEC (C-14) — never a bare string
@@ -932,11 +1041,20 @@ export interface ApplyPlan {
 /** Pure: reads the pack and inspects the project; writes nothing, ever. */
 export function planApply(inputs: ApplyInputs): Promise<ApplyPlan>;
 
-// SEC (C-13). Version 2. Version 1 never shipped; a journal declaring
-// any other version is E-JOURNAL-UNREADABLE, exit 2, and is never guessed.
+// SEC (C-13). Version 3 (Q-62). Versions 1 and 2 never shipped outside a
+// single run — a journal exists only between the start and the end of one
+// command — so there is no compatibility to keep. A journal declaring any
+// other version is E-JOURNAL-UNREADABLE, exit 2, and is never guessed.
 export interface JournalEntry {
   path: WritablePath;
-  sha256: string;                    // the hash this apply intended to write
+  /** Q-62. `update` DELETES payload orphans, and the five-case rollback
+   *  table models overwriting and creating but not deleting. A 'delete'
+   *  entry records preExisting: true, preHash, preMode and a backup, has
+   *  NO intended hash, and rollback restores it unconditionally.
+   *  `init` writes 'write' on every entry, so the field is uniform
+   *  rather than optional. */
+  intent: 'write' | 'delete';
+  sha256: string | null;             // null iff intent === 'delete'
   phase: 1 | 2;
   preExisting: boolean;
   preHash: string | null;
@@ -946,7 +1064,13 @@ export interface JournalEntry {
   backup: string | null;
 }
 export interface Journal {
-  version: 2; cli: string; startedAt: string;
+  version: 3; cli: string; startedAt: string;
+  /** Q-62. E-JOURNAL-PRESENT's remedy line is rendered from this. Saying
+   *  `init --rollback` after a crashed `update` sends the user to a
+   *  command that answers E-ALREADY-APPLIED and leaves the journal
+   *  exactly where it was — a remedy that cannot work is worse than
+   *  none, because the user believes they tried it. */
+  command: 'init' | 'update';
   entries: readonly JournalEntry[];
   createdDirs: readonly string[];    // creation order; removed in reverse
 }
@@ -1795,6 +1919,28 @@ decision**; all three are restatements that drifted from a source.
 | `specifications/general/pack-inventory.md` | `coding` applied-structure fence (**L126**) | Lists `settings.json    merge-json, declared owned keys only` — which contradicts **its own** row at **L356** (*"owned keys — **Missing**"*). Internally inconsistent today, and change 12 settles it in L356's favour |
 | `specifications/project-brief.md` §12 | **Q-40** | *"The recipe is a pure function of (payload, parameters)"* is the **source** all the restatements above inherit, and it is the one that is falsified at a `merge-json` destination. It is the only item on this list that is a **decision record** rather than a restatement, so it needs an amendment note in Q-40's own style rather than an edit — the same treatment Q-50 got on 2026-08-31 |
 | `specifications/project-brief.md` §12 | **Q-41** | Its text — *"phase 2 reads from the phase-1 copy in the project"* — is **confirmed, not contradicted**, by §3.6, but it is the sentence whose ambiguity produced F-5. An amendment note stating that it fixes the **authoritative tree**, not the **moment of the read**, would close the reading that this pass had to rule out |
+
+### 6.6 What the 2026-09-01 amendment changes, and what it leaves
+
+**This amendment edits no other file either.** It brings this ADR up to
+F1 **v3.0**; the folds it reflects were already made in F1 and, on
+2026-09-01, in `specifications/general/`.
+
+**§6.5 is stale as a to-do list and is kept as a record.** Every item on
+it has since been fixed: `pack-application.md`'s `merge-json` row is gone
+and the purity claim is stated as holding without exception,
+`pack-inventory.md` resolved its own internal contradiction in L486-503's
+favour, and the brief's Q-40 and Q-41 carry their amendment notes. **Do
+not work §6.5 — read it as evidence that the flagging worked.**
+
+**What this pass leaves for whoever picks up F1's epics:**
+
+| Item | Why it is not done here |
+|---|---|
+| **F1's epics have no tasks for v3.0** | E-10's heading moved to six states and the code counts were corrected, but no task covers `fillExpected`, `filled`/`unfilled`, the nine new codes, journal v3, `src/claude/frontmatter.ts` or `src/semver/compare.ts`. Tasks name files against **this** file plan, so they had to wait for it — which is now unblocked |
+| **F3's flags, failure contract and lock behaviour** | F1 ships `update.ts`'s module boundary and its reserved flag; **F3 owns what it does**. Naming the module is not specifying the command, and this ADR deliberately does not |
+| **A Mode A pass over the amended contract** | The security architecture in §7 is **not re-examined here** and the verdict does not move. Two changes touch security-adjacent surface — `collisionKey`'s ASCII narrowing (Q-81) and `fillExpected` as a prohibition `update` must honour (Q-79) — and both are argued in F1 v3.0 rather than re-argued here. Neither is a new attack surface; the first is a **stated reduction in a control's reach** and the second is a **new constraint on a writer**. A reviewer should still look at them |
+| **`src/security/disclosure.ts`'s rename** | Named here, not performed — there is no source tree yet |
 
 ---
 
@@ -2975,8 +3121,12 @@ checked rather than assumed:**
    `E-SHARED-*` strings are in prose recording their own deletion, which
    is the right place for them.
 3. ~~The master spec says the v1.0 command surface is `init` only.~~
-   **Cleared.** It now reads four commands, carries the Q-50 row with
+   **Cleared.** It read four commands, carried the Q-50 row with
    both exclusions, six manifest keys, and Q-47…Q-53 indexed as resolved.
+   **Re-checked 2026-09-01:** the master spec is at **v1.0.2** and has
+   moved on again with Q-62 and Q-63 — **five** commands under the group,
+   sequencing `F1 → F2 → F5 → F3 → F6`. Still cleared, and the count in
+   the sentence above is left as the record of what was checked when.
 
 **One item remains, and it is mine.** §3.5 decides that `validate`
 enforces Q-50 mechanically, which adds §6.1 changes 12–16 (a new US-16
