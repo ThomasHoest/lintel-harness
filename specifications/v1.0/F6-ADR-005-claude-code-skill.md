@@ -3,8 +3,8 @@
 **Status:** Draft
 **Date:** 2026-09-01
 **Decides:** `F6-spec-claude-code-skill.md` (US-79…US-98, Q-75…Q-78; **Q-79 was resolved at project level** and is not re-opened here)
-**Reads:** `F1-spec-pack-format-and-manifest.md` **v3.2** · `F2-ADR-003` · `F3-ADR-004` · `general/interaction-model.md` (IM-1…IM-41) · `general/technology-choices.md` §9
-**Verdict:** **REVISE SPEC**, issued 2026-09-01 — **conditions cleared the same day; see §8.** The standing verdict is **PROCEED**. The revision is small and named; the architecture is sound.
+**Reads:** `F1-spec-pack-format-and-manifest.md` **v3.3** (which this ADR's condition 1 produced) · `F2-ADR-003` · `F3-ADR-004` · `general/interaction-model.md` (IM-1…IM-41) · `general/technology-choices.md` §9
+**Verdict:** **REVISE SPEC**, issued 2026-09-01 — **conditions cleared the same day; see §8.** The standing verdict is **PROCEED**. The revision was small and named; the architecture was never in question.
 
 ---
 
@@ -94,8 +94,9 @@ version range it was written against. **A mismatch is reported to the
 user, not worked around.** This is cheap, and it is the only mechanism
 available: a Markdown file cannot introspect its own package.
 
-**Cost, stated:** the sixth command is real surface, and `interaction-
-model.md` §11 currently enumerates five. See §5.
+**Cost, stated:** the sixth command is real surface. `interaction-model.md`
+§11 enumerated five when this was written and enumerates six now — §5
+listed the fold and §8 records it done.
 
 ### 3.2 Locating `init`'s disclosure block — **chosen: sentinel lines from the CLI** (Q-76)
 
@@ -118,8 +119,10 @@ skill's capture depend on message wording F1 is free to change, which is
 the string-matching §Error States forbids for codes and which is no
 better here.
 
-**⚠️ This asks F1 for two lines of output it does not currently
-specify** — see §5.
+**✅ This asked F1 for two lines of output it did not specify. F1 v3.3
+specifies them** — `--- lintel disclosure begin ---` and
+`--- lintel disclosure end ---`, on stderr, fixed and versionless. See
+§5 and §8.
 
 ### 3.3 Whether `update`'s report carries new content — **decided in `F3-ADR-004`** (Q-77)
 
@@ -145,7 +148,7 @@ lives on `--dry-run`, which exits 1 when an update is available.
 | # | Resolution |
 |---|---|
 | **Q-75** | **Ships in `@lintel/cli`; installed by `lintel harness skill install [--user]`.** Version agreement is by co-release, and the skill checks `lintel --version` first and reports a mismatch rather than adapting to it. §3.1. |
-| **Q-76** | **Two fixed sentinel lines around the disclosure**, emitted by `init` on stderr. Not `--json`, not row-text matching. §3.2. **Requires an F1 amendment.** |
+| **Q-76** | **Two fixed sentinel lines around the disclosure**, emitted by `init` on stderr. Not `--json`, not row-text matching. §3.2. **The F1 amendment it required landed as v3.3** (§8). |
 | **Q-77** | **Yes — rendered bytes, not a diff**, in `UpdateEntry.expectedNew`. Decided in `F3-ADR-004` §3.2. |
 | **Q-78** | **`update` exits 0** with edited paths outstanding; `--dry-run` exits 1 when an update is available. Decided in `F3-ADR-004` §3.1. |
 | **Q-79** | **Not F6's any more.** It was in this block and was **resolved at project level on 2026-09-01** as `fillExpected` plus two `verify` states. F5 declares four fill-expected paths; F6 fills the voice guide and the user fills the briefs. The id keeps its number and is recorded in brief §12. |
