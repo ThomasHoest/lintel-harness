@@ -1,6 +1,6 @@
 # ADR-002 — Template packs: a pack-authoring contract, three deliberately unequal packs, and a specification the packs have overtaken
 
-**Status:** Draft — **re-issued 2026-09-01 against F5 v3.1; see §9. Standing verdict: `PROCEED` with two conditions.**
+**Status:** Accepted — **re-issued 2026-09-01 against F5 v3.1; see §9. Standing verdict: `PROCEED` with two conditions.**
 **Date:** 2026-09-01
 **Deciders:** `architect` (this ADR) · escalations to Thomas Andersen
 **Refs:** `F5-spec-template-packs.md` **v2.9** · `F1-spec-pack-format-and-manifest.md` **v2.9** (**authoritative for the format**) · `F1-ADR-001-pack-format-and-manifest.md` · `specifications/general/pack-application.md` (**authoritative** — the two-phase model) · `specifications/general/pack-inventory.md` · `specifications/project-brief.md` §12 (Q-1…Q-63, all resolved; **Q-64 reserved**) · `packs/coding/`, `packs/writing/`, `packs/planning/` (the three built packs) · `packs/coding/specifications/adr-feature.template.md`
@@ -910,3 +910,52 @@ conditions above are about *verifying and scoping* a criterion rather
 than about whether the packs or the spec are right. **`PROCEED` is not
 `SECURITY-PROCEED`** — F5's content passed no security gate here, and the
 standing security verdict for F1 and F5 remains `REVISE-SPEC` by decision.
+
+---
+
+## 10. Condition 2 — the check has run, 2026-09-01
+
+**`T-1502` executed for `coding`.** §9 said its deliverable was *evidence,
+not a pass*, and the evidence is worth more than a pass would have been:
+**the check found two errors in the enumeration on its first run**, plus
+a defect in the provenance it reads.
+
+**The provenance pointed at the wrong commit.** `packs/coding/pack.json`
+recorded `2644096` — which is the commit that **removed** `template/`, so
+the source tree it names does not exist there. Corrected to its parent
+**`807d67d`**. **A re-runnable check that takes its commit from
+`provenance` is the only thing that could have found this**, which is the
+argument `T-1501` made for wiring it that way.
+
+**Result: 38 source files, 41 shipped, 32 differences** — 7 only-in-source,
+10 only-in-shipped, 15 modified.
+
+**Two differences do not fit the ten classes.** Recorded as unplaceable
+rather than reclassified to fit, which is `T-1503`'s job and not this
+section's:
+
+1. **`CLAUDE.md.template` and `README.md` are *modified*, not net-new.**
+   Class (h) — *net-new authoring beyond class (b)* — lists both by name.
+   The diff shows they existed in the source and were **edited**. The
+   class is wrong about two of its own members, and it is wrong in the
+   direction that matters: *authored fresh* and *migrated then changed*
+   are different claims about fidelity.
+2. **The seven `infrastructure/backend-deploy/**` files are gone from the
+   pack entirely.** Class (c) describes that tree becoming
+   `scaffolds/backend-azure/` — true when written, and **Q-82 then moved
+   it out of `packs/` altogether**. A second restructure the class
+   predates, and the enumeration was widened at Q-80 **before** Q-82
+   happened.
+
+**Class (j) was not empty.** F5 v3.0 said so about itself, ADR-002 §9
+declined to treat the admission as a discharge, and the check has now
+made it a fact rather than a worry. **The enumeration's problem was never
+its width — it was that nothing had run it.**
+
+**Condition 2 is discharged for `coding` and stands for `writing`**,
+whose source is `../AIImpactOnOrganizationsAndLeadership/` at
+`9f7b4f1` and needs that repository present. **The standing verdict does
+not move**: `PROCEED` was issued on the six v2.9 findings being addressed,
+and condition 2 was always a gate on F5 being **Accepted**, not on this
+ADR proceeding. **F5 stays `Draft` until `T-1503` adjudicates the two
+unplaceable classes.**

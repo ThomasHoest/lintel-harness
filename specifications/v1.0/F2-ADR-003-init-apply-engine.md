@@ -1,6 +1,6 @@
 # ADR F2-003 — `harness init`, the apply engine's CLI surface
 
-**Status:** Draft
+**Status:** Accepted
 **Date:** 2026-09-01
 **Decides:** `F2-spec-init-apply-engine.md` (US-39…US-56, Q-65…Q-69)
 **Reads:** `F1-spec-pack-format-and-manifest.md` **v3.4** · `F1-ADR-001` (amended 2026-09-01, contract current) · `general/interaction-model.md` §11 · `general/pack-application.md`

@@ -492,11 +492,16 @@ authoritative, verify it rather than trusting the assertion.
   controls), `packs/` resolves from `import.meta.url` and **never
   `process.cwd()`**, and CI is **GitHub Actions** across three platforms
   with **Windows not optional**.
-- **The remaining gates before code are procedural, not open questions:**
-  every spec and ADR is still `Draft` and the process requires **Accepted**;
-  **T-2301** (F3's six-row disposition table → four) must land before F3's
-  tasks; and **T-1502** (the migration diff, never run) before F5 is
-  Accepted.
+- **F1, F2, F3 and F6 are Accepted, spec and ADR. All five ADRs are
+  Accepted.** **F5's spec stays `Draft` on purpose:** `T-1502` ran on
+  2026-09-01 and found **two differences US-24's ten-class enumeration
+  cannot place**, so `T-1503` must adjudicate before it can be Accepted.
+  **F5 is pack content, so this blocks no code** — F1 through F6 are clear
+  to implement.
+- **`T-2301` was rewritten, not executed.** It said *fold F3's disposition
+  table from six rows to four*; that instruction came from an error in
+  `F3-ADR-004` and **executing it would have deleted correct
+  specification** (`F3-ADR-004` §10). The table grows to **seven**.
 - **Every v1.0 feature now has a spec, an ADR and epics.**
 - **F2/F3/F6's Mode A pass ran to four rounds and returned
   `SECURITY-PROCEED`** (`security-review-mode-a-F2-F3-F6.md`).

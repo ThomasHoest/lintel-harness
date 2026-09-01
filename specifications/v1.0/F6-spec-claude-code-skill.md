@@ -1,6 +1,6 @@
 # F6 — The Claude Code Skill Specification — Lintel Harness v1.0
 **Version:** 1.1
-**Status:** Draft
+**Status:** Accepted
 **Date:** 2026-09-01
 **Platform:** **Markdown under `.claude/skills/`, and nothing else** — no runtime, no build, no package, no dependency and no tests of its own (`general/technology-choices.md` §9). It ships in `@lintel/cli` with the binary it drives (`lintel`, command group `harness` — Q-63). The surfaces it acts on are a conversation and a filesystem.
 **Design spec:** n/a (no UI). `general/interaction-model.md` states, as `IM-n` requirements, what would elsewhere be design decisions — what is shown, in what order, verbatim or summarised.

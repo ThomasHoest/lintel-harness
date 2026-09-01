@@ -1,6 +1,6 @@
 # ADR F3-004 — `harness update`, classification without a merge engine
 
-**Status:** Draft
+**Status:** Accepted
 **Date:** 2026-09-01
 **Decides:** `F3-spec-update.md` (US-59…US-72, Q-70…Q-74) — and, jointly with `F6-ADR-005`, **Q-78**
 **Reads:** `F1-spec-pack-format-and-manifest.md` **v3.4** · `F1-ADR-001` (amended 2026-09-01) · `F6-spec-claude-code-skill.md` (IM-7, IM-30, IM-31, IM-33) · `general/interaction-model.md` §11
@@ -24,11 +24,16 @@ expected_new = phase2(bundled payload,      its recipe, recorded answers, record
        classify each path: on-disk vs expected_old        ← this is verify's comparison,
                           │                                  the same implementation
        ┌──────────────────┼──────────────────┬─────────────────────┐
-   unedited            edited            fill-expected        payload orphan
+   unedited            edited            fill-expected      applied orphan
        │                  │                    │                   │
-  replace with       leave, report        NEVER touch          delete
-  expected_new       (F6 reconciles)      (Q-79)            (journal intent: delete)
+  replace with       leave, report        NEVER touch       leave, report
+  expected_new       (F6 reconciles)      (Q-79)          (NEVER delete — §10)
 ```
+
+**Separately, and it is not a disposition:** a file in the **old payload**
+and absent from the **new** is removed from `.harness/pack/`. That is a
+`HarnessPath` operation on a CLI-owned tree, **not an applied path**, and
+it is the reason the journal needs `intent: "delete"`.
 
 **`expected_old` is computed from the *local* payload, not the bundled
 one.** That is the whole reason no merge base is needed: the project
@@ -74,10 +79,24 @@ brand.**
 ### Public interface contract
 
 ```ts
-/** Q-62: four dispositions, and the enumeration is closed. There is no
+/** Q-62: SEVEN dispositions, and the enumeration is closed. There is no
  *  'merged' and no 'conflicted' — building either is what this feature
- *  was defined not to do. */
-export type Disposition = 'replaced' | 'kept-edited' | 'kept-fill-expected' | 'deleted';
+ *  was defined not to do.
+ *
+ *  CORRECTED 2026-09-01 (§10). This ADR first declared FOUR, wrong twice:
+ *  it dropped 'added', 'unchanged', 'kept-adapted' and 'orphaned', which
+ *  F3 §F3.3 states correctly and the write path genuinely distinguishes;
+ *  and it invented 'deleted' by confusing an APPLIED orphan (reported,
+ *  NEVER deleted) with a PAYLOAD orphan (removed from .harness/pack/,
+ *  not an applied path at all). */
+export type Disposition =
+  | 'added'              // not in old, in new, nothing on disk → exclusive create
+  | 'unchanged'          // in both, unedited, new = old → write nothing
+  | 'replaced'           // in both, unedited, new ≠ old → write the new content
+  | 'kept-adapted'       // adaptExpected declared → leave, report
+  | 'kept-edited'        // the user changed it → leave, report, F6 reconciles
+  | 'kept-fill-expected' // Q-79, postdates F3's spec → leave, NEVER overwrite
+  | 'orphaned';          // in old, not in new → leave, report, NEVER delete
 
 export interface UpdateEntry {
   path: AppliedPath;
@@ -200,15 +219,15 @@ records the same resolution from the consumer's side.
 
 ## 5. Conflicts flagged
 
-**One, against this spec, and it changes a story's acceptance criterion.**
+**One, against this ADR itself — corrected in §10 rather than left
+standing.**
 
-**F3 §F3.3's disposition table has six rows; the contract above has
-four.** The spec enumerated dispositions before Q-79 existed, and Q-79
-added `fill-expected` as a path class `update` may never touch. Two of the
-spec's six rows are sub-cases of *replaced* distinguished by whether the
-path exists in `expected_new` — a distinction the write path does not act
-on. **Four is the enumeration that survives**, and F3's §F3.3 should be
-folded to it.
+The paragraph that stood here claimed F3 §F3.3 should fold from six
+dispositions to four. **It was wrong**, and had `T-2301` been executed as
+written it would have deleted correct specification. All six of §F3.3's
+dispositions are real and the write path acts differently on each.
+**The only change Q-79 requires is an addition** —
+`kept-fill-expected`, making **seven**. See §10.
 
 **No conflict with F1.** Journal v3, the nine codes, `fillExpected`'s
 prohibition and `--dry-run`'s reservation all landed in F1 v3.0, and
@@ -274,6 +293,15 @@ conditions are F3's, and both are additive — neither disturbs §1.
 
 ### C-51 (HIGH) — deletion re-confines immediately before acting
 
+> **Scope corrected 2026-09-01 (§10).** The deletion this governs is of
+> **payload** files under `.harness/pack/` — a `HarnessPath` tree — not of
+> applied paths. **`update` deletes no applied path, ever.** The condition
+> still holds, but its blast radius is narrower than the text below
+> implies: phase 1 writes `.harness/pack/` as `0644` regular files and F1
+> forbids a symlink in a pack (`E-SYMLINK-IN-PACK`). Read it as defence in
+> depth against a **user** planting a link inside `.harness/`, which
+> nothing prevents.
+
 **C-14 makes write-time re-confinement absolute**: `executeApply` re-runs
 US-3's stage 3 immediately before **each write**, because the plan's
 `lstat` is stale by the time the write happens. §1 introduced **deletion**
@@ -313,3 +341,49 @@ short.
 **Also inherited:** every line the report prints passes F1 v3.4's
 control-character escaping (C-50). `expectedNew` is pack-rendered content
 going to a terminal, which is exactly the class that rule exists for.
+
+---
+
+## 10. Correction — the disposition enumeration, 2026-09-01
+
+**This ADR declared four dispositions; F3's spec declares six; the spec
+was right.** Recorded as a correction rather than quietly fixed, because
+the error was one step from propagating: **`T-2301` instructed an
+architect to fold §F3.3 down to four**, and executing it would have
+deleted correct specification.
+
+**Two mistakes, and the second is the instructive one.**
+
+**(1) Four dropped dispositions the write path genuinely
+distinguishes.** `added` writes by exclusive create; `unchanged` writes
+nothing because new equals old; `replaced` writes because it does not;
+`kept-adapted` leaves a path the pack **declared** would be edited.
+`added` and `replaced` are not the same write, and `unchanged` and
+`kept-adapted` are not the same silence.
+
+**(2) `deleted` was invented by conflating two different orphans.**
+F3 §F3.6 item 4 separates them precisely, and the separation is the whole
+point:
+
+| | **Applied orphan** | **Payload orphan** |
+|---|---|---|
+| What | a path in the **user's project** the new pack no longer ships | a file in **`.harness/pack/`** the new payload no longer contains |
+| Outcome | **`orphaned`** — reported, **never deleted** | removed — **not a disposition at all**, a `HarnessPath` operation |
+| Why | *"a delete leaves a sentence."* Unedited proves the file matches what the pack **used to** write; it proves nothing about whether the project now depends on it | `.harness/pack/` must be a **verbatim copy**, or its tree digest stops equalling the recorded `payloadDigest` |
+
+**`update` deletes no applied path, ever** — F1's Q-25 default, confirmed
+by F3 with its own argument. **This ADR contradicted it while believing
+it was summarising it.**
+
+**What survives:** journal `intent: "delete"` is still required, because
+payload orphans **are** deleted, journalled and reversible — so **journal
+v3 stands**, for a narrower and better-stated reason than §1 originally
+gave. C-51 stands with the scope note in §9.
+
+**What it says, and it is worth more than the fix.** An ADR that
+summarises a spec can contradict it **while reading as agreement** —
+this one said "six rows, four survive" in the confident register of a
+document that had checked. And *"fold the spec to match the ADR"* is the
+most dangerous instruction such a summary can emit, because it **inverts
+which document is authoritative**. The spec is authoritative. The ADR was
+the thing that needed folding.

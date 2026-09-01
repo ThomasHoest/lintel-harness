@@ -1,6 +1,6 @@
 # F2 — `lintel harness init` — the Two-Phase Apply Engine — Lintel Harness v1.0
 **Version:** 1.0
-**Status:** Draft
+**Status:** Accepted
 **Date:** 2026-09-01
 **Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/cli`, binary `lintel`, with **`harness` as a command group** — the command specified here is reached as `lintel harness init` (Q-16 as amended by Q-63). No UI; a terminal is optional (see US-43).
 **Design spec:** n/a (no UI)

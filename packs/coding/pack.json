@@ -71,7 +71,7 @@
   "provenance": {
     "kind": "migrated",
     "source": "template/ in this repository",
-    "commit": "2644096eafc3f95d5af2e7ea68d809144b270364",
-    "note": "Extracted from the Voxio/Lintel codebase into template/, then renamed to packs/coding/ under the two-phase model (Q-39). US-24 enumerates every declared difference."
+    "commit": "807d67d62ce107bc7b0d7e29b019cf0d41fbba79",
+    "note": "Extracted from the Voxio/Lintel codebase into template/, then renamed to packs/coding/ at 2644096 under the two-phase model (Q-39). The commit above is the last at which template/ existed."
   }
 }

@@ -1,6 +1,6 @@
 # `lintel harness update` Specification — Lintel Harness v1.0
-**Version:** 1.0
-**Status:** Draft
+**Version:** 1.1
+**Status:** Accepted
 **Date:** 2026-09-01
 **Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/cli`, binary `lintel`, with **`harness` as a command group** — every command here is reached as `lintel harness <command>` (Q-16 as amended by Q-63). No UI.
 **Design spec:** n/a (no UI)
@@ -12,6 +12,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial draft, written against **Q-62**. Specifies `lintel harness update`: two recomputations, one classification, replace-or-hand-over, no merge engine. Decides the six items the master spec and `interaction-model.md` §11.3 recorded as *open items inside a settled shape* — the disclosure, the failure contract, the read-only mode's flag spelling, orphan handling, the `payloadDigest` branch, and the payload/manifest ordering. Requests four catalogue rows and three amendments from F1 rather than inventing them. |
+| 1.1 | 2026-09-01 | **Q-79 adds a seventh disposition; the rest of §F3.3 is confirmed against a challenge and stands.** **`kept-fill-expected`** — a path a pack declared `fillExpected` is left and reported with its own reason, *shipped to be filled in* rather than *edited*, and is **never overwritten**: not when the newer pack changed the file, not when it is byte-identical to what shipped, and under no flag. Absolute rather than conditional on the file having been filled, because an unfilled brief and a filled one are indistinguishable to a rule that must be right before it looks, and the costs are asymmetric — over-applying leaves a stale template the user can see and delete, under-applying silently destroys the document every other document is downstream of. **The other six are unchanged, and that is a finding rather than an absence of one:** `F3-ADR-004` initially claimed four of them should be folded away, and `T-2301` was written to do it. **The claim was wrong** — `added` and `replaced` are not the same write, `unchanged` and `kept-adapted` are not the same silence, and the ADR's `deleted` conflated an **applied** orphan (reported, never deleted) with a **payload** orphan (removed from `.harness/pack/`, not an applied path). The ADR is corrected in its §10; **this document was authoritative and stays so**. |
 
 ---
 
@@ -1192,9 +1193,20 @@ the project is downstream of.
 | yes | yes | `match`, and new = old | **`unchanged`** | nothing |
 | yes | yes | `adapted` | **`kept-adapted`** | nothing |
 | yes | yes | `differs` or `missing` | **`kept-edited`** | nothing |
+| yes | yes | `filled` or `unfilled` | **`kept-fill-expected`** | nothing — **ever** |
 | yes | **no** | any | **`orphaned`** | nothing |
 
-Three readings of the table are worth stating rather than inferring:
+**Seven dispositions as of v1.1**, and the enumeration is closed.
+`kept-fill-expected` (Q-79) is the addition; the other six predate it and
+were **re-confirmed against a challenge** — see the change history.
+
+Four readings of the table are worth stating rather than inferring:
+
+- **`kept-fill-expected` outranks every state, including `unfilled`.** A
+  fill-expected path is left alone whether or not the user has touched
+  it, so it never reaches the `match`/`differs` branches at all. This is
+  the one disposition decided entirely by a **declaration** rather than
+  partly by the bytes on disk.
 
 - **`adapted` governs by declaration, not by current bytes** (US-62). A
   path in the adapt-expected set of **either** recipe is `kept-adapted`

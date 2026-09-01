@@ -38,11 +38,13 @@ Four things that change how these tasks should be read:
 - **There is no resume.** A resumed update would need `expected_old` from
   a payload already replaced. Rollback, then re-run.
 
-**Blocked on an F3 spec fold.** `F3-ADR-004` §5 requires §F3.3's
-disposition table to go from **six rows to four** before these tasks are
-implemented, because two of its rows are sub-cases of *replaced* that the
-write path does not act on. **T-2301 carries that fold**, and it is first
-for that reason.
+**One spec fold, and it is an addition rather than the reduction this
+document first said.** `F3-ADR-004` originally claimed §F3.3 should fold
+from six dispositions to four; **that claim was wrong and is corrected in
+that ADR's §10.** All six are real and the write path acts differently on
+each. **The fold Q-79 requires is `kept-fill-expected`, making seven.**
+**T-2301 carries it**, and it is first because the tasks below implement
+whatever the table says.
 
 ---
 
@@ -62,13 +64,24 @@ for that reason.
 (`verify`'s comparison).
 **Unlocks:** everything else in this feature, and F6's reconciliation.
 
-- [ ] **T-2301** `[Architect]` **Fold §F3.3's disposition table to four
-  rows** — `replaced`, `kept-edited`, `kept-fill-expected`, `deleted` —
-  per `F3-ADR-004` §5. The spec enumerated six before Q-79 existed; two
-  are sub-cases of *replaced* distinguished by presence in
-  `expected_new`, which the write path does not branch on. **First,
-  because the tasks below implement whatever the table says**, and six
-  rows would produce two dispositions nothing distinguishes.
+- [ ] **T-2301** `[Architect]` **Add `kept-fill-expected` to §F3.3's
+  disposition table, taking it from six to seven** — `added`,
+  `unchanged`, `replaced`, `kept-adapted`, `kept-edited`,
+  **`kept-fill-expected`**, `orphaned`.
+  **Read `F3-ADR-004` §10 before starting.** This task previously said
+  *"fold the table down to four"*, which was **wrong**: the ADR had
+  dropped four dispositions the write path genuinely distinguishes —
+  `added` writes by exclusive create, `unchanged` writes nothing because
+  new equals old, `replaced` writes because it does not, `kept-adapted`
+  leaves a path the pack **declared** would be edited — and had invented
+  `deleted` by confusing an **applied** orphan (reported, **never
+  deleted**) with a **payload** orphan (removed from `.harness/pack/`,
+  not an applied path at all). **Executing this task as written would
+  have deleted correct specification.**
+  **`update` deletes no applied path, ever** (F1 Q-25, confirmed by F3
+  §F3.6 item 4). The one deletion in the feature is of payload files
+  under `.harness/pack/`, which is why the journal needs
+  `intent: "delete"`.
   *No dependencies. Prerequisite for every task below.*
 
 - [ ] **T-2302** `[Implementer]` `src/update/classify.ts` — the two

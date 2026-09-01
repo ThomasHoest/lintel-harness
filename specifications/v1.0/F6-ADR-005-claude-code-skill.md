@@ -1,6 +1,6 @@
 # ADR F6-005 — the Claude Code skill, the judgment layer
 
-**Status:** Draft
+**Status:** Accepted
 **Date:** 2026-09-01
 **Decides:** `F6-spec-claude-code-skill.md` (US-79…US-98, Q-75…Q-78; **Q-79 was resolved at project level** and is not re-opened here)
 **Reads:** `F1-spec-pack-format-and-manifest.md` **v3.4** (v3.3 was this ADR's condition 1; v3.4 folded the Mode A findings that followed) · `F2-ADR-003` · `F3-ADR-004` · `general/interaction-model.md` (IM-1…IM-41) · `general/technology-choices.md` §9

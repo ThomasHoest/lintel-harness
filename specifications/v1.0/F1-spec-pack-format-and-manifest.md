@@ -1,6 +1,6 @@
 # Pack Format & Manifest Specification — Lintel Harness v1.0
 **Version:** 3.7
-**Status:** Draft
+**Status:** Accepted
 **Date:** 2026-09-01
 **Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/cli`, binary `lintel`, with **`harness` as a command group** — every command in this document is reached as `lintel harness <command>` (Q-16 **as amended by Q-63**). Pack content is Markdown, shell, PowerShell and Bicep; `pack.json`, `recipe.json` and the manifest are JSON. No UI.
 **Design spec:** n/a (no UI)
