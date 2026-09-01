@@ -1,12 +1,15 @@
 # System Architecture — Lintel Harness
 
 **Status:** Draft
-**Applies to version:** v1.0 — four-feature baseline: F1, F2, F5, F6 (F3 and F4 are reserved for v1.1)
-**Date:** 2026-08-31
-**Sources:** `v1.0/LintelHarnessSpecification-1.0.md` · `v1.0/F1-spec-pack-format-and-manifest.md` v2.5 · `v1.0/F1-ADR-001-pack-format-and-manifest.md` (file-level plan, public interface contract, §7 security architecture, §10 FINAL verdict) · `v1.0/F5-spec-template-packs.md` v2.4 · `general/pack-application.md` · `general/pack-inventory.md` · `project-brief.md` §12 (Q-1…Q-55)
+**Applies to version:** v1.0 — five-feature baseline: F1, F2, F3, F5, F6 (**F3 returned to v1.0 with Q-62**; F4 alone is reserved for v1.1)
+**Date:** 2026-09-01
+**Sources:** `v1.0/LintelHarnessSpecification-1.0.md` · `v1.0/F1-spec-pack-format-and-manifest.md` v2.8 · `v1.0/F1-ADR-001-pack-format-and-manifest.md` (file-level plan, public interface contract, §7 security architecture, §10 FINAL verdict) · `v1.0/F5-spec-template-packs.md` v2.7 · `general/pack-application.md` · `general/pack-inventory.md` · `general/interaction-model.md` · `general/technology-choices.md` · `project-brief.md` §12 (Q-1…Q-62)
 
 > The "shape of the whole system in one place" companion to `technology-choices.md`
-> (**required and unwritten**). Where the per-feature specs answer *"what does this
+> (**written**, and the owner of the per-area technology reasoning this document only
+> summarises in §5) and to `general/interaction-model.md` (**written**, and the owner of
+> what using the system is *like* — the two entry points, the CLI/skill seam and the
+> reconciliation §4 below assigns to F6). Where the per-feature specs answer *"what does this
 > feature do?"*, this answers *"how does the whole system fit together?"*. Greenfield
 > Node/TypeScript, no runtime dependency outside the Node standard library; nothing
 > here is reused from an existing platform.
@@ -85,9 +88,13 @@ stops being true.
 - **Deterministic mechanics in the CLI, judgment in a thin skill.** The seam is a
   decision, not an accident (Q-1): a mechanism that varies run to run is not a
   mechanism, and a CLI can only stub out the parts that are genuine judgment.
-  *Consequence:* build order is CLI first, skill last, and the skill wraps `init` and
-  only `init` — `validate`, `verify` and `pack info` are read-only diagnostics a
-  person or CI runs directly.
+  *Consequence:* build order is CLI first, skill last, and the skill wraps the **two
+  writing commands, `init` and `update`** — the two with judgment work on the far side
+  of them (Q-62). `validate`, `verify` and `pack info` are read-only diagnostics a
+  person or CI runs directly, as is `update`'s read-only mode. The seam is sharpest at
+  `update`: the CLI replaces what it can compute an answer for and **deliberately stops**
+  at an edited path, which is the one place it hands work over rather than finishing or
+  failing. `general/interaction-model.md` owns that handover as a requirement.
 
 - **Say what is not enforced.** Severity is a property of the **code**, never of the
   occasion; the `E-`/`W-` codes plus exit classes `0/1/2/3` are the **only** CLI error
@@ -107,9 +114,9 @@ flowchart TB
   skill["Claude Code skill — F6, no spec yet<br/>judgment only: derive answers, adapt CLAUDE.md prose,<br/>redraw ownership tables, fill copy/tone-of-voice.md"]
   bundle["packs/ — bundled in the published package, no network<br/>coding · writing · planning (F5)"]
 
-  subgraph cli["lintel-harness · @lintel/harness · Node 22+ · Node stdlib only"]
+  subgraph cli["lintel · @lintel/cli · Node 22+ · Node stdlib only"]
     direction TB
-    cliq["cli/ — argv, flags, four commands<br/>init (F2) · validate · verify · pack info (F1)"]
+    cliq["cli/ — argv, flags, the harness command group<br/>init (F2) · validate · verify · pack info (F1)"]
 
     subgraph planner["PLAN — pure, in memory, writes nothing"]
       direction TB
@@ -178,7 +185,7 @@ Everything else in this section exists to make that sentence true rather than
 asserted.
 
 ```
-lintel-harness init <pack> [--scaffold …] [--set k=v] [--force]
+lintel harness init <pack> [--scaffold …] [--set k=v] [--force]
 
   1  .harness/ already present?    → E-JOURNAL-PRESENT (2) / E-ALREADY-APPLIED (1)   0 bytes
   2  resolve pack from the bundle; minCliVersion, formatVersion                      0 bytes
@@ -353,18 +360,42 @@ was reporting both *this is wrong* and *this is deliberate*, which left
 
 | Layer | Features | Responsibility |
 |---|---|---|
-| **Format & contracts** | **F1** (spec v2.5 + ADR-001) | `pack.json`, `recipe.json`, the six primitives, the six-key manifest, the four-stage confinement gate, the journal/rollback contract, the diagnostic taxonomy — and the three read-only commands `validate`, `verify`, `pack info` (Q-53). Modules: `pack/`, `recipe/`, `json/`, `manifest/`, `hash/`, `payload/`, `security/`, `verify/`, `validate/`, `diag/`, `fs/`, plus `apply/plan.ts` |
-| **Apply engine** | **F2** — **no feature spec** | `lintel-harness init`: the CLI surface, interactive prompting, and driving `apply/plan.ts` → `apply/execute.ts` → `apply/rollback.ts`. F1 pins the phases, primitive semantics, ordering and atomicity; F2 implements them and may not reinterpret them. There is deliberately **no `src/cli/commands/init.ts` in F1's plan** |
-| **Pack content** | **F5** (spec v2.4) | The three packs and their recipes: `coding` (migrating), `writing` (to extract), `planning` (to author); the nine-part anatomy declarations, the three scaffolds, the Q-46 prose stripping, the two pack-local copies of the targets contract (Q-49). F1 ships no pack; `validate --all --strict` is what binds them |
-| **Judgment layer** | **F6** — **no feature spec** | The thin Claude Code skill: derive parameter answers from what the repo actually is, adapt the generated `CLAUDE.md`'s project-owned prose around the inert anchors, redraw file-ownership tables, fill `copy/tone-of-voice.md`. It wraps `init` and **only** `init`; it is the only feature that can be cut without breaking the release gate |
-| **Deferred** | **F3, F4** — v1.1 | `update` (drift + 3-way merge) and `status` / `contribute`. Both numbers are **reserved and will not be reused**. v1.0's forward investment for them is exactly three things and nothing else: inert region anchors, the minimal manifest, and `payloadDigest` |
+| **Format & contracts** | **F1** (spec v2.8 + ADR-001) | `pack.json`, `recipe.json`, the six primitives, the six-key manifest, the four-stage confinement gate, the journal/rollback contract, the diagnostic taxonomy — and the three read-only commands `validate`, `verify`, `pack info` (Q-53). Modules: `pack/`, `recipe/`, `json/`, `manifest/`, `hash/`, `payload/`, `security/`, `verify/`, `validate/`, `diag/`, `fs/`, plus `apply/plan.ts` |
+| **Apply engine** | **F2** — **no feature spec** | `lintel harness init`: the CLI surface, interactive prompting, and driving `apply/plan.ts` → `apply/execute.ts` → `apply/rollback.ts`. F1 pins the phases, primitive semantics, ordering and atomicity; F2 implements them and may not reinterpret them. There is deliberately **no `src/cli/commands/init.ts` in F1's plan** |
+| **Update engine** | **F3** — **no feature spec** | `lintel harness update`, returned to v1.0 by **Q-62**. It recomputes `expected_old` (local `.harness/pack/` + its recipe + the recorded answers — the identity `verify` already uses) and `expected_new` (the newer bundled payload), classifies each path, **replaces the unedited outright**, and **leaves the edited untouched and reports them**. `adapted` paths are never blindly replaced, being edited on purpose (Q-56). `status` is this command's **read-only mode**, not a fourth command. **No merge engine, no conflict markers, no three-way merge** — the judgment is F6's, not the CLI's |
+| **Pack content** | **F5** (spec v2.7) | The three packs and their recipes: `coding` (migrating), `writing` (to extract), `planning` (to author); the nine-part anatomy declarations, the three scaffolds, the Q-46 prose stripping, the two pack-local copies of the targets contract (Q-49). F1 ships no pack; `validate --all --strict` is what binds them |
+| **Judgment layer** | **F6** — **no feature spec** | The thin Claude Code skill. After `init`: derive parameter answers from what the repo actually is, adapt the generated `CLAUDE.md`'s project-owned prose around the inert anchors, redraw file-ownership tables, fill `copy/tone-of-voice.md`. After `update`: **reconcile the edited paths conversationally** — the case F3 deliberately stops at. It wraps the two writing commands, `init` and `update`. Cutting it no longer leaves the release gate intact in the way it once did: S7 now requires the repo to be *maintained by* `update` (Q-62), and `update` without F6 leaves every edited path unreconciled |
+| **Deferred** | **F4** — v1.1 | `contribute` alone. The number is **reserved and will not be reused**. **F3 is no longer here** — Q-62 returned it to v1.0, and with it G3, S3 and R4 |
 
-**What is unwritten, named so the absence is not read as an oversight:** F2 and F6 have
-**no feature spec, no ADR and no epics-and-tasks**; F5 has a spec but **no ADR**; no
-feature has an epics-and-tasks document; and `technology-choices.md`, this document's
-stated companion, does not exist. The master spec records all of this under
-*Spec-set readiness*, which states plainly that **this set is not
-implementation-ready**.
+**The three forward investments are no longer forward investments.** Inert region
+anchors (Q-45), the minimal manifest (Q-43) and `payloadDigest` (Q-52) were each
+justified as cheap-now, expensive-to-retrofit groundwork **for `update`**. Q-62 brings
+`update` into v1.0, so all three are simply **used**, and by a shipping feature:
+
+| | What it now does | Where |
+|---|---|---|
+| The minimal manifest | Supplies the recorded answers and the pack version `update` recomputes `expected_old` from, and names the pack version to compare against | Q-43, F3 |
+| `payloadDigest` | Gates the recomputation fail-closed — the same first-and-fail-closed check `verify` makes, for the same reason: once the payload is untrusted, `expected_old` is meaningless | Q-52, F3 |
+| Inert region anchors | Mark the project-owned prose in the generated `CLAUDE.md`, which is the `adapted` path `update` must never blindly replace | Q-45, Q-56 |
+
+The anchors keep the "inert" part of their name: **nothing parses them at v1.0**, and
+`update` does not need them to, because it classifies by recomputation rather than by
+region. They are the affordance that makes a *later* region-aware merge possible without
+a format change, and that is now the only forward-looking claim any of the three carries.
+
+**What remains forward investment, and it is for `contribute` alone (F4):** the same
+recomputation identity, pointed the other way. `verify` and `update`'s read-only mode
+already report which applied paths differ from what the pack would produce — which is
+exactly the set `contribute` would propose promoting back into the pack. Nothing else in
+v1.0 is built for F4, and no v1.0 component may be shaped around it.
+
+**What is unwritten, named so the absence is not read as an oversight:** F2, **F3** and
+F6 have **no feature spec, no ADR and no epics-and-tasks** — F3 least of all, having
+been in v1.0 for a matter of hours; F5 has a spec but **no ADR**; and no feature has an
+epics-and-tasks document. Both of this document's stated companions are now **written**:
+`general/technology-choices.md` and `general/interaction-model.md`. The master spec
+records the rest under *Spec-set readiness*, which states plainly that **this set is not
+implementation-ready** — and Q-62 has just added a feature to it.
 
 ---
 
@@ -387,12 +418,16 @@ of the decision.
 | Marked regions | **None.** The generated `CLAUDE.md` carries **inert** anchors; nothing parses them | Regions had two justifications and both were removed: `update` was their consumer, and the source-only/applied-only problem dissolved once phase 1 copies verbatim. Anchors are near-free now and expensive to retrofit, so they ship as forward investment and nothing more | **Q-45** (amends Q-7, Q-10) |
 | Pack cardinality | **Exactly one pack per project.** The manifest has one `pack` object, not a list | Removes the file-collision and ownership-arbitration class of problems rather than solving it. Two ways of working means two projects side by side. This is the single assumption most likely to be "helpfully" relaxed later, and relaxing it reopens everything Q-12 closed | **Q-12** |
 | Settings & permissions | `merge-json` **dropped**; nothing writes `.claude/settings.json`, and that is a *checked* rule rather than a fact about three packs | Once F5's three settings steps were established as invalid recipes, the primitive had **no v1.0 consumer** while carrying the format's largest attack surface — it was the target of both CRITICALs of the second security round. Deleting the surface is a stronger fix than repairing it. Bonus: it was the only primitive taking a fourth input, so determinism and the recomputation identity become true *without exception*. **R5's "sensible default permissions" waits for v1.1** | **Q-54** (supersedes Q-23) |
+| Keeping a project current | **`update` ships at v1.0 and builds no merge engine.** Recompute `expected_old` and `expected_new`, classify per path, replace the unedited, leave and report the edited, never blindly replace an `adapted` path. `status` folds into its read-only mode; `contribute` stays deferred | The blocker Q-42 deferred it for no longer exists: a merge needs a base, the answer then was `.harness/base/`, and Q-39/Q-43 deleted that store because the two-phase model made it unnecessary. The payload is **local** and the recipe **deterministic**, so `expected_old` is recomputable exactly — **`verify` is most of `update`** already. The shape follows the evidence: the dogfooding pass found 12 of 16 applied files byte-identical, so a merge engine would be built for the minority case while the majority needs only a replace. The remainder is judgment, which is what the skill is for (Q-1) on the path Q-57 made primary | **Q-62** (reverses **Q-42** for F3) |
 | Empty directories | **Every folder an apply creates carries a README** (`README.md`; `index.md` for `writing`), `.claude/` and `.harness/` excluded as tool-owned | It dissolves the empty-directory problem instead of solving it: git cannot commit an empty directory, so any answer needed placeholder files — Q-50 makes those files *say something*. Consequence for the format: no `mkdir` primitive, no eighth primitive, no `skeleton/` tree, no `.gitkeep` | **Q-50** |
 
 > **Pending sign-off:** none of the rows above. What is outstanding is *work*, not
-> decisions — `technology-choices.md` is unwritten, so no per-component reasoning
-> exists for it to hold, and the F2/F6 specs that would consume several of these rows
-> do not exist either. See §6 and the master spec's *Spec-set readiness*.
+> decisions. `general/technology-choices.md` **now exists** and holds the per-component
+> reasoning these rows only summarise — including the **⚠️ register** of capabilities the
+> specs require but for which no library has been chosen, which is where the genuinely
+> open technology questions live. What is still missing is the **F2, F3 and F6 specs**
+> that would consume several of these rows. See §6 and the master spec's *Spec-set
+> readiness*.
 
 ---
 
@@ -432,22 +467,35 @@ answer cannot be changed after apply (Q-21), a pack cannot contribute project se
 or ask for a permission by any of four doors, content cannot vary *within* a file by
 answer, and a pack cannot edit a JSON file the project already has.
 
-**3. Pack content lags the spec, materially.** The specs describe `packs/coding/` as it
-will be, not as it is. Today, on disk:
+**3. The packs are authored; the dogfooding is not done.** This section previously
+reported the packs as largely unauthored. **That is no longer true and the entry is
+rewritten against the repo rather than against another document** — which is how the
+old entry went stale. Verified on disk:
 
-| Spec says | Repo has |
+| | Position on disk |
 |---|---|
-| `packs/coding/pack.json` | **Absent** — new authoring |
-| `packs/coding/recipe.json` | **Absent** — new authoring, and it is the single thing S7 is blocked on |
-| `packs/coding/commands/target.md` | **Absent** — `/target` still lives in this repo's `.claude/commands/` |
-| `packs/coding/scaffolds/backend-azure/` | Still `packs/coding/infrastructure/backend-deploy/` |
-| **Five** applied paths carrying a `{{harness:` substitution token (F1's C-43 positive assertion) | **One**: `packs/coding/specifications/README.template.md`. `CLAUDE.md.template`, `agent-teams/Specify.md`, `agent-teams/Implement.md` and `project-brief.template.md` carry none yet |
-| `.harness/pack/` and `.harness/manifest.json` in this repo | **Absent** — so **S7 is unmet**, and this repo is not yet produced by the tool it specifies |
+| `pack.json` | **Present in all three packs** — `coding`, `writing`, `planning` |
+| `recipe.json` | **Present in all three packs.** Step counts: **coding 21**, **writing 12**, **planning 23** — where coding and writing count their base steps plus every declared scaffold branch (coding 15 base + 3 `backend-azure` + 3 `backend-aws`; writing 7 base + 5 `writing-workstream`), of which only the selected branch runs in any one apply. Planning declares no scaffolds, so its 23 all run |
+| `packs/coding/commands/target.md` | **Present.** `planning` ships four commands of its own; `writing` ships none |
+| The scaffold rename | **Done.** `infrastructure/backend-deploy/` is now **`scaffolds/backend-azure/`**, and **`scaffolds/backend-aws/` is authored** alongside it |
+| **Five** applied paths carrying a `{{harness:` token (F1's C-43 positive assertion) | **Met, at exactly five**: `CLAUDE.md.template`, `agent-teams/Specify.md`, `agent-teams/Implement.md`, `specifications/README.template.md`, `specifications/project-brief.template.md` |
+| `.harness/pack/` and `.harness/manifest.json` in this repo | **Absent** |
 
-`applied-readmes/` **does** exist with exactly its five files, and the ten agents exist
-with the `permissionMode: readonly` frontmatter F1's positive assertion now requires.
-The gap closes in one step — author `recipe.json`, then apply `coding` to this repo —
-and that step is the release gate.
+`applied-readmes/` exists with exactly its five files, and the ten agents carry the
+`permissionMode: readonly` frontmatter F1's positive assertion requires.
+
+**What is still outstanding is the last row, and it is the whole of it. `S7 is unmet`:
+this repo is not yet produced by the tool it specifies.** Nothing here has been applied
+by `lintel` — the current tree is still the hand-made apply the dogfooding log
+records. The gap is no longer authoring; it is that **there is no CLI to run**, so the
+remaining step is the release gate itself rather than a step before it. Q-62 also
+raises the bar the gate must clear: S7 now reads *produced by `lintel harness init
+coding` **and maintained by `lintel harness update`***, so demonstrating it takes an
+apply **and** an update, not an apply alone.
+
+> Read this row as the standing check on the rest of the section. It is the one claim
+> here that a `find` can settle in a second, and the reason the table above now cites
+> what was observed rather than what a spec asserts.
 
 ---
 
@@ -456,3 +504,5 @@ and that step is the release gate.
 | Version | Date | Author | Change |
 |---|---|---|---|
 | v1.0 | 2026-08-31 | architect | Initial version. First document to describe the whole system after Q-39's two-phase rewrite; records the principles, the container shape, the `validate → plan → journal → write` trust path with its stated limits, the feature→component map including what is unwritten, and the twelve load-bearing technology decisions with their originating question ids. |
+| v1.1 | 2026-09-01 | architect | **Q-62 fold, plus a reconciliation against the repo.** F3 returns to v1.0 and gets its own §4 row (`update`, replace-or-hand-over, no merge engine); F4/`contribute` alone remains deferred. The §1 seam principle and the F6 row are corrected — the skill wraps **`init` and `update`**, not `init` alone, and F6 is no longer cleanly cuttable now that S7 requires the repo to be *maintained by* `update`. The "exactly three things" forward investment is retired: the minimal manifest, `payloadDigest` and the inert anchors are now **used** by a shipping feature, and the only remaining forward investment is the recomputation identity pointed the other way, for `contribute`. Header sources corrected to F1 **v2.7**, F5 **v2.7**, Q-1…Q-62. Both companion documents — `technology-choices.md` and `interaction-model.md` — now exist and are cited. **§6.3 rewritten against the disk rather than against a spec:** all three packs ship `pack.json` and `recipe.json` (coding 21 / writing 12 / planning 23 steps incl. scaffold branches), `commands/target.md` exists, `scaffolds/backend-azure/` and `backend-aws/` are authored, and C-43's five `{{harness:` paths are met exactly — leaving `.harness/` absence, and therefore **S7 unmet**, as the single outstanding item. §6.1's security position is unchanged and deliberately not weakened. |
+| v1.2 | 2026-09-01 | specwriter | **Q-63 rename.** The binary is **`lintel`** with **`harness` as a command group**, and the package is **`@lintel/cli`**: the container node in §2's diagram, the §4 feature rows for F2 and F3, the §F1.6-shaped apply trace and the dogfooding note all now read `lintel harness <command>`. The `cli/` node is relabelled from *four commands* to *the harness command group*, which is also the honest label under Q-62. F1 is cited at **v2.8**. No boundary, no module and no dependency moves — this is a name, and the only structural fact it adds is that the command is the second positional. |

@@ -11,7 +11,7 @@
 #   Nothing. It is REGISTERED BY NOTHING and EXECUTED BY NOTHING.
 #   It ships mode 0644 — not executable — and no pack may register an agent
 #   hook at v1.0, so there is no settings file in which this could be wired
-#   up and no event on which it could fire. `lintel-harness validate` names
+#   up and no event on which it could fire. `lintel harness validate` names
 #   it with W-HOOK-SCRIPT-INERT for exactly this reason, and `pack info`
 #   lists it as inert.
 #

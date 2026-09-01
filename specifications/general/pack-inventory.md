@@ -469,7 +469,7 @@ convention over the recipe's `when` condition, not special machinery.
 
 This repo is mid-restructure: it was applied by hand under the old
 single-phase model, then partially unwound when Q-39 replaced it. What
-it has today against what `lintel-harness init coding` would produce:
+it has today against what `lintel harness init coding` would produce:
 
 | Path | State |
 |---|---|

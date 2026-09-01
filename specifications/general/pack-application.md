@@ -1,7 +1,16 @@
 # Pack application — the two-phase model
 
-**Status:** Draft · **Date:** 2026-08-31 · **Applies to:** v1.0
-**Decisions:** Q-39 (two phases) · Q-40 (recipe, not script) · Q-41 (the payload is phase 2's source, **rendered at plan time** — see C-23) · Q-42 (v1.0 scope) · Q-43 (minimal manifest) · Q-45 (anchors only) · Q-46 (no bootstrap prose) · Q-54 (six primitives)
+**Status:** Draft · **Date:** 2026-09-01 · **Applies to:** v1.0
+**Decisions:** Q-39 (two phases) · Q-40 (recipe, not script) · Q-41 (the payload is phase 2's source, **rendered at plan time** — see C-23) · Q-42 (v1.0 scope, **amended by Q-62**) · **Q-62 (`update` returns to v1.0 with no merge engine; `status` folds into its read-only mode; only `contribute` stays deferred)** · Q-43 (minimal manifest) · Q-45 (anchors only) · Q-46 (no bootstrap prose) · Q-54 (six primitives)
+
+**Amended 2026-09-01 — Q-62.** *What v1.0 does not do* said `update`,
+`status` and `contribute` were all deferred. Only **`contribute`** is.
+The section is rewritten, and with it the framing of the minimal
+manifest and the inert anchors as *forward investment*: both are now
+**used** by v1.0's `update` rather than held for v1.1. Nothing about the
+two phases, the recipe or the determinism identity changes — that
+identity is exactly what let `update` return without new machinery,
+which is why this document needed amending rather than rewriting.
 
 **Corrected 2026-08-31 — security conditions C-42 and C-46.** **C-42:**
 this document is called *authoritative* by both F1 and the master spec,
@@ -16,7 +25,7 @@ F1 names **three**; the third, scaffold selection, is corrected here and
 in the master spec. Nothing was demoted — the fix is to make this
 document true, not to stop calling it authoritative.
 
-Cross-cutting reference. How `lintel-harness init` turns a pack into a
+Cross-cutting reference. How `lintel harness init` turns a pack into a
 working project. Every pack applies through this model; only phase 2's
 recipe differs between packs.
 
@@ -68,7 +77,7 @@ phase 2, where it is declared and inspectable.
 
 ```mermaid
 flowchart TD
-    A["lintel-harness init &lt;pack&gt; [--scaffold …]"] --> B{Project already<br/>has .harness/?}
+    A["lintel harness init &lt;pack&gt; [--scaffold …]"] --> B{Project already<br/>has .harness/?}
     B -- yes --> B1["E-ALREADY-APPLIED<br/>exit 1, zero bytes"]
     B -- no --> C[Resolve pack from bundle]
     C --> D[Validate pack.json<br/>anatomy · parameters · scaffolds · recipe]
@@ -202,21 +211,59 @@ left in the payload that is wrong once copied.
 
 ## What v1.0 does not do
 
-`update`, `status` and `contribute` are deferred to v1.1 (Q-42), and
-`--adopt` is dropped (Q-44). v1.0 applies a pack; it does not maintain
-one.
+**`contribute` is deferred to v1.1 (Q-62, amending Q-42), and `--adopt`
+is dropped (Q-44).** `update` and `status` are **not** deferred: Q-62
+returned `update` to v1.0 and folded `status` into its read-only mode.
+So v1.0 applies a pack **and maintains one** — what it cannot do is send
+anything back the other way.
 
-Two pieces of forward investment keep v1.1 an addition rather than a
-retrofit:
+An improvement made inside a project has **no route into the pack**
+except editing `packs/<name>/` by hand and bumping the pack version.
+The loop runs one way at v1.0.
+
+### `update`, in one paragraph, because it is this model's second consumer
+
+`update` needs no new machinery from this document, which is the reason
+it could return to v1.0 at all. It recomputes **`expected_old`** from
+the local `.harness/pack/` payload, its recipe and the recorded answers
+— the identity stated under *Determinism is a requirement, not a hope*,
+and the one `verify` already performs — and **`expected_new`** from the
+newer bundled payload. Per applied path: **unedited → replaced
+outright** (no merge, no conflict markers), **edited → left untouched
+and reported**, **adapt-expected → never blindly replaced**, being
+edited on purpose (Q-56). **No merge engine is built**, and no third
+tree is stored: the base a merge would need is recomputable, which is
+precisely what Q-39's two-phase model bought and what Q-43 deleted
+`.harness/base/` on the strength of. The judgment that follows an
+edited path belongs to the skill (Q-1), not to this model.
+
+### The forward investments are no longer forward
+
+The minimal manifest and the inert anchors were both justified here as
+groundwork keeping v1.1 *an addition rather than a retrofit*. With
+`update` in v1.0 they are simply **in use**:
 
 - **The minimal manifest** records **six** things: pack name, pack
   version, CLI version, parameter answers, chosen scaffolds, and a
-  **`payloadDigest`** over the `.harness/pack/` tree (Q-52) — enough for
-  a later `update` to know what was applied and recompute the expected
-  tree. The digest is what lets `verify` distinguish *the applied tree
-  drifted* from *the payload itself was edited*; without it,
-  recomputation would silently trust a payload someone may have
-  changed.
+  **`payloadDigest`** over the `.harness/pack/` tree (Q-52). It is what
+  `update` reads to know what was applied and to recompute the expected
+  tree — no longer *enough for a later `update`* but the actual input to
+  a shipping one. The digest lets `verify` and `update` alike
+  distinguish *the applied tree drifted* from *the payload itself was
+  edited*, and both check it **first and fail-closed**: once the payload
+  is untrusted, `expected_old` is meaningless.
 - **Inert region anchors** are emitted into the generated `CLAUDE.md`
-  (Q-45) so a later `update` can find pack-owned regions. No parser,
-  no region hashes and no tamper detection ship at v1.0.
+  (Q-45). They stay **inert** — no parser, no region hashes, no tamper
+  detection at v1.0 — and `update` does not need them to be otherwise,
+  because it classifies a path by recomputation rather than by region.
+  What they mark is the project-owned prose that makes `CLAUDE.md` an
+  `adapted` path, the one `update` must never blindly replace. Their
+  remaining forward-looking value is that a region-aware merge, if one
+  is ever wanted, needs no format change.
+
+**What is still genuinely forward investment is for `contribute` alone
+(F4):** the same recomputation identity pointed the other way. `verify`
+and `update`'s read-only mode already report which applied paths differ
+from what the pack would produce — exactly the set `contribute` would
+propose promoting. Nothing else in v1.0 is built for it, and nothing in
+this model should be shaped around it.

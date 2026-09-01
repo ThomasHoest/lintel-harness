@@ -14,24 +14,34 @@ before any real work starts: agent roles, agent teams, the process and
 its document templates, behavioural guidelines, folder structure, and
 the skills and automations that make it run.
 
-The unit of delivery is a **template pack**: one complete, opinionated
-way of working for one *kind* of project. **Coding** is one pack.
-**Writing** is another. More will follow.
+The unit of delivery is a **pack**: one complete, opinionated way of
+working for one *kind* of project. **Three ship at v1.0** — `coding`,
+`writing` and `planning` — and more will follow.
 
 The product exists because that knowledge currently ships as *folders
 that get copied and hand-edited* — fast to apply once, impossible to
 update afterwards, and silently drifting from its source. The harness
 replaces copy-paste with a **managed apply**: real files written into
-the target project plus a manifest (pack, version, per-file hash), so a
-later `update` can be computed rather than guessed.
+the target project, plus a **minimal manifest** — pack, version, CLI
+version, the parameter answers and the scaffold selection, and
+**no per-file hashes** (Q-43). Applied state is *recomputed* from
+payload + recipe + answers, which is what lets a later `update` be
+computed rather than guessed.
 
-**Status: pre-spec, but unblocked.** The product brief
-(`specifications/project-brief.md`) is **Draft**. No
-specification set exists yet, no code is written, and the repo has **no
-commits**. Q-1…Q-10 were resolved on 2026-08-30 (see the brief's
-Resolved Decisions table). **One question remains open — Q-11**, the
-framing of the third pack, which needs a research pass before the spec
-can be complete.
+**Status: specified in part, no code.** The brief
+(`specifications/project-brief.md`) is **Draft** and is the source of
+truth for scope. **F1 and F5 are spec-complete at v2.7**, `F1-ADR-001`
+carries an architectural `PROCEED`, and the five cross-cutting
+documents under `specifications/general/` are written (all **Draft**).
+**All three packs ship** under `packs/` with a `pack.json` and a
+`recipe.json` each. **No CLI source exists yet** — nothing in this repo
+is executable product code.
+
+The repo has a real history: **43 commits at the time of writing, all
+pushed** — `git log --oneline | wc -l` is the check, not this number.
+**Every question raised so far is resolved**, with rationale, in the
+brief's §12 — that is the register, and this file does not restate it.
+Ids and next-free values live in **§Counter state**, once.
 
 ### This repo is self-hosting — know which level you are on
 
@@ -42,10 +52,10 @@ confuse:
 | Level | What it is | Where |
 |---|---|---|
 | **Meta** — the harness's own working setup | The agents and commands operating **on this repo** | `.claude/` |
-| **Product** — the material being productized | The pack contents this repo turns into a generator | `template/` |
+| **Product** — the material being productized | The three pack sources this repo turns into a generator | `packs/` |
 
 An edit to `.claude/agents/architect.md` changes how *this project* is
-built. An edit under `template/` changes *what the product ships*.
+built. An edit under `packs/` changes *what the product ships*.
 Never make one thinking you are making the other.
 
 ---
@@ -54,48 +64,62 @@ Never make one thinking you are making the other.
 
 ```
 .
-├── .claude/
-│   ├── agents/                  ← the 10 sub-agents working on THIS repo
-│   └── commands/                ← slash commands (/target)
-├── packs/
-│   └── coding/                  ← the coding pack SOURCE (was template/)
-├── .harness/
-│   └── pack/                    ← (to be created) phase-1 payload copy
+├── .claude/                     ← META: how THIS repo works
+│   ├── agents/                  ← the 10 sub-agents working on this repo
+│   └── commands/                ← slash commands (target.md)
+├── packs/                       ← PRODUCT: what ships
+│   ├── coding/                  ← pack.json + recipe.json + payload
+│   ├── writing/                 ← pack.json + recipe.json + payload
+│   └── planning/                ← pack.json + recipe.json + payload
 ├── specifications/
-│   ├── project-brief.md  ← product brief
+│   ├── README.md                ← index only; the process lives in the pack
+│   ├── project-brief.md         ← product brief, and §12 the decision register
+│   ├── general/                 ← five cross-cutting reference specs
 │   └── v1.0/                    ← master spec, F1, F5, ADR-001, research
 ├── copy/
-│   └── tone-of-voice.md         ← phase-2 artifact; still unfilled
+│   └── tone-of-voice.md         ← applied phase-2 artifact; still unfilled
 └── CLAUDE.md                    ← this file
 ```
 
-`AgentTeams/` and `targets/` are **gone**, and `specifications/` no
-longer holds the doc templates. Under the two-phase model (Q-39) all
-reference material lives in the pack; the project holds only content
-and phase-2 artifacts. `.harness/pack/` is created when the recipe
-exists — hand-copying it now would just be another manual apply to
-redo.
+Verify with `find packs -name pack.json`, `ls specifications/general/`
+and `ls .claude/agents/` rather than trusting the tree above.
+
+Three things a returning reader gets wrong:
+
+- **`template/` does not exist.** It became `packs/coding/`. Any
+  document still saying `template/` is describing history, not the
+  repo.
+- **`AgentTeams/`, `targets/` and `infrastructure/` are gone from the
+  project root**, and `specifications/` no longer holds document
+  templates. Under the two-phase model (Q-39) all reference material
+  lives in the pack; the project holds only content and phase-2
+  artifacts.
+- **`.harness/` does not exist** — no `pack/`, no `manifest.json`. It
+  is written by `init`, and there is no CLI to run yet. That absence is
+  the outstanding S7 item below, not an oversight.
 
 ---
 
 ## Decided architecture (v1.0)
 
-Settled 2026-08-30; rationale for each in the brief's Resolved
-Decisions table. Treat these as given, not as open ground:
+Settled between 2026-08-30 and 2026-09-01; rationale for each in the
+brief's §12. Treat these as given, not as open ground. Where a row
+cites a question, §12 is the authority and this row is the summary:
 
 | Area | Decision |
 |---|---|
-| Build | A **Node/TypeScript CLI**, published as `@lintel/harness`, binary `lintel-harness`, Node >= 22. A **thin Claude Code skill** drives it and handles judgment steps. CLI first. |
+| Build | A **Node/TypeScript CLI**, published as `@lintel/cli`, binary `lintel` with `harness` as a command group, Node >= 22. A **thin Claude Code skill** drives it and handles judgment steps. CLI first. |
 | **Applying a pack** | **Two phases (Q-39).** Phase 1: verbatim copy of the pack into `.harness/pack/` — no transformation, identical for every pack. Phase 2: a **per-pack declarative recipe** over fixed primitives (Q-40), applied automatically by the CLI, reading from the phase-1 copy (Q-41). Deterministic and verifiable. |
-| **v1.0 scope** | **F1 (pack format + manifest), F2 (`init`), F5 (the three packs), F6 (the skill).** `update`, `status` and `contribute` defer to v1.1 (Q-42), taking G3/S3/R4 with them. `--adopt` dropped (Q-44). |
-| Pack home | `packs/` in this repo, published with the CLI. `template/` becomes `packs/coding/`. |
-| Versioning | Per-pack semver in `packs/<name>/pack.json` + a separate CLI semver; the manifest records both. |
+| **v1.0 scope** | **F1 (pack format + manifest), F2 (`init`), F3 (`update`), F5 (the three packs), F6 (the skill).** **Q-62 returns F3 to v1.0**, reversing Q-42 for it and bringing **G3, S3 and R4 back with it**; `status` folds into `update`'s read-only mode. **Only `contribute` (F4) still defers to v1.1.** `--adopt` dropped (Q-44). |
+| **`update`** | **Ships at v1.0, and builds no merge engine (Q-62).** The CLI recomputes `expected_old` (local `.harness/pack/` + recipe + recorded answers — `verify`'s identity) and `expected_new` (newer bundled payload). Per path: **unedited → replaced outright**; **edited → left untouched and reported**; **`adapted` → never blindly replaced**. No conflict markers, no 3-way merge. The **skill** then reconciles the edited paths conversationally — the Q-1 split, on the Q-57 path. |
+| Pack home | `packs/` in this repo, published with the CLI. The move is **done**: `template/` is now `packs/coding/`, and `writing` and `planning` were authored beside it. |
+| Versioning | Per-pack semver in `packs/<name>/pack.json` plus a declared `minCliVersion`, and a separate CLI semver; the manifest records both. All three packs declare `minCliVersion: 1.0.0`. |
 | Manifest | **Minimal (Q-43)**: pack name, version, CLI version, parameter answers, scaffolds. No per-file hashes, no `.harness/base/` — applied state is recomputable from payload + recipe + answers. |
-| Sharing | Packs are standalone but may reference a `shared/` tree, declared in `pack.json`. Changing a shared file bumps every pack referencing it. |
-| Contribute-back | `harness contribute` — **deferred to v1.1 (Q-42)**. |
-| `CLAUDE.md` | Generated by phase 2. **Inert region anchors only at v1.0 (Q-45)** — no parser, no region hashes, no tamper detection; those arrive with `update` in v1.1. |
+| Sharing | **No `shared/` mechanism at v1.0 (Q-48)** — no `shared/` tree, no `component.json`, no declared references, no digest pin, no bump rule. Packs are standalone and **duplicate** what they share: `coding` and `planning` each ship their own `targets/` (Q-49), recorded in F5 as a named v1.1 reconciliation task. The bump rule returns with the mechanism in v1.1. |
+| Contribute-back | `harness contribute` — **deferred to v1.1 (Q-42, unchanged by Q-62)**. The one part of the loop v1.0 does not close: improvements flow back only by hand-editing `packs/<name>/`. |
+| `CLAUDE.md` | Generated by phase 2. **Inert region anchors only (Q-45)** — no parser, no region hashes, no tamper detection, and `update` does not need any: it classifies by recomputation, not by region. `CLAUDE.md` is the **`adapted`** path in every pack (Q-56), so `update` never blindly replaces it. |
 | Source vs applied | **Not needed (Q-45/Q-46).** Phase 1 copies verbatim; bootstrap prose is deleted from the pack because the recipe encodes it. |
-| Packs at v1.0 | Three: `coding`, `writing`, `planning`. Framing settled (Q-11). |
+| Packs at v1.0 | Three: `coding`, `writing`, `planning`. Framing settled (Q-11). **All three are authored** — each has `pack.json` and `recipe.json`. |
 | Presentation | **Not a pack** — a shared capability, but the component **defers to v1.1 (Q-28)**; no pack references it at v1.0. |
 | Scaffolds | Opt-in and composable. Three at v1.0 (Q-17): `backend-azure`, `backend-aws`, `writing-workstream`. `frontend`/`app` defer. |
 | v1.0 boundary | The generator, not pack content. Packs migrate **faithfully**; cross-pollination lands in the first post-v1.0 bump. |
@@ -104,9 +128,10 @@ Decisions table. Treat these as given, not as open ground:
 
 ## The core abstraction — the nine-part anatomy
 
-Both existing templates (§ below) reduce to the same nine parts. Only
-the *content* differs between pack types. This is what the generator
-manufactures, and it doubles as the completeness checklist for a pack:
+Every pack reduces to the same nine parts. Only the *content* differs
+between pack types. This is what the generator manufactures, and it
+doubles as the completeness checklist for a pack — packs declare their
+anatomy in `pack.json`, and `validate` checks the declaration:
 
 1. **A process** — named, gated phases, one defined artifact per phase.
 2. **A role set** — single-purpose agents with non-overlapping write
@@ -126,44 +151,47 @@ as a finding.
 
 ---
 
-## The two source templates
+## Where the pack content came from
 
-### Coding — `template/` (in this repo)
+All three packs now live under `packs/`. Their provenance still
+explains why they differ, and the v1.0 boundary is that they migrate
+**faithfully** — cross-pollination lands in the first post-v1.0 bump.
 
-Extracted from the Voxio/Lintel codebase; the source material for the
-`coding` pack. Five parts: the gated spec process
-(`research → spec → design-spec → ADR → epics-and-tasks →
-implementation`) with 11 document templates and `conventions.md`; 10
-agent roles; 2 agent-team prompts (`Specify.md`, `Implement.md`); the
-targets way-of-working for unsupervised runs; and an Azure SWA + Neon
-deploy scaffold.
+- **`coding`** — extracted from the Voxio/Lintel codebase; this is the
+  tree that used to be `template/`. The gated spec process
+  (`research → spec → design-spec → ADR → epics-and-tasks →
+  implementation`) with its document templates and `conventions.md`; 10
+  agent roles; 2 agent-team prompts (`Specify.md`, `Implement.md`); the
+  targets way-of-working; and Azure and AWS backend-deploy scaffolds.
+  Proven at scale — **RAFAL** was specified end-to-end through it: 8
+  features, 44 epics, 398 tasks, 9 security-reviewed ADRs, all Accepted
+  before a line of code.
+- **`writing`** — migrated out of
+  `../AIImpactOnOrganizationsAndLeadership/`, the project that grew it.
+  Same anatomy, different content: the `scout → researcher → librarian
+  → analyst`, then `outliner → writer → critic → editor` pipeline, a
+  research corpus with per-workstream stage folders, a voice guide with
+  a words-to-avoid list, `index.md` discipline, routing rules. It
+  declares `"folderReadme": "index.md"` rather than taking the default.
+- **`planning`** — the only pack with no prior codebase behind it.
+  Framing settled by Q-11 after the research pass in
+  `specifications/v1.0/research-planning-pack-framing.md`; its role set
+  is declared `provisional` on purpose, which is why Q-60's
+  `notice`/`defect` split exists.
 
-Proven at scale: **RAFAL** was specified end-to-end through it — 8
-features, 44 epics, 398 tasks, 9 security-reviewed ADRs, all Accepted
-before a line of code.
-
-### Writing — `../AIImpactOnOrganizationsAndLeadership/` (external)
-
-Never extracted; still lives inside the project that grew it. Same
-anatomy, different content: an 8-agent pipeline (`scout → researcher →
-librarian → analyst`, then `outliner → writer → critic → editor →
-published`), a shared research corpus plus per-workstream stage
-folders, a voice guide with an explicit words-to-avoid list, `index.md`
-discipline, and routing/parallelization rules.
-
-**Each is missing what the other proves valuable** — coding has a
-strong autonomy contract and almost no automations; writing has strong
+**Each was missing what the others prove valuable** — coding had a
+strong autonomy contract and almost no automations; writing had strong
 coordination and behavioural rules and no autonomy contract. Extracting
-the shared anatomy is how both improve at once. (Brief Q-6.)
+the shared anatomy is how they improve at once. (Brief Q-6.)
 
 ---
 
 ## Dogfooding — this repo is target project #1
 
-**This project must dogfood the template.** Lintel Harness is set up by
-the coding pack it productizes: the `specifications/`, `AgentTeams/`,
-`targets/` and `copy/` folders were produced by applying that pack, by
-hand, exactly as a user would.
+**This project must dogfood the pack.** Lintel Harness is set up by the
+coding pack it productizes: `specifications/`, `copy/` and — until the
+two-phase model removed them — `AgentTeams/` and `targets/` were
+produced by applying that pack, by hand, exactly as a user would.
 
 That is not decoration. It is the primary source of requirements:
 
@@ -171,14 +199,17 @@ That is not decoration. It is the primary source of requirements:
   step that turned out fiddly is a requirement for `harness init`.
 - **Anything the pack claims, we verify here.** If a pack instruction
   doesn't survive contact with a real repo, the pack is wrong.
-- **We feel our own drift.** This repo will go stale against
-  `template/` the same way any other project would. That pain is the
-  evidence for the manifest and `harness update`.
+- **We feel our own drift.** This repo goes stale against
+  `packs/coding/` the same way any other project would. That pain is
+  the evidence for the manifest and `harness update`.
 
 ### What the manual apply actually required
 
 The log below is spec input for R3 (quick to apply) and R4 (easy to
-update). Each line is work the generator must absorb:
+update). Each line is work the generator must absorb. **It is a
+historical record of the 2026-08-30 apply and its paths are as they
+were then** — read every `template/` in it as `packs/coding/`. Do not
+"correct" the log; correcting it would destroy the evidence.
 
 | # | Step | What the generator must handle |
 |---|---|---|
@@ -194,15 +225,21 @@ update). Each line is work the generator must absorb:
 
 **Still outstanding** (deliberate, not forgotten):
 
-- `copy/tone-of-voice.md` is an unfilled placeholder — it needs real
-  content before `copywriter` can be trusted.
-- `AgentTeams/Implement.md`'s file-ownership table names `Sources/**`
-  and `Tests/Unit/**`, which don't exist here. **Now unblocked** — Q-1
-  settled on a Node/TypeScript CLI, so redraw it against that layout
-  once the ADR fixes the file plan.
-- `infrastructure/backend-deploy/` was **not** applied: the harness has
-  no backend. Pack sections are optional and composable — that is
-  itself a finding for R6.
+- **`.harness/pack/` and `.harness/manifest.json` do not exist**, so
+  this repo is still not produced by the tool it specifies. See
+  *Genuinely outstanding* below — it leads that list.
+- `copy/tone-of-voice.md` is an unfilled placeholder, still carrying
+  `{{Product}}` and `<name>` — it needs real content before
+  `copywriter` can be trusted.
+- `packs/coding/agent-teams/Implement.md`'s file-ownership table names
+  `Sources/**` and `Tests/Unit/**`, which are not this project's
+  layout. **Now a pack-content item, not an applied-copy one** — the
+  applied `AgentTeams/` is gone, so the fix belongs in the pack, and
+  `F1-ADR-001`'s file-level plan is the layout to redraw it against.
+- No backend scaffold was applied: the harness has no backend. Pack
+  scaffolds are optional and composable — that is itself a finding for
+  R6, and it is why `coding` ships `backend-azure` and `backend-aws`
+  as branches rather than as base steps.
 
 ### The rule that keeps dogfooding honest
 
@@ -213,26 +250,33 @@ invalidate the evidence.
 
 ---
 
-## Working with `template/` — the pack source
+## Working with `packs/` — the pack sources
 
-`template/` is the **pack source**, and it is pristine. The folders
-marked APPLIED are its output.
+`packs/coding/`, `packs/writing/` and `packs/planning/` are the **pack
+sources**, and they are pristine. The applied folders in this repo root
+are `coding`'s output.
 
-- **Do not make incidental edits under `template/`.** Not to fix a
-  typo, not to improve a prompt in passing.
+- **Do not make incidental edits under `packs/`.** Not to fix a typo,
+  not to improve a prompt in passing.
 - **Do not edit an applied copy to work around a pack defect.** See the
-  rule above.
-- Converting `template/` into a real versioned pack **is** product work
-  — done deliberately under the spec process, once the pack format is
-  specified. Not before.
+  rule below.
+- Pack content is **product**, so changing it is spec-governed work
+  under F5 — not a passing improvement, and not a place to fold a
+  decision the specs have not recorded.
+- A pack's `recipe.json` is the contract for what an apply produces.
+  Changing a payload path without changing the step that carries it
+  breaks the apply silently.
 
 ---
 
 ## Specification process
 
-This project follows the process in `specifications/README.md` and
-`specifications/conventions.md` — the **applied** copies, not the pack
-source. **Read both before touching specs.**
+This project follows the process defined in
+`packs/coding/specifications/README.md` and
+`packs/coding/specifications/conventions.md`. **Read both before
+touching specs.** `specifications/README.md` in this repo is an
+**index** of what is here, not a copy of the process — under Q-46 the
+process document is no longer applied into the project.
 
 ```
 research → spec → design-spec (if UI) → ADR (PROCEED) → epics-and-tasks → implementation
@@ -263,30 +307,38 @@ Conventions chosen 2026-08-30 at the first spec run:
 |---|---|
 | F1 | Pack format & manifest |
 | F2 | `harness init` — the apply engine |
-| F3 | `harness update` — drift detection & 3-way merge |
-| F4 | `harness status` & `harness contribute` |
-| F5 | Template packs (coding, writing, planning) & shared components |
+| F3 | `harness update` — drift classification, **no merge engine** (Q-62), plus its read-only mode (the former `status`) |
+| F4 | `harness contribute` — **v1.1 only**; the number is reserved and never reused |
+| F5 | Template packs (coding, writing, planning) |
 | F6 | The Claude Code skill — the judgment layer |
 
-Build sequencing: **F1 → F2 → F5 → F3 → F4 → F6.** F1 first: the pack
-format and manifest are what every other feature reads or writes.
+**v1.0 is F1, F2, F3, F5, F6.** F1 first: the pack format and manifest
+are what every other feature reads or writes. The master spec's
+sequencing line (`F1 → F2 → F5 → F6`) predates Q-62 and does not yet
+place F3; `general/system-architecture.md` §4 is the current
+feature→component map.
 
-### Counter state
+### Counter state — the one place in this file
 
-| Counter | Last used | Notes |
+**Every counter value in this repo's documentation is stated here and
+nowhere else in `CLAUDE.md`.** If you find a second number for the same
+counter anywhere in this file, that is the bug, and this section wins.
+
+| Counter | Next free | Rule |
 |---|---|---|
-| Epic | — | `E-NN`, per feature |
-| Task | — | Scheme A, epic-derived `T-XXYY` |
-| User story | US-29 | `US-N`, project-monotonic. US-1–US-16 = F1 (pack format & manifest); US-17–US-28 = F5 (template packs); **US-29 = F1** (`harness pack info`, added by the `F1-ADR-001` amendment pass of 2026-08-30, which assigned the command to F1). F5's block was renumbered onto US-17–US-28 by the cross-document consistency pass of 2026-08-30, F1 keeping the earlier block as the earlier feature in build order. F1's block is therefore non-contiguous by design. No gaps, no retired numbers. Next free: **US-30**. |
-| Open question | Q-37 | `Q-N`, **project-monotonic, not per document** — an ID is never reused for a different question, and it keeps its number when it moves to a Resolved Decisions table. Q-1–Q-12 (plus Q-8a, Q-9a, Q-9b) resolved in the brief §12; Q-13–Q-17 cross-feature, owned by the master spec; Q-18–Q-26 = F1; Q-27–Q-37 = F5. **Closed:** Q-1–Q-13, Q-15, Q-18–Q-27, Q-35, Q-37 — Q-13 and Q-15 by `F1-ADR-001` and recorded in the master spec, Q-18–Q-27 by the same ADR and recorded in F1 (Q-27 was raised in F5 but decides an F1 mechanism, so it is recorded where the mechanism lives), Q-35 and Q-37 by the consistency pass. **Open (11):** Q-14, Q-16, Q-17, Q-28, Q-29, Q-30, Q-31, Q-32, Q-33, Q-34, Q-36 — of which six are escalated to Thomas by `F1-ADR-001` §6.1 (Q-14, Q-16, Q-17, Q-28, Q-29, Q-33). The master spec's Open Questions table indexes every open question. Next free: **Q-38**. |
-| ADR | — | Epic-scoped ADRs use `ADR-EXX` and don't consume this counter |
+| Open question | **Q-63** | `Q-N`, **project-monotonic, not per document**. An id is never reused, and it keeps its number when it moves to a Resolved Decisions table. **Q-1…Q-62 are all resolved** — the register is `specifications/project-brief.md` §12, which holds the decision and the rationale for each. This file does not restate them. |
+| User story | **US-39** | `US-N`, project-monotonic across features. **F1 and F5 each state their own range in their §User Stories**, and both agree on US-39 as next free — read them there rather than trusting a list here. **Retired and never reusable:** US-5, US-6, US-7, US-11, US-12 (F1); US-22, US-23 (F5). F3 has no spec and so holds no stories. |
+| Epic | — | `E-NN`, per feature. None written. |
+| Task | — | Scheme A, epic-derived `T-XXYY`. None written. |
+| ADR | — | `F1-ADR-001` is the only ADR written. ADRs are feature-prefixed and numbered per feature, so there is no project-wide next-free id. Epic-scoped ADRs use `ADR-EXX`. |
+| Error code | — | F1's catalogue is the **only** one, and it holds **78** at v2.7. No other document may invent a code. |
 
 ---
 
 ## Agents
 
-Sub-agent definitions live in `.claude/agents/` (sourced from
-`template/agents/`):
+Sub-agent definitions live in `.claude/agents/` — ten of them, sourced
+from `packs/coding/agents/`:
 
 | Agent | Purpose | Model |
 |---|---|---|
@@ -301,10 +353,12 @@ Sub-agent definitions live in `.claude/agents/` (sourced from
 | `copywriter` | User-facing copy from a tone-of-voice guide | Opus 5 |
 | `target-reviewer` | Gates a target's Readiness before an unsupervised run | Sonnet 5 |
 
-Coordination prompts: `template/agent-teams/Specify.md` (research →
+Coordination prompts: `packs/coding/agent-teams/Specify.md` (research →
 spec → ADR → security review → PROCEED-stamped set) and
-`template/agent-teams/Implement.md` (implementer + testwriter +
-reviewer + security review → ships code, epic by epic).
+`packs/coding/agent-teams/Implement.md` (implementer + testwriter +
+reviewer + security review → ships code, epic by epic). They are **pack
+source only** — the applied `AgentTeams/` copies no longer exist in this
+repo.
 
 ---
 
@@ -323,18 +377,22 @@ verified) or **ABORT** (a stop condition fired). Never an open-ended
 - **Instances:** filled targets and their work logs are project
   content, not `.claude/` constructs.
 
-The reference pack lives at `targets/` and its path references are
-already fixed — that fixup is logged as step 6 of the manual apply.
+The reference material lives in the packs — `packs/coding/targets/` and
+`packs/planning/targets/`, which ship separate copies (Q-49, with the
+duplication recorded as a named v1.1 reconciliation task). There is no
+applied `targets/` in this repo root any more; the path-rewrite fixup
+that once produced one is logged as step 6 of the manual apply and is
+now the `rewrite-path` primitive's reason for existing.
 
 ---
 
 ## Conventions enforced for agents
 
-- **Know your level.** `.claude/` is how this repo works; `template/`
-  is what the product ships. See the table above.
-- **No incidental edits under `template/`.** Copy out, then edit.
+- **Know your level.** `.claude/` is how this repo works; `packs/` is
+  what the product ships. See the table above.
+- **No incidental edits under `packs/`.** Copy out, then edit.
 - **Fix the pack before the copy.** A defect found in an applied file
-  is a defect in `template/`; patch it there and re-apply.
+  is a defect in `packs/coding/`; patch it there and re-apply.
 - **Dogfood first.** Before automating a step, do it by hand here and
   log what it cost.
 - Unit tests live alongside the code they cover (owned by
@@ -350,36 +408,55 @@ already fixed — that fixup is logged as step 6 of the manual apply.
 
 ## Open decisions (for Thomas)
 
-**None.** Q-1…Q-38 are resolved and recorded in the brief's Resolved
-Decisions table with rationale. Next free id is **Q-39**.
+**None.** Every question raised in this project is resolved and
+recorded, with its rationale, in `specifications/project-brief.md`
+**§12 — Resolved decisions**. For the id range and the next free id,
+see §Counter state above; this section deliberately states no number.
 
-The six that were escalated from the spec run were decided on
-2026-08-31:
+**Read §12, do not read a summary of it.** This section used to restate
+the decisions it thought mattered, and that is exactly what went stale:
+it was still advertising Q-14's `init --adopt` long after **Q-44
+dropped it**, and it was still counting to a next-free id two dozen
+questions behind the register. A restated decision is a decision that
+will be wrong later. §12 supersedes anything here or in the sections
+below that appears to disagree with it.
 
-| # | Decision |
-|---|---|
-| Q-14 | **`init --adopt` ships** — hashes an existing tree, writes a manifest, seeds `.harness/base/` from the pack's rendered output. Meets S7 without discarding this repo's deliberate README rewrites |
-| Q-16 | Published as **`@lintel/harness`**, binary **`lintel-harness`**, **Node >= 22** (corrected from the ADR's assumed >= 20; Node 20 left LTS in April 2026) |
-| Q-17 | **Three scaffolds**: `backend-azure`, `backend-aws`, `writing-workstream`. `frontend` and `app` defer to v1.1 |
-| Q-28 | **`shared/presentation` defers to v1.1** — no pack references it at v1.0 |
-| Q-29 | **No boundary violation** — Q-6 constrains changing existing packs, not adding one |
-| Q-33 | **Planning's dogfooding site is chosen when the pack is authored.** Recorded risk: a pack is only as good as the work it has carried |
-| Q-38 | **Document templates stay copied** into applied projects — repo noise accepted for self-describing projects; identical copies never produce merge conflicts |
+The one thing worth carrying rather than pointing at, because it
+changed scope after most of the spec set was written: **Q-62 returns
+`update` to v1.0** and F3 with it, **without a merge engine**. G3, S3
+and R4 return too, `status` folds into `update`'s read-only mode,
+**`contribute` (F4) alone stays deferred to v1.1**, and **S7 strengthens
+to *produced by `init` and maintained by `update`***. Any document —
+including the master spec, `LintelHarnessSpecification-1.0.md`, which
+has not been reconciled — that still says `update` or `status` defer to
+v1.1 predates Q-62.
 
 ### Status of the spec set
 
-**F1 and F5 are spec-complete. ADR-001 carries an architectural
-`PROCEED`.** Q-1…Q-55 are all resolved.
+**F1 and F5 are spec-complete, both at v2.7. `F1-ADR-001` carries an
+architectural `PROCEED`.** Neither number moves without a fold; check
+the `**Version:**` line of each spec rather than trusting this one.
+
+The five documents in `specifications/general/` —
+`system-architecture.md`, `technology-choices.md`,
+`interaction-model.md`, `pack-application.md` and `pack-inventory.md` —
+are **all written and all Draft**. Nothing in `general/` is
+outstanding-as-unwritten; the standing risk there is staleness, which
+is what the next section is about.
 
 **The security gate is closed by decision, not by a passing verdict.**
 Four Mode A rounds ran: 2 CRITICAL → 2 CRITICAL → 0 CRITICAL/2 HIGH →
 0 CRITICAL/3 HIGH, with conditions holding 24/31 → 36/38. Round 4's
-HIGHs and MEDIUMs are folded into F1 v2.5 and F5 v2.4; C-47 and the LOW
-residue are accepted with their requirements and tests recorded. **No
-`SECURITY-PROCEED` exists.** Every round-3 and round-4 finding concerned
-the membership or quantifier of a denylist that the spec itself concedes
-is incomplete by construction — stopping is a judgement about
-diminishing returns, and should be read as one.
+HIGHs and MEDIUMs are folded into F1 v2.5 and F5 v2.4 — the fold
+versions, not the current ones; C-47 and the LOW residue are accepted
+with their requirements and tests recorded. **No `SECURITY-PROCEED`
+exists against any revision of F1, F5 or the ADR, and none is claimed.**
+The standing security verdict of record is `REVISE-SPEC`. Every round-3
+and round-4 finding concerned the membership or quantifier of a denylist
+that the spec itself concedes is incomplete by construction — stopping
+is a judgement about diminishing returns, and should be read as one.
+**Do not read the closed gate as a clean pass, and do not weaken this
+paragraph.**
 
 **`§F1.9`'s known limits and v1.1 obligations are part of the contract.**
 
@@ -400,25 +477,30 @@ authoritative, verify it rather than trusting the assertion.
 
 ### Genuinely outstanding before code
 
-- **No epics-and-tasks document** for F1 or F5.
-- **F2 and F6 have no feature spec.** Only F1 and F5 are written.
-- **`general/system-architecture.md` and `general/technology-choices.md`
-  are required and unwritten.** The two-phase model changed the system's
-  shape after F1 and the ADR were first drafted, so the architecture doc
-  has never described the current design.
-- **Pack content lags the spec.** `packs/coding/` has no `pack.json`,
-  no `recipe.json` and no `commands/` directory; `infrastructure/
-  backend-deploy/` has not become `scaffolds/backend-azure/`; and only
-  one template carries a `{{harness:` token where F1 asserts five
-  substitution targets. F1's US-16 positive assertion is what will catch
-  this.
-- **`.harness/pack/` does not exist**, so S7 is unmet — this repo is not
-  yet produced by its own tool.
+- **`.harness/pack/` and `.harness/manifest.json` do not exist**, so
+  **S7 is unmet** — this repo is not yet produced by the tool it
+  specifies. Under Q-62 S7 also strengthens to *produced by `init` **and
+  maintained by `update`***, so clearing it now takes an apply and an
+  update. **This is the outstanding dogfooding item**, it leads this
+  list on purpose, and the blocker is no longer authoring: it is that
+  there is no CLI to run. `ls .harness` is the check.
+- **No CLI source exists.** Not a line. Everything below assumes that.
+- **F2, F3 and F6 have no feature spec** — F3 least of all, having
+  returned to v1.0 only at Q-62. Only F1 and F5 are written.
+- **No epics-and-tasks document** for any feature.
+- **Pack content no longer lags the spec** — this is the line that went
+  stale last time, so it now says how to check itself. All three packs
+  ship a `pack.json` and a `recipe.json`
+  (`find packs -name pack.json`). Their `steps` arrays hold **coding
+  15, writing 7, planning 23**; counting **every** scaffold branch as
+  well the totals are **21 / 12 / 23** — but **only one branch runs in
+  any given apply**, so no single number describes what an apply does.
+  `coding` has two mutually exclusive branches (`backend-azure`,
+  `backend-aws`) at 3 steps each, `writing` one (`writing-workstream`)
+  at 5, `planning` none. `packs/coding/commands/target.md` exists; the
+  old `infrastructure/backend-deploy/` is now
+  `packs/coding/scaffolds/backend-azure/` with `backend-aws/` beside
+  it; and C-43's **five** `{{harness:`-bearing `coding` paths are met
+  exactly (`grep -rl '{{harness:' packs/coding`).
 
-### Counters
-
-Q-1…Q-53 all resolved, next free **Q-54**.
-User stories: F1 holds US-1…US-4, US-6, US-8…US-10, US-13…US-16,
-US-29…US-33; F5 holds US-17…US-22, US-24…US-28, US-34…US-38. Next free
-**US-39**. Retired, never reusable: **US-5, US-7, US-11, US-12** (F1),
-**US-23** (F5).
+Counter values are **not** repeated here. See §Counter state.

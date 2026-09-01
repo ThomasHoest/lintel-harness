@@ -1,7 +1,7 @@
 # F5 — Template Packs Specification — Lintel Harness v1.0
-**Version:** 2.7
+**Version:** 2.9
 **Status:** Draft
-**Date:** 2026-08-31
+**Date:** 2026-09-01
 **Platform:** Pack content is plain files — Markdown, JSON, shell/PowerShell, Bicep, CDK TypeScript — bundled with the Node/TypeScript CLI and consumed by Claude Code's `.claude/` conventions. No runtime of its own.
 **Design spec:** n/a (no UI)
 **ADR:** {{`F5-ADR-NNN-template-packs.md` — filled in by the architect after this spec is reviewed}}
@@ -24,7 +24,9 @@
 | **2.3** | **2026-08-31** | **Final Mode A fold — the F5 side of C-40, the widened reserved list confirmed, and C-46.** The final pass over F1 v2.4 / F5 v2.2 returned **`REVISE-SPEC`** with **3 HIGH, 3 MEDIUM, 4 LOW and no CRITICAL**, 36 of 38 conditions holding. **C-40's evidence lived partly here:** §Flows / *2. Role set* listed the agent frontmatter keys inline, `permissionMode` among them, which read as a menu of what a **pack** may declare. That list is now stated explicitly as **descriptive of the Claude Code runtime**, with what a pack-written `.claude/` file may declare deferred to F1, which is being amended so that such a file **may not declare any permission-bearing key** — tool grant or permission mode — and so that the pre-write disclosure prints the **whole frontmatter block**, not only `tools:`. **Consequence made explicit rather than left to the migration:** `coding`'s `architect.md`, `reviewer.md` and `securityreviewer.md` carry `permissionMode: readonly` in the source and **the migrated pack does not ship it**; US-24 gains it as **declared difference class (d)**, enumerated as exactly three lines in three named files, and the empty class renames to (e). Nothing is lost that was load-bearing — the pack's own `agents/README.md` already says the `tools:` whitelist is the real safety net, and those three agents omit `Write`/`Edit`/`Bash`. **No code is cited for the new rule**, deliberately: whether C-40 extends `E-CLAUDE-TOOL-GRANT` or adds one beside it is F1's, and F1 remains the only catalogue. **The widened reserved-destination list is confirmed against this spec and nothing contradicts it** — US-21 gains an acceptance criterion saying so, naming `azure-pipelines.yml` because the pack ships an **Azure** scaffold: `backend-azure`'s entire write set is `infrastructure/backend-deploy/` and it ships **no CI or pipeline file of any kind**, as do `backend-aws` and `writing-workstream`. **C-46:** §NFR *Recipe purity* named two inputs where F1 names three; it now reads *(payload, parameter answers, scaffold selection)* and restates plan-time rendering (C-23). **No new question, no new story, no new error code:** next free **Q-56**, next free story id **US-39**. |
 | **2.5** | **2026-08-31** | **Pack-reconciliation pass — `planning` gains `background/`, and all three packs gain a project brief.** The packs moved ahead of this document; this row brings the document back to them, and adds no new mechanism. **(1)** **Every pack now renders a project brief out of its payload** — `coding` to `specifications/project-brief.md`, `writing` and now `planning` to `project-brief.md` at the applied root — and the three are deliberately different documents. `planning`'s `templates/` is therefore **five**, not four, restated in the payload inventory, the 7b table, the comparison matrix and part 3, whose "five" heading had already been changed while its table still listed four. **(2)** **`planning` gains `background/`**, the raw material its brief is distilled from: `background/` plus `{company,strategy,products,market,performance,constraints,capacity}/`, each placed by a new **unconditional** `rename` out of `applied-readmes/`, which grows from 3 payload files to **11**. The mapping is stated where the pack consumes it — `constraints/` → the brief's constraint-floor section, the `constraintFloor` calibration itself and horizon determinants **L** and **I**; `market/` → **S**; `products/` + `performance/` → **U** and the current-portfolio section; `capacity/` → absorption capacity, the input the gate is checked against; `strategy/` → vision and what the portfolio decides; `company/` → the company profile. **(3) Counts corrected against the live recipe.** `planning`'s `recipe.json` is **23 steps**, not the 14 rows the 7b table carried — it was already one out of step before this change — and the table is rebuilt one row per step, in recipe order. The apply creates **11** folders, not 3, each taking `<dir>/README.md`; **both calibration branches produce the identical folder set and 32 applied paths each**, and **only the two calibration copies are `when`-gated**. That last fact is now stated as the *reason* the folder sets match, in the §Flows paragraph that previously said "all three of its folder-README steps are unconditional"; the same-branch rule it states is unchanged and still correct. The applied-tree listings for `planning` and `writing` were closed listings missing this content and are extended. **(4) US-28's line budget is raised, deliberately: 120 → 160 lines per pack README, ten → twenty lines for the produced-tree block, with §NFR *Legibility* moved with it so the two do not disagree.** `packs/planning/README.md` was already 125 lines with a 15-line block *before* this change and is now **148** with **18**; `writing` is **150** with **15**; `coding` is **95**. The cap is restated as a **legibility budget** — it exists so a newcomer reads the page in one sitting, and it is raised when a pack's real content outgrows it, never met by deleting substance. A pack that genuinely does more earns more lines; a number that forces content out is the wrong constraint, and this is recorded so the raise reads as a decision rather than a slipped limit. **No new question, no new story, no new error code:** F1 remains the only catalogue and none is cited that it does not carry; next free **Q-62** (Q-56, Q-60 and Q-61 are open), next free story id **US-39**. |
 | **2.6** | **2026-08-31** | **Q-60 fold — the `defect`/`notice` split, and what each pack emits by design.** F1 v2.6 classifies every `W-` code once: a **`defect`** is author-fixable, a **`notice`** reports a declared state the pack intends. **`--strict` promotes defects only, and a notice is never fatal under any flag.** F1 owns the catalogue and the classes; this spec cites them and invents none. Three consequences land here. **(1) G5.11 and every criterion asserting `validate --all --strict` exits `0` are restated against the split** rather than against a bare warning-free state — the goal is now *no `defect`-class finding over any bundled pack*, which is a stronger claim than the old wording could support and a true one, which the old wording was not. **(2) The notices each pack emits are stated per pack, as properties rather than exemptions.** `planning` emits **`W-ANATOMY-PROVISIONAL`** — part 2's role set is genuinely unwritten and the pack says so with a note — and **`W-HOOK-SCRIPT-INERT`** — its kill-criteria guard is inert *because* no pack may register an agent hook at v1.0. Both are **correct output from a correct pack**, not tolerated noise, and both still print on every run. `coding` and `writing` emit no notice at v1.0. **(3) `coding` gains `applied-readmes/infrastructure.md`.** F1 US-16 step 12 quantifies over **proper** directory prefixes, so the intermediate `infrastructure/` is a directory a backend combination creates and no step wrote it a README — a real `defect`, fixed rather than reclassified. Each backend scaffold gains a **third** step placing it, in the same `when` branch that creates the directory; `applied-readmes/` grows from **five** payload files to **six**, and `coding`'s recipe from 19 declared steps to **21**. The two backend scaffolds are alternatives in one category, so only one ever runs and the shared destination is no collision. The base-combination count of **23** phase-2 files is unchanged — the sixth README is scaffold-only. **`provenance` is now a defined `pack.json` field** in F1 US-1, so §NFR *Provenance* is satisfiable without tripping F1's unknown-top-level-key warning, which is `defect` class. **No new question, no new story, no new error code:** Q-60 is resolved; **Q-56 and Q-61 remain open**; next free **Q-62**; next free story id **US-39**. |
-| **2.7** | **2026-08-31** | **Q-56 and Q-61 fold — every pack's `CLAUDE.md` is declared adapt-expected, and every pack `generate`s it.** F1 v2.7 owns both mechanisms; this spec declares the pack content that uses them and invents no code. **Q-56 — `verify` gains a fourth per-path state, `adapted`.** A recipe step may declare **`adaptExpected`** (F1 US-31, a JSON boolean on the step that produces the file); `verify` reports every applied path in that step's write set as **`adapted`** rather than `differs` when it has changed, and `adapted` is **not a failure and does not change the exit code** (F1 US-33). **All three packs set `"adaptExpected": true` on their `generate` step**, and the reason is the same in each: the generated `CLAUDE.md` is the one applied file that carries **project-owned prose the F6 skill is meant to adapt** — the layout section, the file-ownership table, the standing instructions written for this project's real tree — and anchors are inert at v1.0 (Q-45), so nothing inside the file distinguishes pack-owned regions from project prose. **No other applied path in any pack is adapt-expected**, and the declaration is per path, never a blanket suppression: an unexpected change anywhere else still reports `differs` and still exits `1`. The three 7b recipe tables, US-38 and each pack's part 6 state it; §NFR *Determinism* is reconciled — its byte-identical claim is about **two applies**, never about a project after the skill has run. **G5.11 gains its project-side half**: an applied project whose `CLAUDE.md` the skill has adapted **still passes `lintel-harness verify`**, which is what makes S7 checkable on a real project rather than on a state that exists for seconds. **Q-61 — all three packs `generate` their `CLAUDE.md`.** F1 US-32's claim that `coding`'s was the only `generate` step in any v1.0 pack was wrong and is corrected there; this spec was right and its US-38 already asserted anchors for **every** pack. The counts are now stated per pack and agree with F1: `coding` **six** anchors, `writing` **six**, `planning` **seven** — **nineteen** across three templates, all built. `rename` neither substitutes nor emits anchors, so the alternative would have left two of three packs with nothing for v1.1's `update` to find. **No recipe step count changes**: the three `generate` steps were already in the 7b tables and in every total. **No new code, no new story, no new question**: F1 remains the only catalogue and none is cited that it does not carry. Q-56 and Q-61 move to Resolved, so **Q-1…Q-61 are all resolved and no question is open in any document**; next free **Q-62**; next free story id **US-39**. |
+| **2.7** | **2026-08-31** | **Q-56 and Q-61 fold — every pack's `CLAUDE.md` is declared adapt-expected, and every pack `generate`s it.** F1 v2.7 owns both mechanisms; this spec declares the pack content that uses them and invents no code. **Q-56 — `verify` gains a fourth per-path state, `adapted`.** A recipe step may declare **`adaptExpected`** (F1 US-31, a JSON boolean on the step that produces the file); `verify` reports every applied path in that step's write set as **`adapted`** rather than `differs` when it has changed, and `adapted` is **not a failure and does not change the exit code** (F1 US-33). **All three packs set `"adaptExpected": true` on their `generate` step**, and the reason is the same in each: the generated `CLAUDE.md` is the one applied file that carries **project-owned prose the F6 skill is meant to adapt** — the layout section, the file-ownership table, the standing instructions written for this project's real tree — and anchors are inert at v1.0 (Q-45), so nothing inside the file distinguishes pack-owned regions from project prose. **No other applied path in any pack is adapt-expected**, and the declaration is per path, never a blanket suppression: an unexpected change anywhere else still reports `differs` and still exits `1`. The three 7b recipe tables, US-38 and each pack's part 6 state it; §NFR *Determinism* is reconciled — its byte-identical claim is about **two applies**, never about a project after the skill has run. **G5.11 gains its project-side half**: an applied project whose `CLAUDE.md` the skill has adapted **still passes `lintel harness verify`**, which is what makes S7 checkable on a real project rather than on a state that exists for seconds. **Q-61 — all three packs `generate` their `CLAUDE.md`.** F1 US-32's claim that `coding`'s was the only `generate` step in any v1.0 pack was wrong and is corrected there; this spec was right and its US-38 already asserted anchors for **every** pack. The counts are now stated per pack and agree with F1: `coding` **six** anchors, `writing` **six**, `planning` **seven** — **nineteen** across three templates, all built. `rename` neither substitutes nor emits anchors, so the alternative would have left two of three packs with nothing for v1.1's `update` to find. **No recipe step count changes**: the three `generate` steps were already in the 7b tables and in every total. **No new code, no new story, no new question**: F1 remains the only catalogue and none is cited that it does not carry. Q-56 and Q-61 move to Resolved, so **Q-1…Q-61 are all resolved and no question is open in any document**; next free **Q-62**; next free story id **US-39**. |
+| **2.8** | **2026-09-01** | **Q-63 rename — nothing in this specification changes but a name.** The binary is **`lintel`** with **`harness` as a command group**, so every acceptance criterion here now reads `lintel harness <command>`: G5.6, G5.11, the `coding`/`writing`/`planning` apply criteria, the `pack info` criteria and the two `validate` CI criteria. **No pack content moves.** The rename touches no payload path, no recipe step, no applied path, no anchor count and no `pack.json` field; `{{harness:…}}` is a substitution namespace and `.harness/` is a directory, and **neither is the binary name** — both are deliberately untouched. F1 v2.8 owns the CLI-side detail (the `lintel:` diagnostic prefix, the re-scoped `E-CLI-UNKNOWN-COMMAND`); **no code is cited here that F1 does not carry, and none is invented.** No new story, no new question: next free **Q-64**, reserved. |
+| **2.9** | **2026-09-01** | **One stale cross-reference corrected — F1's live story block no longer lists US-6.** §User Stories and the Q-35 Resolved-Decisions row both said F1 holds *"US-1…US-4, **US-6**, US-8…US-10…"*. **F1 retired US-6 at v2.3** under **Q-54**, which dropped `merge-json` and with it the story's entire subject — owning part of a settings file. Both sentences now list F1's live block as **US-1…US-4, US-8…US-10, US-13…US-16 and US-29…US-33**, and both name US-6 among F1's retirements alongside US-5, US-7, US-11 and US-12. **Nothing else in this document moves.** No pack content, no recipe step, no acceptance criterion and no error code is touched; F1 remains the only catalogue and none is cited that it does not carry. **There is no counter conflict to resolve** — F1 and this document already agreed that **US-39** is next free, and they still do, so no story is renumbered and none is allocated. Q-62 returns `update` to v1.0 and the master spec folds it; **this spec asserts nothing about the command surface and needed no change for it**. No new question: next free **Q-64**, reserved. |
 
 ---
 
@@ -225,7 +227,7 @@ Each is assessable yes/no when F5 is done.
   no artefact specific to `AIImpactOnOrganizationsAndLeadership` (its
   permission allowlist, its third-party hook, its research corpus, its
   voice samples, its personal names, its absolute paths) does.
-- **G5.6** — `lintel-harness init planning` at each of the two calibrations
+- **G5.6** — `lintel harness init planning` at each of the two calibrations
   produces trees that differ in cadence defaults, horizon defaults and
   the absorption-gate coverage text — from one pack source, with no
   forked pack.
@@ -245,7 +247,7 @@ Each is assessable yes/no when F5 is done.
 - **G5.10** — Each pack's README names all nine parts, states that pack's
   gaps honestly, and says what its recipe produces, so the completeness
   picture is legible without reading this spec (G6).
-- **G5.11** — `lintel-harness validate --all --strict` exits `0` over the
+- **G5.11** — `lintel harness validate --all --strict` exits `0` over the
   three bundled packs. Under F1 v2.6's `defect`/`notice` split (Q-60)
   that means **no bundled pack produces a single `defect`-class
   finding** — in particular, **every folder each recipe creates carries
@@ -260,7 +262,7 @@ Each is assessable yes/no when F5 is done.
   **G5.11 has a second, project-side half, added with Q-56.** The first
   half is about the packs as authored; this one is about a project after
   an apply: **an applied project whose generated `CLAUDE.md` the F6 skill
-  has adapted still passes `lintel-harness verify` and still exits `0`.**
+  has adapted still passes `lintel harness verify` and still exits `0`.**
   That path is reported **`adapted`** rather than `differs`, because
   every pack declares `"adaptExpected": true` on its `generate` step
   (F1 US-31, US-33) — and **only** that path is, so an unexpected change
@@ -318,8 +320,14 @@ Each is assessable yes/no when F5 is done.
 
 **Range used: US-17…US-21, US-24…US-28, US-34…US-38.**
 `US-N` is project-monotonic and unique across the project. F1 holds
-US-1…US-4, US-6, US-8…US-10, US-13…US-16 and US-29…US-33; F1 retired
-US-5, US-7, US-11 and US-12. **Next free id: US-39.**
+US-1…US-4, US-8…US-10, US-13…US-16 and US-29…US-33; F1 retired
+US-5, **US-6**, US-7, US-11 and US-12. **Next free id: US-39.**
+**US-6 moved from the first list to the second at F1 v2.3**, not at
+this pass: **Q-54 dropped `merge-json`**, and US-6's whole subject —
+owning part of a settings file — went with it, so F1 retired the id
+rather than repointing it. This sentence had continued to list it as
+live. **The counter is unaffected**, and F1 and this document already
+agree that **US-39** is next free, so nothing here is renumbered.
 
 **Retired, never to be reused:**
 
@@ -334,7 +342,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
 > As a solo operator starting a new software project, I want to apply the `coding` pack in one command so that the spec process, agents, agent teams and targets are in place before I write anything.
 
 **Acceptance criteria:**
-- `lintel-harness init coding` in an empty directory exits `0` and
+- `lintel harness init coding` in an empty directory exits `0` and
   produces `.harness/pack/`, `.harness/manifest.json`, `CLAUDE.md`,
   `.claude/agents/` (10 files), `.claude/commands/target.md`,
   `AgentTeams/` (2 files),
@@ -381,7 +389,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   example `copy/tone-of-voice.md`'s body) is listed in the init summary.
 - Running `/target <a filled target file>` in the produced project
   resolves the command and spawns `target-reviewer` with no path fix.
-- Re-running `lintel-harness init coding` in the same directory writes
+- Re-running `lintel harness init coding` in the same directory writes
   zero bytes and fails with `E-ALREADY-APPLIED` (F1 §Error States).
 
 ---
@@ -390,7 +398,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
 > As a solo operator starting a research-and-writing project, I want to apply the `writing` pack in one command so that the corpus structure, the eight-agent pipeline and the voice rules exist before the first scout runs.
 
 **Acceptance criteria:**
-- `lintel-harness init writing --scaffold writing-workstream` exits `0`
+- `lintel harness init writing --scaffold writing-workstream` exits `0`
   and produces `.harness/pack/`, `.harness/manifest.json`, `CLAUDE.md`,
   `Home.md`, `.claude/agents/` (8 files), `writing-guide/` (the source's
   **four** guide files under their existing names — `tone-of-voice.md`,
@@ -399,7 +407,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   and the corpus and workstream tree: `sources/` (with
   `_scouting/` and `inbox/`), `analyses/`, `notes/`, `tasks/` and
   `workstreams/`.
-- `lintel-harness init writing` with **no** `--scaffold` produces the
+- `lintel harness init writing` with **no** `--scaffold` produces the
   agents, the writing guide, `Home.md` and `CLAUDE.md`, and **none** of
   `sources/`, `analyses/`, `notes/`, `tasks/`, `workstreams/`.
 - Every directory the produced `CLAUDE.md` names under "Where things
@@ -418,7 +426,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   tree rather than by parsing a file the apply never writes. (The source
   project's only hook is a third-party notifier and does not migrate; its
   ~120-entry permission allowlist does not migrate either — Q-30.)
-- `lintel-harness pack info writing` reports parts 8 and 9 as `absent`,
+- `lintel harness pack info writing` reports parts 8 and 9 as `absent`,
   each with its declared reason.
 
 ---
@@ -435,7 +443,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   `--calibration high-floor` is exactly
   `--set constraintFloor=high-floor` and the CLI holds no knowledge of
   this pack. That is what keeps S5 falsifiable.
-- `lintel-harness init planning --calibration <name>` accepts exactly the
+- `lintel harness init planning --calibration <name>` accepts exactly the
   two declared values and rejects any other with `E-PARAM-INVALID`
   (F1 §Error States), which lists the permitted values verbatim.
 - Run interactively with no `--calibration`, init asks the parameter's
@@ -479,7 +487,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
 > As someone deciding which pack to apply, I want each pack to state which of the nine anatomy parts it actually ships so that I adopt it knowing what it does not give me.
 
 **Acceptance criteria:**
-- `lintel-harness pack info <name>` — an **F1** command (F1 §US-29) —
+- `lintel harness pack info <name>` — an **F1** command (F1 §US-29) —
   lists all nine parts for the named pack with one of
   `present` / `provisional` / `absent`, plus the declared `reason` for
   `absent` and the declared `note` for `provisional`. These criteria
@@ -506,7 +514,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   `planning`.
 - A pack whose `pack.json` omits any of the nine parts fails validation
   with `E-ANATOMY-MISSING` (F1 §Error States, exit 2), and
-  `lintel-harness init` refuses to apply it.
+  `lintel harness init` refuses to apply it.
 - Across the three packs, exactly **two** parts are `absent` and exactly
   **one** is `provisional`. Checkable in one run.
 - **The report describes the pack, not an applied project.** Every
@@ -523,9 +531,9 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
 > As an operator whose new project needs a backend, I want to select a scaffold at init so that I get the deploy machinery without getting scaffolds I do not need.
 
 **Acceptance criteria:**
-- `lintel-harness init coding` with no `--scaffold` produces no
+- `lintel harness init coding` with no `--scaffold` produces no
   `infrastructure/` directory.
-- `lintel-harness init coding --scaffold backend-azure` produces
+- `lintel harness init coding --scaffold backend-azure` produces
   `infrastructure/backend-deploy/` containing `main.bicep`,
   `production.bicepparam`, `deploy.sh`, `deploy.ps1`, `setup-neon.sh`,
   `setup-neon.ps1` and a README — each with its `.template` suffix
@@ -542,7 +550,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   applied path verbatim, one per line (F1 US-3). A test may assert it by
   running `init coding --scaffold backend-azure` and requiring all four
   in the summary and mode `0755` on disk afterwards.
-- `lintel-harness init coding --scaffold backend-aws` produces
+- `lintel harness init coding --scaffold backend-aws` produces
   `infrastructure/backend-deploy/` containing the CDK + Lambda
   equivalent. Any script it ships executable lands under the **same**
   declared root, is disclosed the same way, and counts against the same
@@ -570,7 +578,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
 - Requesting a scaffold the named pack does not offer writes zero bytes
   and fails with `E-SCAFFOLD-UNKNOWN` (F1 §Error States), which lists the
   available ids.
-- `lintel-harness pack info <name>` lists that pack's available scaffolds.
+- `lintel harness pack info <name>` lists that pack's available scaffolds.
 
 ---
 
@@ -666,7 +674,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
   `0644` file, registered by nothing and executed by nothing — so that
   the v1.1 route is a registration rather than a rewrite.
 - The block **and its limits** are documented in the pack's part 8 and in
-  the produced project's `CLAUDE.md`. `lintel-harness validate` says the
+  the produced project's `CLAUDE.md`. `lintel harness validate` says the
   same about the script with `W-HOOK-SCRIPT-INERT` (F1 §Error States),
   and `pack info` lists it as inert.
 - **That diagnostic is `notice` class and is correct output, not a
@@ -770,7 +778,7 @@ US-5, US-7, US-11 and US-12. **Next free id: US-39.**
 - The full set of destinations a recipe can write is computable from
   `recipe.json` plus the recorded answers **without executing it**, which
   is what lets F2 plan both phases in memory before any byte lands.
-- `lintel-harness pack info <name>` can render the destination list for a
+- `lintel harness pack info <name>` can render the destination list for a
   given set of answers.
 
 ---
@@ -1187,14 +1195,14 @@ Two things follow, both v1.0 facts:
   parts with F1's three-value `status`. Across the three packs, exactly
   **two** parts are `absent` (`writing` 8 and 9) and exactly **one** is
   `provisional` (`planning` 2). Because `status` is a schema field rather
-  than prose, both counts are checkable by `lintel-harness validate --all`.
+  than prose, both counts are checkable by `lintel harness validate --all`.
   Any change to them is a spec change. **The check is entirely
   payload-side:** every declared glob is matched against the pack
   directory, never against an applied tree, so `validate` needs no
   project and a rename in a recipe can never make a declared part look
   empty. See §Flows / *The nine parts across the three packs* for the
   namespace rule and for `coding`'s `agent-teams/` → `AgentTeams/` case.
-- **Folder READMEs:** `lintel-harness validate --all --strict` exits `0`
+- **Folder READMEs:** `lintel harness validate --all --strict` exits `0`
   over the three bundled packs, which means every folder each recipe
   creates — in **every** parameter combination, not merely in the one
   someone tried — receives the pack's declared `folderReadme`
@@ -1826,7 +1834,7 @@ pack-owned sections — **six**, listed in the `generate` step. Nothing
 parses them at v1.0.
 
 **This file is declared adapt-expected** (Q-56): `coding`'s `generate`
-step carries `"adaptExpected": true`, so `lintel-harness verify` reports
+step carries `"adaptExpected": true`, so `lintel harness verify` reports
 it **`adapted`** rather than `differs` once it has been edited, and the
 run still exits `0`. The reason is a property of the content, not a
 convenience: of everything this recipe writes, `CLAUDE.md` is the file
@@ -2675,7 +2683,7 @@ What survives, exactly:
   changed.
 - The **script** survives as content, so a v1.1 that gains a
   hook-registration mechanism has something to register.
-  `lintel-harness validate` names it with `W-HOOK-SCRIPT-INERT`.
+  `lintel harness validate` names it with `W-HOOK-SCRIPT-INERT`.
 - What does **not** survive is enforcement at the file write. US-26's
   criterion is **not met at v1.0** and is recorded as a shortfall, not
   quietly reinterpreted.
@@ -2919,5 +2927,5 @@ acceptance criteria.
 | Q-50 | How does a recipe create an empty directory? | **It does not have to — the premise is dissolved, not the problem solved** (brief §12). Every folder an apply creates carries a README: `README.md` for `coding` and `planning`, `index.md` for `writing`, with **`.claude/` and `.harness/` excluded as tool-owned**. So no folder is ever empty, and there is **no eighth `mkdir` primitive, no `skeleton/` tree and no `.gitkeep`**. The proposed `mkdir` is withdrawn: `F1-ADR-001` §3.3 records that its entire output is invisible to `verify` and uncommittable by git, so an applied tree using it would not survive a clone. `coding` gains **six** folder READMEs from `applied-readmes/` — five unconditional, plus `infrastructure/` from inside each backend scaffold, added by Q-60; `planning` gains **eleven** — `portfolio/`, `portfolio/bets/`, `targets/`, `background/` and `background/`'s seven subfolders (`company/`, `strategy/`, `products/`, `market/`, `performance/`, `constraints/`, `capacity/`), every one of them from an unconditional `rename`; `writing` already had the convention. | 2026-08-31 |
 | Q-51 | May the `writing` extraction author the templates its recipe needs? | **Yes, and exactly two** (brief §12). `index.template.md` and `home.template.md` are authored and recorded in the extraction record as **recipe scaffolding rather than content** — without them the recipe cannot render `Home.md` or a per-folder `index.md`, and the pack would ship a convention it cannot execute. Everything else stays faithful: the one real `post` template migrates as it is, and the writing guide keeps its **four files under their existing names**, `.template`-suffixed only where the recipe strips a suffix. Part 3 stays thin. | 2026-08-31 |
 | Q-54 | *(Raised by the Mode A re-review, not by F5 — restated here because it removes content this spec carried.)* Does `merge-json` ship at v1.0? | **No — six primitives, not seven** (brief §12). `merge-json` is deferred to v1.1 with the whole settings story: the ownable-key allowlist, the destination policy, the leaf-only rule, the agreement gate and the security disclosure are **removed rather than repaired**. The trigger was this spec: its three "Settings" steps in `coding`, `writing` and `planning` were **never valid recipes** — not one named a `from`, not one named a single owned key, and no pack's payload inventory holds a settings source file — so once they were deleted `merge-json` had **no v1.0 consumer** while carrying the format's largest attack surface. Consequences folded here: no pack writes `.claude/settings.json`, owns a settings key or ships a default permission set; `E-MERGE-JSON-*`, `E-OWNEDKEY-*` and `E-SETTINGS-*` leave F1's catalogue and every citation of them leaves this spec; `coding`'s phase-2 count drops to **23**; and R5 gains a **fourth** recorded shortfall. **Bonus, and it is not small:** `merge-json` was the only primitive taking a fourth input — the destination's pre-existing content — so the *Recipe purity* NFR is now true **without exception**. | 2026-08-31 |
-| Q-35 | How is the project-monotonic `US-N` counter reconciled across parallel feature specs? | **Reconciled by the 2026-08-30 consistency pass.** F1 keeps US-1…US-16 (earlier in build order) and later gained US-29; F5's block was renumbered to US-17…US-28. Standing rule for later parallel passes: the earlier feature in build order keeps its block, later blocks are renumbered at the merge, and the counter table is updated before either spec reaches `Accepted`. **Applied again in this rewrite:** US-23 is retired rather than reused, and new stories were allocated from US-34. **Applied again at the ADR-001 fold:** US-22 is retired with the `shared/` mechanism it asserted (Q-48), its id is not reused, and no replacement story is allocated — what it protected is now task **v1.1-T1**. F5's live block is US-17…US-21, US-24…US-28, US-34…US-38; F1 holds US-1…US-4, US-6, US-8…US-10, US-13…US-16 and US-29…US-33; **next free id US-39**. | 2026-08-30 |
+| Q-35 | How is the project-monotonic `US-N` counter reconciled across parallel feature specs? | **Reconciled by the 2026-08-30 consistency pass.** F1 keeps US-1…US-16 (earlier in build order) and later gained US-29; F5's block was renumbered to US-17…US-28. Standing rule for later parallel passes: the earlier feature in build order keeps its block, later blocks are renumbered at the merge, and the counter table is updated before either spec reaches `Accepted`. **Applied again in this rewrite:** US-23 is retired rather than reused, and new stories were allocated from US-34. **Applied again at the ADR-001 fold:** US-22 is retired with the `shared/` mechanism it asserted (Q-48), its id is not reused, and no replacement story is allocated — what it protected is now task **v1.1-T1**. F5's live block is US-17…US-21, US-24…US-28, US-34…US-38; F1 holds US-1…US-4, US-8…US-10, US-13…US-16 and US-29…US-33; **next free id US-39**. *(This closing clause states current ownership, not history, and is corrected 2026-09-01: **US-6 is retired**, by F1 v2.3 under Q-54, and was still listed as F1's. The standing rule the row records is unchanged, and the counter does not move.)* | 2026-08-30 |
 | Q-37 | Where is a pack's anatomy declaration validated — schema or CLI? | **Answered by F1.** `pack.json` carries a mandatory `anatomy` object with exactly nine keys; a missing key is `E-ANATOMY-MISSING`; a key whose globs match no files is `E-ANATOMY-EMPTY`. The anatomy carries a three-value `status` enum — `present \| provisional \| absent`, defaulting to `present` — with `provisional` requiring a `note` and `absent` a `reason`, which is what makes this spec's provisional/absent counts mechanically checkable. **Reaffirmed by this rewrite:** the recipe is a sub-part of part 7 precisely so that nine keys stays nine keys. | 2026-08-30 |
