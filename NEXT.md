@@ -209,8 +209,20 @@ those scaffolds. **That suite is now the sole coverage for two
 security-relevant rules** — worth knowing before anyone trims it.
 
 **Still open on this:** F7 has no spec, and the add-on *composition* rule
-(ordering, collisions between an add-on and its pack, whether add-ons can
-declare parameters) is entirely undesigned.
+is entirely undesigned. **Q-83 is now recorded** (brief §9) as its first
+design question — whether `category` belongs to scaffolds, add-ons or
+both, and who owns an open-string namespace once add-ons are authored
+independently. F7 must also settle whether an add-on may collide with
+**its pack** (a case scaffolds never had) and whether add-ons declare
+parameters.
+
+**Fixed while investigating Q-83:** F1 US-9 asserted *"`writing-workstream`
+declares none"* while the pack declares `"category": "workstream"` — a
+false statement about a shipping pack, in the bullet defining the rule.
+Behaviourally harmless, which is why it survived four security reviews.
+**F1 is now v3.2**, and US-9 states plainly that all three of its
+category branches are **fixture-covered only**, rather than leaving a
+reader to assume an untested branch is a tested one.
 
 ## 4. Waves 2 and 3
 

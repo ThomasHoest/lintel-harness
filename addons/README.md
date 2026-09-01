@@ -41,9 +41,24 @@ add-on carries no way of working, so composing several is coherent.
 | `backend-azure/` | `backend` | `packs/coding/scaffolds/backend-azure/` |
 | `backend-aws/` | `backend` | `packs/coding/scaffolds/backend-aws/` |
 
-Both declare `"category": "backend"`, which is what will make them mutually
-exclusive when a mechanism exists to enforce it — the same rule
-`writing-workstream` is exempt from by having no sibling.
+Both declare `"category": "backend"`. **That declaration is currently
+decorative** — no mechanism reads it, because no mechanism applies an
+add-on. Whether it survives into F7 unchanged is **Q-83**, which is open:
+
+- On *scaffolds*, `category` did two opposite jobs from one field. Same
+  category → **alternatives**, refuse at selection (`E-SCAFFOLD-EXCLUSIVE`).
+  Different or absent → **must not overlap**, caught statically as an
+  authoring error (`E-SCAFFOLD-COLLISION`).
+- On *add-ons*, a third case appears that scaffolds never had: an add-on
+  may collide with **its pack**, not only with another add-on.
+- And `category` is an **open string**. One pack author picks their own
+  values coherently; independently authored add-ons share a namespace
+  **nobody owns**, so two can mean different things by `backend`, or miss
+  each other by spelling it differently, with nothing detecting either.
+
+Do not treat the two `"category": "backend"` lines here as a settled part
+of the add-on format. They record what these two units *were*, which is
+useful input to F7 and not a decision it has taken.
 
 **Expected to follow at v1.1:** `presentation`, which Q-28 deferred as a
 shared component and which is a better fit here than as a pack.

@@ -339,7 +339,53 @@ spec.
 
 ## 9. Open questions
 
-**Q-65…Q-78 remain open** from the wave-1 specs, each feature-local and resolvable in its own ADR. Q-79, Q-80 and Q-81 are resolved. Q-1…Q-63 are resolved — see §12. Next free ID is **Q-83**. **Q-64 stays reserved** for the packaging question Q-63 names and is not free.
+**Q-65…Q-78 remain open** from the wave-1 specs, each feature-local and resolvable in its own ADR. Q-79…Q-82 are resolved. Q-1…Q-63 are resolved — see §12. Next free ID is **Q-84**. **Q-64 stays reserved** for the packaging question Q-63 names and is not free.
+
+**One question is open at the project level rather than inside a feature, and it is not resolvable before F7 is specified:**
+
+> **Q-83 — Does `category` belong to scaffolds, to add-ons, or to both, and who owns the value namespace?**
+>
+> **Why it is open.** `category` does two opposite jobs from one
+> declaration: two scaffolds sharing a category are **alternatives**
+> (`E-SCAFFOLD-EXCLUSIVE`, exit 1, refused at selection), while two of
+> **differing or absent** categories writing the same applied path are an
+> **authoring error** (`E-SCAFFOLD-COLLISION`, exit 2, caught statically).
+> Within a category: do not check paths, just refuse. Across categories:
+> do check, because they are meant to coexist. It also **prunes the
+> combination space** `validate` renders — the two backends' shared
+> `infrastructure/README.md` destination was not a collision precisely
+> because no combination could contain both.
+>
+> **What Q-82 exposed.** Those two backends were **the only same-category
+> pair v1.0 ever had**, and they are now add-ons. So on *scaffolds* the
+> mechanism has no subject at all, while on *add-ons* — where the
+> declaration now sits — **no mechanism exists to read it**. The
+> `"category": "backend"` in each add-on's `pack.json` is currently
+> decorative.
+>
+> **Why it is genuinely an add-on problem.** "Alternatives, not additions"
+> is intrinsic to composing *several* units. A scaffold is opt-in content
+> **within one pack**, and an author shipping two mutually exclusive
+> scaffolds could as easily have shipped one scaffold with a parameter.
+> Add-ons compose **across** packs, several at a time, from independently
+> authored folders — which is the situation that actually needs the rule.
+>
+> **The part that only bites for add-ons.** `category` is an **open
+> string**, not an enumeration. Within one pack that is fine: one author
+> picks the values. Across independently authored add-ons, `backend` is a
+> name **nobody owns** — two add-ons can mean different things by it, or
+> miss each other by spelling it differently, and nothing detects either.
+> A namespace with no owner is not a problem scaffolds have.
+>
+> **Current disposition, and it is deliberate.** The declaration **stays
+> on scaffolds** — it costs nothing, F1 is spec-complete, and a v1.1
+> `frontend-react` / `frontend-vue` pair is plausible. **The rule is
+> recorded as primarily F7's**, and F7 must decide more than exclusivity:
+> whether an add-on may collide with its *pack* (not only with another
+> add-on), whether add-ons may declare parameters, and what governs the
+> namespace. **Not answered here** — designing a composition mechanism for
+> add-ons that no CLI can yet apply is exactly the speculation Q-42 and
+> Q-48 were right to refuse.
 
 ---
 

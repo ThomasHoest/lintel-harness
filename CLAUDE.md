@@ -309,7 +309,7 @@ Conventions chosen 2026-08-30 at the first spec run:
 | F2 | `harness init` — the apply engine |
 | F3 | `harness update` — drift classification, **no merge engine** (Q-62), plus its read-only mode (the former `status`) |
 | F4 | `harness contribute` — **v1.1 only**; the number is reserved and never reused |
-| F7 | **Add-on packs — v1.1 only (Q-82).** Composable units that are not ways of working: `backend-azure`, `backend-aws`, and `presentation` (Q-28). Parked in `addons/`, applied by nothing |
+| F7 | **Add-on packs — v1.1 only (Q-82).** Composable units that are not ways of working: `backend-azure`, `backend-aws`, and `presentation` (Q-28). Parked in `addons/`, applied by nothing. **Q-83 is its first design question** — whether `category` is a scaffold concept or an add-on one, and who owns an open-string namespace once add-ons are authored independently |
 | F5 | Template packs (coding, writing, planning) |
 | F6 | The Claude Code skill — the judgment layer |
 
@@ -327,7 +327,7 @@ counter anywhere in this file, that is the bug, and this section wins.
 
 | Counter | Next free | Rule |
 |---|---|---|
-| Open question | **Q-83** | `Q-N`, **project-monotonic, not per document**. An id is never reused, and it keeps its number when it moves to a Resolved Decisions table. **Q-1…Q-63 and Q-79…Q-82 are resolved** — the register is `specifications/project-brief.md` §12, which holds the decision and the rationale for each. This file does not restate them. **Q-64 is reserved**, not free (see Q-63). **Q-65…Q-78 are open**, each feature-local to F2, F3 or F6 and resolvable in its own ADR. |
+| Open question | **Q-84** | `Q-N`, **project-monotonic, not per document**. An id is never reused, and it keeps its number when it moves to a Resolved Decisions table. **Q-1…Q-63 and Q-79…Q-82 are resolved** — the register is `specifications/project-brief.md` §12, which holds the decision and the rationale for each. This file does not restate them. **Q-64 is reserved**, not free (see Q-63). **Q-65…Q-78 are open**, each feature-local to F2, F3 or F6 and resolvable in its own ADR, plus **Q-83** (the `category` model), which is project-level and waits on F7. |
 | User story | **US-99** | `US-N`, project-monotonic across features. **F1 and F5 each state their own range in their §User Stories**, — read them there rather than trusting a list here. F2, F3 and F6 now hold stories too (US-39…US-98). **Retired and never reusable:** US-5, US-6, US-7, US-11, US-12 (F1); US-22, US-23 (F5). |
 | Epic | **E-20** | `E-NN`, per feature. **F1 holds E-01…E-12; F5 holds E-13…E-19.** F2, F3 and F6 have none. |
 | Task | per epic | Scheme A, epic-derived `T-XXYY`, so there is no single next-free id. **F1 holds T-0101…T-1219** (112 tasks); **F5 holds T-1301…T-1906** (32 tasks). Next free within F1's last epic is **T-1220**; F5's per-epic next-free values are listed at the end of its own document. |
@@ -409,7 +409,7 @@ now the `rewrite-path` primitive's reason for existing.
 
 ## Open decisions (for Thomas)
 
-**None.** Every question raised in this project is resolved and
+**One: Q-83**, and it waits on F7 rather than on you — see §9 of the brief. Every other question raised in this project is resolved and
 recorded, with its rationale, in `specifications/project-brief.md`
 **§12 — Resolved decisions**. For the id range and the next free id,
 see §Counter state above; this section deliberately states no number.
