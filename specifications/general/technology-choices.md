@@ -71,20 +71,20 @@ because the honest answer is often *the exclusion is Firm and the replacement is
 | Execution split | Deterministic mechanics in the CLI, judgment in a thin Claude Code skill | **Firm** | Q-1, Q-57 |
 | Distribution | `@lintel/cli`, binary `lintel` with `harness` as a command group, `packs/` bundled into the published artefact | **Firm** | Q-2, Q-16 |
 | Versioning | Per-pack semver + `minCliVersion`, separate CLI semver, both recorded in the manifest | **Firm** | Q-3 |
-| Semver parsing & comparison | *not chosen* | ⚠️ pending | F1 US-1 (`E-PACK-CLI-TOO-OLD`, `E-PACK-FORMAT-NEWER`, `W-PACK-NEWER-THAN-CLI`) |
+| Semver parsing & comparison | **Hand-rolled** — compare only, no range arithmetic (~30 lines) | **Firm** (Q-81) | F1 US-1 (`E-PACK-CLI-TOO-OLD`, `E-PACK-FORMAT-NEWER`, `W-PACK-NEWER-THAN-CLI`) |
 | Hashing | SHA-256 via `node:crypto`, lowercase hex, over BOM-stripped / CRLF→LF-normalised content | **Firm** | Q-26, Q-52; F1 §NFR |
 | Filesystem | `node:fs/promises` only — `open(…, 'wx')`, `link`/`unlink` with an `EPERM`/`ENOSYS` fallback, `lstat` on every ancestor, no symlink followed | **Firm** | F1 US-13, §NFR *Filesystem safety* |
-| Authored-JSON parsing | **Not `JSON.parse`.** A duplicate-key-rejecting reader for `pack.json`, `recipe.json` and the manifest | **Firm on the exclusion · ⚠️ pending on the replacement · behind a port** (`src/json/parse-strict.ts`) | C-25; F1 US-1, `E-JSON-DUPLICATE-KEY` |
-| Schema validation | Structural validator for `pack.json` / `recipe.json`, closed enumerations, JSON-boolean typing | ⚠️ pending · behind a port (`src/pack/schema.ts`, `src/recipe/schema.ts`) | F1 US-1 (C-16, C-34), US-31 |
-| Glob matching | **One** matcher, taking no filesystem handle, for `exclude`, `in` and anatomy `paths` | **Firm on the shape · ⚠️ pending on the dialect · behind a port** (`src/recipe/glob.ts`) | C-27; F1 US-4, ADR file plan |
-| Path normalisation (`collisionKey`) | NFC via `String.prototype.normalize`, then a case fold | **Firm on NFC · ⚠️ pending on the fold** | F1 US-3 stage 1, N-5 |
+| Authored-JSON parsing | **Not `JSON.parse`.** A duplicate-key-rejecting reader for `pack.json`, `recipe.json` and the manifest | **Firm — hand-rolled** (Q-81) **· behind a port** (`src/json/parse-strict.ts`) | C-25; F1 US-1, `E-JSON-DUPLICATE-KEY` |
+| Schema validation | **Hand-rolled** structural validator for `pack.json` / `recipe.json`, closed enumerations, JSON-boolean typing | **Firm** (Q-81) · behind a port (`src/pack/schema.ts`, `src/recipe/schema.ts`) | F1 US-1 (C-16, C-34), US-31 |
+| Glob matching | **One** matcher, taking no filesystem handle, for `exclude`, `in` and anatomy `paths` | **Firm — hand-rolled, dialect this project's to state** (Q-81) **· behind a port** (`src/recipe/glob.ts`) | C-27; F1 US-4, ADR file plan |
+| Path normalisation (`collisionKey`) | NFC via `String.prototype.normalize`, then an **ASCII-only** case fold | **Firm** (Q-81) — the narrowing is F1 known limit 17 | F1 US-3 stage 1, N-5 |
 | Argv parsing | Two-pass walk: pass 1 defers unknown tokens, pass 2 re-parses with the pack's `parameters[].flag` aliases registered | **Firm on the algorithm · ⚠️ pending on what implements it** | F1 US-8; ADR `src/cli/flags.ts` |
-| `.claude/` frontmatter reading | *not chosen* — and a security gate rides on it | ⚠️ pending | F1 US-3 (`E-CLAUDE-TOOL-GRANT`, `E-CLAUDE-PERMISSION-MODE`), US-13 disclosure row 4 |
+| `.claude/` frontmatter reading | **Hand-rolled** — a security gate rides on it, and it must fail closed with a line number | **Firm** (Q-81) | F1 US-3 (`E-CLAUDE-TOOL-GRANT`, `E-CLAUDE-PERMISSION-MODE`), US-13 disclosure row 4 |
 | Parameter `pattern` validation | *not chosen* — must reject backreference and lookaround by inspecting the source | ⚠️ pending | C-7; F1 US-8 (`E-PARAM-PATTERN-INVALID`) |
 | Interactive prompting | *not chosen* | ⚠️ pending — F2's, and F2 has no spec | F1 §Introduction ("F2 owns interactive prompting"), US-8 |
 | Text encoding & binary detection | UTF-8 only; a file is binary when it is not valid UTF-8 or its first 8 KB hold a NUL | **Firm** | F1 §NFR *Encoding*, *Binary files* |
 | Diagnostics & `--json` output | Stdlib serialisation; `src/diag/catalogue.ts` is the only place user-facing text exists | **Firm** | F1 §Error States; ADR file plan |
-| Test runner | *not decided* — `vitest.config.ts` appears in the ADR's file plan; `node:test` is in the stdlib | ⚠️ pending | ADR file-level plan; F1 US-16 |
+| Test runner | **`node:test`** — in the stdlib, so not a dependency in either budget. The ADR's `vitest.config.ts` is superseded | **Firm** (Q-81) | ADR file-level plan; F1 US-16 |
 | Adversarial fixture packs | Shipping requirement, run in CI, asserted on **exact code and exit class** | **Firm** | F1 US-16 |
 | Build (TypeScript → something `npx` runs) | *not chosen* | ⚠️ pending | Q-16; ADR file plan (`tsconfig.json`) |
 | Pack bundling into the artefact | Packs ship inside the package; the CLI resolves them relative to its own install directory | **Firm on the requirement · ⚠️ pending on the mechanism** (U-12) | Q-2; F1 US-3 stage 2 (the install dir is itself a reserved destination) |
@@ -93,10 +93,14 @@ because the honest answer is often *the exclusion is Firm and the replacement is
 | Datastore · server · hosting · auth · telemetry · network at runtime | **None.** See §2 | **Firm** | F1 §NFR *No network*, *Offline privacy*; brief §10 |
 | Pack content stacks (Bicep + Neon, CDK + Lambda, Markdown, shell/PowerShell) | **Pack content, not the harness's stack.** See §8 | **Firm** | Q-8, Q-8a, Q-17; F5 §Platform |
 
-> **Pending sign-off:** the dependency posture of §7.1 is this document's proposed
-> position and has not been ratified by the owner. Ratifying it would take **Q-62**;
-> no question is opened here. Everything else outstanding in this table is *work* —
-> a choice nobody has made — not a decision awaiting a signature.
+> **Ratified 2026-09-01 (Q-81).** The dependency posture of §7.1 is the owner's
+> decision, not this document's proposal: **zero runtime dependencies**, now a
+> **requirement** in F1 §NFR and assertable as an empty `dependencies` object in the
+> published manifest. **Nine register entries close with it** — U-1, U-2, U-3, U-4,
+> U-6, U-8, U-10, U-11 and U-14 — leaving **five** open: U-5, U-7, U-9, U-12, U-13,
+> every one of them *work* rather than a decision awaiting a signature. The one
+> item that could not be hand-rolled honestly, U-4, is resolved by **narrowing the
+> claim rather than approximating it**: see §4.6.
 
 ---
 
@@ -198,7 +202,8 @@ directories created one level at a time. A convenience wrapper (`fs-extra` and i
 would be a strict downgrade here — its whole selling point is recursive, symlink-tolerant
 operations, which is precisely the behaviour four security rounds spent removing.
 
-**One residual, and it is F1's rather than a technology choice** — see §6, ⚠️ U-11: the
+**One residual, and it is F1's rather than a technology choice** — see §6, ✅ U-11,
+**closed in F1 v3.0** by the allocation of `W-LINK-FALLBACK`: the
 `link` fallback is required to "record the narrowed guarantee" in the run's diagnostics,
 and no `W-` code exists for it in a catalogue that is declared to be the only error model.
 
@@ -220,9 +225,10 @@ must (a) reject a duplicate key at any depth, (b) report **the key and both line
 numbers**, which requires source positions the standard parser discards, (c) be the only
 parser for authored JSON so the rule is total across exactly three documents, and (d) add
 no runtime dependency under §7.1. A candidate satisfying (a)–(c) but not (d) escalates
-the posture, not the parser. ⚠️ **U-1.**
+the posture, not the parser. ✅ **U-1 closed by Q-81** — the posture is ratified, so
+the parser is hand-rolled: duplicate-key detection at any depth, both line numbers.
 
-### 4.4 Schema validation — ⚠️ pending
+### 4.4 Schema validation — **settled by Q-81: hand-rolled**
 
 `pack.json` and `recipe.json` need a validator that enforces three different rules at
 once, and the third is why an off-the-shelf schema engine is a poor fit:
@@ -244,7 +250,9 @@ consistent answer to all three. **The constraint that decides it:** the validato
 emit F1 diagnostic codes directly, must treat unknown keys and unknown values
 asymmetrically, must reject non-literal booleans without coercion, and must be
 enumerable against F1 US-16's fourteen ordered steps — a validator that reports findings
-in its own order breaks a check order that is *part of the contract*. ⚠️ **U-2.**
+in its own order breaks a check order that is *part of the contract*. ✅ **U-2 closed
+by Q-81** — hand-rolled, which is what lets the check order be the contract's rather
+than a library's.
 
 ### 4.5 Glob matching — **the shape is Firm; the dialect is not**
 
@@ -273,9 +281,11 @@ small enough that `pack info` can render what an apply will do *completely* (G-F
 must be matched against strings with no filesystem access, it must be bounded — no
 construct with super-linear backtracking, since patterns come from pack authors — and it
 must be the **same** matcher in all three positions, because two dialects means a pack
-author has to know which one they are in. ⚠️ **U-3.**
+author has to know which one they are in. ✅ **U-3 closed by Q-81** — hand-rolled over
+a known path set with no filesystem handle, and the dialect is therefore this
+project's to state rather than a library's to imply.
 
-### 4.6 Path normalisation and `collisionKey` — **NFC is Firm; the fold is not**
+### 4.6 Path normalisation and `collisionKey` — **NFC is Firm; the fold is ASCII-only (Q-81)**
 
 `collisionKey` is the applied path **NFC-normalised and then case-folded**, matched on
 every platform **unconditionally** (F1 US-3, N-5). It decides step-vs-step collisions,
@@ -301,7 +311,22 @@ protecting against**, because the failure direction that matters is a collision 
 *misses*. Note what is *not* a constraint: matching APFS or NTFS exactly. The CLI owns
 its own key and only has to be self-consistent and conservative. A documented
 `toLowerCase()`-after-NFC, with its known divergences written down, is a defensible
-answer; adopting it silently is not. ⚠️ **U-4.**
+answer; adopting it silently is not.
+
+**Resolved by Q-81, and not in the direction this section expected.** Neither
+`toLowerCase()`-after-NFC nor a hand-rolled full fold was adopted. **`collisionKey`
+folds ASCII case only** — `A`–`Z` to `a`–`z`, no other character altered — and the
+narrowing is documented as **F1 known limit 17**. The reasoning is constraint (c)
+above turned around: a hand-rolled partial fold is *not* uniformly "at least as
+aggressive", it is aggressive on the pairs it happens to cover and silent on the rest,
+while reporting the same confidence for both. An ASCII fold is **wrong in a knowable
+way** — every non-ASCII case pair is uncovered, and that sentence is the whole of the
+limit — where a partial Unicode fold is wrong in an unknowable one. Constraints (a) and
+(b) are satisfied trivially: ASCII folding is identical on every platform and cannot
+move under a Node upgrade. **The exposure is bounded and stated**: every applied path in
+all three v1.0 packs is ASCII, so no shipped pack is affected, and the v1.1 obligation
+is a full fold — or a vetted dependency admitted for this single purpose — **before any
+pack ships a non-ASCII applied path**. ✅ **U-4 closed.**
 
 ### 4.7 Argument parsing — ⚠️ pending
 
@@ -325,7 +350,7 @@ four `E-CLI-*` codes plus `E-FLAG-NOT-PERMITTED`. `parseArgs` with `strict: fals
 pass 1 and `strict: true` on pass 2 is a plausible stdlib route and has not been
 evaluated. ⚠️ **U-5.**
 
-### 4.8 `.claude/` frontmatter reading — ⚠️ pending, and a gate rides on it
+### 4.8 `.claude/` frontmatter reading — **settled by Q-81: hand-rolled**, and a gate rides on it
 
 Two error codes and one disclosure row read YAML frontmatter out of Markdown:
 `E-CLAUDE-TOOL-GRANT` (a permission-bearing key on any pack-placed file under a
@@ -349,7 +374,9 @@ narrow enough to audit, since a full YAML implementation is a large surface to a
 into a process that computes a confinement gate. Reading the delimited block as lines and
 matching pinned key names — the pin F1 US-3 already requires, with the runtime version it
 was taken against recorded beside it — satisfies all four without a YAML engine, and is
-the recommendation this document offers rather than decides. ⚠️ **U-6.**
+the recommendation this document offers rather than decides. ✅ **U-6 closed by
+Q-81** — hand-rolled, and the fail-closed-with-a-line-number requirement is the
+reason: it is a security-relevant reader, and three codes ride on it.
 
 ### 4.9 Parameter `pattern` validation — ⚠️ pending
 
@@ -366,7 +393,7 @@ validate time in CI with no project. A conservative scan that rejects the constr
 outright — including any it cannot classify — is fail-closed and is the shape this
 document recommends; a regex-AST parser is the alternative and is a dependency. ⚠️ **U-7.**
 
-### 4.10 Semver — ⚠️ pending
+### 4.10 Semver — **settled by Q-81: hand-rolled**
 
 `pack.json` carries `version` and `minCliVersion`; the manifest records both plus the CLI
 version; `E-PACK-CLI-TOO-OLD`, `E-PACK-FORMAT-NEWER` and `W-MANIFEST-NEWER-CLI` /
@@ -376,7 +403,8 @@ must be total over the range of versions the three bundled packs and the CLI wil
 declare, must be deterministic across platforms, and must not drag in a transitive tree
 under §7.1 — the `semver` package is the ecosystem default and is a single dependency,
 while strict-semver parsing that ignores ranges (which this product never needs, since
-`minCliVersion` is a floor and not a range) is about thirty lines. ⚠️ **U-8.**
+`minCliVersion` is a floor and not a range) is about thirty lines. ✅ **U-8 closed by
+Q-81** — those thirty lines, not the dependency.
 
 ### 4.11 Interactive prompting — ⚠️ pending, and it is F2's
 
@@ -402,7 +430,7 @@ everything else is a byte scan. Stdlib, no choice to make.
 
 ## 5. Build, test and distribution
 
-### 5.1 Test runner and fixtures — ⚠️ pending on the runner, **Firm** on what it must run
+### 5.1 Test runner and fixtures — **`node:test` (Q-81)**, **Firm** on what it must run
 
 **What runs is decided and is unusually specific.** F1 US-16 makes **adversarial fixture
 packs a shipping requirement** — a directory of deliberately malicious minimal packs,
@@ -427,7 +455,9 @@ class**, not only on a thrown error — several fixtures distinguish exit 1 from
 two assert on **on-disk file mode and directory-entry name** with no code at all; (b) run
 in CI on the three platforms G-F1-7 names; and (c) not require the build step of §5.2 to
 run first, or every test run pays for a build. This is a dev-dependency decision, so §7.1
-does not forbid it — but it should be *taken*, not inherited from a table row. ⚠️ **U-10.**
+does not forbid it — but it should be *taken*, not inherited from a table row. ✅
+**U-10 closed by Q-81**: `node:test`, which ships with Node 22 and is not a
+dependency in either budget.
 
 ### 5.2 Build — ⚠️ pending
 
@@ -483,26 +513,49 @@ Every ⚠️ above, gathered. Each names the **constraint that decides it** rath
 deadline. None of them blocks *specification* work; U-1, U-2, U-3, U-4 and U-6 block the
 first line of implementation, because a module in the ADR's file plan cannot be written
 without them. **No question is opened for any of these** — they are choices to be made
-inside a settled decision, not decisions awaiting the owner. The one exception is noted
-at U-14.
+inside a settled decision, not decisions awaiting the owner. The one exception was
+U-14, and **it has been ratified** (Q-81).
+
+**Nine of the fourteen are closed** — marked ✅ — and **five remain open**: U-5, U-7,
+U-9, U-12 and U-13. Read the ✅ rows as history: the constraint column still states what
+had to be true, which is what makes the resolution checkable.
 
 | # | Unclarity | The constraint that decides it | Owner / unblocks |
 |---|---|---|---|
-| **U-1** | What replaces `JSON.parse` for `pack.json`, `recipe.json`, the manifest | Must reject a duplicate key **at any depth** and report the key with **both line numbers** — so source positions the stdlib parser discards are required; must be the only authored-JSON reader so the rule is total; must add no runtime dependency under §7.1 | `architect` at F1 implementation · blocks `src/json/parse-strict.ts` |
-| **U-2** | What validates `pack.json` / `recipe.json` | Unknown **keys** warn while unknown **values in a behaviour-selecting position** are fatal (C-16); boolean fields must be JSON literals with **no coercion** (C-34); findings must be F1 codes emitted in US-16's fixed fourteen-step order | `architect` · blocks `src/pack/schema.ts`, `src/recipe/schema.ts` |
-| **U-3** | The glob **dialect** (`*` vs `**`, classes, braces, negation) | One matcher for `exclude`, `in` and anatomy `paths`; **no filesystem handle** (C-27); small enough that `pack info` renders an apply completely (G-F1-9); bounded against author-supplied patterns | `architect` · blocks `src/recipe/glob.ts` |
-| **U-4** | The case-fold half of `collisionKey` | Identical and unconditional on **every platform**; stable across Node versions; **at least as aggressive** as the case-insensitive filesystems it guards, since the dangerous direction is a missed collision. `toLowerCase()` ≠ Unicode full folding and the divergence must be written down, not discovered | `architect` + `securityreviewer` · blocks `src/security/confine.ts`; rollback safety (N-5) rides on it |
+| ✅ **U-1** | What replaces `JSON.parse` for `pack.json`, `recipe.json`, the manifest | Must reject a duplicate key **at any depth** and report the key with **both line numbers** — so source positions the stdlib parser discards are required; must be the only authored-JSON reader so the rule is total; must add no runtime dependency under §7.1 | `architect` at F1 implementation · blocks `src/json/parse-strict.ts` |
+| ✅ **U-2** | What validates `pack.json` / `recipe.json` | Unknown **keys** warn while unknown **values in a behaviour-selecting position** are fatal (C-16); boolean fields must be JSON literals with **no coercion** (C-34); findings must be F1 codes emitted in US-16's fixed fourteen-step order | `architect` · blocks `src/pack/schema.ts`, `src/recipe/schema.ts` |
+| ✅ **U-3** | The glob **dialect** (`*` vs `**`, classes, braces, negation) | One matcher for `exclude`, `in` and anatomy `paths`; **no filesystem handle** (C-27); small enough that `pack info` renders an apply completely (G-F1-9); bounded against author-supplied patterns | `architect` · blocks `src/recipe/glob.ts` |
+| ✅ **U-4** | The case-fold half of `collisionKey` | Identical and unconditional on **every platform**; stable across Node versions; **at least as aggressive** as the case-insensitive filesystems it guards, since the dangerous direction is a missed collision. `toLowerCase()` ≠ Unicode full folding and the divergence must be written down, not discovered | `architect` + `securityreviewer` · blocks `src/security/confine.ts`; rollback safety (N-5) rides on it |
 | **U-5** | What implements the two-pass argv walk | Pass 1 must **defer unknown tokens without judging them**; pass 2 re-parses with a grammar extended at runtime from `pack.json`; reserved-flag list is global, not per-command; every failure maps to an `E-CLI-*` code | F2 (with F1's `flags.ts`) · blocks `src/cli/flags.ts` |
-| **U-6** | How `.claude/` frontmatter is read | Must report a **line**; must fail **closed** on an unparsed block; must reproduce the block **verbatim** for the disclosure (no re-serialise); must be narrow enough to audit. A full YAML engine is a large surface admitted into the gate-computing process | `architect` + `securityreviewer` · blocks `E-CLAUDE-TOOL-GRANT`, `E-CLAUDE-PERMISSION-MODE`, US-13 disclosure row 4 |
+| ✅ **U-6** | How `.claude/` frontmatter is read | Must report a **line**; must fail **closed** on an unparsed block; must reproduce the block **verbatim** for the disclosure (no re-serialise); must be narrow enough to audit. A full YAML engine is a large surface admitted into the gate-computing process | `architect` + `securityreviewer` · blocks `E-CLAUDE-TOOL-GRANT`, `E-CLAUDE-PERMISSION-MODE`, US-13 disclosure row 4 |
 | **U-7** | How `pattern` is checked for backreference / lookaround | Must be decided from the **source text**, not from compilation; must not itself backtrack over author input; runs at validate time with no project; fail closed on anything unclassifiable | `architect` · blocks `E-PARAM-PATTERN-INVALID` |
-| **U-8** | Semver parse and compare | Total, deterministic across platforms, no range arithmetic needed (`minCliVersion` is a floor); weigh one well-known dependency against ~30 lines under §7.1 | `architect` · blocks `E-PACK-CLI-TOO-OLD`, `E-PACK-FORMAT-NEWER` |
+| ✅ **U-8** | Semver parse and compare | Total, deterministic across platforms, no range arithmetic needed (`minCliVersion` is a floor); weigh one well-known dependency against ~30 lines under §7.1 | `architect` · blocks `E-PACK-CLI-TOO-OLD`, `E-PACK-FORMAT-NEWER` |
 | **U-9** | Interactive prompting | Must work with **no TTY** (CI and the F6 skill both drive `init` non-interactively — Q-57); must surface the pre-write disclosure **faithfully, not summarised**; no terminal text outside the diagnostics catalogue | **F2**, which has no spec — this is downstream of that gap |
-| **U-10** | Test runner | Must assert on the **process exit class** and, for two fixtures, on **file mode and directory-entry name** with no code involved; must run the cross-platform matrix of G-F1-7; should not require a build first. A dev dependency, so §7.1 permits one — but the choice should be taken, not inherited from `vitest.config.ts` sitting in a file plan | `implementer` + `testwriter` · blocks the fixture suite, which US-16 calls its most important criterion |
-| **U-11** | No `W-` code for the `link` → `open(dest,'wx')`+`rename` fallback | F1 US-13 requires the run's diagnostics to "record the narrowed guarantee", and F1 declares its codes **the only** CLI error model — so this diagnostic is currently only assertable by string-matching. Needs a classified `W-` code (a **notice**: the state is real and nothing is fixable) | **F1 defect** — report to the spec owner; not a technology choice |
+| ✅ **U-10** | Test runner | Must assert on the **process exit class** and, for two fixtures, on **file mode and directory-entry name** with no code involved; must run the cross-platform matrix of G-F1-7; should not require a build first. A dev dependency, so §7.1 permits one — but the choice should be taken, not inherited from `vitest.config.ts` sitting in a file plan | `implementer` + `testwriter` · blocks the fixture suite, which US-16 calls its most important criterion |
+| ✅ **U-11** | No `W-` code for the `link` → `open(dest,'wx')`+`rename` fallback | F1 US-13 requires the run's diagnostics to "record the narrowed guarantee", and F1 declares its codes **the only** CLI error model — so this diagnostic is currently only assertable by string-matching. Needs a classified `W-` code (a **notice**: the state is real and nothing is fixable) | **F1 defect** — report to the spec owner; not a technology choice |
 | **U-12** | Build route (`tsc` / bundler / Node type stripping) **and the packaging half with it**: getting `packs/` into the artefact, and resolving it install-relative | Must **type-check**, not merely strip — the path brands and the total `RecipeStep` union are compile-time controls; must include `packs/` in the published package (Q-2) and resolve it from the installed module, which is the same `realpath` the gate reserves as a destination; must keep the artefact inspectable (Q-2's audit argument); must honour `engines.node >= 22` | `architect` · blocks the first publish |
 | **U-13** | CI provider and workflow | Must run `validate --all --strict` + the fixture suite on the three platforms of G-F1-7. Unrelated to the reserved-destination rules, which govern what a **pack** writes into a **user's** project | Owner · blocks the release gate, not implementation |
-| **U-14** | **The dependency posture of §7.1 is proposed, not ratified** | It governs U-1, U-2, U-3, U-6, U-8 and U-10 at once and cannot be derived from the specs — the ADR and `system-architecture.md` currently state it at two different scopes (§7.1). If the owner ratifies it, it takes **Q-62**; this document opens no question | **Owner** · ratification would settle six register rows in one line |
+| ✅ **U-14** | **The dependency posture of §7.1 is proposed, not ratified** | It governs U-1, U-2, U-3, U-6, U-8 and U-10 at once and cannot be derived from the specs — the ADR and `system-architecture.md` currently state it at two different scopes (§7.1). If the owner ratifies it, it takes **Q-62**; this document opens no question | **Owner** · ratification would settle six register rows in one line |
 
+
+**What closed them, 2026-09-01.** **Q-81 ratified the §7.1 posture**, which turns
+"weigh a dependency against N lines" into "hand-roll it", and that single answer
+settles **U-1** (strict JSON with duplicate-key detection and line numbers), **U-2**
+(schema validation over closed enumerations this project already specifies), **U-3**
+(a glob over a known path set with no filesystem handle), **U-6** (the `.claude/`
+frontmatter reader), **U-8** (semver comparison, no range arithmetic — the ~30 lines
+the row already costed) and **U-10** (`node:test`, which ships with Node 22 and is
+therefore not a dependency at all). **U-4 is the one that did not resolve by
+hand-rolling** and is answered by narrowing `collisionKey` instead — §4.6, F1 known
+limit 17. **U-11 closes separately**, in the same F1 v3.0 fold: the missing `W-` code
+for the `link()` fallback now exists as **`W-LINK-FALLBACK`**, class `notice`, so the
+narrowed guarantee US-13 has required since v2.0 is finally assertable by code rather
+than by string-matching a message.
+
+**The five that remain are all *work*, and none blocks a task.** U-5 (two-pass argv
+walk), U-7 (`pattern` source inspection), U-9 (prompting with no TTY), U-12 (build and
+packaging route) and U-13 (CI provider) each have their constraint written above and an
+implementer who can satisfy it without another decision.
 ---
 
 ## 7. Cross-cutting positions
@@ -634,3 +687,4 @@ risk at all.
 | Version | Date | Author | Change |
 |---|---|---|---|
 | v1.0 | 2026-09-01 | architect | Initial version. Adapts the template to a product with no backend, datastore, frontend or hosting (§0), states what it deliberately has none of (§2), records the settled runtime and the six stdlib-settled capabilities, and opens a **14-entry ⚠️ register** — each with the constraint that decides it — covering strict JSON parsing, schema validation, the glob dialect, the `collisionKey` case fold, the two-pass argv walk, frontmatter reading, `pattern` inspection, semver, prompting, the test runner, the build, CI, an F1 defect (no `W-` code for the `link` fallback), and the unratified dependency posture. No question opened; next free remains **Q-62**. |
+| v1.1 | 2026-09-01 | specwriter | **Q-81 ratifies §7.1, and nine of the fourteen ⚠️ entries close.** The dependency posture is no longer this document's proposal — **zero runtime dependencies** is the owner's decision and is now a **requirement** in F1 §NFR, assertable as an empty `dependencies` object. **U-1, U-2, U-3, U-6, U-8 and U-10 close on the single answer** the posture supplies: hand-roll it, or use the stdlib (`node:test` ships with Node 22, so the runner is not a dependency in either budget, and the ADR's `vitest.config.ts` is superseded). **U-4 did not close that way and is the honest part of this fold**: §4.6 asked for a fold that is identical across platforms, stable across Node versions and at least as aggressive as the filesystems it guards — and Q-81 answers it by **narrowing `collisionKey` to NFC plus ASCII case-folding**, recorded as F1 known limit 17, on the ground that a hand-rolled partial Unicode fold is aggressive on the pairs it covers and silent on the rest while reporting equal confidence for both. Wrong in a knowable way beats wrong in an unknowable one. **U-11 closes separately in the same F1 v3.0 fold**, by the allocation of `W-LINK-FALLBACK`. **Five remain, and all five are work rather than decisions**: U-5, U-7, U-9, U-12, U-13. The §1 status table and the section headings for every closed item move off ⚠️ in this pass, so the register and the prose cannot disagree. |

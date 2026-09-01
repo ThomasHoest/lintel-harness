@@ -81,8 +81,8 @@ needs an answer no project ever gave is refused rather than prompted for
 - The `lintel harness update` command surface: its usage line, its
   flags, its two modes, its report and its exit classes.
 - The **two recomputations** and the **closed six-value disposition**
-  each applied path receives, derived from `verify`'s closed four states
-  (F1 US-33) and never replacing them.
+  each applied path receives, derived from `verify`'s closed **six**
+  states (F1 US-33, Q-79) and never replacing them.
 - **What `update` writes**: the replacement of `.harness/pack/` with the
   newer payload, the phase-2 replacement of unedited paths, and the
   rewrite of `.harness/manifest.json` — with the ordering, the commit
@@ -1163,10 +1163,26 @@ been replaced. Rollback, then re-run.
 
 ### F3.3 — Classification and disposition
 
-Classification uses **`verify`'s closed four states** (F1 US-33), applied
-against `expected_old` and computed by the same implementation.
+Classification uses **`verify`'s closed six states** (F1 US-33, Q-79),
+applied against `expected_old` and computed by the same implementation.
 Disposition is what `update` does about it, and depends on `expected_new`
 as well. **Six dispositions, and the enumeration is closed.**
+
+**`filled` and `unfilled` do not reach the disposition table, and that
+is a prohibition rather than an omission** (Q-79, F1 US-31). A path in
+the **fill-expected set** — `project-brief.md` in every pack,
+`writing`'s voice guide — is **never overwritten by `update`**, in
+either state, under any flag, and whether or not the newer pack changed
+the file. F1 states the rule because it is a property of the
+declaration; F3 states what happens instead: the path is **reported and
+left**, in the same place in the report as an edited path, with the
+reason given as *shipped to be filled in* rather than *edited*. **The
+prohibition is unconditional deliberately**: an unfilled brief and a
+filled one are indistinguishable to a rule that has to be right before
+it looks, and the two errors are not symmetric — over-applying it leaves
+a user with a stale template they can see and delete, while
+under-applying it silently destroys the document every other document in
+the project is downstream of.
 
 | In `expected_old` | In `expected_new` | State vs `expected_old` | Disposition | `update` writes |
 |---|---|---|---|---|

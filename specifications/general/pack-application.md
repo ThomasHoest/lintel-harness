@@ -168,8 +168,8 @@ of its destination — and it is dropped from v1.0, so no primitive reads
 anything outside (payload, answers, scaffold selection). `verify`'s
 recomputation identity is therefore exact rather than approximate.
 
-**`verify` reports four states per path** — `match`, `adapted`,
-`differs`, `missing` (Q-56). `adapted` exists because `differs` was
+**`verify` reports six states per path** — `match`, `adapted`,
+`filled`, `unfilled`, `differs`, `missing` (Q-56, Q-79). `adapted` exists because `differs` was
 doing two jobs: *someone changed this*, and *this was supposed to
 change*. A recipe step may declare its output **adapt-expected** — the
 generated `CLAUDE.md` is, in all three packs, because it carries

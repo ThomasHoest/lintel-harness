@@ -75,7 +75,7 @@ epic-derived `T-XXYY` (`CLAUDE.md` §counters), beginning at **T-0101**.
 | E-07 | The manifest — six keys, canonical bytes, read-back validation | US-10, US-14, US-15 | `src/manifest/*` |
 | E-08 | The permission surface and the security disclosure | US-3, US-4, US-13, US-29 | `src/security/claude-frontmatter.ts`, `src/security/consent.ts` |
 | E-09 | `validate` and `pack info` — the fourteen-step runner and one report | US-2, US-16, US-29 | `src/validate/*`, `src/cli/commands/validate.ts`, `pack-info.ts` |
-| E-10 | `verify` — recomputation, the digest gate and four states | US-15, US-33 | `src/verify/*`, `src/cli/commands/verify.ts` |
+| E-10 | `verify` — recomputation, the digest gate and six states | US-15, US-33 | `src/verify/*`, `src/cli/commands/verify.ts` |
 | E-11 | The write path F2 and F3 drive — journal, lock, plan, execute, rollback | US-13, US-14, US-30 | `src/fs/atomic-write.ts`, `journal.ts`, `lock.ts`, `src/apply/*` |
 | E-12 | The adversarial fixture suite and the bundled-pack acceptance gate | US-16, US-29, US-30, US-31, US-32, US-33 | `tests/fixtures/adversarial/`, `tests/integration/`, CI |
 
@@ -127,7 +127,7 @@ T-0103…T-0105 land.
 ### The diagnostic contract
 
 - [ ] **T-0103** `[Implementer]` `src/diag/codes.ts` — the single code taxonomy:
-  the `DiagnosticCode` union over F1 §Error States (**78 codes**, and that
+  the `DiagnosticCode` union over F1 §Error States (**87 codes** at F1 v3.0, and that
   table is the only catalogue), `Severity`, the **class** axis
   (`defect | notice`, Q-60) carried by every `W-` code, and the
   code→exit-class map over `0 | 1 | 2 | 3`. An unclassified `W-` code
@@ -1017,7 +1017,7 @@ product is enforced here.
 
 ---
 
-## E-10 — `verify` — recomputation, the digest gate and four states
+## E-10 — `verify` — recomputation, the digest gate and six states
 
 `verify` reads `.harness/manifest.json` and `.harness/pack/`, re-runs phase 2
 **entirely in memory**, and compares to disk. It **writes nothing, ever** —
@@ -1474,7 +1474,7 @@ this order:
 - `src/security/consent.ts` (T-0804) — one disclosure builder, **three**
   render surfaces, which is why they cannot disagree.
 - `src/diag/catalogue.ts` (T-0104) — the only place user-facing CLI text
-  exists, on all 78 codes.
+  exists, on all 87 codes.
 
 ### The error surface is one table
 

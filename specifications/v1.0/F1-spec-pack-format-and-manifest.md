@@ -1,5 +1,5 @@
 # Pack Format & Manifest Specification — Lintel Harness v1.0
-**Version:** 2.9
+**Version:** 3.0
 **Status:** Draft
 **Date:** 2026-09-01
 **Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/cli`, binary `lintel`, with **`harness` as a command group** — every command in this document is reached as `lintel harness <command>` (Q-16 **as amended by Q-63**). Pack content is Markdown, shell, PowerShell and Bicep; `pack.json`, `recipe.json` and the manifest are JSON. No UI.
@@ -25,6 +25,7 @@
 | **2.7** | **2026-08-31** | **Q-56 and Q-61 — `verify` gains an `adapted` per-path state, and all three packs `generate` their `CLAUDE.md`.** **Q-56.** `differs` was doing two jobs — *someone changed this* and *this was supposed to change* — and they are split here exactly as Q-60 split `defect` from `notice` one layer down. F6's stated job includes adapting the generated `CLAUDE.md`'s project-owned prose, region anchors are inert at v1.0 (Q-45) so nothing distinguished pack-owned regions from project prose, and Q-57 made the conversational path primary — so the skill **always** runs and `CLAUDE.md` is **always** edited. US-33's green `verify`, which is the acceptance test for S7, therefore failed on the normal case rather than an edge one. **The fix:** a recipe step may declare **`adaptExpected`** on the step that produces the file (the `generate` step for `CLAUDE.md` is the case that matters); `verify` reports every applied path in such a step's write set as **`adapted`** rather than `differs` when it has changed; **`adapted` is not a failure and does not affect the exit code**. **An unexpected change still reports `differs` and still fails** — adapt-expected is a **per-path property declared by the pack, never a blanket suppression**, there is no flag, environment variable or pack-level switch that tolerates drift, and a path no step declared behaves exactly as it did at v2.6. The `verify` state enumeration becomes **four and stays closed**: `match`, `adapted`, `differs`, `missing`. **`verify --json` carries the `state` per path**, alongside the `class` field Q-60 put on findings — two different axes, both emitted. **The manifest does not change and stays at Q-43's six keys**, and this is stated explicitly so a later reader does not assume a seventh: the adapt-expected set is **recomputable** from the local `.harness/pack/` payload plus its recipe, which are already the inputs §F1.8's identity takes, so recording it would duplicate a derivable fact. **`adaptExpected` is a JSON boolean**, so C-34's typing rule applies unchanged and a non-boolean is `E-UNKNOWN-VALUE`, exit 2; US-1's closed enumeration of boolean-typed fields grows from **three to four**. **Q-61.** US-32's claim that `coding`'s was *"the only `generate` step in any v1.0 pack"* was **wrong and is corrected**: **all three packs generate their `CLAUDE.md`**, which is what emits the inert anchors Q-45 requires and F5 US-38 asserts for **every** pack — `coding` **six** anchors, `writing` **six**, `planning` **seven**, **nineteen** across three templates, all built. `rename` neither substitutes nor emits anchors, so the alternative would have left two of three packs with nothing for v1.1's `update` to find. §F1.9's forward-investment row is corrected with it. **No step-count arithmetic depended on the wrong claim** — the three `generate` steps were already counted in every recipe total — and one unrelated stale number found during that check is corrected where it stood: US-31 compares the 256 bound against the largest v1.0 pack, which is `planning` at **23** declared steps, not `coding` at 19. **No code is added and none removed; the catalogue holds 78**, `validate` remains a **14-step** runner and the lifecycle **twelve** steps; nothing is renumbered. Q-56 and Q-61 move to Resolved: **Q-1…Q-61 are all resolved and no question is open in any document**; next free **Q-62**; next free story id **US-39**. |
 | **2.8** | **2026-09-01** | **Q-63 — the binary becomes `lintel` and `harness` becomes a command group; the package becomes `@lintel/cli`.** A rename, and the only thing in this document it is allowed to change is a name. **Every usage line is now `lintel harness <command>`** — `init`, `validate`, `verify`, `pack info` — and the published package that provides the binary is `@lintel/cli` (the two `npm i -g` remedy lines move with it). **The diagnostic prefix becomes `lintel:`, on all 78 codes**, and the choice is deliberate rather than mechanical: §Technical Context's rule was *match the binary*, the binary is `lintel`, and **a prefix is what a user greps for** — one binary, one prefix, so `grep '^lintel:'` catches every diagnostic this CLI emits whatever group produced it, and the second group Q-64 contemplates does not splinter the token. `lintel harness:` was rejected on exactly that ground: it embeds a group in a line prefix, carries a space into a grep target, and duplicates in every message what the code already says. **Inside a message the name follows position:** the running program is `lintel` (`was written by a newer lintel`, `lintel will not guess`, `the directory lintel itself is installed in`), while a thing the group **owns** is `lintel harness` (`another lintel harness command is running`, `not a lintel harness primitive`, `"lintel harness {command}" does not accept --{flag}`). **`E-CLI-UNKNOWN-COMMAND` is re-scoped, not renamed** — the command is now the *second* positional, so the code answers *`harness` has no such command* — and the fault it does **not** cover, a first positional that is not a known **group**, is **recorded as known limit 16 rather than invented**: different list, different remedy, therefore a different code by this catalogue's own rule, and it belongs in the change that answers Q-64 and decides who raises it. **The two-pass argv parse is confirmed to hold unchanged** (US-8), and the confirmation is written into the spec: two passes are forced by pack-declared aliases being unknowable until the pack resolves, and a **fixed** leading token is recognisable in pass 1 by construction, so it joins nothing to the deferred set and moves no fail-closed point. **No code is added and none removed; the catalogue holds 78**, `validate` remains a **14-step** runner and the lifecycle **twelve** steps; nothing is renumbered and no exit class moves. Q-16 is amended, not superseded, and is left stated in its original terms in `project-brief.md` §12 and the master spec with a pointer to Q-63. Q-63 is resolved in the brief; **next free Q-64, reserved** for whether later tools are built into `@lintel/cli` or loaded as plugins — no question opens here. |
 | **2.9** | **2026-09-01** | **Q-62 — the command surface is five, and the fold here is a list.** `update` returns to v1.0 as **F3's** (Q-62, reversing Q-42 for F3), and this document is where the count is written down. **Three places change and no more.** **(1) `E-CLI-UNKNOWN-COMMAND`'s message** now prints `Commands: init, update, validate, verify, pack` — five, in the surface's own order, the two writing commands before the three read-only ones, matching `general/interaction-model.md` §11, which had recorded this exact line as an unfolded defect. **(2) §Technical Context's *v1.0 command surface* row** becomes five and names the ownership: `init` is F2's, **`update` is F3's**, `validate`/`verify`/`pack info` are F1's, and **`status` is not a command** — it is `update`'s read-only mode. v2.8 had recorded the count as stale under Q-62 and deliberately left it, on the ground that Q-63 renamed the surface and did not resize it; the resize lands here. **(3) §NFR *No network*** enumerates the commands and was missing `update`; it is named, and the claim is **not weakened** — `update` moves a project to the version bundled in the installed CLI, so "newer" is resolved by upgrading the package and never over the wire. The quantifier is restated as **every v1.0 command**, so a later one joins the list or breaks it. **What is deliberately not done.** **No code is added and none removed; the catalogue holds 78.** **No code for an unknown command *group*** — that fault has a different list and a different remedy, is **known limit 16**, and belongs to the change that answers **Q-64**; it is recorded, not invented. **Nothing is specified about `update` itself**: its flags, its failure contract, whether it takes the lock, whether it emits a disclosure and any code it may need are **F3's**, and F3 has no spec. F1 states the size of the surface, not the behaviour of a command it does not own. `validate` remains a **14-step** runner and the lifecycle **twelve** steps; nothing is renumbered and no exit class moves. **Recorded as still unfolded, rather than left to be discovered:** the manifest's *what each field is for* table (§F1.8) labels four consumers **"v1.1 `update`"**, US-32's anchor note says the anchors exist so **"v1.1's `update`"** has something to find, and **§F1.9's forward-investment table** is framed as "what it buys v1.1" and twice describes `update` as **merging** against a recomputed base. All of that is now wrong twice over — `update` is v1.0, and **Q-62 builds no merge engine** — but repairing it is a rewrite of a scope argument, not a list, and it belongs with **F3's spec**, which is what will state what `update` actually does with the digest and the anchors. The three places corrected here are the three that state the **size and membership of the command surface**, which is F1's to state and no one else's. **Q-53's Resolved-Decisions row is annotated rather than rewritten** — its answer (F1 owns `verify`) stands; only its count is superseded. No story is added, retired or renumbered: next free story id **US-39**. No question opens: **next free Q-64, reserved**. |
+| **3.0** | **2026-09-01** | **Q-79 and Q-81 fold, and with them the batch of defects four reviews had recorded but left standing.** **Q-79 — ship-to-be-filled gets its own states.** A pack ships files whose *purpose* is to be filled in: `project-brief.md` in all three packs, `writing`'s voice guide. Under v2.9 a filled one reported `differs`, so `verify` exited 1 and **US-33's green run — the acceptance test for S7 — was unreachable on any project anybody had actually used**; it passed only because nobody had filled the brief. **A step may declare `fillExpected`** (US-31), and `verify` gains **two** states, not one: **`unfilled`** (byte-identical to what shipped — you have not filled it in yet) and **`filled`** (edited, as intended). Both are non-failure. **Two, because they are two facts**, and collapsing them would have made `verify` unable to say the one thing a project owner most needs told — that a template is still a template. The enumeration becomes **six and stays closed**: `match`, `adapted`, `filled`, `unfilled`, `differs`, `missing`. US-1's boolean-typed fields grow **four to five**. **`fillExpected` and `adaptExpected` are mutually exclusive on one step** (`E-RECIPE-STEP-INVALID`): a file is either the skill's to adapt or the user's to fill, and a step claiming both is an authoring mistake. **The second fault Q-79 fixes was never reported by `verify` at all:** `update` would have replaced a filled `project-brief.md` with a fresh template. **`update` may never overwrite a `fillExpected` path**, stated here because F1 owns the declaration and a rule left to F3 would be a rule the format does not carry. **Q-81 — zero runtime dependencies, ratified, and `collisionKey` narrows to match.** §NFR gains the posture as a **requirement**: strict JSON, schema validation, glob, semver, the `.claude/` frontmatter reader and the test runner are hand-rolled or stdlib (`node:test`, Node >= 22). The reasoning is the product's own security argument turned on itself — every runtime dependency is code inside the boundary of a tool whose job is writing into a user's repository. **The honest cost is paid, not hidden:** `collisionKey` **narrows to NFC plus ASCII case-folding**, and the limit is documented as **known limit 17**. Full Unicode case folding is neither in the stdlib nor safe to approximate, and a stated limit on a security control beats a silent approximation inside one — but it *is* a narrowing, and two non-ASCII paths differing only by case now collide where the v2.9 text implied they would not. **The catalogue grows 78 → 87**, the first growth since v2.2, and every one of the nine was requested by a spec that could not proceed without it: **four for `update`** (`E-UPDATE-AVAILABLE`, `E-UPDATE-NOT-NEWER`, `E-UPDATE-PARAM-UNANSWERED`, `E-UPDATE-SCAFFOLD-DROPPED`, all F3's to fire), **four for `init`** (`E-CLI-UNKNOWN-PACK`, `E-CLI-PACK-MISSING`, `E-SET-UNKNOWN-PARAM`, `E-PARAM-UNANSWERABLE`, all F2's), and **one notice** for US-13's `link()` fallback (`W-LINK-FALLBACK`) — which US-13 has required since v2.0 while providing no code, making the narrowed guarantee assertable **only by string-matching**, the one thing §Error States forbids. **The journal goes to version 3**: every entry carries **`intent: "write" | "delete"`**, because `update` deletes payload orphans and v2.9's five-case rollback table models no deletion at all; and the journal **records which command wrote it**, because `E-JOURNAL-PRESENT`'s remedy said `init --rollback` unconditionally and after a crashed `update` that lands the user on `E-ALREADY-APPLIED`. **`--dry-run` joins the reserved flag list**, which had eight names and now has nine — without it a pack may declare `"flag": "dry-run"` and shadow `update`'s read-only mode. **The Q-62 residue v2.9 recorded and deliberately left is now cleared**: §What is NOT in scope no longer defers `update` and `status`, US-14 no longer says there is no in-place re-apply, `E-ALREADY-APPLIED`'s message no longer says "update lands in v1.1", US-32's anchor note and the four manifest-consumer rows no longer say "v1.1 `update`", and **§F1.9 no longer describes `update` as *merging* against a recomputed base** — it recomputes and classifies, and **Q-62 builds no merge engine**. `validate` remains a **14-step** runner and the lifecycle **twelve** steps; no story is added or retired; next free story id **US-99**. Q-79 and Q-81 move to Resolved; **next free question Q-82**, with **Q-64 reserved**. |
 
 ---
 
@@ -190,7 +191,11 @@ downstream features implement it and may not reinterpret it.
 - **The apply engine and its CLI surface** (F2). This spec pins the
   phases, the primitive semantics and their ordering; F2 implements them
   and owns interactive prompting.
-- **`update`, `status` and `contribute`** — deferred to v1.1 (Q-42).
+- **`contribute`** — deferred to v1.1 (Q-42, unchanged by Q-62). **`update`
+  is v1.0 and is F3's** (Q-62), and **`status` is not a command** — it is
+  `update`'s read-only mode. What is out of scope here is not the command
+  but its *behaviour*: F1 states the format `update` reads and the
+  declarations it must honour, and says nothing about what it does.
   Everything that existed only to serve drift detection, 3-way merge or
   contribute is removed from this spec, not merely disabled. The two
   pieces of forward investment that remain are named explicitly in §F1.9.
@@ -498,12 +503,18 @@ controls rather than inherit a heading.
     string acceptance, on the same reasoning that makes `op` matched
     literally (US-31).
   - **The boolean-typed fields are enumerated and the list is closed at
-    four**: `RecipeStep.executable` (US-3), **`RecipeStep.adaptExpected`**
-    (US-31, US-33), `ParameterDecl.required` and
-    `ParameterDecl.notASecret` (US-8). Adding a boolean field to the
-    format adds it to this list in the same change; a field typed boolean
-    and absent from the list is a spec defect, not a permissive case.
-    **`adaptExpected` joined at v2.7 under that rule** (Q-56), and it is
+    five**: `RecipeStep.executable` (US-3), **`RecipeStep.adaptExpected`**
+    (US-31, US-33), **`RecipeStep.fillExpected`** (Q-79; US-31, US-33),
+    `ParameterDecl.required` and `ParameterDecl.notASecret` (US-8).
+    Adding a boolean field to the format adds it to this list in the same
+    change; a field typed boolean and absent from the list is a spec
+    defect, not a permissive case. **`adaptExpected` joined at v2.7 and
+    `fillExpected` at v3.0, both under that rule** — the list has now
+    grown twice without once being the thing someone forgot, which is the
+    only evidence a rule like this ever produces. `fillExpected` earns it
+    twice over: a non-boolean there would not merely mis-report a state,
+    it would silently disarm the prohibition that stops `update`
+    overwriting a filled `project-brief.md`. `adaptExpected` is
     the worked example of why the rule exists: a non-boolean there would
     make `verify` report `adapted` at a path no pack declared, which is a
     blanket suppression wearing the name of a state. A test may assert it
@@ -696,11 +707,32 @@ searches that each miss a different case:
   NFC one — breaking G-F1-7 silently.
 - **Collision keys.** Two applied paths collide when
   `collisionKey(a) === collisionKey(b)`, where `collisionKey` is the
-  applied path **NFC-normalized and then case-folded**. A collision that
+  applied path **NFC-normalized and then ASCII-case-folded** — `A`–`Z`
+  folded to `a`–`z`, and no other character altered (Q-81). A collision that
   is a pure case difference is `E-MAP-CASE-COLLISION`; one that survives
   case-folding and is created by normalization alone is
   **`E-MAP-NORM-COLLISION`**, exit 2 — a separate code because the remedy
   is different prose. The check runs over the merged step set.
+- **The folding is ASCII-only, and that is a documented narrowing of a
+  security control** (Q-81, **known limit 17**). Full Unicode case
+  folding is not in the Node standard library, and the zero-runtime-
+  dependency posture §NFR now requires means it would have to be
+  hand-rolled against the Unicode `CaseFolding.txt` tables. **A
+  hand-rolled approximation inside a control that decides whether two
+  paths are the same file is worse than a stated limit**, because it
+  fails silently and asymmetrically — the tables are versioned, the
+  full-fold cases are not one-to-one, and a partial implementation folds
+  some pairs and not others while reporting the same confidence for both.
+  **The consequence is real and is not hidden:** two applied paths
+  differing only in the case of a non-ASCII letter — `ÉTUDE.md` and
+  `étude.md` — do **not** collide under this rule, and on a case-
+  insensitive volume they are the same file. **What still protects the
+  case that matters:** the reserved-destination denylist, the confinement
+  gate and every path in all three v1.0 packs are ASCII, so no shipped
+  pack is exposed; and the `step`-vs-existing-file half of the rule
+  (N-5) is unchanged in scope, only in folding. **v1.1 obligation:** a
+  full-fold implementation, or a vetted dependency admitted for this one
+  purpose, before any pack ships a non-ASCII applied path.
 - **`collisionKey` is the folding rule for `step`-vs-`step` *and* for
   `step`-vs-**existing file**, and the second half is not optional**
   (N-5). Through v2.2 the folding rule was scoped to the merged step set
@@ -1520,10 +1552,18 @@ diagnostic.
   pack-specific knowledge. This is what keeps S5 testable.
 - `flag` is kebab-case (`^[a-z][a-z0-9-]{0,31}$`). A `flag` colliding
   with a reserved CLI flag (`--set`, `--scaffold`, `--json`, `--strict`,
-  `--force`, `--rollback`, `--all`), with a reserved word, or with
+  `--force`, `--rollback`, `--all`, **`--dry-run`**), with a reserved word,
+  or with
   another parameter's `flag` in the same pack, fails with
   `E-PARAM-FLAG-INVALID`. The reserved list is the whole list; a flag is
   reserved whether or not the command being run accepts it.
+  **`--dry-run` is reserved although no v1.0 command in this document
+  accepts it** (Q-62). It is `update`'s read-only mode, which is F3's;
+  reserving it here is the list's own rule applied on time — *a flag is
+  reserved whether or not the command being run accepts it* — and the
+  alternative is a pack that has already claimed `dry-run` as an alias
+  silently shadowing a read-only mode when F3 ships. This is the
+  `--accept-permissions` mistake avoided rather than repeated.
   **`--accept-permissions` and `--accept-hooks` have left the list**
   because the consent gate they belonged to is deleted (Q-54, US-13).
   **v1.1 obligation, §F1.9:** the version that reinstates the gate must
@@ -1867,8 +1907,10 @@ diagnostic.
   and requiring the summary to name **all five** applied paths at which a
   parameter answer was substituted, each with the verbatim answer (C-43,
   US-16).
-- Before writing, a **journal (version 2)** is written to
-  `.harness/journal.json` and flushed. It records, per intended path: the
+- Before writing, a **journal (version 3)** is written to
+  `.harness/journal.json` and flushed. It records **which command wrote
+  it** (`"command": "init" | "update"`) and, per intended path: an
+  **`intent`** of `"write"` or `"delete"`, the
   hash this apply intends to write, **`preExisting`**, the **pre-apply
   hash** and **pre-apply mode** (both `null` when the path did not
   exist), and a **`backup`** path under `.harness/journal.d/` holding the
@@ -1878,9 +1920,27 @@ diagnostic.
   one. The journal also records the directories the apply created, in
   creation order, and covers **both phases** — the payload copy is
   journalled exactly as phase-2 output is.
-- A journal declaring any `version` other than `2` is
+- A journal declaring any `version` other than `3` is
   **`E-JOURNAL-UNREADABLE`**, exit 2 — the fail-closed rule of US-1
-  applied to the journal.
+  applied to the journal. **There is no version-2 journal to be
+  compatible with**: a journal exists only between the start and the end
+  of a single run, so the only reader of a version-2 journal would be a
+  CLI recovering a crash that happened under a CLI that no longer exists.
+- **`intent` exists because `update` deletes** (Q-62). A payload path
+  that the newer pack no longer ships is removed, and the five-case
+  rollback table below models overwriting and creating but **not
+  deleting** — rolling back a delete means restoring from `journal.d/`
+  with no intended hash to compare against. An `intent: "delete"` entry
+  records `preExisting: true`, the pre-apply hash and mode, and a
+  `backup`, and **has no intended hash**; rollback restores it
+  unconditionally. `init` writes `intent: "write"` on every entry, so the
+  field is uniform rather than optional.
+- **The journal records its command because the remedy depends on it.**
+  `E-JOURNAL-PRESENT` directs the user to `--rollback`, and through v2.9
+  it named `init --rollback` unconditionally — which, after a crashed
+  `update`, sends the user to a command that answers `E-ALREADY-APPLIED`
+  and leaves the journal exactly where it was. The remedy line is
+  rendered from the recorded command.
 - **Each write re-confines and creates exclusively** (C-14).
   `executeApply` re-runs US-3's stage 3 **immediately before each write**,
   because the plan's `lstat` is stale by the time the write happens:
@@ -1946,9 +2006,12 @@ diagnostic.
 - The one exception is a `.harness/` holding a journal from a crashed
   apply, which is `E-JOURNAL-PRESENT` instead (US-13) and directs the
   user to `--rollback`.
-- With `update` deferred (Q-42) there is no in-place re-apply at v1.0.
-  `--force` affects only the pre-existing-path rule of US-13 and never
-  overrides `E-ALREADY-APPLIED`.
+- **`init` never re-applies in place, and `update` is the command that
+  does** (Q-62). `E-ALREADY-APPLIED` is not a statement that moving an
+  applied project to a newer pack is unsupported — it is v1.0 and it is
+  F3's — but that **`init` is not the command for it**. `--force` affects
+  only the pre-existing-path rule of US-13 and never overrides
+  `E-ALREADY-APPLIED`.
 - Applying the same pack twice into two empty directories with identical
   answers and scaffolds produces **byte-identical trees and
   byte-identical manifests**. A test may assert this by recursive
@@ -2604,6 +2667,42 @@ whose only evidence is a table row is a condition nobody has tested.
     that matches nothing: a declaration that covers no path is an
     authoring mistake, and silently accepting it is how a pack ends up
     believing it declared something it did not.
+- **A step may declare `fillExpected`, which marks what it produces as
+  *shipped to be filled in*** (Q-79). It is optional on every primitive,
+  defaults to **`false`**, and is a **JSON boolean** — one of US-1's
+  **five** boolean-typed fields, so `"fillExpected": "true"` is
+  `E-UNKNOWN-VALUE`, exit 2, with no coercion and no truthiness. It takes
+  the same per-step, write-set quantifier `adaptExpected` takes, for the
+  same reason, and an empty write set is `E-RECIPE-STEP-INVALID`.
+  - **It is not `adaptExpected` under another name, and the two are
+    mutually exclusive on one step.** `adaptExpected` says *something
+    else will rewrite this* — the skill adapting a generated
+    `CLAUDE.md`. `fillExpected` says *this shipped incomplete, and the
+    person who applied it is expected to finish it* — `project-brief.md`
+    in every pack, `writing`'s voice guide. A step declaring both is
+    **`E-RECIPE-STEP-INVALID`**, exit 2: a file is either the skill's to
+    adapt or the user's to fill, and a step claiming both has not decided
+    which.
+  - **It changes nothing about the apply**, on the same enumeration as
+    `adaptExpected`: the bytes written, the printed plan, the disclosure,
+    the confinement gate, the collision rule and §F1.8's recomputation
+    are identical with and without it.
+  - **It has two consumers, not one.** `verify` uses it to choose among
+    report states (US-33). **`update` uses it as a prohibition: it may
+    never overwrite a path in the fill-expected set** — not when the
+    bundled payload's version of that file has changed, not when the path
+    is byte-identical to what shipped, and not under any flag. The rule
+    is stated here rather than left to F3 because it is a property of the
+    *declaration*, and a format whose declarations are honoured only by
+    the feature that happens to read them is not a format. What `update`
+    does **instead** of overwriting is F3's to state.
+  - **Why the prohibition is absolute rather than conditional on the
+    file having been filled.** A brief still at its placeholders and a
+    brief filled in are indistinguishable to a rule that has to be right
+    before it looks; the cost of over-applying it is that a user who
+    never filled the brief keeps a stale template, which they can see and
+    delete, and the cost of under-applying it is silently destroying the
+    document every other document in the project is downstream of.
 - A `recipe.json` that is unparseable, or whose top-level shape is wrong,
   fails with **`E-RECIPE-INVALID`**, exit 2.
 - **Steps run in declared order**, base steps first, then the steps of
@@ -2680,7 +2779,8 @@ whose only evidence is a table row is a condition nobody has tested.
   unchanged. `<id>` matches `^[a-z][a-z0-9-]{0,31}$`.
 - **Anchors are inert.** Nothing at v1.0 parses them, hashes them,
   merges into them or reports on them. They are text in a Markdown
-  comment, present so that v1.1's `update` has something to find.
+  comment, present so that `update` has something to find (Q-62 —
+  `update` is v1.0 and is F3's).
 - The assertion `generate` performs is a **literal line count, not a
   grammar**: for each declared id, the exact anchor opening line must
   appear **exactly once** in the rendered output, and the number of
@@ -2789,8 +2889,9 @@ whose only evidence is a table row is a condition nobody has tested.
   tree comparison is **suppressed** on the same reasoning as a digest
   mismatch: the expectation would be rendered from an input the manifest
   cannot vouch for.
-- It reports **four** states per recomputed path: `match`, **`adapted`**,
-  `differs` and `missing`. **Four, and the enumeration is closed.**
+- It reports **six** states per recomputed path: `match`, **`adapted`**,
+  **`filled`**, **`unfilled`**, `differs` and `missing`. **Six, and the
+  enumeration is closed.**
   Comparison is over normalized content for text (§NFR) and raw bytes for
   binary; a CRLF checkout on Windows and an added UTF-8 BOM both report
   `match`.
@@ -2803,6 +2904,35 @@ whose only evidence is a table row is a condition nobody has tested.
   exit code**. A path in the set that still matches byte for byte is
   reported `match`, not `adapted` — the state names what `verify` found,
   never what it was permitted to find.
+- **`filled` and `unfilled` — the path was shipped to be filled in**
+  (Q-79). A recomputed path in the **fill-expected set** — the union of
+  the write sets of the steps that declared `"fillExpected": true`
+  (US-31) — is reported **`unfilled`** when it matches the expectation
+  byte for byte, and **`filled`** when it differs. **Neither is a
+  failure**, neither is counted toward `E-VERIFY-MISMATCH`, and neither
+  affects the exit code.
+- **The inversion against `adapted` is deliberate and is the reason there
+  are two states rather than one.** For an adapt-expected path, matching
+  is the unremarkable case and is reported `match`; for a fill-expected
+  path, matching means **the user has not done the thing the pack asked
+  of them**, which is the single most useful thing `verify` can tell a
+  project owner and is invisible under `match`. Collapsing the pair into
+  one state, or reusing `adapted` for both, would have restored exactly
+  the ambiguity Q-56 split `differs` to remove — one state doing two
+  jobs — one layer further out.
+- **`unfilled` is a `notice`, never a `defect`** (Q-60), and `--strict`
+  does not promote it. An unfilled template is a declared state of a
+  freshly applied project, not an authoring fault; a `--strict` run that
+  could never pass on a project the day it was created is the
+  `validate --all --strict` mistake repeated.
+- **This is what makes US-33's green run reachable.** Through v2.9 the
+  acceptance test for **S7** — a `verify` that exits 0 on this
+  repository — passed only because `specifications/project-brief.md` was
+  still at its placeholders. The first person to fill in a brief would
+  have turned the release gate red, and the gate would have been right
+  by its own rules and useless. A test may assert the fix by filling a
+  fill-expected path with arbitrary content and requiring exit **0**
+  with that path reported `filled`.
 - **An unexpected change still reports `differs`, and still fails.**
   Adapt-expected is a **per-path property declared by the pack**, never a
   blanket suppression: it cannot be turned on for a run, for a project or
@@ -2954,7 +3084,7 @@ change the exit code.
 | `E-ANATOMY-NO-REASON` — `"status": "absent"` with no reason | Exit 2. `lintel: anatomy part "{part}" in pack {name} is absent without a reason.` / `  An absent part must say why it is absent.` / `  → "{part}": { "status": "absent", "reason": "…" }` |
 | `E-ANATOMY-NO-NOTE` — `"status": "provisional"` with no note | Exit 2. `lintel: anatomy part "{part}" in pack {name} is provisional without a note.` / `  A provisional part must say what is unsettled about it.` / `  → "{part}": { "paths": […], "status": "provisional", "note": "…" }` |
 | `E-ANATOMY-SOURCE-ON-ABSENT` — a content source alongside `"status": "absent"` | Exit 2. `lintel: anatomy part "{part}" in pack {name} is declared absent but also declares content ("{sourceKey}").` / `  A part cannot both not exist and have content, and lintel will not guess which was meant.` / `  → Remove "{sourceKey}", or drop "status": "absent".` A contradiction, not an unknown key: US-2 keeps redundancy as a warning. |
-| `E-UNKNOWN-VALUE` — an unrecognised value in a behaviour-selecting position, **or a non-boolean in a boolean-typed field** (US-1, C-34) | Exit 2. `lintel: "{value}" is not a valid {field}.` / `  Allowed: {allowed}` / `  → Fix the value, or upgrade to a lintel that understands it.` Used wherever the position has no more specific code. Unknown **keys** stay a warning; unknown **values** are never ignored, because ignoring one runs behaviour the pack did not ask for. **The boolean-typing case, new at v2.4 and extended at v2.7:** `RecipeStep.executable`, `RecipeStep.adaptExpected` (Q-56), `ParameterDecl.required` and `ParameterDecl.notASecret` are the **four** boolean-typed fields in the format, and each must hold the JSON literal `true` or `false` — `{allowed}` reads `true, false`. There is no coercion and no truthiness: in JavaScript the string `"false"` is **truthy**, so `"executable": "false"` read as `true` and `"notASecret": "no"` disabled the credential ban, two security gates failing **open** on a typo that US-1's closed enumeration affirmatively excluded from cover. Zero bytes written. |
+| `E-UNKNOWN-VALUE` — an unrecognised value in a behaviour-selecting position, **or a non-boolean in a boolean-typed field** (US-1, C-34) | Exit 2. `lintel: "{value}" is not a valid {field}.` / `  Allowed: {allowed}` / `  → Fix the value, or upgrade to a lintel that understands it.` Used wherever the position has no more specific code. Unknown **keys** stay a warning; unknown **values** are never ignored, because ignoring one runs behaviour the pack did not ask for. **The boolean-typing case, new at v2.4 and extended at v2.7:** `RecipeStep.executable`, `RecipeStep.adaptExpected` (Q-56), **`RecipeStep.fillExpected` (Q-79)**, `ParameterDecl.required` and `ParameterDecl.notASecret` are the **five** boolean-typed fields in the format, and each must hold the JSON literal `true` or `false` — `{allowed}` reads `true, false`. There is no coercion and no truthiness: in JavaScript the string `"false"` is **truthy**, so `"executable": "false"` read as `true` and `"notASecret": "no"` disabled the credential ban, two security gates failing **open** on a typo that US-1's closed enumeration affirmatively excluded from cover. Zero bytes written. |
 | `W-ANATOMY-ABSENT` — a part is declared absent (at init) | **Class `notice`** — the pack declared the absence and supplied the reason this message prints (US-2); nothing is fixable. Warning, exit unchanged. `lintel: pack {name} declares no {part}.` / `  Reason given: {reason}` |
 | `W-ANATOMY-PROVISIONAL` — a part is declared provisional | **Class `notice`** — a well-formed `provisional` part is a declared state with a declared note (US-2), not a shortfall. This is one of the two codes `planning` emits by design, and `--strict` does not promote it. Warning, exit unchanged. `lintel: pack {name} ships {part} as provisional.` / `  Note: {note}` |
 | `E-RECIPE-MISSING` — `pack.json` names a recipe the pack does not contain | Exit 2. `lintel: pack {name} declares "recipe": "{path}", which is not in the pack.` / `  Phase 2 has nothing to run, so applying this pack would produce a payload and nothing else.` / `  → Add {path}, or correct the "recipe" path.` |
@@ -2993,8 +3123,8 @@ change the exit code.
 | `E-SCAFFOLD-EXCLUSIVE` — two selected scaffolds share a category | Exit 1. `lintel: "{a}" and "{b}" are alternatives, not additions — both are "{category}" scaffolds.` / `  Pick one.` / `  Available {category} scaffolds: {ids}` This is the choose-one diagnostic; a path collision would have been technically true and practically misleading. |
 | `E-SCAFFOLD-COLLISION` — two scaffolds of different categories write one path | Exit 2. `lintel: scaffolds "{a}" and "{b}" both write "{path}".` / `  They are in different categories, so a user may select both.` / `  → Give them one category if they are alternatives, or move the shared file into the base recipe.` |
 | `E-TARGET-EXISTS` — init into a non-empty tree | Exit 1. `lintel: {n} files already exist where this pack would write.` / `  {first ten paths, one per line, two-space indented}` / `  → Apply into an empty directory, or re-run with --force to keep byte-identical files and stop on the rest.` **The existence test compares by `collisionKey`** — NFC-normalized then case-folded — **not by exact string** (N-5, US-13), as do `--force`'s byte-identity check and the journal's `preExisting` determination. Without that folding, `.claude/Settings.json` on disk and a step writing `.claude/settings.json` are the same file on macOS and Windows and this code does not fire: the apply overwrites silently, the journal records `preExisting: false`, and rollback deletes a user file it did not create. |
-| `E-ALREADY-APPLIED` — the project already has `.harness/` | Exit 1. `lintel: this project already has {pack}@{version} applied.` / `  Re-applying is not supported in v1.0; update lands in v1.1.` / `  → Apply into a fresh directory, or remove .harness/ by hand if you mean to start over.` Zero bytes written. Named without a pack when the manifest is unreadable. |
-| `E-JOURNAL-PRESENT` — a previous apply crashed | Exit 2. `lintel: a previous apply did not finish.` / `  {n} files were being written when it stopped.` / `  → lintel harness init --rollback   remove exactly what that apply wrote` |
+| `E-ALREADY-APPLIED` — the project already has `.harness/` | Exit 1. `lintel: this project already has {pack}@{version} applied.` / `  init applies a pack to a project that has none.` / `  → lintel harness update   to move this project to a newer {pack}` / `  → Or apply into a fresh directory, or remove .harness/ by hand if you mean to start over.` Zero bytes written. Named without a pack when the manifest is unreadable. |
+| `E-JOURNAL-PRESENT` — a previous apply crashed | Exit 2. `lintel: a previous {command} did not finish.` / `  {n} files were being written when it stopped.` / `  → lintel harness {command} --rollback   undo exactly what that run did` **`{command}` is read from the journal's own `command` field** (US-13, journal v3) and is never assumed. Through v2.9 the remedy said `init --rollback` unconditionally, which after a crashed `update` sent the user to a command that answers `E-ALREADY-APPLIED` and leaves the journal exactly where it was — a remedy line that cannot work is worse than none, because the user believes they tried. |
 | `E-JOURNAL-UNREADABLE` — `.harness/journal.json` declares a `version` other than `2`, or cannot be parsed | Exit 2. `lintel: .harness/journal.json is not a journal this CLI can act on ({detail}).` / `  lintel will not guess what a previous apply was doing.` / `  → Remove .harness/journal.json by hand once you have checked the project, or restore it from version control.` Fail-closed: journal version 1 never shipped, and this check exists so that it never can. |
 | `E-TARGET-RACE` — a write target changed between plan and write | Exit 2. `lintel: "{path}" changed while lintel was writing.` / `  {detail}` / `  Nothing further was written; the journal is intact.` / `  → lintel harness init --rollback, then re-run.` `{detail}` is one of `it appeared after the plan said it did not exist`, `it is no longer a regular file`, or `its contents no longer match what the plan read`. |
 | `W-ROLLBACK-KEPT` — rollback declined to touch a path | **Class `notice`** — rollback kept the file **on purpose** under the five-case table (US-13), and reporting it is the point; nothing is fixable. Warning within the rollback report. `lintel: kept "{path}" — it has changed since it was written.` Rollback continues and exits 0 with the count of kept files. |
@@ -3007,7 +3137,7 @@ change the exit code.
 | `W-MANIFEST-NEWER-CLI` | **Class `notice`** — version skew between the recorded CLI and the running one; commands proceed and no pack content is wrong. Warning. `lintel: this project was last touched by lintel {recorded}; you are running {current}.` |
 | `W-PACK-NEWER-THAN-CLI` | **Class `notice`** — the same skew on the pack axis, and the message itself says `verify` still works. Warning. `lintel: this project has {pack}@{version}; the newest {pack} bundled with lintel {cliVersion} is {bundled}.` / `  verify still works — it reads .harness/pack/, not the bundle.` |
 | `E-PAYLOAD-DIGEST-MISMATCH` — `.harness/pack/` does not hash to the manifest's `payloadDigest` | Exit 2. `lintel: .harness/pack/ does not match the payload this project recorded.` / `  recorded {recorded}` / `  computed {computed}` / `  The applied tree cannot be checked against an edited payload.` / `  → Restore .harness/pack/ from version control, or re-apply into a fresh directory.` Raised by `verify` **before** any recomputation, and the tree comparison is suppressed: the expectation is computed from the payload, so an untrusted payload makes it meaningless (US-33). Class 2 and never class 1 — this is a payload integrity fault, not a difference a user may have chosen, which is the line `E-VERIFY-MISMATCH` sits on the other side of. |
-| `E-VERIFY-MISMATCH` — the project differs from the recomputed applied tree | Exit 1. `lintel: {n} of {total} applied paths do not match what this pack and these answers produce.` / `  {first ten paths, one per line, with "differs" or "missing"}` / `  → Inspect the differences, or re-apply into a fresh directory.` A `differs` is not necessarily a fault — a user may have edited a generated file deliberately — so this is exit 1 and never exit 2. **A path reported `adapted` is not counted in `{n}` and never appears in this message** (Q-56, US-33): the pack declared `adaptExpected` on the step that produced it, so a change there is the declared outcome rather than a mismatch. This code fires on `differs` and `missing` only, and a run whose only movement is adaptation exits `0` without raising it. |
+| `E-VERIFY-MISMATCH` — the project differs from the recomputed applied tree | Exit 1. `lintel: {n} of {total} applied paths do not match what this pack and these answers produce.` / `  {first ten paths, one per line, with "differs" or "missing"}` / `  → Inspect the differences, or re-apply into a fresh directory.` A `differs` is not necessarily a fault — a user may have edited a generated file deliberately — so this is exit 1 and never exit 2. **A path reported `adapted` is not counted in `{n}` and never appears in this message** (Q-56, US-33): the pack declared `adaptExpected` on the step that produced it, so a change there is the declared outcome rather than a mismatch. **A path reported `filled` or `unfilled` is likewise not counted and never appears** (Q-79, US-33): the pack declared `fillExpected`, so a change there is the user doing what the pack asked, and an *absence* of change is a template still waiting to be filled — neither is a mismatch. This code fires on `differs` and `missing` only, and a run whose only movement is adaptation or filling exits `0` without raising it. |
 | `E-CLAUDE-TOOL-GRANT` — a file a pack places under a `.claude` segment declares a permission-bearing frontmatter key that it may not (US-3, US-30, US-31, C-32a, C-39c, C-40) | Exit 2. `lintel: "{path}" declares a permission decision ("{key}", line {line}).` / `  A pack may not pre-authorize tools or select a permission mode for the project it is applied to. A command file's frontmatter is a permission declaration, and its !-prefixed lines execute shell under it.` / `  → Remove the key. A pack contributing permissions is deferred to v1.1 with the settings story.` **Zero bytes written.** Raised for a **grant key** on any pack-placed file under a `.claude` segment, and for a **mode key** on any such file that is **not** an agent file — a command or skill file has no business selecting a permission mode (C-40). **Two quantifiers, two steps, two disjoint sets** (C-39c): the **write set**, on **rendered** output, at US-16 **step 11** — rendered because a later `substitute` or `rewrite-path` can change the bytes the runtime reads — and the **phase-1 payload set**, on payload bytes, at US-16 **step 3**, because phase 1 copies verbatim and skips no payload file, so a `.claude/` subtree a pack merely *ships* lands live inside the committed project at `.harness/pack/.claude/`. Matched on **any segment** equal to `.claude`, not the first only (C-33's scoping). `{key}` comes from **one named constant pinning the key names the Claude Code runtime's current frontmatter contract uses for a permission decision** — **grant keys** (`allowed-tools` and its spellings) **and mode keys** (`permissionMode` and its spellings) — with the runtime version the pin was taken against recorded beside it; a key the runtime adds after the pin is not caught until the pin is updated, which §F1.9 records as a maintenance obligation. **Not raised for an agent file's `tools:` list, nor for an agent file's non-widening `permissionMode`**, both permitted and **disclosed** instead (US-13, C-32b, C-40); a widening or unrecognised mode value on an agent file is `E-CLAUDE-PERMISSION-MODE`. |
 | `E-CLAUDE-PERMISSION-MODE` — a pack-placed agent file under a `.claude` segment declares a `permissionMode` whose value is widening or unrecognised (US-3, US-30, US-31, C-40) | Exit 2. `lintel: "{path}" selects permission mode "{value}" (line {line}).` / `  A pack may not widen the permission envelope of the project it is applied to, and lintel will not guess at a mode it does not recognise.` / `  Permitted: {modes}` / `  → Use a mode that does not widen the envelope, or remove the key.` **Zero bytes written.** `{modes}` is the pinned **non-widening** value set held in the same named constant as the key names, with the runtime version the pin was taken against. **A distinct code from `E-CLAUDE-TOOL-GRANT` because the fault and the remedy differ**: there the key may not be declared at all, here the key is legitimate and the *value* is not — and the two messages must not be interchangeable, on this catalogue's own rule that a code is the stable contract. **Fail-closed on an unrecognised value**, which is US-1's rule for a value in a behaviour-selecting position applied to a foreign contract: refusing a legitimate new mode at `validate` time is visible, locatable and fixable in one constant, while accepting an unknown one is a silent widening. **Not raised for `tools:`**, which is a request made underneath the engine rather than a selection of its mode (C-32b) — the distinction v2.4 collapsed, and the reason `permissionMode: bypassPermissions` on an agent that also declared `Bash` was neither refused nor shown. |
 | `W-HOOK-SCRIPT-INERT` — the pack ships a file under a `hooks/` directory in any `.claude` tree | **Class `notice`** — shipping an inert `0644` hook script is **permitted and intended** (US-3), the script is inert *because* no pack may register an agent hook at v1.0, and no change an author could make would clear the finding short of deleting content the pack means to ship. This is the second of the two codes `planning` emits by design. Warning. `lintel: "{path}" is shipped as an ordinary file and is registered by nothing.` / `  No v1.0 mechanism registers a hook, so this script does not run until something registers it by hand.` Emitted by `validate` at US-16 **step 8**, and the same files are listed in the init summary and in `pack info` (US-3). **`.claude` is matched at any segment** (C-39), as it is in every other rule in this document; the file is `0644` by `E-EXEC-DEST-FORBIDDEN`, also at any segment (C-39b). |
@@ -3023,6 +3153,15 @@ change the exit code.
 | `E-CLI-UNKNOWN-FLAG` — a flag no command and no pack alias recognises | Exit 1. `lintel: "lintel harness {command}" does not accept --{flag}.` / `  It accepts: {flags}` / `  → lintel harness {command} --help` Reported **only after the second argv pass**, once the resolved pack's aliases are registered (US-8) — otherwise every pack-declared alias reports falsely. |
 | `E-CLI-FLAG-VALUE-MISSING` — a flag that takes a value received none | Exit 1. `lintel: --{flag} needs a value.` / `  {usage}` |
 | `E-CLI-ARG-UNEXPECTED` — a positional the command does not take | Exit 1. `lintel: "lintel harness {command}" does not take the argument "{arg}".` / `  {usage}` |
+| `E-CLI-UNKNOWN-PACK` — the pack positional names no bundled pack (F2) | Exit 1. `lintel: "{name}" is not a pack bundled with lintel {cliVersion}.` / `  Packs: {packs}` / `  → lintel harness pack info <pack>   to see what one contains` **Exit 1, not 2**: a user typed a name and can retype it, which is the class `E-CLI-UNKNOWN-COMMAND` sits in. Distinct from `E-CLI-ARG-UNEXPECTED`, which is a positional the command does not take at all. |
+| `E-CLI-PACK-MISSING` — a command requiring a pack positional received none (F2) | Exit 1. `lintel: "lintel harness {command}" needs a pack name.` / `  Packs: {packs}` / `  {usage}` A separate code from `E-CLI-UNKNOWN-PACK` because the remedy differs — there is nothing to correct, only something to supply — and this catalogue's rule is that two messages which are not interchangeable are two codes. |
+| `E-SET-UNKNOWN-PARAM` — `--set` names a parameter the resolved pack does not declare (F2, US-8) | Exit 1. `lintel: {pack}@{version} declares no parameter "{id}".` / `  Declared: {ids}` / `  → lintel harness pack info {pack}   to see the parameters and their defaults` **Reported only after the second argv pass** (US-8), like `E-CLI-UNKNOWN-FLAG`: the pack is not resolved during pass 1, so a pass-1 report would be a guess. **Never silently ignored** — an unrecognised `--set` means the user believes they set something they did not, and the applied tree would be recomputable but not what they asked for. |
+| `E-PARAM-UNANSWERABLE` — a parameter has no answer, no default, is not `required`, and there is no TTY to ask on (F2, US-8) | Exit 1. `lintel: "{id}" has no answer and no default, and there is nowhere to ask.` / `  Non-interactive: stdin and stderr are not both a terminal.` / `  → Pass --set {id}=<value>, or run where lintel can prompt.` **Distinct from `E-PARAM-MISSING`**, which is a `required` parameter left unanswered and is a fault whatever the terminal is; this fires only where the *absence of a prompt* is what makes the run undecidable, and the remedy names the flag rather than the declaration. **Distinct from `E-PARAM-UNDECIDABLE`**, which is a `validate`-time authoring defect about a parameter named in a `when` — that is exit 2 and is the pack author's; this is exit 1 and is the user's. |
+| `W-LINK-FALLBACK` — an applied path was written by copy because `link()` was unavailable (US-13) | **Class `notice`** — the CLI reports a narrowed guarantee it could not avoid; no pack change and no user change would clear it. Warning. `lintel: "{path}" was copied rather than linked ({errno}).` / `  The write is still atomic; the space saving is not.` **This code exists because US-13 has required the fallback to "record the narrowed guarantee" since v2.0 while providing no code for it** — making the one assertion that mattered available only by string-matching a message, which §Error States forbids outright, since the code and not the prose is the stable contract. A test may assert the fallback path by forcing `link()` to fail and requiring this code with exit unchanged. |
+| `E-UPDATE-AVAILABLE` — a newer version of the applied pack is bundled (F3) | **Exit 1, and it is not a failure of the run** — it is the answer. `update`'s read-only mode (the former `status`) reports it and exits 1 so that a CI job can gate on "this project is behind" without parsing output. `lintel: {pack}@{applied} is applied; lintel {cliVersion} bundles {bundled}.` / `  → lintel harness update   to see what would change` **The exit class is deliberate and is the one place in this catalogue where exit 1 reports a question answered rather than a fault.** F3 owns when it fires. |
+| `E-UPDATE-NOT-NEWER` — the bundled pack is not newer than the applied one (F3) | Exit 1. `lintel: {pack}@{applied} is applied; lintel {cliVersion} bundles {bundled}, which is not newer.` / `  → Upgrade the CLI: npm i -g @lintel/cli@latest` **`update` never resolves "newer" over the wire** (§NFR *No network*): a project moves to the version bundled in the installed CLI, so the remedy for "nothing newer" is upgrading the package. Covers both equal and older, because the remedy is the same and the two are not separately actionable. |
+| `E-UPDATE-PARAM-UNANSWERED` — the newer pack declares a parameter the manifest has no answer for (F3, US-8) | Exit 1. `lintel: {pack}@{bundled} declares "{id}", which {pack}@{applied} did not.` / `  Recorded answers cannot supply it, and update does not guess.` / `  → lintel harness update --set {id}=<value>` **`update` may not fall back to the declared default**, and this is the whole reason the code exists rather than the run proceeding: a default chosen by a pack author is a reasonable *first* answer and an unreasonable *silent* one, because the parameter may drive a `when` that adds or removes steps, and the user would discover the choice as a diff. |
+| `E-UPDATE-SCAFFOLD-DROPPED` — the newer pack no longer declares a scaffold the manifest records (F3, US-9) | Exit 1. `lintel: {pack}@{bundled} no longer declares the scaffold "{name}", which this project selected.` / `  update will not silently drop the files it placed.` / `  → Re-apply into a fresh directory, or remove the scaffold's files by hand first.` Stops the run rather than deleting: the scaffold's steps are gone from the recipe, so the paths it wrote are payload orphans by construction, and the deletion rule that handles orphans would remove a whole selected feature on a version bump. |
 
 ---
 
@@ -3034,6 +3173,28 @@ change the exit code.
   and pre-apply hashes (US-13), `--force` byte-identity (US-13),
   `verify`'s comparison (US-33), and **the manifest's `payloadDigest`**
   (US-10, Q-52).
+- **Zero runtime dependencies** (Q-81). The published `@lintel/cli`
+  declares **no runtime dependency**. Strict JSON parsing with duplicate-
+  key detection and line numbers, `pack.json`/`recipe.json` schema
+  validation, the `in` glob matcher, semver comparison, the `.claude/`
+  frontmatter reader and the test runner (`node:test`, Node >= 22) are
+  hand-rolled or standard library. **The reason is this product's own
+  security argument applied to itself:** the CLI writes files into a
+  user's repository, four review rounds were spent bounding what a *pack*
+  can do through it, and a runtime dependency is code inside that same
+  boundary that no pack rule governs. **This is a requirement, not a
+  preference** — it is assertable as an empty `dependencies` object in
+  the published manifest, and a test asserts it.
+  - **The cost is paid where it falls, not averaged away.** Most of the
+    register was hand-rollable on its merits: semver needs comparison but
+    no range arithmetic, the glob runs over a known path set with no
+    filesystem handle, and the schemas are closed enumerations this
+    document already specifies. **Unicode case folding was the one item
+    where hand-rolling is a genuine correctness risk**, and it is
+    resolved by **narrowing the claim rather than approximating it** —
+    `collisionKey` folds ASCII only, documented as known limit 17 (US-3).
+  - Build-time and test-time dependencies are unconstrained by this
+    requirement; it governs what ships and runs on a user's machine.
 - **Tree digest.** `payloadDigest` is the one tree digest in the product
   and has exactly one call site. It is computed over the payload file
   set as `sha256-<hex>` of a canonical listing: one line per file,
@@ -3779,12 +3940,12 @@ will rot:
 | Field | Consumer | Why |
 |---|---|---|
 | `manifestVersion` | every command | Refuse a manifest a newer CLI wrote (US-15) |
-| `cli` | `verify`, v1.1 `update` | Warn when a CLI behaviour change would reinterpret this project |
-| `pack.name`, `pack.version` | `verify`, v1.1 `update` | "you applied `coding@1.0.0`, latest is `coding@1.4.0`" |
+| `cli` | `verify`, `update` | Warn when a CLI behaviour change would reinterpret this project |
+| `pack.name`, `pack.version` | `verify`, `update` | "you applied `coding@1.0.0`, latest is `coding@1.4.0`" |
 | `pack.formatVersion` | `verify` | The payload's format, versioned separately from the manifest's |
-| `payloadDigest` | `verify` (**checked first, fail-closed**), v1.1 `update` (**must check it before merging** — C-11's concern) | One tree digest over `.harness/pack/`, so the recomputation is an assertion about *the pack that shipped* rather than a tautology about *the payload on disk*. **Top-level, not inside `pack`**: `pack` is what the pack declared, this is what the apply observed. Over **normalized** content, so it survives a CRLF checkout |
-| `parameters` | `verify`, v1.1 `update` | Recompute the applied tree. Every declared parameter is recorded, including ones answered by default and ones that selected nothing, because a `when` must be re-evaluated against the *original* answers |
-| `scaffolds` | `verify`, v1.1 `update` | Recompute exactly the same step set; never silently gain or lose one |
+| `payloadDigest` | `verify` (**checked first, fail-closed**), `update` (**must check it before classifying anything** — C-11's concern, restated for Q-62: there is no merge, and the digest gates the recomputation that classification depends on) | One tree digest over `.harness/pack/`, so the recomputation is an assertion about *the pack that shipped* rather than a tautology about *the payload on disk*. **Top-level, not inside `pack`**: `pack` is what the pack declared, this is what the apply observed. Over **normalized** content, so it survives a CRLF checkout |
+| `parameters` | `verify`, `update` | Recompute the applied tree. Every declared parameter is recorded, including ones answered by default and ones that selected nothing, because a `when` must be re-evaluated against the *original* answers |
+| `scaffolds` | `verify`, `update` | Recompute exactly the same step set; never silently gain or lose one |
 
 Six keys, in that order, and the order is part of the byte-identity
 contract of US-10.
@@ -4060,7 +4221,7 @@ shape was chosen with `update` in view:
 |---|---|---|
 | **Inert region anchors** (US-32) | **Nineteen** anchors across **three** templates — `coding` 6, `writing` 6, `planning` 7 (Q-61) — each a literal pair of comment lines, plus a line-counting assertion | `update` has stable insertion points in **every** pack's `CLAUDE.md` without a migration that has to guess where pack-owned text begins. The count is three templates and not one because all three packs `generate`: had only `coding` done so, two of the three packs would have carried nothing for `update` to find, and the investment would have bought a third of what it was costed for |
 | **The minimal manifest** (US-10) | Six keys | `update` knows what was applied and can recompute the expected tree, which is what makes it an addition rather than a retrofit |
-| **`payloadDigest`** (US-10, Q-52) | One key, one tree walk per apply and per `verify` | `update` merges against a recomputed base, and a wrong base loses work silently. Checking the digest before merging is C-11's concern, and the field it needs is already in every v1.0 manifest — so v1.1 adds a check, not a migration. It earns its keep at v1.0 too, as the thing that lets `verify` say which side moved |
+| **`payloadDigest`** (US-10, Q-52) | One key, one tree walk per apply and per `verify` | **Q-62 collected this investment early, and changed what it buys.** `update` is v1.0 and **builds no merge engine**: it recomputes `expected_old` from the local `.harness/pack/` plus the recipe plus the recorded answers — `verify`'s own identity — and classifies each path against it. There is no base to merge against and nothing to lose work into; what a wrong payload loses instead is the *classification*, silently marking an edited file unedited and letting `update` replace it. Checking the digest first is therefore C-11's concern **strengthened**, not deferred, and the field was already in every manifest — so F3 adds a check, not a migration. It earns its keep at v1.0 twice: it is also what lets `verify` say which side moved |
 
 Nothing else in this spec is carried for a deferred feature. Where the
 old spec kept a field, a hash or a code "for F3", it has been removed —
@@ -4093,7 +4254,7 @@ of rediscovering the finding.
 | C-8 no substitution into a security-relevant owned key | **RESOLVED BY DELETION** (Q-54) — US-4. No pack writes a settings file (US-3 stage 2), so no substituted value can land under a security-relevant key and `E-SUBST-IN-SECURITY-KEY` had nothing left to fire on; a check that cannot fire is deleted rather than kept, because kept it reads as coverage. **The reasoning did not go with it**: C-8's principle — *a permission is a decision the pack author makes at authoring time, not one a user makes by typing a project name* — is now applied one boundary out, to agent-instruction content, where §US-4 states it, **accepts** it with three reasons, and **enumerates** it in the disclosure (C-28). **v1.1 obligation:** the rule and its code return in the same change as the settings destination |
 | C-9 substitution may not forge a marker | **Half carried.** The newline ban survives as `E-SUBST-NEWLINE`. The marker-lex half and `E-REGION-TAMPERED` are **removed with the region parser** (Q-45): anchors are inert, so a forged one hijacks nothing. **v1.1 obligation:** restore the lex check when `update` starts reading anchors. |
 | C-10 integrity fail-closed on write paths | **Rescoped.** Its subject was `shared[].integrity`, and `shared/` does not ship at v1.0 (Q-48, resolved in the brief). The general rule it expressed — a flag that downgrades an integrity check exists on read-only commands only — survives as `E-FLAG-NOT-PERMITTED`, and there is **no flag anywhere in the CLI that skips the `payloadDigest` check**. |
-| C-11 `pack.integrity` verified same-name-same-version | **Half carried, half deferred.** Q-43 removed `pack.integrity`; **Q-52 pays the payload half now** — `payloadDigest` is recorded by every apply and checked first and fail-closed by `verify` (US-10, US-33). The half that stays deferred with `update` (Q-42) is the *merge-time* obligation: v1.1 must check the digest before merging against a recomputed base. **v1.1 obligation, and the field it needs already exists.** |
+| C-11 `pack.integrity` verified same-name-same-version | **Carried in full as of Q-62.** Q-43 removed `pack.integrity`; **Q-52 paid the payload half** — `payloadDigest` is recorded by every apply and checked first and fail-closed by `verify` (US-10, US-33). The half that was deferred with `update` is **no longer deferred and is no longer a merge-time obligation**: `update` is v1.0, builds no merge engine, and must check the digest **before classifying any path**, because classification is computed from the payload exactly as `verify`'s expectation is. **F3 obligation, and the field it needs already exists.** |
 | C-12 `executable` declared, bounded, disclosed | **Carried in full, extended to phase 1, and — new at v2.4 — actually exercised** (C-38). `coding` declares `executableRoots: ["infrastructure/backend-deploy/"]` and sets `"executable": true` on each backend scaffold's script step, producing **four** `0755` applied paths and four real disclosure lines. Through v2.3 F1 stated that *every* v1.0 pack shipped no executable, which disagreed with F5, forced adopters to `chmod` scripts meant to be run, and left the roots/cap/disclosure apparatus specified and dormant — the exact pattern §F1.9 records Q-54 as the lesson about. US-3, US-29, US-30, §F1.3. Every clause of the executable rule is written for a *recipe step* — a declared `to`, an `executable` field, a declared root, the cap of 32, a disclosure line — and **phase 1 is not one and has none of them**, so a `0755` source file used to land `0755` under `.harness/` with no root, no cap, no disclosure and no diagnostic, invisible to a content-only `payloadDigest`. **Repair (C-26):** phase 1 writes every payload file `0644` and every created directory `0755`, reading no source mode, which satisfies `E-EXEC-DEST-FORBIDDEN` **by construction** rather than by a check phase 1 cannot run |
 | C-13 journal `preExisting` + pre-apply hash; rollback deletes only what it created | **Carried in full** — US-13, and now covers phase-1 writes too |
 | C-14 branded `AppliedPath`, exclusive create, `E-TARGET-RACE` | **Carried in full, and extended to close the hole phase 1 opened** — US-3, US-13. `AppliedPath` for recipe destinations, **`HarnessPath`** for the CLI's own `.harness/` writes, and `WritablePath = AppliedPath \| HarnessPath` on the journal, the writer and rollback. Without the second brand, phase-1 writes would have to reach the writer as bare strings and C-14's compile-error property would not hold across phase 1 |
@@ -4361,7 +4522,10 @@ rather than discovering them:
     message catalogue, F1 owns it, and Q-63 renamed the surface without
     resizing it; a code invented ahead of the feature that raises it is a
     declaration nothing checks, which is the failure mode Q-60 names.
-    **The count of codes is unchanged: the catalogue holds 78.**
+    **The count of codes is unchanged *by Q-63*.** (The catalogue holds
+    **87** at v3.0, which grew it by nine for `update`, `init` and the
+    `link()` notice — none of them this limit's missing group code, which
+    is still not invented.)
 
 **v1.1 obligations created or restated by this version.** Collected in
 one place because the failure mode this amendment exists to correct is an
@@ -4385,6 +4549,7 @@ obligation recorded only inside a row nobody re-reads:
 | 14 | Reserved-destination class 2 is **reviewed as a denylist, not read as a closed proof** (C-31, C-41) | The v2.3 failure was not a missing entry, it was an absolute claim resting on a three-item list. Whoever adds the next capability must ask what *else* executes what a pack writes, and add the entry and its fixture together. v2.5 added `.mcp.json` — the sibling of `.claude/settings.json` — which is what a *second* pass over the same list found |
 | 15 | **A rule stated as a property must be quantified over every set the property is true of, and the sets must be named** (C-39) | Every HIGH of the final pass was one quantifier short of a principle the same version had established. A rule quantified over `to` exempted two primitives (C-19); over the write set, it exempted phase 1 (C-39c); scoped to a first segment, it exempted every nested tree the document itself said was live (C-39a, C-39b, C-39d). The repair is not a longer list, it is stating the quantifier next to the property and naming the sets it ranges over |
 | 16 | **`AnatomyDecl.declaredBy` becomes US-1's seventh behaviour-selecting position, and the enumeration's count moves with it** (C-47, §F1.9 limit 15) | It is a behaviour-selecting value no rule governs, accepted at v1.0 only because no security gate rides on it. A v1.1 that adds an anatomy source shape inherits an unhandled value, and a closed enumeration whose count is not updated in the same change is the defect C-24 and C-34 both found |
+| 17 | **`collisionKey` folds ASCII case only** (Q-81, US-3) | Full Unicode case folding is not in the Node standard library and the zero-dependency posture (§NFR) forbids taking one for it. Two applied paths differing only in the case of a non-ASCII letter do not collide, and on a case-insensitive volume they are the same file. No v1.0 pack ships a non-ASCII applied path, so nothing shipped is exposed — but this is a **narrowing of a security control**, recorded as one, and the v1.1 obligation is a full-fold implementation or a vetted dependency admitted for this single purpose before any pack ships such a path |
 
 ---
 
@@ -4479,4 +4644,6 @@ re-litigate.
 | Q-60 | Can `validate --all --strict` exit `0` for all three bundled packs, given that two of `planning`'s findings are deliberate design decisions? | **Yes, once warnings are split into two classes.** One severity was doing two jobs — reporting a state a pack declared on purpose, and flagging something an author should fix — so `planning` could not pass CI for reasons that were both *decisions*: part 2 is `provisional` because the role set is genuinely unwritten, and the guard script is inert **because** no pack may register an agent hook at v1.0. Every `W-` code is now classified once, in §Error States, as **`defect`** (author-fixable) or **`notice`** (reports a declared state the pack intends). **`--strict` promotes defects only; a notice always prints, never changes an exit code, and is never fatal under any flag**, because a flag that could promote one would recreate the problem. **Exit classes are unchanged**; only the promotion set changed. **A new `W-` code must declare its class, and an unclassified code is `defect`** — fail-closed, so a forgotten classification makes CI louder rather than quieter; the opposite default was rejected because a silently un-promoted warning is the failure mode this project has hit twice. Two consequences land in the format: **`provenance` becomes a defined optional `pack.json` field** (US-1, §F1.3), so the key F5 §NFR *Provenance* requires stops tripping the unknown-key warning; and **`coding`'s `infrastructure/` finding is a real defect and is fixed** — each backend scaffold gains a third step placing `applied-readmes/infrastructure.md`, taking the recipe from 19 declared steps to **21**. No code is added or removed; the catalogue holds **78**. | 2026-08-31 |
 | Q-54 | Does `merge-json` ship at v1.0 at all, given that no bundled pack consumes it? | **No — six primitives, not seven**, resolved in the brief §12. Once F5's three settings steps were deleted as invalid recipes — not one names a `from`, not one names an owned key, and no pack's payload holds a settings source file — `merge-json` had **no v1.0 consumer** while carrying the format's largest attack surface: it was the target of both CRITICALs of the 2026-08-31 Mode A re-review, both lapses of C-16, and the newly found rollback defect. **Deleting the surface is a stronger fix than repairing it.** F1's format consequences, in full: the primitive set is **six**; `ownedKeys`, the ownable-key allowlist and its destination table, the security-relevant key classification, the leaf-only rule, the destination-policy concept and the entire consent gate are **deleted, not disabled**; `.claude/settings.json`, `.claude/settings.local.json` and any `package.json` become **reserved destinations** so that "nothing writes settings" is a checked rule rather than a fact about three packs; **US-6 is retired**; six codes leave the catalogue and four join it, at **76**. **Bonus, and it is not small:** `merge-json` was the only primitive taking a fourth input — the destination's pre-existing content — so removing it makes `verify`'s recomputation identity (§F1.8) and §NFR's determinism sentence **true as originally written**, and C-22's narrowing is deliberately not applied. R5's "sensible default permissions" waits for v1.1, whose obligations are enumerated in §F1.9. | 2026-08-31 |
 | Q-56 | `verify` compares whole files and reports `match \| differs \| missing`, region anchors are inert, and F6's job is to adapt the generated `CLAUDE.md`'s project-owned prose. How does a project the skill has done its work on pass `verify`? | **`verify` gains a fourth per-path state, `adapted`, and the pack declares which paths may have it.** `differs` was doing two jobs — *someone changed this* and *this was supposed to change* — and they are split exactly as Q-60 split `defect` from `notice` one layer down. **A recipe step may declare `adaptExpected`** (US-31), on the step that produces the file; the `generate` step for `CLAUDE.md` is the case that matters and all three packs set it. It is a **JSON boolean**, so C-34's typing rule applies and a non-boolean is `E-UNKNOWN-VALUE`, exit 2; US-1's closed enumeration of boolean-typed fields grows from three to **four**. **`verify` reports every applied path in such a step's write set as `adapted`** when it has changed; `adapted` is **not** a failure, is not counted toward `E-VERIFY-MISMATCH`, and **does not affect the exit code**. **An unexpected change still reports `differs` and still fails**: adapt-expected is a per-path property declared by the pack, **never a blanket suppression** — there is no flag, no environment variable and no pack-level switch — and a path no step declared behaves exactly as it did before. The state enumeration is **four and closed**: `match`, `adapted`, `differs`, `missing`; `verify --json` carries the `state` per path beside Q-60's `class` on findings. **The manifest does not change**: the adapt-expected set is recomputable from `.harness/pack/` plus the recipe, which are already §F1.8's inputs, so Q-43's six keys stand and **no seventh key is added** — stated explicitly in US-33 and §F1.8 so a later reader does not go looking for one. **Why it matters for S7:** Q-57 made the conversational path primary, so the skill always runs and an unadapted `CLAUDE.md` exists for seconds; without `adapted`, US-33's green `verify` was checkable only on a project nobody had finished setting up. No code is added and none removed. | 2026-08-31 |
+| Q-79 | `project-brief.md` and `writing`'s voice guide ship to be filled in. A filled one reports `differs`, so `verify` exits 1 and US-33's green run — the acceptance test for S7 — is unreachable on any project anybody has used. Widen `adaptExpected`, or something else? | **Something else: `fillExpected`, and two new `verify` states.** `adaptExpected` would have worked and was rejected for what it costs: a filled `project-brief.md` and an adapted `CLAUDE.md` are different facts about a project, and one state for both throws away the more useful of the two. **A step may declare `"fillExpected": true`** (US-31) — a JSON boolean, US-1's **fifth**, with the same write-set quantifier `adaptExpected` takes — and `verify` reports **`unfilled`** where the path matches what shipped and **`filled`** where it does not (US-33). **Both are non-failure; the enumeration goes to six and stays closed.** **The inversion is the point:** for an adapt-expected path, matching is unremarkable; for a fill-expected path, matching means *the user has not done what the pack asked*, and `match` would have hidden it. **`unfilled` is a `notice`** (Q-60) and `--strict` does not promote it — a `--strict` run that could never pass on the day a project is created is the `validate --all --strict` mistake repeated. **The second fault was invisible to `verify` entirely:** `update` would have replaced a filled brief with a fresh template, so **`update` may never overwrite a fill-expected path**, absolutely rather than conditionally on the file having been filled — the two are indistinguishable to a rule that must be right before it looks, and the asymmetry of the costs is total. **`fillExpected` and `adaptExpected` are mutually exclusive on one step** (`E-RECIPE-STEP-INVALID`). No manifest key is added: the fill-expected set is recomputable from the payload and recipe, exactly as the adapt-expected set is, so Q-43's six keys stand. | 2026-09-01 |
+| Q-81 | `general/technology-choices.md` §7.1 proposes zero runtime dependencies but records it unratified, and fourteen ⚠️ register entries wait on it — six of F1's blocked tasks among them. Ratify or reject? | **Ratified, and the one item that could not be hand-rolled honestly is resolved by narrowing the claim rather than approximating it.** §NFR now **requires** an empty `dependencies`: strict JSON, schema validation, the `in` glob, semver, the `.claude/` frontmatter reader and the test runner (`node:test`, Node >= 22) are hand-rolled or stdlib. **The argument is this product's own, turned on itself** — four review rounds bounded what a *pack* can do through a CLI that writes into a user's repository, and a runtime dependency is code inside that same boundary that no pack rule governs. **Most of the register was hand-rollable on its merits:** semver needs comparison but no range arithmetic, the glob runs over a known path set with no filesystem handle, the schemas are closed enumerations this document already specifies. **Unicode case folding was the exception**, and it is not a close call: the fold tables are versioned and not one-to-one, a partial implementation folds some pairs and not others while reporting equal confidence for both, and this one sits inside a control deciding whether two paths are the same file. So **`collisionKey` narrows to NFC plus ASCII case-folding** and the consequence is stated as **known limit 17** rather than left implied. **Closes register entries U-1, U-2, U-3, U-4, U-6, U-8, U-10 and U-14**; six remain, and `technology-choices.md` names which. Build-time and test-time dependencies are unconstrained — the requirement governs what ships and runs on a user's machine. | 2026-09-01 |
 | Q-61 | US-32 said `coding`'s `CLAUDE.md.template` → `CLAUDE.md` was the only `generate` step in any v1.0 pack. Is that right, and if not, how does every pack get the anchors Q-45 buys? | **It was wrong. All three packs `generate` their `CLAUDE.md`**, and US-32 is corrected rather than narrowed. `generate` is the only primitive that emits inert region anchors, and F5 US-38 asserts anchors for **every** pack, so a pack whose `CLAUDE.md` arrived by `rename` would carry none — `rename` neither substitutes nor asserts anchors. The alternative would have left **two of three packs with nothing for v1.1's `update` to find**, which is the whole of Q-45's forward-investment case. **Counts, all built:** `coding` **six** anchors (`overview`, `layout`, `process`, `agents`, `conventions`, `targets`), `writing` **six** (`overview`, `voice`, `layout`, `workflow`, `coordination`, `standing-instructions`), `planning` **seven** (`overview`, `loop`, `gate`, `practices`, `conventions`, `roles`, `targets`) — **nineteen across three templates**. §F1.9's forward-investment row is corrected with US-32, since it costed the anchors at one template. **No step-count arithmetic depended on the wrong claim**: the three `generate` steps were already counted in each pack's recipe total, so `coding` stays at 21 declared steps, `writing` at its 7 and `planning` at 23. Assertable over `packs/*/recipe.json`: exactly three `generate` steps, one per pack, each writing `CLAUDE.md`, with 6 / 6 / 7 anchors. | 2026-08-31 |

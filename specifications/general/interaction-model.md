@@ -383,8 +383,13 @@ that generates `CLAUDE.md`, because that file carries the project-owned
 prose the skill exists to adapt. Such a path reports **`adapted`**, which
 is not counted toward a mismatch and does not affect the exit code
 (Q-56). A path no step declared still reports `differs` and still fails.
-`verify` reports four states per path and F1 US-33 is authoritative on
-the enumeration.
+`verify` reports **six** states per path — `match`, `adapted`, `filled`,
+`unfilled`, `differs`, `missing` — and F1 US-33 is authoritative on the
+enumeration. **`filled` and `unfilled`** (Q-79) name a path the pack
+shipped *to be filled in*: `project-brief.md` in every pack, `writing`'s
+voice guide. `unfilled` means the template is still a template, which is
+the one thing a project owner most needs told and which `match` hid.
+Neither is a failure.
 
 **Why the user needs to know this.** Under Q-57 the skill always runs, so
 `CLAUDE.md` is *always* edited — an unadapted one exists for the seconds
@@ -899,3 +904,4 @@ non-zero exit stops it, whatever was or was not written.
 |---|---|---|---|
 | v1.1 | 2026-09-01 | specwriter | **Q-63 rename, plus §11 — the command surface.** The binary is **`lintel`** with **`harness` as a command group**, so every usage line here now reads `lintel harness <command>` and the `→` remedy line quoted in IM-19/IM-20 carries the `lintel:` prefix. **New §11 enumerates the surface** the rest of this document only describes: five commands, each with its usage line, what it does, whether it writes, its arguments and flags, its exit classes and its owning feature — flags taken from F1 v2.8 rather than from a list, which is what surfaced that **`--allow-stale-shared` does not exist** (its subject left with `shared/` at Q-48; C-10 survives as the stronger rule that no flag anywhere skips the `payloadDigest` check). Four new requirements make the shape of the surface visible rather than leaving it to be inferred: **IM-38** three of five commands cannot write, **IM-39** an exit class means the same thing on every command, **IM-40** `update` is the only writing command a previous run determines, **IM-41** no flag downgrades an integrity check. F1's error table is **cited and not restated**. `## 11. Reconciliation notes` becomes **§12** and gains three notes: F1's `E-CLI-UNKNOWN-COMMAND` still lists four commands after Q-62, an unknown *group* has no code (F1 known limit 16, recorded not invented), and `update`'s flags await F3. Next free id **IM-42**; next free question **Q-64**, reserved. |
 | v1.0 | 2026-09-01 | specwriter | Initial version, written against **Q-62**. Defines the two entry points and which is primary (Q-57), the CLI/skill seam and the rules that keep the skill thin (Q-1), the faithful-disclosure requirement and the fact that the disclosure now gates nothing (Q-54, Q-57), the success and failure experiences including the zero-bytes guarantee and the `→` remedy-line contract, notices versus defects (Q-60), `verify`'s `adapted` state (Q-56), the unfilled-brief interaction rule the packs already implement, **`update`'s replace-or-hand-over shape and the conversational reconciliation the skill owns (Q-62)**, and what v1.0 still declines to offer — `contribute`, a second pack, a changed answer (Q-12). Records the documents Q-62 supersedes and three reconciliation notes. |
+| v1.2 | 2026-09-01 | specwriter | **Q-79 fold.** `verify` reports **six** states per path, not four — `filled` and `unfilled` join `match`, `adapted`, `differs`, `missing`. The pair names a path the pack shipped **to be filled in** (`project-brief.md` in every pack, `writing`'s voice guide), and `unfilled` is the state that reports work still owed by the person who applied the pack — which `match` hid, and which made US-33's green run unreachable on any project anybody had actually used. Neither is a failure. This document had deferred to F1 US-33 for the enumeration while also stating the count, which is precisely the shape the fold-check rule exists to catch: the deference was correct and the number beside it was not. |

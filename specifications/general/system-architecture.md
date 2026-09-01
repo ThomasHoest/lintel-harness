@@ -98,7 +98,7 @@ stops being true.
 
 - **Say what is not enforced.** Severity is a property of the **code**, never of the
   occasion; the `E-`/`W-` codes plus exit classes `0/1/2/3` are the **only** CLI error
-  model, and F1 §Error States is the only catalogue (78 codes). *Consequence:* F6 and
+  model, and F1 §Error States is the only catalogue (**87** codes at F1 v3.0). *Consequence:* F6 and
   CI branch on codes and never on prose — and, symmetrically, where a control is
   incomplete the design states it: reserved-destination class 2 is a **denylist and
   therefore incomplete by construction**, and an agent file's `tools:` list is
@@ -128,7 +128,7 @@ flowchart TB
 
     subgraph writer["EXECUTE — writes only; reads no input"]
       direction TB
-      fsw["fs/ — lock · journal v2 · atomic write · rollback"]
+      fsw["fs/ — lock · journal v3 · atomic write · rollback"]
     end
 
     vf["verify/ — recompute in memory, compare to disk<br/>read-only: no lock, no journal, no network"]
@@ -206,7 +206,7 @@ lintel harness init <pack> [--scaffold …] [--set k=v] [--force]
         └─ any failure → exit 1 or 2, ZERO bytes
   ────────────────────────────── the gate closes here ──────────────────────────────
   7  take .harness/lock                        (E-LOCK-HELD / W-LOCK-STALE-BROKEN)
-  8  write .harness/journal.json  (v2)         ← the first byte of the run
+  8  write .harness/journal.json  (v3)         ← the first byte of the run
   9  PHASE 1 — write the payload verbatim to .harness/pack/, files 0644, dirs 0755
  10  PHASE 2 — write the bytes rendered at step 6; NO read of disk
         per write: re-confine (stage 3) → exclusive create → link/rename
@@ -254,7 +254,7 @@ the sets are named:
 
 ### The journal, and the rollback invariant
 
-Before any write, a **version-2 journal** records, per intended path: the hash this
+Before any write, a **version-3 journal** records the command that wrote it and, per intended path: an **`intent`** of `write` or `delete`, the hash this
 apply intends to write, **`preExisting`**, the pre-apply hash and mode (both `null`
 when the path did not exist), and a backup under `.harness/journal.d/` taken *before*
 any overwrite. It covers **both phases** and the directories created, in creation
@@ -287,12 +287,18 @@ Two drifts, two codes, two exit classes: the payload moved (`E-PAYLOAD-DIGEST-MI
 exit 2) or the applied tree moved (`E-VERIFY-MISMATCH`, exit 1). That is what Q-52
 buys — `verify` can say **which side moved**.
 
-### Three drifts, because one of them is expected
+### Three kinds of expected movement, and only one kind of drift
 
-The applied tree moving is not always drift. `verify` reports **four**
-states per path — `match`, `adapted`, `differs`, `missing` (Q-56) —
-because `differs` was doing two jobs: *someone changed this*, and *this
-was supposed to change*. A recipe step declares its output
+The applied tree moving is not always drift. `verify` reports **six**
+states per path — `match`, `adapted`, `filled`, `unfilled`, `differs`,
+`missing` (Q-56, Q-79) — because `differs` was doing two jobs: *someone
+changed this*, and *this was supposed to change*. **Q-79 split the
+second job again**: a file the skill is meant to adapt and a file the
+*user* is meant to fill in are both expected to move, and only one of
+them is anybody's job to check. `filled` and `unfilled` name a
+fill-expected path that has and has not been completed; **`unfilled` is
+a `notice`** and is the one state that reports work still owed by the
+person who applied the pack. Neither affects the exit code. A recipe step declares its output
 **adapt-expected**; the generated `CLAUDE.md` is, in all three packs,
 because it carries project-owned prose F6 exists to adapt. Such a path
 reports `adapted`, which is **not** a failure and does not affect the
@@ -360,7 +366,7 @@ was reporting both *this is wrong* and *this is deliberate*, which left
 
 | Layer | Features | Responsibility |
 |---|---|---|
-| **Format & contracts** | **F1** (spec v2.8 + ADR-001) | `pack.json`, `recipe.json`, the six primitives, the six-key manifest, the four-stage confinement gate, the journal/rollback contract, the diagnostic taxonomy — and the three read-only commands `validate`, `verify`, `pack info` (Q-53). Modules: `pack/`, `recipe/`, `json/`, `manifest/`, `hash/`, `payload/`, `security/`, `verify/`, `validate/`, `diag/`, `fs/`, plus `apply/plan.ts` |
+| **Format & contracts** | **F1** (spec v3.0 + ADR-001) | `pack.json`, `recipe.json`, the six primitives, the six-key manifest, the four-stage confinement gate, the journal/rollback contract, the diagnostic taxonomy — and the three read-only commands `validate`, `verify`, `pack info` (Q-53). Modules: `pack/`, `recipe/`, `json/`, `manifest/`, `hash/`, `payload/`, `security/`, `verify/`, `validate/`, `diag/`, `fs/`, plus `apply/plan.ts` |
 | **Apply engine** | **F2** — **no feature spec** | `lintel harness init`: the CLI surface, interactive prompting, and driving `apply/plan.ts` → `apply/execute.ts` → `apply/rollback.ts`. F1 pins the phases, primitive semantics, ordering and atomicity; F2 implements them and may not reinterpret them. There is deliberately **no `src/cli/commands/init.ts` in F1's plan** |
 | **Update engine** | **F3** — **no feature spec** | `lintel harness update`, returned to v1.0 by **Q-62**. It recomputes `expected_old` (local `.harness/pack/` + its recipe + the recorded answers — the identity `verify` already uses) and `expected_new` (the newer bundled payload), classifies each path, **replaces the unedited outright**, and **leaves the edited untouched and reports them**. `adapted` paths are never blindly replaced, being edited on purpose (Q-56). `status` is this command's **read-only mode**, not a fourth command. **No merge engine, no conflict markers, no three-way merge** — the judgment is F6's, not the CLI's |
 | **Pack content** | **F5** (spec v2.7) | The three packs and their recipes: `coding` (migrating), `writing` (to extract), `planning` (to author); the nine-part anatomy declarations, the three scaffolds, the Q-46 prose stripping, the two pack-local copies of the targets contract (Q-49). F1 ships no pack; `validate --all --strict` is what binds them |
@@ -506,3 +512,4 @@ apply **and** an update, not an apply alone.
 | v1.0 | 2026-08-31 | architect | Initial version. First document to describe the whole system after Q-39's two-phase rewrite; records the principles, the container shape, the `validate → plan → journal → write` trust path with its stated limits, the feature→component map including what is unwritten, and the twelve load-bearing technology decisions with their originating question ids. |
 | v1.1 | 2026-09-01 | architect | **Q-62 fold, plus a reconciliation against the repo.** F3 returns to v1.0 and gets its own §4 row (`update`, replace-or-hand-over, no merge engine); F4/`contribute` alone remains deferred. The §1 seam principle and the F6 row are corrected — the skill wraps **`init` and `update`**, not `init` alone, and F6 is no longer cleanly cuttable now that S7 requires the repo to be *maintained by* `update`. The "exactly three things" forward investment is retired: the minimal manifest, `payloadDigest` and the inert anchors are now **used** by a shipping feature, and the only remaining forward investment is the recomputation identity pointed the other way, for `contribute`. Header sources corrected to F1 **v2.7**, F5 **v2.7**, Q-1…Q-62. Both companion documents — `technology-choices.md` and `interaction-model.md` — now exist and are cited. **§6.3 rewritten against the disk rather than against a spec:** all three packs ship `pack.json` and `recipe.json` (coding 21 / writing 12 / planning 23 steps incl. scaffold branches), `commands/target.md` exists, `scaffolds/backend-azure/` and `backend-aws/` are authored, and C-43's five `{{harness:` paths are met exactly — leaving `.harness/` absence, and therefore **S7 unmet**, as the single outstanding item. §6.1's security position is unchanged and deliberately not weakened. |
 | v1.2 | 2026-09-01 | specwriter | **Q-63 rename.** The binary is **`lintel`** with **`harness` as a command group**, and the package is **`@lintel/cli`**: the container node in §2's diagram, the §4 feature rows for F2 and F3, the §F1.6-shaped apply trace and the dogfooding note all now read `lintel harness <command>`. The `cli/` node is relabelled from *four commands* to *the harness command group*, which is also the honest label under Q-62. F1 is cited at **v2.8**. No boundary, no module and no dependency moves — this is a name, and the only structural fact it adds is that the command is the second positional. |
+| v1.3 | 2026-09-01 | specwriter | **Q-79 and Q-81 fold.** `verify`'s state enumeration goes **four to six** — `match`, `adapted`, **`filled`**, **`unfilled`**, `differs`, `missing` — and the section heading moves with it, from *"Three drifts, because one of them is expected"* to *"Three kinds of expected movement, and only one kind of drift"*, because the old title was a count and counts go false silently. Q-79 splits Q-56's second job again: a file **F6** is meant to adapt and a file the **user** is meant to fill in are both expected to move, and only one is anybody's job to chase. **The error-catalogue count moves 78 → 87** (F1 v3.0), which is the third time this document's closed enumerations have needed the fold-check rule and the second time the number was the thing that went stale. |

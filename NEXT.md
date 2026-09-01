@@ -6,114 +6,64 @@ Picked up cold, this is what to do and in what order. Delete when spent.
 
 ## 0. State
 
-Wave 1 is committed and pushed (`27c6d93`). The three §1 decisions are
-**taken** and recorded in `specifications/project-brief.md` §12 as
-**Q-79, Q-81 and Q-80**. `CLAUDE.md`'s counter table is current.
+Committed and pushed: wave 1 (`27c6d93`), the three decisions (`eaf3e9b`).
+**F1 v3.0 and the `general/` reconciliation are done** — see §1 and §2.
 
-Uncommitted: `NEXT.md`, `CLAUDE.md`, `specifications/project-brief.md`.
+## 1. Q-79, Q-81, Q-80 — two folded, one outstanding
 
-## 1. The three decisions — taken, now fold them
+**Q-79 (`fillExpected`) — FOLDED.** Landed in F1 v3.0 as a step
+declaration plus **two** new `verify` states (`filled`, `unfilled`, six
+total), the `update` prohibition, mutual exclusion with `adaptExpected`,
+US-1's boolean list at five, and the `E-VERIFY-MISMATCH` exclusion.
+Reconciled into `pack-application.md`, `system-architecture.md`,
+`interaction-model.md`, F3's §Scope and §F3.3, and F1's E-10.
 
-All three are decided. What remains is the fold, and each one reaches
-further than the document that raised it. **Fold all three in the same
-pass as §2** — they touch the same files.
+**Q-81 (zero runtime deps) — FOLDED.** §NFR now *requires* an empty
+`dependencies`; `collisionKey` narrows to NFC + ASCII case-folding as
+**known limit 17**. `technology-choices.md` §7.1 ratified, §4.6
+resolved, §1 status table and four section headings moved off ⚠️.
+**Nine register entries closed** — U-1, U-2, U-3, U-4, U-6, U-8, U-10,
+U-11, U-14 — not the eight advertised: **U-11 closed too**, because the
+same fold allocated `W-LINK-FALLBACK`. **Five remain and none blocks a
+task:** U-5, U-7, U-9, U-12, U-13.
 
-### Q-79 — a distinct ship-to-be-filled state
+**Q-80 (US-24's enumeration) — NOT FOLDED.** It is F5's, and F5 has not
+been revised. It belongs with §3, not before it.
 
-Chosen over marking the files `adaptExpected`, because a filled
-`project-brief.md` and an adapted `CLAUDE.md` are different situations
-and the report should say which.
+## 2. F1 + ADR-001 — F1 done, ADR-001 outstanding
 
-- **F1** — a new per-step declaration, and a **fifth `verify` state**
-  alongside `match | adapted | differs | missing`. Neither the new state
-  nor `adapted` is a failure. **Name both in F1**; nothing downstream
-  should invent them.
-- **F1** — `update` must **never** overwrite a path in this state. This
-  is a second, separate bug the decision fixes: without it a filled
-  brief is replaced by a fresh template.
-- **F5** — declare the paths, per pack: `project-brief.md` in all three,
-  the voice guide in `writing`. **Check `planning`'s `background/`
-  READMEs** — seven subfolders of ship-to-be-filled material is exactly
-  this shape, and F5 has never classified them.
-- **ADR-001** — `VerifyState` changes again; it is already six versions
-  behind (see §2).
-- **`general/`** — `pack-application.md` and `interaction-model.md` both
-  carry the state table. This is the fold-check rule, and this decision
-  is precisely the shape that goes stale silently: a closed enumeration.
+**F1 is at v3.0 and every item §2 listed is folded:**
 
-### Q-81 — zero runtime dependencies, `collisionKey` narrowed
+- **Catalogue 78 → 87**, verified by row count, not by claim. Four for
+  `update`, four for `init`, one notice (`W-LINK-FALLBACK`) closing a
+  gap US-13 had carried since v2.0.
+- **Journal version 3** — `intent: write|delete` for `update`'s payload
+  orphans, plus the recorded command, so `E-JOURNAL-PRESENT`'s remedy
+  stops sending a crashed `update` to `init --rollback`.
+- **`--dry-run` reserved** (list of eight → nine).
+- **Every Q-62 residue v2.9 recorded and left**: §What is NOT in scope,
+  US-14, `E-ALREADY-APPLIED`'s message, US-32's anchor note, four
+  manifest-consumer rows, and §F1.9's forward-investment row — which no
+  longer describes `update` as *merging* against a recomputed base.
+  C-11 is now carried in full rather than half-deferred.
 
-U-14 ratified. Strict JSON, schema validation, glob, semver, the
-frontmatter reader and the test runner are hand-rolled or stdlib
-(`node:test` ships with Node 22).
+**ADR-001 is still six versions behind and is now seven.** Unchanged
+from the original list — `VerifyState` (now `match | adapted | filled |
+unfilled | differs | missing`, and C-22's dead `ownedKeysChecked` still
+present), the four-command surface with no group, `adaptExpected` absent
+**and `fillExpected` with it**, no module for the `.claude/` frontmatter
+reader, surviving `ConsentInputs` / `src/security/consent.ts` after Q-54
+deleted the gate, `src/cli/main.ts` dispatching four commands. **Add:**
+the file plan needs the hand-rolled modules Q-81 now requires (strict
+JSON, schema, glob, semver, frontmatter) as *deliberate* modules rather
+than dependency wrappers, and **`vitest.config.ts` in the plan is
+superseded by `node:test`**.
 
-- **`general/technology-choices.md`** — §7.1 becomes ratified, and
-  **register entries U-1, U-2, U-3, U-4, U-6, U-8, U-10 and U-14
-  close**. Six of the fourteen remain; name them explicitly so the
-  register does not read as fully closed.
-- **F1 epics** — **eight of the fourteen blocked tasks unblock.** This is
-  the largest single unblocking available.
-- **F1 §Security** — `collisionKey` narrows to **NFC plus ASCII
-  case-folding, with the limit documented**. Do not let this land as a
-  quiet edit: it is a deliberate narrowing of a security control, and
-  the reasoning (a stated limit beats a hand-rolled approximation) has
-  to survive in the spec, not only in the brief. Worth a line in the
-  known-limits list.
-
-### Q-80 — the difference enumeration widens
-
-Widened, not reverted: the region anchors and parameter tokens the old
-enumeration failed to admit are **required by F1**, so `coding` cannot
-both satisfy the format and fit the enumeration as written.
-
-- **F5 US-24** — admit five further classes, **each enumerated by
-  file**: payload-side path repointing, parameter-token insertion into
-  migrated content, region anchors, net-new authoring beyond class (b),
-  and Q-59's `securityreviewer` generalisation. The enumeration is worth
-  running only because it compares against a list rather than a
-  judgement — keep it a list.
-- This resolves **ADR-002's opened question only.** Its other findings
-  are §3, and F5's epics stay blocked until those land too.
-
-**Still open: Q-65…Q-78** from wave 1. Each is feature-local to F2, F3
-or F6 and resolvable inside its own ADR — none needs a session-level
-decision. Next free question is **Q-82**; **Q-64 is reserved**, not
-free.
-
-## 2. The batched F1 + ADR-001 fold
-
-Four separate agents independently flagged this. Do it as **one pass**,
-not four.
-
-**F1 needs:**
-- **Four new codes** (78 → 82), all requested by F3's spec:
-  `E-UPDATE-AVAILABLE`, `E-UPDATE-NOT-NEWER`,
-  `E-UPDATE-PARAM-UNANSWERED`, `E-UPDATE-SCAFFOLD-DROPPED`
-- **A `notice`-class code for the `link()` fallback** — US-13 requires
-  diagnostics to "record the narrowed guarantee" and no code exists, so
-  it is assertable only by string-matching, which §Error States forbids
-- **Journal version 3** with `intent: write|delete` — `update` deletes
-  payload orphans and F1's five-case rollback table models no deletion
-- **The journal must record which command wrote it** —
-  `E-JOURNAL-PRESENT`'s remedy unconditionally says `init --rollback`,
-  which after a crashed `update` lands on `E-ALREADY-APPLIED`
-- **`--dry-run` added to US-8's reserved-flag list**, or a pack can
-  declare `"flag": "dry-run"` and shadow the read-only mode
-- **Stale Q-62 text**: `E-ALREADY-APPLIED`'s message says "update lands
-  in v1.1"; US-14 says the same; §What-is-NOT-in-scope still defers
-  `update`/`status`; §F1.9's forward-investment table describes `update`
-  as merging against a recomputed base — wrong twice
-- **Four codes F2 needs that do not exist** — unknown pack name, missing
-  `<pack>` positional, `--set` naming an undeclared id, an enum
-  parameter neither required nor defaulted
-
-**ADR-001 needs** (it was written against F1 v2.1; the spec is v2.9):
-`VerifyState` still `match | partial | differs | missing` with C-22's
-dead `ownedKeysChecked`; the command surface still four commands with no
-group; `adaptExpected` absent entirely; **no module for the `.claude/`
-frontmatter reader** though three codes ride on it; surviving
-`ConsentInputs` / `src/security/consent.ts` after Q-54 deleted the gate;
-`src/cli/main.ts` still dispatching four commands.
+**New, found during the fold and not previously listed:** **F1's epics
+need tasks for v3.0.** E-10's heading moved to six states and the code
+counts were corrected, but no task covers `fillExpected`, the two new
+states, the nine new codes or journal v3. Do this *after* ADR-001, since
+the ADR is what the tasks name files against.
 
 ## 3. F5 revision, then its epics
 
