@@ -41,7 +41,8 @@
     {
       "op": "rename",
       "from": "specifications/project-brief.template.md",
-      "to": "specifications/project-brief.md"
+      "to": "specifications/project-brief.md",
+      "fillExpected": true
     },
     {
       "op": "rename",

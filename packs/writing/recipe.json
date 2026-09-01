@@ -10,7 +10,17 @@
       "op": "strip-suffix",
       "from": "writing-guide/",
       "to": "writing-guide/",
-      "suffix": ".template"
+      "suffix": ".template",
+      "exclude": [
+        "tone-of-voice.template.md"
+      ]
+    },
+    {
+      "op": "strip-suffix",
+      "from": "writing-guide/tone-of-voice.template.md",
+      "to": "writing-guide/tone-of-voice.md",
+      "suffix": ".template",
+      "fillExpected": true
     },
     {
       "op": "rename",
@@ -25,7 +35,8 @@
     {
       "op": "rename",
       "from": "templates/project-brief.template.md",
-      "to": "project-brief.md"
+      "to": "project-brief.md",
+      "fillExpected": true
     },
     {
       "op": "substitute",

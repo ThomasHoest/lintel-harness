@@ -1,5 +1,5 @@
 # F5 — Template Packs Specification — Lintel Harness v1.0
-**Version:** 2.9
+**Version:** 3.0
 **Status:** Draft
 **Date:** 2026-09-01
 **Platform:** Pack content is plain files — Markdown, JSON, shell/PowerShell, Bicep, CDK TypeScript — bundled with the Node/TypeScript CLI and consumed by Claude Code's `.claude/` conventions. No runtime of its own.
@@ -27,6 +27,7 @@
 | **2.7** | **2026-08-31** | **Q-56 and Q-61 fold — every pack's `CLAUDE.md` is declared adapt-expected, and every pack `generate`s it.** F1 v2.7 owns both mechanisms; this spec declares the pack content that uses them and invents no code. **Q-56 — `verify` gains a fourth per-path state, `adapted`.** A recipe step may declare **`adaptExpected`** (F1 US-31, a JSON boolean on the step that produces the file); `verify` reports every applied path in that step's write set as **`adapted`** rather than `differs` when it has changed, and `adapted` is **not a failure and does not change the exit code** (F1 US-33). **All three packs set `"adaptExpected": true` on their `generate` step**, and the reason is the same in each: the generated `CLAUDE.md` is the one applied file that carries **project-owned prose the F6 skill is meant to adapt** — the layout section, the file-ownership table, the standing instructions written for this project's real tree — and anchors are inert at v1.0 (Q-45), so nothing inside the file distinguishes pack-owned regions from project prose. **No other applied path in any pack is adapt-expected**, and the declaration is per path, never a blanket suppression: an unexpected change anywhere else still reports `differs` and still exits `1`. The three 7b recipe tables, US-38 and each pack's part 6 state it; §NFR *Determinism* is reconciled — its byte-identical claim is about **two applies**, never about a project after the skill has run. **G5.11 gains its project-side half**: an applied project whose `CLAUDE.md` the skill has adapted **still passes `lintel harness verify`**, which is what makes S7 checkable on a real project rather than on a state that exists for seconds. **Q-61 — all three packs `generate` their `CLAUDE.md`.** F1 US-32's claim that `coding`'s was the only `generate` step in any v1.0 pack was wrong and is corrected there; this spec was right and its US-38 already asserted anchors for **every** pack. The counts are now stated per pack and agree with F1: `coding` **six** anchors, `writing` **six**, `planning` **seven** — **nineteen** across three templates, all built. `rename` neither substitutes nor emits anchors, so the alternative would have left two of three packs with nothing for v1.1's `update` to find. **No recipe step count changes**: the three `generate` steps were already in the 7b tables and in every total. **No new code, no new story, no new question**: F1 remains the only catalogue and none is cited that it does not carry. Q-56 and Q-61 move to Resolved, so **Q-1…Q-61 are all resolved and no question is open in any document**; next free **Q-62**; next free story id **US-39**. |
 | **2.8** | **2026-09-01** | **Q-63 rename — nothing in this specification changes but a name.** The binary is **`lintel`** with **`harness` as a command group**, so every acceptance criterion here now reads `lintel harness <command>`: G5.6, G5.11, the `coding`/`writing`/`planning` apply criteria, the `pack info` criteria and the two `validate` CI criteria. **No pack content moves.** The rename touches no payload path, no recipe step, no applied path, no anchor count and no `pack.json` field; `{{harness:…}}` is a substitution namespace and `.harness/` is a directory, and **neither is the binary name** — both are deliberately untouched. F1 v2.8 owns the CLI-side detail (the `lintel:` diagnostic prefix, the re-scoped `E-CLI-UNKNOWN-COMMAND`); **no code is cited here that F1 does not carry, and none is invented.** No new story, no new question: next free **Q-64**, reserved. |
 | **2.9** | **2026-09-01** | **One stale cross-reference corrected — F1's live story block no longer lists US-6.** §User Stories and the Q-35 Resolved-Decisions row both said F1 holds *"US-1…US-4, **US-6**, US-8…US-10…"*. **F1 retired US-6 at v2.3** under **Q-54**, which dropped `merge-json` and with it the story's entire subject — owning part of a settings file. Both sentences now list F1's live block as **US-1…US-4, US-8…US-10, US-13…US-16 and US-29…US-33**, and both name US-6 among F1's retirements alongside US-5, US-7, US-11 and US-12. **Nothing else in this document moves.** No pack content, no recipe step, no acceptance criterion and no error code is touched; F1 remains the only catalogue and none is cited that it does not carry. **There is no counter conflict to resolve** — F1 and this document already agreed that **US-39** is next free, and they still do, so no story is renumbered and none is allocated. Q-62 returns `update` to v1.0 and the master spec folds it; **this spec asserts nothing about the command surface and needed no change for it**. No new question: next free **Q-64**, reserved. |
+| **3.0** | **2026-09-01** | **Q-80 widens US-24's enumeration, Q-79 lands `fillExpected`, and five defects ADR-002 found are corrected.** **Q-80.** US-24 asserted class (e) was **empty** — every difference between the source commit and the shipped `coding` pack falling into four declared classes. It was not empty, and the check has never been run against a real diff. **Five further classes are admitted, each enumerated by file**, and the residue class relabels to (j): **(e) payload-side path repointing** — five migrated files whose pack-relative literals became `.harness/pack/…`; **(f) parameter-token insertion** — the five `{{harness:` paths C-43 already counted, three of them migrated content; **(g) region anchors** — six in `CLAUDE.md.template`, which is class (h) itself; **(h) net-new authoring beyond class (b)** — the pack's own `README.md`, `CLAUDE.md.template`, `applied-readmes/` ×6 and the two `.template.md` files under `specifications/`; **(i) Q-59's `securityreviewer` generalisation**, which the brief had already recorded as a declared difference and which US-24 never admitted. **Widened rather than reverted, because reverting is not available**: the region anchors of (g) and the parameter tokens of (f) are **required by F1** (US-32, US-4), so `coding` cannot both satisfy the format and fit the enumeration as written. **The enumeration stays a list rather than a judgement**, which is the only property that made it worth running. **Q-79.** Three paths per pack are now declared **`fillExpected`** — every pack's `project-brief.md`, plus `writing`'s voice guide — which is what makes US-33's green `verify` reachable on a project someone has actually used; through v2.9 a filled brief reported `differs` and failed the S7 gate. **`fillExpected` and `adaptExpected` are mutually exclusive**, so the generated `CLAUDE.md` keeps `adaptExpected` and gains nothing. **Five ADR-002 defects corrected.** *(1)* *"`planning` is the only pack with a parameter"* is **false** — `coding` declares 2, `writing` 3, `planning` 1; the true claim is that **`planning` is the only pack with a `when` over an answer**, and it is the claim that was meant. *(2)* `writing`'s 7b table described **`rename` per destination** for folder indexes, a mechanism that **does not exist**: the recipe holds **one** `index.md` rename, and the scaffold ships **twelve pre-authored `index.md` files** as ordinary payload. *(3)* `writing` renders **three** templates out, not one. *(4)* §What is NOT in scope and §Out of Scope still deferred **`update` and `status`** after **Q-62** returned them. *(5)* `planning`'s payload inventory omitted **`process.md`, `conventions.md`, `coordination.md` and `agents/README.md`** — all four payload-only, which is why an inventory read off the recipe missed them, and which left anatomy parts 1, 4 and 5 declared with nothing visibly behind them. **A pack-content consequence lands with Q-79:** `writing`'s `strip-suffix` splits in two so `fillExpected` covers the voice guide alone and not three reference files nobody is asked to fill in, taking that pack from **7 declared base steps to 8**. **No new question, no new story, no new code:** next free story id **US-99**; next free question **Q-82**. |
 
 ---
 
@@ -142,8 +143,14 @@ section first if you are here for the packs themselves.
   disagree, F1 wins** and the disagreement is flagged, not decided here.
 - **The CLI error catalogue.** F1 owns every `E-`/`W-` code and every
   message string. F5 names codes; it does not invent them.
-- **`update`, `status` and `contribute` (Q-42).** Deferred to v1.1. No
-  criterion in this spec depends on them.
+- **`contribute` (Q-42, unchanged by Q-62).** Deferred to v1.1. No
+  criterion in this spec depends on it.
+- **`update`'s behaviour — but not its inputs.** `update` is **v1.0 and
+  F3's** (Q-62), and `status` is not a command at all: it is `update`'s
+  read-only mode. What is out of scope here is what `update` *does*.
+  What is emphatically **in** scope is what the packs must declare for it
+  to work — `adaptExpected`, and now **`fillExpected`** (Q-79), which is
+  a prohibition `update` must honour and therefore pack content.
 - **Marked regions (Q-45).** No region parser, region hashes, tamper
   detection or source-only/applied-only blocks at v1.0. The generated
   `CLAUDE.md` carries **inert anchors** and nothing more.
@@ -279,9 +286,10 @@ Each is assessable yes/no when F5 is done.
 
 ## Out of Scope (this version)
 
-- **`update`, `status`, `contribute`** and everything that depends on
-  them (Q-42). The manifest and the inert anchors are the only forward
-  investment.
+- **`contribute`** and everything that depends on it (Q-42). **`update`
+  is no longer here** (Q-62): it ships at v1.0 as F3's, `status` folds
+  into its read-only mode, and the inert anchors stopped being *forward*
+  investment when the feature that reads them returned to this release.
 - **Marked regions, region hashes, tamper detection** (Q-45).
 - **`.harness/base/` and per-file hash lists** (Q-43).
 - **The `shared/` mechanism** (Q-48) and **`shared/presentation`**
@@ -590,17 +598,67 @@ agree that **US-39** is next free, so nothing here is renumbered.
   taken from.
 - A documented, re-runnable check diffs the shipped pack against that
   commit.
-- **Every difference the check reports falls into exactly one of five
+- **Every difference the check reports falls into exactly one of ten
   declared classes**, and the record says which: (a) a Q-46 deletion,
   named by file and heading; (b) an added `pack.json`, `recipe.json` or
   `applied-readmes/` file; (c) the declared restructure —
   `infrastructure/backend-deploy/` → `scaffolds/backend-azure/`, and the
   `/target` command moving into `commands/`; (d) **the brief wire-up**,
-  enumerated below; (e) nothing else. **The
+  enumerated below; **(e) payload-side path repointing**; **(f)
+  parameter-token insertion**; **(g) region anchors**; **(h) net-new
+  authoring beyond class (b)**; **(i) Q-59's `securityreviewer`
+  generalisation**; (j) nothing else. **The
   migration makes no frontmatter change at all** — `permissionMode:
   readonly` ships unchanged on `architect.md`, `reviewer.md` and
   `securityreviewer.md`, because `readonly` restricts rather than
   widens and F1 v2.5 requires it present and disclosed.
+- **Why the enumeration widened, and why `coding` was not reverted
+  instead** (Q-80). Through v2.9 this criterion named five classes and
+  asserted the residue was empty. It was not — and the check had never
+  been run against a real diff, which is how a completeness claim
+  survives review. **Reverting was not available**: the anchors of class
+  (g) are required by F1 US-32 and asserted by F5 US-38 for *every* pack,
+  and the tokens of class (f) are required by F1 US-4, so a `coding` that
+  fit the old enumeration would fail the format. **What the widening must
+  not become** is a licence: each new class below is enumerated **by
+  file**, exactly as class (d) is, so the check still compares against a
+  list rather than a judgement. That property, not the number of classes,
+  is what made this criterion worth running.
+- **Class (e) — payload-side path repointing — is five files.**
+  `targets/README.md`, `agents/designer.md`, `agents/specwriter.md`,
+  `agents/target-reviewer.md` and `agent-teams/Specify.md`, each having a
+  pack-relative literal repointed to `.harness/pack/…`. **This is the
+  payload half of the same problem step 6 of the manual apply solved on
+  the applied side**, and it is why the `rewrite-path` primitive exists:
+  a document that describes its own location is wrong the moment it is
+  copied. Assertable as `grep -rl '\.harness/pack' packs/coding`, minus
+  the class (b) and (h) files.
+- **Class (f) — parameter-token insertion — is five files**, and they are
+  **C-43's five**, already counted and asserted elsewhere in this spec:
+  `CLAUDE.md.template`, `specifications/project-brief.template.md`,
+  `specifications/README.template.md`, `agent-teams/Implement.md` and
+  `agent-teams/Specify.md`. **The last two are migrated content**, which
+  is what makes this a difference class rather than net-new authoring.
+  Assertable as `grep -rl '{{harness:' packs/coding`.
+- **Class (g) — region anchors — is six**, all in `CLAUDE.md.template`,
+  matching the count F5 US-38 and Q-61 assert for `coding`. The file is
+  itself class (h), so (g) is a property of net-new content rather than a
+  change to migrated content — stated as its own class anyway, because
+  the anchors are the one difference a reader is most likely to mistake
+  for drift.
+- **Class (h) — net-new authoring beyond class (b) —** is the pack's own
+  `README.md`, `CLAUDE.md.template`, the six files under
+  `applied-readmes/`, and the two `.template.md` files under
+  `specifications/`. Class (b) covered only `pack.json`, `recipe.json`
+  and `applied-readmes/`; everything else a pack needs in order to *be* a
+  pack had no class, which is the gap that made (e) look empty.
+- **Class (i) — the `securityreviewer` generalisation** (Q-59). Hardcoded
+  `reference/thoughtpartner/reference/*.md` paths and requirement ids
+  R-27/R-28/R-29 become project-relative. **The brief recorded this as a
+  declared difference and US-24 never admitted it** — a decision folded
+  in one register and not the other, which is the failure the fold-check
+  rule exists to catch, caught here a version late. Assertable as zero
+  hits for the host project's names in `packs/coding/agents/`.
 - **`targets/` does not move.** Under Q-48 there is no `shared/` tree to
   lift it into, so the check expects `targets/` and `target-reviewer.md`
   exactly where the source commit has them; their absence is a migration
@@ -626,9 +684,14 @@ agree that **US-39** is next free, so nothing here is renumbered.
   boundary must arrive in the invocation — rather than instructing it to
   read a file it cannot reach. Granting `Read` would be a frontmatter
   change, which no class permits.
-- Class (e) is empty. Any difference the check cannot place in (a), (b),
-  (c) or (d) fails the check — **including any frontmatter difference**,
-  since the migration makes none.
+- **Class (j) is empty, and it is the only empty class.** Any difference
+  the check cannot place in (a) through (i) fails the check — **including
+  any frontmatter difference**, since the migration makes none. **The
+  emptiness of (j) is now an untested claim of the same kind (e) was**,
+  and it is stated that way deliberately: it becomes evidence only when
+  the check has been run against the real diff, which has still not
+  happened. Running it is the acceptance test for this criterion, not a
+  formality.
 - The Q-46 deletion list is exhaustive and enumerated in §Flows, so the
   check compares against a list rather than a judgement.
 
@@ -884,15 +947,40 @@ agree that **US-39** is next free, so nothing here is renumbered.
 - Editing or deleting an anchor does not cause any v1.0 command to fail.
 - The anchor set each pack emits is declared in `recipe.json`'s
   `generate` step, so v1.1 reads it from data rather than inferring it.
-  **`adaptExpected` sits on the same step for the same reason**: v1.1's
+  **`adaptExpected` sits on the same step for the same reason**:
   `update` learns from data which file the project was expected to have
   edited, rather than rediscovering it.
 - No file other than the generated `CLAUDE.md` carries anchors at v1.0,
   and **no applied path other than the generated `CLAUDE.md` is
   adapt-expected in any pack.** No pack declares `adaptExpected` on a
-  `copy`, `rename`, `strip-suffix`, `rewrite-path` or `substitute` step,
-  so every other applied file still reports `match` or `differs` exactly
-  as it did before the state existed.
+  `copy`, `rename`, `strip-suffix`, `rewrite-path` or `substitute` step.
+- **Four applied paths are declared `fillExpected`** (Q-79, F1 US-31),
+  and they are a **different set with a different meaning**: every pack's
+  **`project-brief.md`** — `specifications/project-brief.md` in `coding`,
+  the applied root in `writing` and `planning` — plus **`writing`'s voice
+  guide, `writing-guide/tone-of-voice.md`**. `adaptExpected` says *the
+  skill will rewrite this*; `fillExpected` says *this shipped incomplete
+  and the person who applied it is expected to finish it*.
+- **The two are mutually exclusive on one step** (F1 US-31,
+  `E-RECIPE-STEP-INVALID`), and no pack declares both anywhere: the
+  `generate` step stays `adaptExpected` and gains nothing.
+- **`writing`'s `strip-suffix` step splits in two so the declaration
+  lands only on the voice guide.** The declaration is quantified over a
+  step's **write set**, and one `strip-suffix` over `writing-guide/*.md`
+  writes four files — the voice guide plus `README`, `ai-tells` and
+  `bilingual-publishing`, which are **reference content nobody is asked
+  to fill in**. Declaring the whole step would report three permanently
+  `unfilled` paths that are complete as shipped, which is precisely the
+  false signal `unfilled` exists to give truthfully. **Two steps, one
+  declaration** — a pack-content consequence of the per-step quantifier,
+  recorded here because it is the kind of split an implementer would
+  otherwise collapse back.
+- **This is what makes US-33's green `verify` reachable on a real
+  project.** Through v2.9 the S7 acceptance test passed only because
+  nobody had filled in a brief; the first person to do so would have
+  turned the gate red, correctly by its own rules and uselessly. A test
+  may assert it by filling any of the four paths with arbitrary content
+  and requiring `verify` to exit **0** with that path reported `filled`.
 
 ---
 
@@ -1396,11 +1484,18 @@ Four readings follow, all v1.0 facts:
    with a credible part 8 is the one authored fresh — evidence that the
    weakness is historical rather than intrinsic to the format. But see
    §Error States: at v1.0 it is *also* a format constraint.
-3. **`planning` is the only pack with a parameter.** Nothing in `coding`
-   or `writing` changes content by an init answer. Under the two-phase
-   model this is expressed as `when` conditions in the recipe over
-   `calibrations/<name>/` — a pack-authoring convention over an existing
-   mechanism, not new grammar (Q-13).
+3. **`planning` is the only pack whose *content varies* by an init
+   answer.** All three packs declare parameters — **`coding` two,
+   `writing` three, `planning` one** — so the claim this row carried
+   through v2.9, that `planning` is the only pack with a parameter, was
+   simply false, and it was false about the pack with the **fewest**.
+   What distinguishes `planning` is the **`when`**: it holds the only two
+   conditional steps in any v1.0 recipe, over `calibrations/<name>/`. The
+   others' parameters are substitution only — an answer reaches the
+   applied tree as text, never as a branch. Under the two-phase model
+   this is a pack-authoring convention over an existing mechanism, not
+   new grammar (Q-13). Assertable over `packs/*/recipe.json`: exactly two
+   `when` keys in the product, both in `planning`.
 4. **Part 7b is the one part where all three packs are equal.** Every
    pack authors a recipe, every recipe uses the same six primitives,
    and none may do anything the primitives cannot express. That is the
@@ -1509,7 +1604,7 @@ authoring** for the migration: `pack.json`, `recipe.json`, `commands/`
 | Kickoff | `copy` | `targets/Run.md` | `targets/Run.md` |
 | Tone guide | `strip-suffix` | `copy/tone-of-voice.template.md` | `copy/tone-of-voice.md` |
 | Spec index | `rename` | `specifications/README.template.md` | `specifications/README.md` |
-| Project brief | `rename` | `specifications/project-brief.template.md` | `specifications/project-brief.md` |
+| Project brief | `rename`, **`"fillExpected": true`** (Q-79) | `specifications/project-brief.template.md` | `specifications/project-brief.md` — shipped to be filled in, so `verify` reports it `unfilled` until it is |
 | Folder README | `rename` | `applied-readmes/agentteams.md` | `AgentTeams/README.md` |
 | Folder README | `rename` | `applied-readmes/specifications-general.md` | `specifications/general/README.md` |
 | Folder README | `rename` | `applied-readmes/specifications-version.md` | `specifications/v1.0/README.md` |
@@ -1979,13 +2074,14 @@ should be corrected to the four-file guide when it is next revised.
 | Step | Primitive | From (payload) | To (project) |
 |---|---|---|---|
 | Agents | `copy` | `agents/*.md` | `.claude/agents/` (8 files) |
-| Writing guide | `strip-suffix` | `writing-guide/*.template.md` | `writing-guide/*.md` |
+| Writing guide — reference | `strip-suffix` | `writing-guide/{README,ai-tells,bilingual-publishing}.template.md` | `writing-guide/*.md` — complete as shipped |
+| Writing guide — voice | `strip-suffix`, **`"fillExpected": true`** (Q-79) | `writing-guide/tone-of-voice.template.md` | `writing-guide/tone-of-voice.md` — **split from the row above** so the declaration covers only the file a project must fill in |
 | Front door | `rename` | `templates/home.template.md` | `Home.md` |
 | Onboarding | `generate` | `CLAUDE.md.template` + answers | `CLAUDE.md`, with **six** inert anchors and **`"adaptExpected": true`** (Q-56) — the one applied path this pack declares adapt-expected |
 | Corpus + workstreams | `copy`, `when scaffold=writing-workstream` | `scaffolds/writing-workstream/**` | `sources/{_scouting,inbox}/`, `analyses/`, `notes/`, `tasks/`, `workstreams/` |
-| Project brief | `rename`, then covered by the existing `substitute` step | `templates/project-brief.template.md` | `project-brief.md` at the applied root — the **one** template this pack renders out |
-| Folder indexes — unconditional folders | `rename` per destination | `templates/index.template.md` | one `index.md` per folder the **unconditional** steps create — `writing-guide/` included |
-| Folder indexes — scaffold folders | `rename` per destination, **`when scaffold=writing-workstream`** | `templates/index.template.md` | one `index.md` per folder **that scaffold** creates, in the **same** branch |
+| Project brief | `rename`, **`"fillExpected": true`** (Q-79), then covered by the existing `substitute` step | `templates/project-brief.template.md` | `project-brief.md` at the applied root |
+| Folder index — `writing-guide/` | `rename` | `templates/index.template.md` | `writing-guide/index.md` — the **one** `index.md` the recipe renders |
+| Folder indexes — scaffold folders | *(no step — they are payload)* | `scaffolds/writing-workstream/**/index.md` | **twelve pre-authored `index.md` files**, carried by the five scaffold `copy` steps above |
 
 **Applied tree:**
 
@@ -2006,7 +2102,20 @@ should be corrected to the four-file guide when it is next revised.
 Every created folder carries an `index.md` with a table of contents —
 which is Q-50's rule met by the pack's own existing Obsidian convention,
 so `writing` needs **no new folder READMEs** and creates **no empty
-directory**, `sources/inbox/` included. Keeping the `index.md` current
+directory**, `sources/inbox/` included. **How they get there was stated
+wrongly through v2.9 and is corrected here.** The table above described a
+`rename` **per destination** from one template, which is a mechanism the
+recipe does not contain and the primitive set does not offer: `rename` is
+one file in, one file out, so *N* destinations would need *N* declared
+steps and the recipe declares **one**. What actually happens is simpler
+and better: the scaffold ships **twelve pre-authored `index.md` files**
+as ordinary payload, each already carrying the table of contents its own
+folder needs, and the five `copy` steps carry them in. **The correction
+matters beyond accuracy** — a generic template renamed twelve times would
+have produced twelve identical stubs, which is the `.gitkeep`-shaped
+placeholder Q-50 exists to prevent. Assertable as
+`find packs/writing -name index.md | wc -l` → **12**, against exactly one
+`index.md` rename in `recipe.json`. Keeping the `index.md` current
 thereafter is enforced by prose at v1.0, not by a hook — part 8 is
 absent. The document templates stay in the payload — **with one
 exception: `project-brief.template.md` is rendered out to
@@ -2014,6 +2123,21 @@ exception: `project-brief.template.md` is rendered out to
 sees cannot be filled in. It is classified as recipe scaffolding
 alongside `index.template.md` and `home.template.md` (Q-51), so this
 pack's "exactly one real template" claim is unaffected.
+
+**Three templates are rendered out, not one, and the two claims do not
+conflict.** The recipe renames **three** of the four files under
+`templates/` — `index.template.md`, `home.template.md` and
+`project-brief.template.md` — and leaves **`post.template.md`** in the
+payload. The "exactly one real template" claim in part 3 is about
+**document templates in the anatomy sense** — a template for a *kind of
+artefact the process produces* — and by that measure `post.template.md`
+is the only one, which is why part 3 rates **weak**. The other three are
+**recipe scaffolding**: a front door, a folder index and a brief, none of
+which is an artefact of the writing process. Stating the count here
+because v2.9 said "the **one** template this pack renders out" beside a
+table showing three renames, and a reader checking the table against the
+sentence would have found the sentence wrong rather than the distinction
+subtle.
 
 **`writing` writes no `.claude/settings.json`.** The tree above carried
 one until this pass, from a `merge-json` step annotated *"no `hooks`, no
@@ -2287,6 +2411,8 @@ four portfolio document templates plus `project-brief.template.md`),
 `calibration.template.md`, `portfolio-seed/`,
 `calibrations/{high-floor,near-zero-floor}/`, `commands/` (**4** —
 `bet.md`, `review.md`, `horizon.md`, `target.md`),
+**`process.md`**, **`conventions.md`**, **`coordination.md`**,
+**`agents/README.md`**,
 **`targets/`** (`README.md`, `target.template.md`, `Run.md`),
 **`applied-readmes/`** (**11** — `portfolio.md`, `portfolio-bets.md`,
 `targets.md`, `background.md`, and one per `background/` subfolder:
@@ -2296,11 +2422,24 @@ four portfolio document templates plus `project-brief.template.md`),
 `background-capacity.md`), and `hooks/kill-criteria-guard.sh`. Full tree:
 `general/pack-inventory.md`.
 
-**Two additions this spec makes to the inventory, and the reasons:**
+**Three additions this spec makes to the inventory, and the reasons:**
 
 - **The inventory omits `hooks/` from the source tree while showing
   `.claude/hooks/kill-criteria-guard.sh` in the applied tree.** The
   payload must carry it, and this spec adds it.
+- **Four payload files were missing from this list entirely** —
+  `process.md`, `conventions.md`, `coordination.md` and
+  `agents/README.md` — and the omission had a shape worth naming: **all
+  four are payload-only**, carried into `.harness/pack/` by phase 1 and
+  written to no applied path by any recipe step. **That is correct
+  behaviour** under Q-46, which moved the process documents out of the
+  applied project and into the pack, and it is exactly why they went
+  unnoticed: an inventory assembled by reading the *recipe* sees every
+  applied path and no payload-only file. Anatomy parts **1, 4 and 5** —
+  the process, the conventions and the coordination rules — are carried
+  by these four files, so a reader checking `planning`'s anatomy against
+  its payload list would have found three declared parts with nothing
+  behind them.
 - **`targets/`, `target-reviewer.md`, `commands/target.md` and
   `applied-readmes/` are `planning`-local content.** The inventory
   records planning's part 9 as present "via `shared/targets`"; **Q-48
@@ -2337,7 +2476,7 @@ which is the property the folder-README rule below turns on.
 | 17 | Folder README | `rename` | `applied-readmes/background-constraints.md` | `background/constraints/README.md` |
 | 18 | Folder README | `rename` | `applied-readmes/background-capacity.md` | `background/capacity/README.md` |
 | 19 | Calibration record | `rename` | `calibration.template.md` | `calibration.md` at the repo root |
-| 20 | Project brief | `rename` | `templates/project-brief.template.md` | `project-brief.md` at the applied root — company profile, the constraint floor, vision, absorption capacity, horizon determinants |
+| 20 | Project brief | `rename`, **`"fillExpected": true`** (Q-79) | `templates/project-brief.template.md` | `project-brief.md` at the applied root — company profile, the constraint floor, vision, absorption capacity, horizon determinants |
 | 21 | Path fix | `rewrite-path` | `targets/Run.md`, `.claude/commands/target.md` | the pack-relative `targets/…` literal → `.harness/pack/targets/…` |
 | 22 | Answers | `substitute` | `{{harness:param.constraintFloor}}` | `calibration.md` |
 | 23 | Onboarding | `generate` | `CLAUDE.md.template` + calibrated fragments + answers | `CLAUDE.md`, with **seven** inert anchors and **`"adaptExpected": true`** (Q-56) — the one applied path this pack declares adapt-expected |

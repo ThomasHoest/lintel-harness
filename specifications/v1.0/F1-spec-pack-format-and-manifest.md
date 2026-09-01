@@ -3496,12 +3496,12 @@ have — passes the four-stage confinement gate of US-3.
 
 | `op` | Required | Optional | Reads | Writes | **Write set** |
 |---|---|---|---|---|---|
-| `copy` | `from`, `to` | `exclude`, `executable`, `when`, `adaptExpected` | payload file or directory | applied path(s), basenames unchanged | every applied path its recursion expands to, `exclude` applied |
-| `rename` | `from`, `to` | `when`, `adaptExpected` | payload **file** | one applied path, basename may differ | its `to` |
-| `strip-suffix` | `from`, `to`, `suffix` | `exclude`, `executable`, `when`, `adaptExpected` | payload file or directory | applied path(s) with `<suffix>` dropped from the basename | every applied path its recursion expands to, suffix already stripped |
-| `rewrite-path` | `in`, `find`, `replace` | `when`, `adaptExpected` | applied text files already written | the same files, in place | **every written-set path its `in` globs match** — matched, not hit: a path whose content lacks `find` is still in the set |
-| `substitute` | `in` | `tokens`, `when`, `adaptExpected` | applied text files already written | the same files, in place | **every written-set path its `in` globs match**, on the same terms |
-| `generate` | `template`, `to`, `anchors` | `when`, `adaptExpected` | payload template | one applied path, substituted, anchors asserted | its `to` |
+| `copy` | `from`, `to` | `exclude`, `executable`, `when`, `adaptExpected`, `fillExpected` | payload file or directory | applied path(s), basenames unchanged | every applied path its recursion expands to, `exclude` applied |
+| `rename` | `from`, `to` | `when`, `adaptExpected`, `fillExpected` | payload **file** | one applied path, basename may differ | its `to` |
+| `strip-suffix` | `from`, `to`, `suffix` | `exclude`, `executable`, `when`, `adaptExpected`, `fillExpected` | payload file or directory | applied path(s) with `<suffix>` dropped from the basename | every applied path its recursion expands to, suffix already stripped |
+| `rewrite-path` | `in`, `find`, `replace` | `when`, `adaptExpected`, `fillExpected` | applied text files already written | the same files, in place | **every written-set path its `in` globs match** — matched, not hit: a path whose content lacks `find` is still in the set |
+| `substitute` | `in` | `tokens`, `when`, `adaptExpected`, `fillExpected` | applied text files already written | the same files, in place | **every written-set path its `in` globs match**, on the same terms |
+| `generate` | `template`, `to`, `anchors` | `when`, `adaptExpected`, `fillExpected` | payload template | one applied path, substituted, anchors asserted | its `to` |
 
 **The write set is a named concept because it is the quantifier every
 destination rule uses** (C-19). A rule quantified over `to` has **two

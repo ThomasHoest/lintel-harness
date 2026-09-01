@@ -313,10 +313,10 @@ Conventions chosen 2026-08-30 at the first spec run:
 | F6 | The Claude Code skill — the judgment layer |
 
 **v1.0 is F1, F2, F3, F5, F6.** F1 first: the pack format and manifest
-are what every other feature reads or writes. The master spec's
-sequencing line (`F1 → F2 → F5 → F6`) predates Q-62 and does not yet
-place F3; `general/system-architecture.md` §4 is the current
-feature→component map.
+are what every other feature reads or writes. The master spec is **at v1.0.2 and is current** —
+five commands under the group, sequencing `F1 → F2 → F5 → F3 → F6`. The
+claim that it predates Q-62 was itself stale and is retired here;
+`general/system-architecture.md` §4 remains the feature→component map.
 
 ### Counter state — the one place in this file
 
@@ -492,8 +492,8 @@ authoritative, verify it rather than trusting the assertion.
   stale last time, so it now says how to check itself. All three packs
   ship a `pack.json` and a `recipe.json`
   (`find packs -name pack.json`). Their `steps` arrays hold **coding
-  15, writing 7, planning 23**; counting **every** scaffold branch as
-  well the totals are **21 / 12 / 23** — but **only one branch runs in
+  15, writing 8, planning 23**; counting **every** scaffold branch as
+  well the totals are **21 / 13 / 23** — but **only one branch runs in
   any given apply**, so no single number describes what an apply does.
   `coding` has two mutually exclusive branches (`backend-azure`,
   `backend-aws`) at 3 steps each, `writing` one (`writing-workstream`)

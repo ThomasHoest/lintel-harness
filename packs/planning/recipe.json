@@ -108,7 +108,8 @@
     {
       "op": "rename",
       "from": "templates/project-brief.template.md",
-      "to": "project-brief.md"
+      "to": "project-brief.md",
+      "fillExpected": true
     },
     {
       "op": "rewrite-path",

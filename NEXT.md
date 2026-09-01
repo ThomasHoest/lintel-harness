@@ -79,30 +79,53 @@ task covers `fillExpected`, `filled`/`unfilled`, the nine new codes,
 journal v3, `src/claude/frontmatter.ts` or `src/semver/compare.ts`.
 Tasks name files against the ADR's file plan, which is why they waited.
 
-## 3. F5 revision, then its epics
+## 3. F5 — REVISED to v3.0. Epics unblocked; ADR-002 needs re-issuing
 
-F5's ADR-002 returned **`REVISE SPEC`**. Beyond Q-80:
+**Q-80 folded.** US-24's enumeration widens from five classes to **ten**,
+each new one enumerated **by file** so the check still compares against a
+list: (e) payload-side path repointing — 5 files; (f) parameter-token
+insertion — C-43's 5; (g) region anchors — 6; (h) net-new authoring
+beyond class (b); (i) Q-59's `securityreviewer` generalisation, which the
+brief had recorded and US-24 never admitted. **The residue class (j) is
+now an untested claim of exactly the kind (e) was**, and says so: the
+check has still never been run against a real diff, and running it is the
+acceptance test.
 
-- *"planning is the only pack with a parameter"* is false — coding 2,
-  writing 3, planning 1. True claim: planning is the only pack with a
-  `when` over an answer
-- `writing` has **three** authored templates, not two
-- `writing`'s 7b index steps describe a mechanism that does not exist
-  (one rename, not per-destination; the scaffold ships 12 pre-authored
-  `index.md` files)
-- planning's payload inventory omits `process.md`, `conventions.md`,
-  `coordination.md`, `agents/README.md`
-- F5 §Scope and §Out of Scope **still defer `update`/`status`** after
-  Q-62 returned them
-- `interaction-model.md:418` says `scout.md` can read the brief; it has
-  no `Read` tool and the pack handles it honestly — the doc is wrong
+**Q-79 folded into pack content.** Four applied paths declared
+`fillExpected` — every pack's `project-brief.md`, plus `writing`'s
+`writing-guide/tone-of-voice.md`. **`writing`'s `strip-suffix` split in
+two** so the declaration covers the voice guide alone and not the three
+reference files nobody is asked to fill in: that pack goes **7 → 8**
+declared base steps, and `CLAUDE.md`'s counts move with it (**13** total
+with the scaffold branch). Recipes changed in all three packs; verified
+no step declares both flags.
 
-**Pack work the ADR found** (separate from the spec revision):
-- `coding` and `writing` **declare no `provenance`** — the exact
-  condition F1 added the field to catch, and it passes `validate`
-  silently because F1 has no code for absence
-- `packs/coding/README.md` **fails four of US-28's five criteria** —
-  largest outstanding pack item
+**Five ADR-002 defects corrected**, one more than the four listed here
+before: the parameter claim (`coding` 2, `writing` 3, `planning` 1 — the
+true claim is the `when`), `writing`'s three rendered templates, the
+`index.md` mechanism that did not exist (one rename plus **12
+pre-authored** files, not a rename per destination), the `update`/`status`
+deferral, and — **new** — `planning`'s payload inventory omitting
+`process.md`, `conventions.md`, `coordination.md` and `agents/README.md`.
+All four are payload-only, which is why an inventory read off the recipe
+missed them, and they carry anatomy parts **1, 4 and 5**.
+
+**Also fixed, a gap in the F1 v3.0 fold itself:** the primitive table's
+optional-field column listed `adaptExpected` and not `fillExpected` on
+all six rows.
+
+**Now outstanding for F5:**
+
+- **ADR-002 should be re-issued.** Its verdict was `REVISE SPEC` against
+  F5 v2.9; the spec is v3.0 and every finding is addressed. A re-review
+  is what turns that into a verdict — do not treat the revision as
+  self-certifying.
+- **F5's epics** — unblocked, and they can now name files against
+  ADR-001's amended file plan.
+- **Pack work still untouched:** `coding` and `writing` declare no
+  `provenance` (the exact condition F1 added the field to catch, passing
+  `validate` silently because F1 has no code for absence), and
+  `packs/coding/README.md` fails four of US-28's five criteria.
 
 ## 4. Waves 2 and 3
 
