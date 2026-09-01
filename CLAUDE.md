@@ -332,7 +332,7 @@ counter anywhere in this file, that is the bug, and this section wins.
 | Epic | **E-28** | `E-NN`, per feature, and the range is contiguous. **F1 E-01…E-12 · F5 E-13…E-19 · F2 E-20…E-22 · F3 E-23…E-25 · F6 E-26…E-27.** Every v1.0 feature now has epics. |
 | Task | per epic | Scheme A, epic-derived `T-XXYY`, so there is no single next-free id. **F1 T-0101…T-1219** (112) · **F5 T-1301…T-1906** (32) · **F2 T-2001…T-2206** (19) · **F3 T-2301…T-2507** (21) · **F6 T-2601…T-2708** (15) — **206 tasks** across five features. Each document ends with its own per-epic next-free table; that is where to look, not here. |
 | ADR | — | Five written: **`F1-ADR-001`** (`PROCEED`, amended 2026-09-01; its contract types are current, and F1 has since moved to v3.4), **`F5-ADR-002`** (`REVISE SPEC`), **`F2-ADR-003`** (`PROCEED`), **`F3-ADR-004`** (`PROCEED`), **`F6-ADR-005`** (issued `REVISE SPEC`, **conditions cleared, now `PROCEED`**). ADRs are feature-prefixed and numbered per feature, so there is no project-wide next-free id. Epic-scoped ADRs use `ADR-EXX`. |
-| Error code | — | F1's catalogue is the **only** one, and it holds **88** at v3.4. No other document may invent a code. Ten were added on 2026-09-01: nine at v3.0 (four for `update`, four for `init`, one notice) and **`E-DISCLOSURE-FORGERY` at v3.4**, closing the Mode A CRITICAL. |
+| Error code | — | F1's catalogue is the **only** one, and it holds **88** at v3.7. No other document may invent a code. Ten were added on 2026-09-01: nine at v3.0 (four for `update`, four for `init`, one notice) and **`E-DISCLOSURE-FORGERY` at v3.4**, closing the Mode A CRITICAL. |
 
 ---
 
@@ -487,15 +487,18 @@ authoritative, verify it rather than trusting the assertion.
   there is no CLI to run. `ls .harness` is the check.
 - **No CLI source exists.** Not a line. Everything below assumes that.
 - **Every v1.0 feature now has a spec, an ADR and epics.**
-- **F2/F3/F6's Mode A pass returned `REVISE-SPEC`** — 1 CRITICAL, 3 HIGH,
-  2 MEDIUM, 1 LOW — and **all eight conditions (C-49…C-56) are folded**
-  (`security-review-mode-a-F2-F3-F6.md` §6). **The verdict has not moved:
-  folding is not passing, and a re-review is required.** The CRITICAL was
-  the disclosure block's delimiters being forgeable by the content they
-  wrap — a regression against **C-9**, whose lex check Q-45 removed with an
-  obligation to restore it when something started reading markers. Two
-  conditions were closed by **dropping a flag** rather than adding
-  machinery (`--user`, `--force`).
+- **F2/F3/F6's Mode A pass ran to four rounds and returned
+  `SECURITY-PROCEED`** (`security-review-mode-a-F2-F3-F6.md`).
+  **C-49…C-62 all folded.** The CRITICAL — the disclosure's delimiters
+  being forgeable by the content they wrap — **survived three rounds of
+  tightening the matching rule** and was closed in round 3 by **replacing
+  the rule with a per-run nonce**: a pack cannot forge what it cannot
+  predict, and the property became *falsifiable* rather than
+  unfalsifiable. **Read §8's diagnosis before touching that mechanism.**
+  Two conditions closed by **dropping a flag** rather than adding
+  machinery (`--user`, `--force`) — a removed surface cannot be got wrong.
+  **This is the ADR gate only**: there is no security-implementation
+  review, because there is no code.
 - **ADR-002 has not been re-issued** against F5 v3.1.
 - **No epics-and-tasks document for F2, F3 or F6.** F1 and F5 both have one.
 - **Pack content no longer lags the spec** — this is the line that went

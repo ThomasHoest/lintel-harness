@@ -2,7 +2,7 @@
 **Version:** 1.1
 **Status:** Draft
 **Date:** 2026-09-01
-**References:** `F5-spec-template-packs.md` (**v3.2** — authoritative for every acceptance criterion, the three pack outlines and the ten-class difference enumeration), `F5-ADR-002-template-packs.md` (**REVISE SPEC** against v2.9 — **its findings are folded and its verdict has not been re-issued**; see the note below), `F1-spec-pack-format-and-manifest.md` (**v3.6** — the format every task here conforms to, and the 88-code catalogue), `F1-ADR-001-pack-format-and-manifest.md` (amended 2026-09-01), `specifications/general/pack-inventory.md`, `specifications/general/pack-application.md`, `CLAUDE.md`
+**References:** `F5-spec-template-packs.md` (**v3.2** — authoritative for every acceptance criterion, the three pack outlines and the ten-class difference enumeration), `F5-ADR-002-template-packs.md` (**REVISE SPEC** against v2.9 — **its findings are folded and its verdict has not been re-issued**; see the note below), `F1-spec-pack-format-and-manifest.md` (**v3.7** — the format every task here conforms to, and the 88-code catalogue), `F1-ADR-001-pack-format-and-manifest.md` (amended 2026-09-01), `specifications/general/pack-inventory.md`, `specifications/general/pack-application.md`, `CLAUDE.md`
 
 **Amendment history**
 

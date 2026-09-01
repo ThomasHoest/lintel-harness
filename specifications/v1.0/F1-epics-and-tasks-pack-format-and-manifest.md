@@ -1,14 +1,15 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 1.4
+**Version:** 1.5
 **Status:** Draft
 **Date:** 2026-09-01
-**References:** `F1-spec-pack-format-and-manifest.md` (**v3.6** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
+**References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
 
 **Amendment history**
 
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 1.5 | 2026-09-01 | **Mode A round 4 — C-61, C-62; the CRITICAL closes and the review returns `SECURITY-PROCEED`.** T-0806 refuses the delimiter **shape** as well as this run's nonce, which is what keeps `E-DISCLOSURE-FORGERY` **reachable** — the nonce alone made it probabilistically unfireable, and an untriggerable check rots. T-0806 also states the nonce's **scope**: `init`'s block only, so `pack info --json` stays deterministic. **T-1221 gains the two fixtures that assert both.** |
 | 1.4 | 2026-09-01 | **Mode A rounds 2 and 3.** T-0806 is rewritten twice over: round 2 specified the sentinel comparison, round 3 **deleted it** in favour of a **per-run nonce** (C-59), because three rounds of tightening the emitter's matching rule were beaten three times by a slightly wider consumer normalization — the last by `String.prototype.trim()` removing `U+00A0`. **The check becomes *does any row contain this run's nonce*.** T-0113 gains C-60: any surviving normalization uses stdlib `trim()`, never a hand-rolled ASCII one — **Q-81 forbids dependencies, not correctness.** Next free task id **T-1222**. |
 | 1.3 | 2026-09-01 | **Mode A over F2/F3/F6 folded — the F1 half.** Five tasks: **T-0113** (one control-character escaping function for every stream, C-50), **T-0114** (`E-DISCLOSURE-FORGERY`, catalogue **87 → 88**), **T-0806** (the disclosure containment check, **the CRITICAL**, at `init` **and** `validate` step 11 — no fifteenth step), **T-0211** (`skills` joins the reserved names at any `.claude` segment, C-53) and **T-1221** (fixtures for both, plus marking `compare.ts` security-relevant, C-55). **T-0806 is C-9's marker-lex check restored** — Q-45 removed it while anchors were inert and recorded the obligation to bring it back when something started reading markers; F1 v3.3 created such a marker and did not consult it. Next free task id **T-1222**. |
 | 1.2 | 2026-09-01 | **Q-82 — add-on packs.** `coding`'s two backend scaffolds move to `addons/` as v1.1 add-ons, which leaves **`writing-workstream` as the only scaffold in the product** and **no v1.0 pack shipping an executable at all**. Six rules lose their only bundled-pack subject — scaffold *composition* and exclusivity, `executableRoots`, `executable: true` (a security gate C-34 showed fails **open** on a typo), `E-EXEC-DEST-FORBIDDEN`, US-13's `0755` disclosure and `verify`'s mode comparison. **No rule is weakened and none is removed**; what changes is that the adversarial fixture suite becomes their **sole** coverage, so **T-1220** adds the four fixtures that were previously redundant with the bundled packs. Next free task id **T-1221**. |
@@ -1027,8 +1028,14 @@ E-11's pre-write summary (F2 renders it).
   `E-DISCLOSURE-FORGERY`, exit 2, **zero bytes**. `validate` runs the same
   refusal at **step 11** over the rendered set. **No fifteenth validate
   step.**
-  **Do not implement a string-matching rule here, and read why before
-  deciding otherwise.** Three security rounds tried: exact match, beaten
+  **Refuse the delimiter *shape* too** (C-61), any nonce value, not only
+  this run's — otherwise the check is probabilistically unfireable and
+  will rot untested, and a consumer that pattern-matches rather than
+  matching the exact nonce is still truncatable. **Scope the nonce to
+  `init`'s block** (C-62): `pack info` renders the same rows inside a
+  `PackReport` and **must stay deterministic**, `--json` included.
+  **Do not implement a string-matching rule against a fixed marker, and
+  read why before deciding otherwise.** Three security rounds tried: exact match, beaten
   by a trailing space; trim-and-fold, beaten by a non-breaking space
   because `String.prototype.trim()` removes Unicode whitespace and the
   rule said ASCII. **The emitter cannot enumerate every way a reader might
@@ -1646,7 +1653,12 @@ for the applying fixtures E-11.
   that is now true of all four, and it is the reason they exist.
   *Depends on: T-0307, T-0405, T-0504, T-1201. Q-82.*
 
-- [ ] **T-1221** `[TestWriter]` Two fixtures for C-49 and C-50: a pack
+- [ ] **T-1221** `[TestWriter]` Four fixtures for C-49, C-50, C-61 and
+  C-62. **The two C-61 cases carry the whole point of round 4**: a pack
+  shipping the delimiter with a **foreign** nonce must be refused (the
+  check is shape-based, not value-based, and this is the case that keeps
+  the code reachable at all), and `pack info --json` run twice must be
+  **byte-identical** (the nonce is `init`'s alone). Then the original two: a pack
   whose agent frontmatter carries a sentinel line, requiring
   `E-DISCLOSURE-FORGERY` at **both** `validate` and `init` with zero
   bytes; and a pack whose parameter `prompt`, applied path and frontmatter

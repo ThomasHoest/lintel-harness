@@ -5,7 +5,7 @@
 **Mode:** A — architectural validation at the ADR gate
 **Subjects:** `F2-ADR-003` (`PROCEED`) · `F3-ADR-004` (`PROCEED`) · `F6-ADR-005` (`PROCEED`, conditions cleared) · their specs, and `F1-spec` **v3.3** where these three depend on it
 **Verdict:** **REVISE-SPEC** — one CRITICAL, three HIGH, two MEDIUM, one LOW. See §5.
-**Disposition:** all eight conditions folded 2026-09-01 (§6). Round 2 returned `REVISE-SPEC` (§7, conditions C-57/C-58). **Round 3 carried the CRITICAL a third time and stopped patching the comparison** — see §8, condition **C-59**.
+**Disposition:** all eight conditions folded 2026-09-01 (§6). Round 2 returned `REVISE-SPEC` (§7, conditions C-57/C-58). Round 3 carried the CRITICAL a third time and replaced the matching rule with a nonce (§8, C-59/C-60). **Round 4 closes the CRITICAL and returns `SECURITY-PROCEED` with two conditions** — see §9.
 
 ---
 
@@ -487,3 +487,109 @@ the fix**: rounds 1 and 2 patched a comparison, and this one removes the
 need for one. **A round 4 must still confirm it**; a reviewer who
 recommends a structural change does not get to certify it in the same
 breath.
+
+---
+
+## 9. Round 4 — over the nonce, 2026-09-01
+
+**Verdict: `SECURITY-PROCEED`, with conditions C-61 and C-62.**
+**The CRITICAL is closed.** Two new findings, both HIGH-or-below, neither
+reopening it.
+
+### C-1 — CLOSED
+
+Prediction-based forgery is gone, and the argument is short enough to
+check rather than trust:
+
+- **Pack content is fixed before the run.** Packs are static files
+  bundled with the CLI; the nonce is generated per invocation from
+  `node:crypto`. A pack cannot contain a value that did not exist when it
+  was authored.
+- **The user cannot supply it either.** Substituted answers reach the
+  disclosure verbatim, so `--set` was worth checking — but argv is parsed
+  before the nonce exists, and the user is the party being protected, not
+  the adversary.
+- **A stale nonce is inert.** Content containing a *previous* run's nonce
+  matches neither this run's check nor this run's begin line.
+
+**The property is now falsifiable**, which is the real gain over three
+rounds of matching rules: *"a pack cannot predict a random value"* can be
+argued about and tested. *"Our comparison dominates every consumer's"*
+could only be disproved, repeatedly, by finding one more consumer.
+
+### H-5 (NEW, HIGH) — the design is correct only if every consumer matches the *exact* nonce, and nothing makes a sloppy one safe
+
+The nonce defeats a pack that tries to forge **the delimiter it will
+see**. It does nothing against a pack that ships a line of the right
+**shape** with a different value:
+
+```
+--- lintel disclosure end deadbeef ---
+```
+
+A consumer matching the **exact nonce it read** ignores this — correct,
+and it is what F1 v3.6 and F6 both specify. **A consumer that
+pattern-matches the delimiter shape re-syncs on it and truncates.** That
+is a consumer bug, but "the design is safe provided every reader
+implements it exactly" is the assumption C-1 was about in the first
+place, and the CLI can remove it for nearly nothing.
+
+**Second reason, and it is not secondary.** With the nonce alone,
+`E-DISCLOSURE-FORGERY` becomes **probabilistically unreachable** — a code
+that can essentially never fire is a code nobody exercises, nobody
+maintains, and quietly rots. **A shape-based refusal gives it a real,
+testable trigger** and keeps the check alive.
+
+**Required (C-61).** The containment check refuses any row matching the
+delimiter **shape** — `--- lintel disclosure (begin|end) <hex> ---` under
+the C-60 normalization — **regardless of the nonce value**, not only rows
+containing this run's nonce. Defence in depth, one regex, and it restores
+a trigger the fixture suite can assert.
+
+### M-4 (NEW, MEDIUM) — the nonce's scope is unstated, and the obvious over-application breaks a machine contract
+
+**`pack info` also renders disclosure content** (F1 §F1.3: *"the
+disclosure line in `init`'s pre-write summary and in `pack info`"*), and
+`pack info --json` is a **machine contract** that **G-F1-9** rests on —
+a reader must be able to see what an apply will do without running it.
+
+F1 v3.6 introduces the nonce under US-13 and **does not say where it
+applies**. An implementer folding C-59 uniformly would put a nonce in
+`pack info` too, making its output — including `--json` — **different on
+every invocation**, which breaks golden-file tests and any consumer
+diffing two runs.
+
+**Required (C-62).** State the scope: **the nonce belongs to `init`'s
+delimited stderr block and nowhere else.** `pack info` renders disclosure
+*rows* inside a `PackReport`; it emits **no delimiters**, needs none —
+nothing captures a substring from it — and stays **deterministic**.
+
+### What round 4 did not find
+
+**No finding against the nonce mechanism itself**, and none against C-51,
+C-52, C-53, C-54, C-55, C-56, C-58 or C-60, all re-checked. **The three
+ADR verdicts are undisturbed for a fourth round.**
+
+### Conditions
+
+| # | Condition | Owner |
+|---|---|---|
+| **C-61** | The containment check refuses the delimiter **shape**, any nonce value, not only this run's — defence against a pattern-matching consumer, and it restores a testable trigger to `E-DISCLOSURE-FORGERY` | F1 |
+| **C-62** | The nonce's scope is stated: **`init`'s delimited block only.** `pack info` emits no delimiters and stays deterministic, including `--json` | F1 |
+
+### Verdict
+
+**`SECURITY-PROCEED`.** The CRITICAL that opened this review across four
+rounds is closed by a mechanism whose security property is stateable and
+testable rather than by a rule that had to out-guess every reader.
+**Both remaining conditions are hardening and scoping**; neither is a
+defect in what was decided, and neither blocks implementation.
+
+**What this verdict does not cover, stated so it is not over-read:**
+this is F2, F3 and F6 at the **ADR gate**. It is **not** a
+security-implementation review — that runs at the code gate, and there is
+no code. It says nothing about F1 or F5, whose standing verdict remains
+`REVISE-SPEC` **by decision** (four rounds, stopped on diminishing
+returns, no `SECURITY-PROCEED` claimed). And it rests on specifications:
+**every finding here was found by reading, and the fixture suite is what
+will find the next one.**
