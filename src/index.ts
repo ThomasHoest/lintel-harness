@@ -88,6 +88,27 @@ export {
   type RootResult,
 } from './security/resolve.js';
 
+export {
+  HARNESS_ROOT,
+  harness,
+  harnessPath,
+  isHarnessOwned,
+  payloadPath,
+  type HarnessPath,
+  type PayloadResult,
+  type WritablePath,
+} from './security/harness-paths.js';
+
+export {
+  MAX_DEPTH,
+  MAX_ENTRIES,
+  SCAN_SKIP,
+  walk,
+  type WalkEntry,
+  type WalkOptions,
+  type WalkResult,
+} from './fs/walk.js';
+
 // ── pack resolution (E-01) ──────────────────────────────────────────────
 export { packDir, packsDir } from './paths.js';
 

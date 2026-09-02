@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 2.3
+**Version:** 2.4
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 2.4 | 2026-09-02 | **E-02 complete — T-0206…T-0210.** `harness-paths.ts` is the only constructor of `HarnessPath`, over the five owned entries; `walk.ts` is the one bounded walk. **The brand guard is real:** `tests/structural/brands.test.ts` reads the sources and fails on any `as AppliedPath` / `as HarnessPath` outside its minter — verified by planting a forged cast, which the suite caught. C-14's *"a path that skipped the gate is a compile error"* holds only while nothing casts, and TypeScript cannot say so. **A code was assigned to the wrong fault and is corrected:** T-0206 names `E-PAYLOAD-PATH-INVALID` for `HarnessPath` violations, but that message reads *"X in pack N is not a legal pack path"* — it is a **pack author's** fault with a pack's name, not a constructor misuse. So `harnessPath()` is a type-level constructor that **emits no diagnostic at all** (only the CLI calls it; a bad argument is a bug a test catches), and `payloadPath(name, sub)` carries the code where it belongs. **91 unit, 21 integration, 4 structural.** |
 | 2.3 | 2026-09-02 | **T-0201…T-0205 — the confinement gate, all four stages.** `confine.ts` holds stages 1–2 (grammar, denylist) with **no filesystem access**, which is what lets `validate` run in CI with no project; `resolve.ts` holds 3–4. **Three corrections, all mine, all caught by tests rather than review.** *(1)* I **restated** the reserved-basename list at two entries where F1 declares **thirteen** — precisely what T-0203's *"reference it, do not restate it"* warns against — so `confine.test.ts` now re-derives the whole denylist from §US-3 stage 2 on every run. *(2)* Four confinement messages shipped with **unfilled placeholders**, including one passing `to` where the message wants `path`; confinement now carries a **`ConfineContext`** with the step index, because every one of these messages is written as *step {index} writes …* and a caller that cannot say which step has not thought about what it is confining. *(3)* `//host/share` reported *a leading separator* rather than *a UNC prefix* — both refuse it, and naming the more specific construct is the better message. **`collisionKey`'s ASCII-only narrowing is pinned by a test**, since a documented limit nothing asserts is one a later "improvement" undoes silently. **71 unit tests.** |
 | 2.2 | 2026-09-02 | **E-01 complete — T-0106…T-0112 done, and two defects of mine were caught by their own tests.** The surface is data (`surface.ts`), so `E-CLI-UNKNOWN-COMMAND`'s six-command list is **rendered from the array** rather than restated. **T-0111 was already satisfied**: deriving the catalogue from §Error States gave all nine v3.0 codes with their classes for free, which is what deriving rather than transcribing buys. **Defect 1 — the two-pass walk was structurally wrong.** Pass 2 re-read pass 1's *leftovers*, but pass 1 cannot know whether an unknown flag takes a value, so `--calibration high-floor` leaves the flag in `deferred` and the value in `positionals` and **nothing reading only the leftovers can reunite them**. Pass 2 now **re-parses the original argv**, which is what the spec said. **Defect 2, security-relevant — aliases were resolved before the reserved table**, so a pack declaring `force` would have shadowed `--force`, which gates US-13's pre-existing-path rule. That is the `--accept-permissions` shadowing concern reintroduced one layer below where anyone was looking. Reserved now wins by construction, as defence in depth rather than trusting `validate` refused the pack. **69 tests.** |
 | 2.1 | 2026-09-02 | **T-0105 done — the diagnostic group is complete.** `diagnostic.ts` makes *severity is a property of the code* **structural rather than remembered**: `diagnostic()` is the only constructor, it derives severity, class and message from the catalogue, and `DiagnosticInit` has **no field through which an occasion could override one**. `exitCodeFor` prices the worst present — errors contribute their own class, warnings **0**, a **defect** 1 under `--strict`, and a **notice 0 under every flag**, asserted over all thirteen warnings rather than one example. **A defect of mine was caught by its own test:** `get items()` returned the internal array, so `readonly Diagnostic[]` — a **compile-time** claim — was reachable by a cast, and this bag is append-only with its order as the contract (US-16's fixed check order). Returns a copy now. **34 unit tests, 6 integration.** |
@@ -394,7 +395,7 @@ E-11. E-09's steps 6 and 7 are this epic's rules, run at validate time.
 
 ### The second brand, and the walk
 
-- [ ] **T-0206** `[Implementer]` `src/security/harness-paths.ts` — **the only
+- [x] **T-0206** `[Implementer]` `src/security/harness-paths.ts` — **the only
   constructor of `HarnessPath`**, over a list that is **five and complete**:
   `pack/**`, `manifest.json`, `journal.json`, `journal.d/**`, `lock`. Derived
   from paths already proven grammar-clean, so confined by construction;
@@ -405,12 +406,12 @@ E-11. E-09's steps 6 and 7 are this epic's rules, run at validate time.
   produces one (Q-50 as amended). C-5, C-14.
   *Depends on: T-0201.*
 
-- [ ] **T-0207** `[Implementer]` `src/fs/project-paths.ts` — the `.harness/`
+- [x] **T-0207** `[Implementer]` `src/fs/project-paths.ts` — the `.harness/`
   layout constants and POSIX + NFC normalization helpers. All path *safety*
   stays in `src/security/`; this module holds names, not rules.
   *Depends on: T-0206.*
 
-- [ ] **T-0208** `[Implementer]` `src/fs/walk.ts` — the **one** bounded,
+- [x] **T-0208** `[Implementer]` `src/fs/walk.ts` — the **one** bounded,
   non-symlink-following walk: depth ≤ 32, ≤ 10 000 entries,
   `E-TRAVERSAL-LIMIT`, `lstat` never `stat`, `W-SCAN-SYMLINK-SKIPPED`, and the
   scan skip list (`.git/`, `.hg/`, `.svn/`, `node_modules/`). **Exactly two call
@@ -420,7 +421,7 @@ E-11. E-09's steps 6 and 7 are this epic's rules, run at validate time.
 
 ### Verification
 
-- [ ] **T-0209** `[TestWriter]` Acceptance tests for US-3's four stages in
+- [x] **T-0209** `[TestWriter]` Acceptance tests for US-3's four stages in
   `tests/integration/confinement.test.ts` — one case per rejected construct in
   the stage-1 grammar table, one per denylist class and quantifier, symlinked
   ancestor and symlinked destination, and `/tmp`-on-macOS root resolution
@@ -428,7 +429,7 @@ E-11. E-09's steps 6 and 7 are this epic's rules, run at validate time.
   the suite).
   *Runs in parallel with T-0201–T-0206 against the ADR's public interface contract.*
 
-- [ ] **T-0210** `[TestWriter]` A **structural** test in
+- [x] **T-0210** `[TestWriter]` A **structural** test in
   `tests/structural/brands.test.ts`: no `as AppliedPath` / `as HarnessPath`
   cast exists outside `src/security/confine.ts` and
   `src/security/harness-paths.ts`, and no exported function that constructs a
