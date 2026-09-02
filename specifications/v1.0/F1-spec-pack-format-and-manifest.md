@@ -1,5 +1,5 @@
 # Pack Format & Manifest Specification — Lintel Harness v1.0
-**Version:** 3.8
+**Version:** 3.9
 **Status:** Accepted
 **Date:** 2026-09-01
 **Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/cli`, binary `lintel`, with **`harness` as a command group** — every command in this document is reached as `lintel harness <command>` (Q-16 **as amended by Q-63**). Pack content is Markdown, shell, PowerShell and Bicep; `pack.json`, `recipe.json` and the manifest are JSON. No UI.
@@ -33,6 +33,7 @@
 | **3.6** | **2026-09-01** | **Mode A round 3 — C-59 and C-60. The delimiters carry a per-run nonce, and the matching rule is deleted rather than tightened again.** Round 3 carried the CRITICAL a **third** time: v3.5 trimmed **ASCII** whitespace, and `String.prototype.trim()` — the call every consumer reaches for — also trims `U+00A0`, `U+2003` and `U+3000`, so a marker with a trailing NBSP was missed by the check and matched by the reader. **Three rounds, three tightenings, three defeats by a slightly wider consumer normalization**, and the pattern was the finding: the emitter cannot win an argument about what a reader considers "the same string", because the reader is not obliged to tell it. **C-59 ends the class.** The begin line now carries a **per-run nonce** and the end line repeats it — `--- lintel disclosure begin {nonce} ---` — so **a pack cannot forge what it cannot predict**, and the consumer matches the nonce it read rather than a constant it knows. `E-DISCLOSURE-FORGERY` survives, simplified: it refuses content containing the run's nonce, which is now a probabilistic near-impossibility rather than a normalization question. **This does not reintroduce what v3.3 rejected** — v3.3 refused a delimiter carrying a **version or a row count**, which a consumer must *know* in advance and which an added row invalidates; **a nonce is read, not known**, so it creates no compatibility surface. **Accepted cost, and it is real:** the disclosure is no longer byte-identical between two runs. **G-F1-4's determinism is about applied trees and manifests, not stdout**, so nothing it promises weakens — but tests asserting the block must match the nonce as a pattern. **C-60 — where any normalization survives, it uses `String.prototype.trim()`, never a hand-rolled ASCII trim.** The ASCII narrowing was **Q-81 applied where it does not fit**: `collisionKey` folds ASCII because full case folding needs tables and a dependency, and that limit is documented; **trimming is stdlib and Unicode-aware and costs nothing.** Q-81 forbids dependencies, not correctness — and this is how a sound constraint becomes a bug when carried past its reason. **No code added: the catalogue holds 88.** |
 | **3.7** | **2026-09-01** | **Mode A round 4 — C-61 and C-62, and the CRITICAL closes.** Round 4 confirmed the nonce defeats prediction-based forgery: pack content is fixed before the run, argv is parsed before the nonce exists, and a stale nonce matches neither the check nor the begin line. **The property is now falsifiable** — *a pack cannot predict a random value* — which is the real gain over three rounds of matching rules, since *our comparison dominates every consumer's* could only ever be disproved by finding one more consumer. **C-61 — the check refuses the delimiter *shape*, not only this run's nonce.** The nonce defeats a pack forging the delimiter it will see; it does nothing about one shipping `--- lintel disclosure end deadbeef ---`, which a consumer matching the **exact nonce** correctly ignores and a consumer **pattern-matching the shape** re-syncs on. That is a consumer bug, and *"safe provided every reader implements it exactly"* is the assumption C-1 was about. **Second reason and not a secondary one:** with the nonce alone `E-DISCLOSURE-FORGERY` becomes **probabilistically unreachable**, and a code that can never fire is one nobody exercises or maintains — the shape refusal gives it a **real, testable trigger**. **C-62 — the nonce's scope is stated: `init`'s delimited stderr block and nowhere else.** `pack info` also renders disclosure rows and `pack info --json` is a machine contract **G-F1-9** rests on; an implementer folding C-59 uniformly would have made its output differ on every invocation. `pack info` emits **no delimiters**, needs none — nothing captures a substring from it — and **stays deterministic**. **No code added: the catalogue holds 88**, and C-61 gives one of them back a reachable trigger. |
 | **3.8** | **2026-09-01** | **First implementation task run, and it falsified one sentence of §NFR.** T-0101 built `package.json`, `tsconfig.json` and the install-relative pack resolution. §NFR *Zero runtime dependencies* said the posture is *"assertable as an **empty `dependencies` object** in the published manifest"* — **it is not**: `npm install` **normalises an empty `dependencies` object out of `package.json`**, so a test asserting the literal form **fails on a correct package**. The **requirement is unchanged** and the **assertion is corrected**: *no runtime dependency is declared* — `dependencies` **empty or absent**, both of which express it. **A spec that names a representation rather than a property will be wrong the first time a tool normalises the representation**, and this one survived a ratification decision, a fold and four security rounds before a build caught it. |
+| **3.9** | **2026-09-02** | **T-0104 built the catalogue and found three things §Error States does not say.** **(1) The placeholder grammar was undefined.** *"`{…}` interpolation only"* is not a rule a reader can implement: **nine of the 88 messages carry braces that are not substitutions** — JSON a remedy line tells the user to write (`{ "status": "absent", "reason": "…" }` and three more), a **regex quantifier** `{1,64}` inside a recommended `pattern`, and three prose slots. **Now stated: a placeholder is `{name}` where `name` matches `^[A-Za-z][A-Za-z0-9]*$`; every other brace is literal and passes through untouched.** 71 names across the catalogue. **(2) Three slots are described in prose rather than named** — `E-RECIPE-STEP-INVALID`'s *"usage for that primitive"*, and `E-TARGET-EXISTS`'s and `E-VERIFY-MISMATCH`'s *"first ten paths…"*. Under the identifier rule they render **literally**, so the emitting module builds those lines itself. **Recorded as a known gap rather than fixed by renaming**, because renaming changes message text three features already cite; `catalogue.ts` pins the list so it stays visible. **(3) A `→` marks a remedy only at the start of a line.** `E-REWRITE-UNUSED` renders `"{find}" → "{replace}"` as **content** in line 1 — so the obvious reading, *any line containing an arrow is a remedy*, is wrong about a shipping message. **A C-50 refinement lands with it:** an **interpolated value** is escaped more strictly than a template line — LF, CR and HT included — because a value carrying a newline and an arrow would **forge a remedy line**, which is C-1's forgery shape one layer down. C-50's exemption was written for templates, which the CLI controls, not for values, which a pack does. **No code added: the catalogue holds 88.** |
 
 ---
 
@@ -3335,10 +3336,37 @@ change the exit code.
   whitespace, blank lines and the presence or absence of a final newline
   are all significant. Two projects whose files differ only in line
   endings compare equal.
+- **Message templates and placeholders** (new at v3.9, from building
+  T-0104). A **placeholder** is `{name}` where `name` matches
+  `^[A-Za-z][A-Za-z0-9]*$`; **every other brace is literal** and renders
+  untouched. Forced by the catalogue rather than chosen: nine brace
+  occurrences across the 88 messages are not substitutions — JSON a remedy
+  line instructs the user to write, and the quantifier `{1,64}` in a
+  recommended `pattern`. **A reader treating every `{…}` as a placeholder
+  mangles both.**
+  - **Three slots are described in prose and have no name** —
+    `E-RECIPE-STEP-INVALID`, `E-TARGET-EXISTS`, `E-VERIFY-MISMATCH`. They
+    render literally under this rule, so the emitting module builds those
+    lines itself. **A known gap, not a decision**: naming them would change
+    message text three features already cite, so it is recorded here and
+    pinned in `catalogue.ts` rather than left to be rediscovered.
+  - **A `→` marks a remedy only at the start of a line.**
+    `E-REWRITE-UNUSED` renders `"{find}" → "{replace}"` as content in line
+    1, so *"any line with an arrow is a remedy"* is wrong about a shipping
+    message.
 - **Control characters in output** (C-50). Every diagnostic, prompt and
   disclosure row passes through **one escaping function** in `src/diag/`
   before it reaches a stream: **C0 control characters other than `\n` and
   `\t`, plus `U+2028` and `U+2029`, are escaped** to a visible form.
+  **An interpolated value is escaped more strictly than a template line**
+  (refinement, v3.9): **LF, CR and HT are escaped in values**, where a
+  template keeps them. A value is never legitimately multi-line inside one
+  diagnostic line, and one carrying a newline followed by `  → ` would
+  **forge a remedy line** — a user follows an instruction the CLI never
+  gave. That is **C-1's forgery shape one layer down**, and C-50's
+  exemption does not reach it because the exemption was written for
+  **templates**, which the CLI controls, not for **values**, which a pack
+  does.
   **Ordering, and it is load-bearing** (C-58): for the disclosure this
   escaping runs **after** the sentinel scan of US-13, never before.
   Escape-then-scan defeats the scan — it would run over escaped text and
