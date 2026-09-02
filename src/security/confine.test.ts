@@ -4,6 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { DENYLIST, collisionKey, confinePath, isConfinable, reservedDestination } from './confine.js';
 
+/** Confinement always happens in a step's context; the messages name it. */
+const CTX = { index: 0 } as const;
+
 const SPEC = fileURLToPath(
   new URL('../../specifications/v1.0/F1-spec-pack-format-and-manifest.md', import.meta.url),
 );
@@ -73,7 +76,7 @@ test('the grammar refuses each construct US-3 names, and says which', () => {
     ['NUL.txt', 'a reserved Windows device name'],
   ];
   for (const [path, construct] of cases) {
-    const r = confinePath(path);
+    const r = confinePath(path, CTX);
     assert.equal(r.path, undefined, `${JSON.stringify(path)} must be refused`);
     assert.deepEqual(codes(r), ['E-MAP-PATH-GRAMMAR'], path);
     assert.ok(r.bag.items[0]?.message.includes(construct), `${path}: message must name the construct`);
@@ -83,7 +86,7 @@ test('the grammar refuses each construct US-3 names, and says which', () => {
 test('a non-NFC path is refused', () => {
   const nfd = 'e\u0301tude.md'; // e + combining acute
   assert.notEqual(nfd.normalize('NFC'), nfd);
-  assert.deepEqual(codes(confinePath(nfd)), ['E-MAP-PATH-GRAMMAR']);
+  assert.deepEqual(codes(confinePath(nfd, CTX)), ['E-MAP-PATH-GRAMMAR']);
 });
 
 test('ordinary applied paths pass', () => {
@@ -121,14 +124,14 @@ test('collisionKey does NOT fold non-ASCII case — known limit 17', () => {
 
 test('reserved names are refused at EVERY segment, not just the first', () => {
   for (const p of ['.github/workflows/ci.yml', 'docs/.github/x.md', 'a/node_modules/b']) {
-    assert.deepEqual(codes(confinePath(p)), ['E-MAP-RESERVED-DEST'], p);
+    assert.deepEqual(codes(confinePath(p, CTX)), ['E-MAP-RESERVED-DEST'], p);
   }
 });
 
 test('reserved basenames are refused at any depth', () => {
   for (const b of DENYLIST.basenames) {
-    assert.deepEqual(codes(confinePath(b)), ['E-MAP-RESERVED-DEST'], b);
-    assert.deepEqual(codes(confinePath(`deep/nested/${b}`)), ['E-MAP-RESERVED-DEST'], b);
+    assert.deepEqual(codes(confinePath(b, CTX)), ['E-MAP-RESERVED-DEST'], b);
+    assert.deepEqual(codes(confinePath(`deep/nested/${b}`, CTX)), ['E-MAP-RESERVED-DEST'], b);
   }
 });
 
@@ -141,7 +144,7 @@ test('settings files are refused under ANY .claude segment', () => {
     'docs/.claude/settings.json',
     'a/b/.claude/settings.local.json',
   ]) {
-    assert.deepEqual(codes(confinePath(p)), ['E-MAP-RESERVED-DEST'], p);
+    assert.deepEqual(codes(confinePath(p, CTX)), ['E-MAP-RESERVED-DEST'], p);
   }
   // A settings file NOT under .claude is ordinary content.
   assert.ok(isConfinable('config/settings.json'));
@@ -149,7 +152,7 @@ test('settings files are refused under ANY .claude segment', () => {
 
 test('.harness/ is the only location entry, and it is absolute', () => {
   for (const p of ['.harness/manifest.json', '.harness/pack/x.md', '.HARNESS/x']) {
-    assert.deepEqual(codes(confinePath(p)), ['E-MAP-RESERVED-DEST'], p);
+    assert.deepEqual(codes(confinePath(p, CTX)), ['E-MAP-RESERVED-DEST'], p);
   }
   // Not reserved deeper: only the first segment names the CLI's tree.
   assert.ok(isConfinable('docs/.harness-notes.md'));
@@ -157,7 +160,7 @@ test('.harness/ is the only location entry, and it is absolute', () => {
 
 test('the denylist folds through collisionKey, so case cannot evade it', () => {
   for (const p of ['.GitHub/x.yml', 'Node_Modules/a', 'PACKAGE.JSON', '.claude/Settings.json']) {
-    assert.deepEqual(codes(confinePath(p)), ['E-MAP-RESERVED-DEST'], p);
+    assert.deepEqual(codes(confinePath(p, CTX)), ['E-MAP-RESERVED-DEST'], p);
   }
 });
 
@@ -168,6 +171,6 @@ test('reservedDestination names what was hit, for the message', () => {
 });
 
 test('grammar is checked before the denylist, so a bad path reports one fault', () => {
-  const r = confinePath('/.github/x');
+  const r = confinePath('/.github/x', CTX);
   assert.deepEqual(codes(r), ['E-MAP-PATH-GRAMMAR'], 'the first failing stage reports, alone');
 });

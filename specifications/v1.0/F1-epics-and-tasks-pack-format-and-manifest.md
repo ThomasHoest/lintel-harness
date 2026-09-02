@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 2.2
+**Version:** 2.3
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 2.3 | 2026-09-02 | **T-0201…T-0205 — the confinement gate, all four stages.** `confine.ts` holds stages 1–2 (grammar, denylist) with **no filesystem access**, which is what lets `validate` run in CI with no project; `resolve.ts` holds 3–4. **Three corrections, all mine, all caught by tests rather than review.** *(1)* I **restated** the reserved-basename list at two entries where F1 declares **thirteen** — precisely what T-0203's *"reference it, do not restate it"* warns against — so `confine.test.ts` now re-derives the whole denylist from §US-3 stage 2 on every run. *(2)* Four confinement messages shipped with **unfilled placeholders**, including one passing `to` where the message wants `path`; confinement now carries a **`ConfineContext`** with the step index, because every one of these messages is written as *step {index} writes …* and a caller that cannot say which step has not thought about what it is confining. *(3)* `//host/share` reported *a leading separator* rather than *a UNC prefix* — both refuse it, and naming the more specific construct is the better message. **`collisionKey`'s ASCII-only narrowing is pinned by a test**, since a documented limit nothing asserts is one a later "improvement" undoes silently. **71 unit tests.** |
 | 2.2 | 2026-09-02 | **E-01 complete — T-0106…T-0112 done, and two defects of mine were caught by their own tests.** The surface is data (`surface.ts`), so `E-CLI-UNKNOWN-COMMAND`'s six-command list is **rendered from the array** rather than restated. **T-0111 was already satisfied**: deriving the catalogue from §Error States gave all nine v3.0 codes with their classes for free, which is what deriving rather than transcribing buys. **Defect 1 — the two-pass walk was structurally wrong.** Pass 2 re-read pass 1's *leftovers*, but pass 1 cannot know whether an unknown flag takes a value, so `--calibration high-floor` leaves the flag in `deferred` and the value in `positionals` and **nothing reading only the leftovers can reunite them**. Pass 2 now **re-parses the original argv**, which is what the spec said. **Defect 2, security-relevant — aliases were resolved before the reserved table**, so a pack declaring `force` would have shadowed `--force`, which gates US-13's pre-existing-path rule. That is the `--accept-permissions` shadowing concern reintroduced one layer below where anyone was looking. Reserved now wins by construction, as defence in depth rather than trusting `validate` refused the pack. **69 tests.** |
 | 2.1 | 2026-09-02 | **T-0105 done — the diagnostic group is complete.** `diagnostic.ts` makes *severity is a property of the code* **structural rather than remembered**: `diagnostic()` is the only constructor, it derives severity, class and message from the catalogue, and `DiagnosticInit` has **no field through which an occasion could override one**. `exitCodeFor` prices the worst present — errors contribute their own class, warnings **0**, a **defect** 1 under `--strict`, and a **notice 0 under every flag**, asserted over all thirteen warnings rather than one example. **A defect of mine was caught by its own test:** `get items()` returned the internal array, so `readonly Diagnostic[]` — a **compile-time** claim — was reachable by a cast, and this bag is append-only with its order as the contract (US-16's fixed check order). Returns a copy now. **34 unit tests, 6 integration.** |
 | 2.0 | 2026-09-02 | **T-0104 and T-0113 done, and building them found three things F1 did not say.** `catalogue.ts` carries all **88** message templates, derived from §Error States and drift-guarded like `codes.ts`; `escape.ts` is C-50's single escaping function. **(1) The placeholder grammar was undefined** — nine brace occurrences are **not** substitutions (JSON in remedy lines, the quantifier `{1,64}`), so *"`{…}` interpolation only"* was not implementable. Now `{name}` with an identifier name; everything else literal. **(2) Three slots are prose, not names**, and render literally — pinned in `DESCRIPTIVE_SLOTS` so the gap stays visible. **(3) A `→` marks a remedy only line-initially**; `E-REWRITE-UNUSED` uses one as content, and the first shape assertion written here was wrong about the message rather than the message being wrong. **A C-50 refinement**: values escape LF/CR/HT where templates do not, because a value carrying a newline and an arrow forges a remedy line. F1 v3.9. Next free task id **T-1222**. |
@@ -331,7 +332,7 @@ E-11. E-09's steps 6 and 7 are this epic's rules, run at validate time.
 
 ### The gate
 
-- [ ] **T-0201** `[Implementer]` `src/security/confine.ts` — **stage 1**, the
+- [x] **T-0201** `[Implementer]` `src/security/confine.ts` — **stage 1**, the
   anchored `to` grammar of US-3, as a single anchored rule rather than four
   substring searches: leading separator, any backslash, drive-absolute *and*
   drive-relative (`C:x`), UNC prefix, `.`/`..`/empty segment, a segment ending
@@ -342,7 +343,7 @@ E-11. E-09's steps 6 and 7 are this epic's rules, run at validate time.
   C-4, C-6.
   *Depends on: T-0105. Prerequisite for T-0202–T-0205, and for every epic that writes.*
 
-- [ ] **T-0202** `[Implementer]` `collisionKey()` in `src/security/confine.ts` —
+- [x] **T-0202** `[Implementer]` `collisionKey()` in `src/security/confine.ts` —
   the applied path **NFC-normalized and then case-folded**, computed
   identically and **unconditionally on every platform**. This one function is
   the folding rule for step-vs-step (`E-MAP-CASE-COLLISION`,
@@ -362,7 +363,7 @@ E-11. E-09's steps 6 and 7 are this epic's rules, run at validate time.
   pinned rather than merely documented.
   *Depends on: T-0201. Prerequisite for T-0203, T-0405, T-1108.*
 
-- [ ] **T-0203** `[Implementer]` **Stage 2** — the reserved-destination denylist
+- [x] **T-0203** `[Implementer]` **Stage 2** — the reserved-destination denylist
   in `src/security/confine.ts`, as two declared closed classes with **one
   quantifier rule**: a reserved *name* at **every segment**, `.harness/` as the
   **only location entry**, basenames at any depth, and the two settings
@@ -376,7 +377,7 @@ E-11. E-09's steps 6 and 7 are this epic's rules, run at validate time.
   C-5, C-19, C-31, C-33, C-39a, C-39d, C-41.
   *Depends on: T-0202. Prerequisite for T-0404, T-0508, T-0901.*
 
-- [ ] **T-0204** `[Implementer]` **Stage 3** — resolution confinement in
+- [x] **T-0204** `[Implementer]` **Stage 3** — resolution confinement in
   `src/security/confine.ts`, the `stage: 'resolved'` arm: the project root
   resolved **once per run** with `realpath()`; every ancestor component
   `lstat`ed top-down with `E-DEST-SYMLINK` on any reparse point; directories
@@ -385,7 +386,7 @@ E-11. E-09's steps 6 and 7 are this epic's rules, run at validate time.
   Skipped at `validate`, which has no project root. C-4.
   *Depends on: T-0201.*
 
-- [ ] **T-0205** `[Implementer]` **Stage 4** — `confineAtWrite()` in
+- [x] **T-0205** `[Implementer]` **Stage 4** — `confineAtWrite()` in
   `src/security/confine.ts`: re-run stage 3 immediately before each write and
   return the fd of an **exclusively created** temp file, or a diagnostic. The
   plan's `lstat` is stale by write time; this closes the window. C-14.

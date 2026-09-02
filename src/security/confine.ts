@@ -216,6 +216,17 @@ export function reservedDestination(path: string): ReservedHit | null {
 
 /* ── the gate ───────────────────────────────────────────────────────── */
 
+/**
+ * Where a path came from. **Every confinement diagnostic names a step**,
+ * because confinement only ever happens in one — the messages in F1
+ * §Error States are written as `step {index} writes "…"`, and a caller
+ * that cannot say which step has not thought about what it is confining.
+ */
+export interface ConfineContext {
+  /** Recipe step index, 0-based as declared. */
+  readonly index: number;
+}
+
 export interface ConfineResult {
   /** Present iff the path passed every stage that applies. */
   readonly path?: AppliedPath;
@@ -229,19 +240,29 @@ export interface ConfineResult {
  * in CI with no project present. Stages 3 and 4 are `plan`'s and the
  * writer's, and live in the resolution module.
  */
-export function confinePath(to: string): ConfineResult {
+export function confinePath(to: string, ctx: ConfineContext): ConfineResult {
   const bag = new DiagnosticBag();
+  const index = String(ctx.index);
 
   for (const fault of GRAMMAR_FAULTS) {
     if (fault.test(to)) {
-      bag.add('E-MAP-PATH-GRAMMAR', { values: { to, construct: fault.construct } });
+      bag.add('E-MAP-PATH-GRAMMAR', {
+        step: ctx.index,
+        values: { index, to, construct: fault.construct },
+      });
       return { bag };
     }
   }
 
   const hit = reservedDestination(to);
   if (hit !== null) {
-    bag.add('E-MAP-RESERVED-DEST', { values: { to, reserved: hit.reserved } });
+    bag.add('E-MAP-RESERVED-DEST', {
+      step: ctx.index,
+      // `path`, not `to` — F1's message for this code names the parameter
+      // differently from the grammar code's, and a mismatched name renders
+      // a visible `{path}` to the user rather than the path.
+      values: { index, path: to, reserved: hit.reserved },
+    });
     return { bag };
   }
 
@@ -250,6 +271,6 @@ export function confinePath(to: string): ConfineResult {
 
 /** True iff `confinePath` would accept. For call sites that want the
  *  predicate without the diagnostics. */
-export function isConfinable(to: string): boolean {
-  return confinePath(to).path !== undefined;
+export function isConfinable(to: string, ctx: ConfineContext = { index: 0 }): boolean {
+  return confinePath(to, ctx).path !== undefined;
 }

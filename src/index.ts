@@ -73,9 +73,20 @@ export {
   isConfinable,
   reservedDestination,
   type AppliedPath,
+  type ConfineContext,
   type ConfineResult,
   type ReservedHit,
 } from './security/confine.js';
+
+export {
+  confineAtWrite,
+  confineResolved,
+  isStrictDescendant,
+  resolveRoot,
+  type ProjectRoot,
+  type ResolveResult,
+  type RootResult,
+} from './security/resolve.js';
 
 // ── pack resolution (E-01) ──────────────────────────────────────────────
 export { packDir, packsDir } from './paths.js';
