@@ -1676,7 +1676,7 @@ for the applying fixtures E-11.
   this command **and** the fixture suite on the three platforms of G-F1-7.)
   *Depends on: T-0905, T-1201.*
 
-- [ ] **T-1215** `[TestWriter]` A structural assertion over `packs/*/recipe.json`
+- [x] **T-1215** `[TestWriter]` A structural assertion over `packs/*/recipe.json`
   in `tests/integration/bundled-packs.test.ts`: exactly **three** steps with
   `"op": "generate"`, one per pack, each with `"to": "CLAUDE.md"`, each
   carrying `"adaptExpected": true`, with **6 / 6 / 7** declared anchor ids for
@@ -1684,7 +1684,7 @@ for the applying fixtures E-11.
   — nineteen anchors across three templates (US-32, Q-56, Q-61).
   *Depends on: T-0506, T-0407.*
 
-- [ ] **T-1216** `[TestWriter]` **Positive assertion 1** — apply `coding` and
+- [x] **T-1216** `[TestWriter]` **Positive assertion 1** — apply `coding` and
   require `agentInstructionSubstitutions` to name **exactly five** applied
   paths (`CLAUDE.md`, `AgentTeams/Specify.md`, `AgentTeams/Implement.md`,
   `specifications/README.md`, `specifications/project-brief.md`), each with its
@@ -1696,7 +1696,7 @@ for the applying fixtures E-11.
   asserted three and passed under one that missed two more (C-43).
   *Depends on: T-0804, T-0906, T-1106.*
 
-- [ ] **T-1217** `[TestWriter]` **Positive assertion 2** — apply `coding` and
+- [x] **T-1217** `[TestWriter]` **Positive assertion 2** — apply `coding` and
   require the disclosure to name **all ten** agents with their **whole
   frontmatter blocks verbatim**, including `Bash` on **two** of them
   (`implementer`, `testwriter`), `researcher`'s `WebSearch, WebFetch` — the
@@ -1706,7 +1706,7 @@ for the applying fixtures E-11.
   C-32b, C-38, C-40, C-45, C-12.
   *Depends on: T-0508, T-0804, T-1106.*
 
-- [ ] **T-1218** `[TestWriter]` Determinism and the S7 precondition, in
+- [x] **T-1218** `[TestWriter]` Determinism and the S7 precondition, in
   `tests/integration/determinism.test.ts` and
   `tests/integration/s7-reinit.test.ts`: two applies of the same pack version
   with identical answers and scaffolds into two empty directories producing
@@ -1745,7 +1745,7 @@ for the applying fixtures E-11.
   what was refused and what was conceded — are both pinned.
   *Depends on: T-0101, T-0102, T-0202.*
 
-- [ ] **T-1220** `[TestWriter]` **Four fixtures that stopped being redundant
+- [x] **T-1220** `[TestWriter]` **Four fixtures that stopped being redundant
   at Q-82.** Moving `coding`'s two backend scaffolds to `addons/` left
   `writing-workstream` as the **only** scaffold in the product, and all four
   v1.0 executables went with them — so this suite is now the **sole**
@@ -1770,7 +1770,7 @@ for the applying fixtures E-11.
   that is now true of all four, and it is the reason they exist.
   *Depends on: T-0307, T-0405, T-0504, T-1201. Q-82.*
 
-- [ ] **T-1221** `[TestWriter]` Four fixtures for C-49, C-50, C-61 and
+- [x] **T-1221** `[TestWriter]` Four fixtures for C-49, C-50, C-61 and
   C-62. **The two C-61 cases carry the whole point of round 4**: a pack
   shipping the delimiter with a **foreign** nonce must be refused (the
   check is shape-based, not value-based, and this is the case that keeps

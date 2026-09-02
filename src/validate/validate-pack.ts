@@ -80,7 +80,7 @@ import { isEditing, type Recipe, type RecipeOp, type StepWhen } from '../recipe/
 import { OPS } from '../recipe/ops/index.js';
 import { planPayloadCopy, type PayloadEntry } from '../payload/copy-payload.js';
 import { checkPayloadClaudeFiles, checkRenderedClaudeFiles } from '../security/claude-gate.js';
-import { buildDisclosure, type SecurityDisclosure } from '../security/consent.js';
+import { buildDisclosure, scanForForgery, type SecurityDisclosure } from '../security/consent.js';
 import { isClaudeHookFile } from '../security/claude-frontmatter.js';
 import { decodeText } from '../hash/normalize.js';
 import { walk, MAX_DEPTH } from '../fs/walk.js';
@@ -429,6 +429,32 @@ export function validatePack(input: ValidatePackInput): PackReport {
       (s) => `${s.path} ${s.id} ${s.value}`,
     ),
   });
+
+  /* 11 (concluded) — the disclosure containment check.
+     `E-DISCLOSURE-FORGERY`, exit 2.
+
+     **T-0806: `validate` runs the same refusal at step 11 over the
+     rendered set, and there is no fifteenth step.** It is raised here
+     rather than earlier only because the disclosure it scans is the object
+     built directly above — the same one `init` shows and `pack info`
+     renders — and scanning a separately assembled copy would be scanning
+     something no user ever sees.
+
+     **Why it has to be in `validate` and not only in `init`.** The check
+     closes the CRITICAL that took four Mode A rounds: a pack whose
+     content carries a line that would end the disclosure block can make a
+     reader believe the disclosure finished before the interesting rows.
+     `init` refuses such a pack — but `validate` is what a pack **author**
+     runs, and what CI runs **before anybody applies it**. Without it here,
+     `validate --all --strict` exits 0 on a pack `init` will refuse, which
+     is the gate giving a clean bill for something it never checked.
+
+     No nonce is passed. `buildDisclosure` is deterministic and nonce-free
+     by design (C-62), so `pack info --json` stays byte-identical across
+     runs; the shape rule is the half that does not depend on a per-run
+     value, and it is the half that applies to a pack sitting in a
+     repository rather than to one being applied. */
+  for (const d of scanForForgery(disclosure).items) bag.push(d);
 
   return report(
     pack,

@@ -148,7 +148,7 @@ the skill is unimplementable no matter how well written.
 
 **Depends on:** E-26, F2 E-22, F3 E-25.
 
-- [ ] **T-2701** `[TestWriter]` **IM-10 — the disclosure is capturable.**
+- [x] **T-2701** `[TestWriter]` **IM-10 — the disclosure is capturable.**
   Run `init`, capture stderr, assert the two delimiter lines appear
   exactly once each in order **carrying the same nonce**, every US-13 row
   lies between them, and nothing else does. **Assert across two runs that
@@ -159,14 +159,14 @@ the skill is unimplementable no matter how well written.
   regressing to that state.
   *Depends on: F2 T-2203.*
 
-- [ ] **T-2702** `[TestWriter]` **IM-7 and IM-31 — the exit contract.**
+- [x] **T-2702** `[TestWriter]` **IM-7 and IM-31 — the exit contract.**
   `update` with edited paths outstanding exits **0** and reports them;
   `--dry-run` with an update available exits **1**. Assert both in one
   file with a comment naming **Q-78**, because a future reader will find
   the 0 surprising and the reasoning must arrive before the surprise.
   *Depends on: F3 T-2505.*
 
-- [ ] **T-2703** `[TestWriter]` **IM-33 and Q-77 — the content is
+- [x] **T-2703** `[TestWriter]` **IM-33 and Q-77 — the content is
   present.** Every `kept-edited` entry in `update --json` carries
   `expectedNew` with the **rendered** bytes, and those bytes differ from
   the corresponding payload file wherever a `substitute`, `rewrite-path`
@@ -176,14 +176,14 @@ the skill is unimplementable no matter how well written.
   first half alone.
   *Depends on: F3 T-2502.*
 
-- [ ] **T-2704** `[TestWriter]` **IM-5 — nothing requires the skill to
+- [x] **T-2704** `[TestWriter]` **IM-5 — nothing requires the skill to
   render.** Enumerate every IM requirement that names pack content and
   assert a CLI-provided source for each. A requirement with no CLI source
   is a **finding against the interaction model**, not a task for the
   skill — record it rather than closing the gap with instructions.
   *Depends on: T-2703.*
 
-- [ ] **T-2705** `[TestWriter]` **IM-38 — the surface is six and three of
+- [x] **T-2705** `[TestWriter]` **IM-38 — the surface is six and three of
   them cannot write.** Assert `E-CLI-UNKNOWN-COMMAND` lists six commands,
   and that `validate`, `verify` and `pack info` write nothing — no lock,
   no journal, no path — by recursive comparison after each. **The count
@@ -191,7 +191,7 @@ the skill is unimplementable no matter how well written.
   "three of five" coming back.
   *Depends on: T-2607.*
 
-- [ ] **T-2706** `[TestWriter]` **`skill install` is confined.** Assert it
+- [x] **T-2706** `[TestWriter]` **`skill install` is confined.** Assert it
   writes only under `.claude/skills/lintel/`; that the write is journalled
   and rolled back like any other; and that **no destination outside the
   project root is reachable at all**, `--user` having been dropped at
@@ -201,7 +201,7 @@ the skill is unimplementable no matter how well written.
   command must be demonstrably the only route in.
   *Depends on: T-2606.*
 
-- [ ] **T-2707** `[TestWriter]` The instruction-level checks that can be
+- [x] **T-2707** `[TestWriter]` The instruction-level checks that can be
   automated without a model: `SKILL.md` declares **no** permission-bearing
   frontmatter key; every command string it names exists in
   `E-CLI-UNKNOWN-COMMAND`'s list; every flag it names is accepted by the
@@ -209,7 +209,7 @@ the skill is unimplementable no matter how well written.
   when a flag is renamed and the prose is not.
   *Depends on: T-2601, T-2607.*
 
-- [ ] **T-2708** `[TestWriter]` The end-to-end rehearsal, **with the
+- [x] **T-2708** `[TestWriter]` The end-to-end rehearsal, **with the
   judgment steps stubbed**: `skill install` → `init` → capture the
   disclosure → `update` on a bumped pack → read `--json` → write one
   reconciled path. Asserts the *sequence and the seams*, never a decision.
