@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 1.9
+**Version:** 2.0
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 2.0 | 2026-09-02 | **T-0104 and T-0113 done, and building them found three things F1 did not say.** `catalogue.ts` carries all **88** message templates, derived from §Error States and drift-guarded like `codes.ts`; `escape.ts` is C-50's single escaping function. **(1) The placeholder grammar was undefined** — nine brace occurrences are **not** substitutions (JSON in remedy lines, the quantifier `{1,64}`), so *"`{…}` interpolation only"* was not implementable. Now `{name}` with an identifier name; everything else literal. **(2) Three slots are prose, not names**, and render literally — pinned in `DESCRIPTIVE_SLOTS` so the gap stays visible. **(3) A `→` marks a remedy only line-initially**; `E-REWRITE-UNUSED` uses one as content, and the first shape assertion written here was wrong about the message rather than the message being wrong. **A C-50 refinement**: values escape LF/CR/HT where templates do not, because a value carrying a newline and an arrow forges a remedy line. F1 v3.9. Next free task id **T-1222**. |
 | 1.9 | 2026-09-01 | **T-0103 done — the catalogue stops being prose.** `src/diag/codes.ts` carries the `DiagnosticCode` union over all **88** codes, `Severity`, Q-60's `defect | notice` axis and the code→exit-class map. **It is derived from F1 §Error States rather than transcribed**, and `codes.test.ts` **re-derives it on every run and fails on divergence** — so the two cannot agree until they do not, which is the failure mode this project has recorded four times in prose and is here made mechanical. The extraction found the section **internally consistent**: 88 rows, 75 `E-`, 13 `W-`, every exit class present, **every `W-` code classified**, no duplicates. The fail-closed rule is tested rather than asserted: an unclassified warning resolves to **`defect`**. |
 | 1.8 | 2026-09-01 | **T-0102 done — the acceptance harness, and a layout constraint T-0101 created.** `tests/harness/cli.ts` gives the suite the two things F1 states as contracts and neither of which is observable from inside the process: **the exit class** (named, not numbered, at call sites) and **zero bytes written**, proved by a before/after snapshot of a real directory rather than by spot-checking paths the test thought of. The snapshot is built from **`readdir` entries**, so it reports the **on-disk spelling** — C-36's distinction, which a test composing its own paths cannot make on a case-insensitive volume, and which two fixtures turn on. **Three tsconfigs, because of the depth invariant T-0101 pinned:** `paths.ts` must compile one level inside its out root, so tests cannot be compiled to a different root alongside it — the app builds `src → dist` **excluding tests**, unit tests build to the same root, and `tests/` builds to `dist-tests/` and drives the **built artefact**. Production `dist/` contains **zero** test files. **The harness tests itself against the filesystem with no CLI in the picture**, because every acceptance test in F1, F2, F3 and F6 asserts through it. |
 | 1.7 | 2026-09-01 | **T-0101 done — the first code in the project, and it falsified a spec sentence.** `package.json`, `tsconfig.json`, `src/paths.ts` and eight passing tests. **§NFR's *empty `dependencies` object* is not assertable** — `npm install` normalises it away — so F1 v3.8 restates the requirement as *no runtime dependency declared*, empty **or absent**. **T-1219 is amended to match.** Also verified by running rather than by reading: `packs/` ships (121 files) and **`addons/` does not** (0), and the resolution does not move when `cwd` does. |
@@ -183,11 +184,18 @@ T-0103…T-0105 land.
   the only catalogue and no other document may invent a code.
   *Depends on: T-0101. Prerequisite for T-0104, T-0105 and every emitting module.*
 
-- [ ] **T-0104** `[Implementer]` `src/diag/catalogue.ts` — code → message
+- [x] **T-0104** `[Implementer]` `src/diag/catalogue.ts` — code → message
   template, verbatim from F1 §Error States, with the `lintel:` line-1 prefix,
   two-space indented continuation lines and the `→` remedy line. `{…}`
   interpolation only. **No user-facing string may exist anywhere else in the
   product.**
+  **Done, and it required three rules F1 did not state** — now in §NFR at
+  v3.9: a placeholder is `{name}` with an **identifier** name and every
+  other brace is literal (nine occurrences across the catalogue are JSON or
+  a regex quantifier, and reading them as placeholders mangles both); three
+  slots are **prose without names** and render literally, pinned in
+  `DESCRIPTIVE_SLOTS`; and a `→` marks a remedy **only line-initially**,
+  because `E-REWRITE-UNUSED` carries one as content.
   *Depends on: T-0103.*
 
 - [ ] **T-0105** `[Implementer]` `src/diag/diagnostic.ts` — `Diagnostic`,
@@ -275,7 +283,7 @@ T-0103…T-0105 land.
   is the `--accept-permissions` mistake avoided rather than repeated.
   *Depends on: T-0107.*
 
-- [ ] **T-0113** `[Implementer]` `src/diag/` — **one escaping function for
+- [x] **T-0113** `[Implementer]` `src/diag/` — **one escaping function for
   every stream** (C-50): C0 control characters other than `\n` and `\t`,
   plus `U+2028`/`U+2029`, escaped to a visible form in **every**
   diagnostic, prompt and disclosure row. **Escaped, not refused** — a path
