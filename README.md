@@ -201,16 +201,14 @@ something.
 saying *this one* — and the full three-platform matrix runs before the
 publish rather than after.
 
-The registry is **GitHub Packages**, so auth is the workflow's own
-`GITHUB_TOKEN` — no secret to create — and the package inherits the
-repository's visibility.
+The registry is **public npm** — `@lintel/cli`, MIT, published with
+provenance so the package page links back to the workflow run and commit
+that built it.
 
-**One prerequisite remains**, and it is the registry's rule rather than a
-preference: GitHub Packages requires the package scope to match the
-repository owner, so `@lintel/cli` publishes only from a `lintel`
-organisation. Creating one is free and the transfer preserves history,
-issues and stars; `release-check.mjs` derives the requirement from
-`repository.url`, so the move clears it with no edit to `package.json`.
+**Two prerequisites**, neither checkable from here: the `@lintel` scope
+must exist and be yours on npmjs.com, and an `NPM_TOKEN` secret with
+publish rights on it. A 404 on the package proves it is unpublished, not
+that the scope is free.
 
 ## Licence
 

@@ -96,6 +96,17 @@ if (onGitHub) {
     );
   }
   notes.push('publishing to GitHub Packages — auth is GITHUB_TOKEN, not an NPM_TOKEN secret');
+} else if (pkg.publishConfig?.access === 'public') {
+  // Public npm. The scope has to exist and be yours before the first
+  // publish, and nothing here can check that without credentials — a 404
+  // on the package proves it is unpublished, not that the scope is free.
+  notes.push(
+    `publishing ${pkg.name} publicly to npm — the @${pkg.name.slice(1).split('/')[0]} scope ` +
+      `must exist and be yours, which only \`npm publish\` or \`npm org\` can confirm`,
+  );
+  if (pkg.license === 'UNLICENSED' || pkg.license === undefined) {
+    blockers.push('a public npm package with no licence — nobody may legally use it');
+  }
 } else if (pkg.name.startsWith('@') && pkg.publishConfig?.access === undefined) {
   decisions.push(
     `${pkg.name} is scoped, and a scoped package defaults to RESTRICTED. ` +

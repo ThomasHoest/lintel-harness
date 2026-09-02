@@ -26,30 +26,28 @@
 # deliberately: every one of those is a person's call, and a release
 # pipeline that quietly answered them would be answering them wrongly.
 #
-# ── Registry: GitHub Packages ─────────────────────────────────────────
+# ── Registry: public npm ──────────────────────────────────────────────
 #
-# Auth is the workflow's own `GITHUB_TOKEN` — no secret to create, and
-# nothing to rotate. The package inherits the repository's visibility, so a
-# private repo publishes a private package, which is why UNLICENSED is
-# coherent here and would not be on public npm.
+# `@lintel/cli`, MIT, published publicly with provenance.
 #
-# **GitHub Packages requires the package scope to match the repository
-# owner.** `@lintel/cli` under `ThomasHoest/lintel-harness` is rejected by
-# the registry, not merely frowned upon. `release-check.mjs` reports it as
-# a blocker rather than this workflow discovering it at the last step.
+# **GitHub Packages was the earlier choice and is not this one.** It was
+# picked while the repository was believed private and UNLICENSED — a
+# registry that inherits repository visibility and needs no licence fitted
+# that. Both premises were wrong: the repo is public and is now MIT. And
+# GitHub Packages requires the package scope to match the repository
+# owner, which `lintel` is not and cannot become — the org name is taken.
+# Renaming the scope would be a 47-occurrence change through the
+# specification set, to buy a registry whose only advantages had already
+# evaporated.
 #
 # ── Before the first release ──────────────────────────────────────────
 #
-#   1. Create the `lintel` GitHub organisation and transfer this
-#      repository into it. Free, preserves history, issues and stars, and
-#      it is what lets the package keep the name `@lintel/cli` that the
-#      specification set uses throughout. `git remote set-url` afterwards.
-#   2. `npm run release:check` and clear what it still names.
-#   3. Tag: `git tag v1.0.0 && git push origin v1.0.0`.
-#
-# `release-check.mjs` derives the required scope from `repository.url`, so
-# step 1 clears its blocker with no edit to `package.json` at all — the
-# name is already right and the owner is what changes.
+#   1. Claim the `@lintel` scope on npmjs.com. Nothing here can check it:
+#      a 404 on the package proves it is unpublished, not that the scope
+#      is free.
+#   2. Add an `NPM_TOKEN` secret with publish rights on that scope.
+#   3. `npm run release:check` and clear what it still names.
+#   4. Tag: `git tag v1.0.0 && git push origin v1.0.0`.
 
 name: Release
 
@@ -64,7 +62,7 @@ concurrency:
 
 permissions:
   contents: read
-  packages: write # GitHub Packages, via the workflow's own GITHUB_TOKEN
+  id-token: write # npm provenance: the published package links back to this run
 
 jobs:
   verify:
@@ -99,7 +97,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          registry-url: https://npm.pkg.github.com
+          registry-url: https://registry.npmjs.org
           cache: npm
       - run: npm ci
       - run: npm run build
@@ -118,6 +116,10 @@ jobs:
       # Refuses on any blocker or any unmade decision. See the header.
       - run: npm run release:check
 
-      - run: npm publish
+      # `--provenance` records which workflow, commit and repository built
+      # the tarball, and npm shows it on the package page. For a tool whose
+      # entire posture is about what ends up in somebody's repository, a
+      # verifiable build origin is worth the one flag.
+      - run: npm publish --provenance
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
