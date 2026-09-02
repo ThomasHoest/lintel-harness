@@ -66,6 +66,17 @@ export {
 
 export { run, stubbedCommands, type RunResult, type Streams } from './cli/main.js';
 
+// ── confinement (E-02) ──────────────────────────────────────────────────
+export {
+  collisionKey,
+  confinePath,
+  isConfinable,
+  reservedDestination,
+  type AppliedPath,
+  type ConfineResult,
+  type ReservedHit,
+} from './security/confine.js';
+
 // ── pack resolution (E-01) ──────────────────────────────────────────────
 export { packDir, packsDir } from './paths.js';
 
@@ -76,6 +87,9 @@ export { packDir, packsDir } from './paths.js';
  *     not a contract symbol. Internal to `catalogue.ts`.
  *   - `ALL_CODES` — a test convenience over `CODES`, not part of the
  *     interface.
+ *   - `DENYLIST` — exported from `confine.ts` for its drift guard only.
+ *     The denylist's *members* are F1's; a consumer wanting to know what
+ *     is reserved asks `reservedDestination`, not the table.
  *   - Anything under `src/cli/main.ts` beyond `run` — the stub note and
  *     its helpers are development-time and must not become a promise.
  */
