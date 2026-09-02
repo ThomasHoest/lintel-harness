@@ -111,6 +111,7 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'W-PATH-NON-NFC': ["lintel: \"{path}\" is not in Unicode NFC; its applied path has been normalized.", "  An NFD name would not match the same file on Linux."],
   'W-ROLLBACK-KEPT': ["lintel: kept \"{path}\" — it has changed since it was written."],
   'W-SCAN-SYMLINK-SKIPPED': ["lintel: skipped \"{path}\" — it is a symbolic link, and lintel does not follow links out of the project."],
+  'W-UNKNOWN-KEY': ["lintel: {where} declares an unknown key \"{key}\".", "  It is ignored — this lintel does not know what it means.", "  → Remove it, or upgrade to a lintel that understands it."],
 } as const;
 
 const PLACEHOLDER = /(?<!\\[pP])\{([A-Za-z][A-Za-z0-9]*)\}/g;

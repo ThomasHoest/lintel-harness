@@ -123,7 +123,8 @@ export type DiagnosticCode =
   | 'W-PACK-NEWER-THAN-CLI'
   | 'W-PATH-NON-NFC'
   | 'W-ROLLBACK-KEPT'
-  | 'W-SCAN-SYMLINK-SKIPPED';
+  | 'W-SCAN-SYMLINK-SKIPPED'
+  | 'W-UNKNOWN-KEY';
 
 export interface CodeEntry {
   readonly severity: Severity;
@@ -133,7 +134,7 @@ export interface CodeEntry {
   readonly class?: DiagnosticClass;
 }
 
-/** Every code in the catalogue. **89** at F1 v4.0. */
+/** Every code in the catalogue. **90** at F1 v4.0. */
 export const CODES: Readonly<Record<DiagnosticCode, CodeEntry>> = {
   'E-ALREADY-APPLIED': { severity: 'error', exit: 1 },
   'E-ANATOMY-EMPTY': { severity: 'error', exit: 2 },
@@ -224,6 +225,7 @@ export const CODES: Readonly<Record<DiagnosticCode, CodeEntry>> = {
   'W-PATH-NON-NFC': { severity: 'warning', exit: 0, class: 'defect' },
   'W-ROLLBACK-KEPT': { severity: 'warning', exit: 0, class: 'notice' },
   'W-SCAN-SYMLINK-SKIPPED': { severity: 'warning', exit: 0, class: 'notice' },
+  'W-UNKNOWN-KEY': { severity: 'warning', exit: 0, class: 'defect' },
 } as const;
 
 /** Total over the union: every code has an exit class. */

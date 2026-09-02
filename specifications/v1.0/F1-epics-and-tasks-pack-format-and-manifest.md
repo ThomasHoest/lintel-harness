@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 2.6
+**Version:** 2.7
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 2.7 | 2026-09-02 | **T-0302 and T-0303 — the types and the validator, and a fifth gap found by building.** **`W-UNKNOWN-KEY` did not exist.** US-1 has specified the unknown-key rule since v1.0, §US-2 cites it by name, Q-60 assigns it `defect` class, and US-1 **asks for a test requiring no unknown-key warning** — with **no code to name it by**, and §Error States forbids asserting a fault by string-matching its prose. So the rule was unassertable in either direction. **F1 v4.3, catalogue 89 → 90.** Second such gap in two days after `E-PACK-INVALID`, and both survived every review because **prose that names a fault reads exactly like prose that codes one**. The validator enforces the three rules as three separate faults — key warns, value is fatal, non-boolean is fatal over the **five**-field list — and **all three bundled packs validate clean, including under `--strict`**, which is F1's own acceptance criterion for `validate --all --strict`. A test also asserts the pattern the CLI **recommends** passes its own validator, so it cannot advise something it then refuses. **132 unit tests.** |
 | 2.6 | 2026-09-02 | **The boolean-typed list folded from four to five, here and in three places in F1** (v4.1). Q-79 added `RecipeStep.fillExpected` at F1 v3.0 and updated US-1's bullet; §Technical Context, US-31's `adaptExpected` bullet, C-34's disposition row and **this task** were all left at four. **Not a stale number — C-34's own finding recurring.** That condition exists because two security-gating booleans sat outside a closed enumeration and `"false"` is truthy in JavaScript, so both gates failed **open** on a typo. A validator built against "four" leaves **`fillExpected`** uncovered, and that is the field gating whether `update` may overwrite a filled `project-brief.md`. |
 | 2.5 | 2026-09-02 | **T-0301 — the strict reader, and F1 gains a code it never had.** Building it found that **`pack.json` had no code for a syntax fault**: US-1 has said since v2.0 that it goes through the duplicate-key-rejecting reader, `E-JSON-DUPLICATE-KEY` covers the duplicate, and `recipe.json` and the manifest each have their own malformed code — the third document had neither. **`E-PACK-INVALID` added, catalogue 88 → 89, F1 v4.0.** The parser refuses **exactly what other JSON tools refuse** — no comments, no trailing commas, no `NaN`, no single quotes — because being lenient would mean the CLI reads a document no other tool does; a **BOM is stripped rather than refused**, since it is invisible in an editor and refusing it reports an error nobody can see. **`scripts/gen-diag.mjs` is new**: the derivation of `codes.ts` and `catalogue.ts` from §Error States had now been done by hand twice, and a transcription performed by hand twice is one that will eventually be performed wrongly. **104 unit tests.** |
 | 2.4 | 2026-09-02 | **E-02 complete — T-0206…T-0210.** `harness-paths.ts` is the only constructor of `HarnessPath`, over the five owned entries; `walk.ts` is the one bounded walk. **The brand guard is real:** `tests/structural/brands.test.ts` reads the sources and fails on any `as AppliedPath` / `as HarnessPath` outside its minter — verified by planting a forged cast, which the suite caught. C-14's *"a path that skipped the gate is a compile error"* holds only while nothing casts, and TypeScript cannot say so. **A code was assigned to the wrong fault and is corrected:** T-0206 names `E-PAYLOAD-PATH-INVALID` for `HarnessPath` violations, but that message reads *"X in pack N is not a legal pack path"* — it is a **pack author's** fault with a pack's name, not a constructor misuse. So `harnessPath()` is a type-level constructor that **emits no diagnostic at all** (only the CLI calls it; a bad argument is a bug a test catches), and `payloadPath(name, sub)` carries the code where it belongs. **91 unit, 21 integration, 4 structural.** |
@@ -485,7 +486,7 @@ reader), E-09 (steps 1, 2, 9, 10).
 
 ### The schema
 
-- [ ] **T-0302** `[Implementer]` `src/pack/types.ts` — `PackJson`, `AnatomyDecl`,
+- [x] **T-0302** `[Implementer]` `src/pack/types.ts` — `PackJson`, `AnatomyDecl`,
   `AnatomySource`, `AnatomyPartId`, `AnatomyStatus`, `ParameterDecl`,
   `ScaffoldDecl`, exactly as the ADR's contract declares them. **No `Mapping`,
   no `SharedRef`, no `ComponentJson`, no `contentRoot`.** Add `provenance`
@@ -493,7 +494,7 @@ reader), E-09 (steps 1, 2, 9, 10).
   carries.
   *Depends on: T-0101.*
 
-- [ ] **T-0303** `[Implementer]` `src/pack/schema.ts` — the hand-rolled
+- [x] **T-0303** `[Implementer]` `src/pack/schema.ts` — the hand-rolled
   structural validator. Three rules, and they are separate rules:
   unknown **keys** → warning, `defect` class, ignored at apply; an unrecognised
   **value in a behaviour-selecting position** → `E-UNKNOWN-VALUE`, exit 2,

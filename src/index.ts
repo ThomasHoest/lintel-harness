@@ -69,6 +69,31 @@ export { run, stubbedCommands, type RunResult, type Streams } from './cli/main.j
 // ── authored JSON (E-03) ───────────────────────────────────────────────
 export { parseStrictJson, type JsonValue, type ParseStrictResult } from './json/parse-strict.js';
 
+// ── the pack declaration (E-03) ────────────────────────────────────────
+export {
+  ANATOMY_PART_IDS,
+  ANATOMY_STATUSES,
+  BOOLEAN_TYPED_FIELDS,
+  PARAMETER_TYPES,
+  type AnatomyDecl,
+  type AnatomyPartId,
+  type AnatomySource,
+  type AnatomyStatus,
+  type PackJson,
+  type ParameterDecl,
+  type ParameterType,
+  type Provenance,
+  type ScaffoldDecl,
+} from './pack/types.js';
+
+export {
+  MAX_LENGTH_CEILING,
+  MAX_LENGTH_DEFAULT,
+  PATTERN_MAX_SOURCE,
+  validatePackJson,
+  type ValidatePackResult,
+} from './pack/schema.js';
+
 // ── confinement (E-02) ──────────────────────────────────────────────────
 export {
   collisionKey,
