@@ -110,9 +110,19 @@ const isObj = (v: JsonValue | undefined): v is Obj =>
  * and a mismatch is a pack that will resolve under one name and describe
  * itself as another.
  */
-export function validatePackJson(value: JsonValue, packName: string): ValidatePackResult {
+/**
+ * `packName` is the **directory name** the declaration must agree with;
+ * `file` is what the message shows. They were one parameter until
+ * `load-pack.ts` needed to report `packs/coding/pack.json` while comparing
+ * against `coding` — a single argument cannot be both, and conflating them
+ * caps the path in every message at one segment.
+ */
+export function validatePackJson(
+  value: JsonValue,
+  packName: string,
+  file: string = `${packName}/pack.json`,
+): ValidatePackResult {
   const bag = new DiagnosticBag();
-  const file = `${packName}/pack.json`;
 
   if (!isObj(value)) {
     bag.add('E-PACK-INVALID', { values: { path: file, detail: 'the top level is not an object' } });

@@ -160,6 +160,16 @@ export {
 } from './fs/walk.js';
 
 export {
+  PACK_NAME_RE,
+  SUPPORTED_FORMAT_VERSION,
+  bundledPackNames,
+  checkCliFloor,
+  loadPack,
+  type LoadedPack,
+  type LoadResult,
+} from './pack/load-pack.js';
+
+export {
   checkScaffoldCollisions,
   parametersFor,
   selectScaffolds,
