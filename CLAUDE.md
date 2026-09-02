@@ -112,7 +112,7 @@ cites a question, §12 is the authority and this row is the summary:
 
 | Area | Decision |
 |---|---|
-| Build | A **Node/TypeScript CLI**, published as `@lintel/cli`, binary `lintel` with `harness` as a command group, Node >= 22. A **thin Claude Code skill** drives it and handles judgment steps. CLI first. |
+| Build | A **Node/TypeScript CLI**, published as `@linteldk/cli`, binary `lintel` with `harness` as a command group, Node >= 22. A **thin Claude Code skill** drives it and handles judgment steps. CLI first. |
 | **Applying a pack** | **Two phases (Q-39).** Phase 1: verbatim copy of the pack into `.harness/pack/` — no transformation, identical for every pack. Phase 2: a **per-pack declarative recipe** over fixed primitives (Q-40), applied automatically by the CLI, reading from the phase-1 copy (Q-41). Deterministic and verifiable. |
 | **v1.0 scope** | **F1 (pack format + manifest), F2 (`init`), F3 (`update`), F5 (the three packs), F6 (the skill).** **Q-62 returns F3 to v1.0**, reversing Q-42 for it and bringing **G3, S3 and R4 back with it**; `status` folds into `update`'s read-only mode. **Only `contribute` (F4) still defers to v1.1.** `--adopt` dropped (Q-44). |
 | **`update`** | **Ships at v1.0, and builds no merge engine (Q-62).** The CLI recomputes `expected_old` (local `.harness/pack/` + recipe + recorded answers — `verify`'s identity) and `expected_new` (newer bundled payload). Per path: **unedited → replaced outright**; **edited → left untouched and reported**; **`adapted` → never blindly replaced**. No conflict markers, no 3-way merge. The **skill** then reconciles the edited paths conversationally — the Q-1 split, on the Q-57 path. |

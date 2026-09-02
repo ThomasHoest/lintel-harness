@@ -201,7 +201,7 @@ something.
 saying *this one* — and the full three-platform matrix runs before the
 publish rather than after.
 
-The registry is **public npm** — `@lintel/cli`, MIT, published with
+The registry is **public npm** — `@linteldk/cli`, MIT, published with
 provenance so the package page links back to the workflow run and commit
 that built it.
 

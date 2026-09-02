@@ -43,7 +43,7 @@ byte-for-byte, it is not the skill's.**
 
 | File | Action | Owner | Purpose |
 |---|---|---|---|
-| `skill/SKILL.md` | **New** | F6 | The skill itself — frontmatter plus the workflow. Ships **inside `@lintel/cli`**, and is copied out by a CLI command (§3.1) |
+| `skill/SKILL.md` | **New** | F6 | The skill itself — frontmatter plus the workflow. Ships **inside `@linteldk/cli`**, and is copied out by a CLI command (§3.1) |
 | `skill/reference/init.md` | **New** | F6 | What `init`'s output looks like and what to do with each part. Loaded on demand, not inline |
 | `skill/reference/update.md` | **New** | F6 | The reconciliation workflow over `update --json` |
 | `src/cli/commands/skill.ts` | **New** | **F6→F1** | `lintel harness skill install` — copies `skill/` to `.claude/skills/lintel/`. **Project-local only; `--user` was dropped at C-52 (§9).** A sixth command; see §5 |
@@ -74,7 +74,7 @@ discovered that nobody had.
 
 ### 3.1 How the skill is distributed — **chosen: shipped in the package, installed by a command** (Q-75)
 
-**Chosen.** `skill/` ships inside `@lintel/cli`. A new command,
+**Chosen.** `skill/` ships inside `@linteldk/cli`. A new command,
 `lintel harness skill install [--user]`, copies it into
 `.claude/skills/lintel/` (project) or the user profile.
 
@@ -147,7 +147,7 @@ lives on `--dry-run`, which exits 1 when an update is available.
 
 | # | Resolution |
 |---|---|
-| **Q-75** | **Ships in `@lintel/cli`; installed by `lintel harness skill install [--user]`.** Version agreement is by co-release, and the skill checks `lintel --version` first and reports a mismatch rather than adapting to it. §3.1. |
+| **Q-75** | **Ships in `@linteldk/cli`; installed by `lintel harness skill install [--user]`.** Version agreement is by co-release, and the skill checks `lintel --version` first and reports a mismatch rather than adapting to it. §3.1. |
 | **Q-76** | **Two fixed sentinel lines around the disclosure**, emitted by `init` on stderr. Not `--json`, not row-text matching. §3.2. **The F1 amendment it required landed as v3.3** (§8). |
 | **Q-77** | **Yes — rendered bytes, not a diff**, in `UpdateEntry.expectedNew`. Decided in `F3-ADR-004` §3.2. |
 | **Q-78** | **`update` exits 0** with edited paths outstanding; `--dry-run` exits 1 when an update is available. Decided in `F3-ADR-004` §3.1. |

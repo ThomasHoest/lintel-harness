@@ -69,7 +69,7 @@ because the honest answer is often *the exclusion is Firm and the replacement is
 |---|---|---|---|
 | Language & runtime | TypeScript, ESM, **Node ≥ 22** | **Firm** | Q-16, Q-1; ESM per `F1-ADR-001` file-level plan |
 | Execution split | Deterministic mechanics in the CLI, judgment in a thin Claude Code skill | **Firm** | Q-1, Q-57 |
-| Distribution | `@lintel/cli`, binary `lintel` with `harness` as a command group, `packs/` bundled into the published artefact | **Firm** | Q-2, Q-16 |
+| Distribution | `@linteldk/cli`, binary `lintel` with `harness` as a command group, `packs/` bundled into the published artefact | **Firm** | Q-2, Q-16 |
 | Versioning | Per-pack semver + `minCliVersion`, separate CLI semver, both recorded in the manifest | **Firm** | Q-3 |
 | Semver parsing & comparison | **Hand-rolled** — compare only, no range arithmetic (~30 lines) | **Firm** (Q-81) | F1 US-1 (`E-PACK-CLI-TOO-OLD`, `E-PACK-FORMAT-NEWER`, `W-PACK-NEWER-THAN-CLI`) |
 | Hashing | SHA-256 via `node:crypto`, lowercase hex, over BOM-stripped / CRLF→LF-normalised content | **Firm** | Q-26, Q-52; F1 §NFR |
@@ -146,7 +146,7 @@ sections and their absence should not read as an oversight.
 Hashing, planning and comparison must be computed facts or "applied correctly every
 time" varies run to run; a CLI is where that lives, and the judgment half goes to a
 skill instead of being stubbed out. The target ecosystem settles the language: the
-projects being scaffolded are Claude Code repositories, and `npx @lintel/cli` is the
+projects being scaffolded are Claude Code repositories, and `npx @linteldk/cli` is the
 zero-install route to a machine that already has Node.
 
 **Node ≥ 22 is Q-16**, corrected from the ADR's assumed ≥ 20 because Node 20 left LTS
@@ -481,7 +481,7 @@ dependency in either budget.
 
 ### 5.2 Build — **`tsc` only, no bundler (U-12)**
 
-TypeScript has to become something `npx @lintel/cli` runs. Three routes exist and
+TypeScript has to become something `npx @linteldk/cli` runs. Three routes exist and
 none has been chosen: `tsc` emitting ESM JavaScript plus declarations; a bundler
 (`esbuild`, `tsup`, `rollup`) emitting one file; or shipping `.ts` and relying on Node's
 type stripping, which Node 22 supports in recent minors. **The constraint that decides
@@ -529,10 +529,10 @@ F1 treats as trusted. **Not `__dirname`** either, which does not exist in ESM.
 
 ### 5.3 Distribution and pack bundling — **Firm on the requirement**
 
-`@lintel/cli`, binary `lintel`, with `harness` as its first command group (Q-16 **as
+`@linteldk/cli`, binary `lintel`, with `harness` as its first command group (Q-16 **as
 amended by Q-63**). The binary deliberately no longer matches the package name: `lintel`
 is claimed once on PATH and later tools slot in as `lintel <tool> …` with no new name to
-claim. **Whether those tools ship inside `@lintel/cli` or load as plugins is Q-64 —
+claim. **Whether those tools ship inside `@linteldk/cli` or load as plugins is Q-64 —
 reserved and open**; two packages cannot both own the `lintel` binary, so a second tool
 forces that choice. **`packs/` ships inside
 the published package** (Q-2): one maintainer, three packs, so a CLI feature and the pack

@@ -1,7 +1,7 @@
 /**
  * `lintel harness skill install` — the sixth command. T-2606, T-2607.
  *
- * It copies the Markdown skill that ships inside `@lintel/cli` into
+ * It copies the Markdown skill that ships inside `@linteldk/cli` into
  * `.claude/skills/lintel/` in the current project, so that the
  * conversational path is installed by a command rather than by telling
  * people to copy a folder out of `node_modules` — which is the

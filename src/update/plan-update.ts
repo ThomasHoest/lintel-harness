@@ -119,7 +119,7 @@ export interface VersionResult {
  * Compare the applied pack version against the **bundled** one.
  *
  * **`update` never resolves "newer" over the wire.** A project moves to
- * the version bundled in the installed `@lintel/cli`, which is what keeps
+ * the version bundled in the installed `@linteldk/cli`, which is what keeps
  * §NFR *No network* true for **every** v1.0 command with no exception; the
  * remedy for "nothing newer" is upgrading the package (Q-2).
  *

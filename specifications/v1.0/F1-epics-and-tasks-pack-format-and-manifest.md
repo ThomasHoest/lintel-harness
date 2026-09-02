@@ -53,7 +53,7 @@ F1 is the only feature past the ADR gate, so this is the last artefact
 before code, and it is the first breakdown in the project: **no epic or
 task number has been allocated before this document**.
 
-The deliverable is a **greenfield TypeScript ESM package** — `@lintel/cli`,
+The deliverable is a **greenfield TypeScript ESM package** — `@linteldk/cli`,
 binary `lintel`, `engines.node >= 22` — that ships three of the five
 commands of the `harness` group (`validate`, `verify`, `pack info`), plus
 the planner, executor, journal and rollback that **F2 drives from `init`**
@@ -151,7 +151,7 @@ T-0103…T-0105 land.
 ### Package and build
 
 - [x] **T-0101** `[Implementer]` Create `package.json`, `tsconfig.json` and the
-  build script for `@lintel/cli`: ESM, binary `lintel`, `engines.node >= 22`,
+  build script for `@linteldk/cli`: ESM, binary `lintel`, `engines.node >= 22`,
   `packs/` included in the published artefact and resolvable relative to the
   installed module (Q-2; F1 US-3 stage 2 reserves that resolved directory as a
   destination). The build must **type-check** rather than strip — the path

@@ -1,4 +1,4 @@
-# Publishing `@lintel/cli`.
+# Publishing `@linteldk/cli`.
 #
 # LEVEL NOTE, as in ci.yml: this file is META — it is how *this repository*
 # ships. It is not pack content and is applied to nobody.
@@ -28,7 +28,7 @@
 #
 # ── Registry: public npm ──────────────────────────────────────────────
 #
-# `@lintel/cli`, MIT, published publicly with provenance.
+# `@linteldk/cli`, MIT, published publicly with provenance.
 #
 # **GitHub Packages was the earlier choice and is not this one.** It was
 # picked while the repository was believed private and UNLICENSED — a

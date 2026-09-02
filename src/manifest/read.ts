@@ -36,7 +36,7 @@
  * *newer* CLI wrote may legitimately hold a shape this CLI does not know,
  * so validating the shape first would report `E-MANIFEST-CORRUPT` — "restore
  * it from version control" — for a file that is not corrupt at all and whose
- * actual remedy is `npm i -g @lintel/cli@latest`. Wrong code, wrong remedy,
+ * actual remedy is `npm i -g @linteldk/cli@latest`. Wrong code, wrong remedy,
  * and the user acts on it.
  *
  * **2 before everything** is US-1's rule applied to the user's own file: a

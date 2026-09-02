@@ -31,7 +31,7 @@ yours: **if it can be checked byte for byte, it is not yours.**
 
 **Before anything else, run `lintel --version`.**
 
-This skill ships inside `@lintel/cli` and is written against the CLI it
+This skill ships inside `@linteldk/cli` and is written against the CLI it
 was released with. It was written against **`lintel` 1.x** — that is,
 `>= 1.0.0` and `< 2.0.0`.
 
@@ -46,7 +46,7 @@ that a differently versioned CLI probably still accepts the same flags is
 how a skill teaches a user a command that does not exist.
 
 If `lintel` is not installed at all, say so and stop. The remedy is
-installing `@lintel/cli`. **Do not perform the setup by hand instead**,
+installing `@linteldk/cli`. **Do not perform the setup by hand instead**,
 in whole or in part.
 
 ---

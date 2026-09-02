@@ -1,5 +1,5 @@
 {
-  "name": "@lintel/cli",
+  "name": "@linteldk/cli",
   "version": "1.0.0",
   "description": "Harness template generator \u2014 applies a way of working to a project, and updates it later.",
   "type": "module",

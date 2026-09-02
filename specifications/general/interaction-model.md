@@ -3,7 +3,7 @@
 **Status:** Draft
 **Applies to version:** v1.0 — the CLI (F1, F2, F3) plus the thin skill (F6)
 **Date:** 2026-09-01
-**Decisions:** Q-1 (CLI/skill split) · Q-57 (conversational primary, and the design obligation recorded with it) · **Q-62 (`update` returns to v1.0, without a merge engine; `contribute` stays deferred; `status` folds into `update`'s read-only mode — reverses Q-42 in part)** · Q-54 (no consent gate) · Q-56 (`adapted`) · Q-60 (defect/notice) · Q-50 (folder READMEs) · Q-53 (the read-only commands) · Q-12 (one pack per project) · **Q-63 (the binary is `lintel`, `harness` is a command group, the package is `@lintel/cli`)**
+**Decisions:** Q-1 (CLI/skill split) · Q-57 (conversational primary, and the design obligation recorded with it) · **Q-62 (`update` returns to v1.0, without a merge engine; `contribute` stays deferred; `status` folds into `update`'s read-only mode — reverses Q-42 in part)** · Q-54 (no consent gate) · Q-56 (`adapted`) · Q-60 (defect/notice) · Q-50 (folder READMEs) · Q-53 (the read-only commands) · Q-12 (one pack per project) · **Q-63 (the binary is `lintel`, `harness` is a command group, the package is `@linteldk/cli`)**
 **Sources:** `general/system-architecture.md` · `general/pack-application.md` · `general/pack-inventory.md` · `v1.0/F1-spec-pack-format-and-manifest.md` v2.8 (US-4, US-8, US-13, US-14, US-16, US-29, US-31, US-33, §Technical Context, §F1.6, §Error States) · `v1.0/F5-spec-template-packs.md` v2.8 · `project-brief.md` §12 · the three bundled packs
 
 > **Written against Q-62, which lands after every document this one

@@ -244,7 +244,13 @@ test('a CLI below the floor is refused, and told what to do about it', async () 
   for (const part of [pack.name, pack.version, pack.minCliVersion, '0.9.0']) {
     assert.ok(m.includes(part), `the message names ${part}: ${m}`);
   }
-  assert.match(m, /→ Upgrade with: npm i -g @lintel\/cli@latest/, 'and the remedy is actionable');
+  // The package name, read from `package.json` rather than written out.
+  // Three remedies in the catalogue name it, and the name changed once
+  // already — a literal here would pin the test to yesterday's registry.
+  const { name } = JSON.parse(
+    await readFile(fileURLToPath(new URL('../../package.json', import.meta.url)), 'utf8'),
+  ) as { name: string };
+  assert.ok(m.includes(`npm i -g ${name}@latest`), `the remedy is actionable: ${m}`);
 
   assert.deepEqual(codes(checkCliFloor(pack, pack.minCliVersion)), [], 'equal meets the floor');
   assert.deepEqual(codes(checkCliFloor(pack, '2.0.0')), [], 'and newer does too');

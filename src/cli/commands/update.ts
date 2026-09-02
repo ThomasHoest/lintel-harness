@@ -667,7 +667,7 @@ interface BundledPack {
  * `update` takes no pack argument, so it can never run against a pack the
  * project never applied — Q-12 enforced by the surface rather than by a
  * check. And it resolves nothing over the wire: "newer" means the version
- * bundled in the installed `@lintel/cli`, which keeps §NFR *No network*
+ * bundled in the installed `@linteldk/cli`, which keeps §NFR *No network*
  * true for every v1.0 command with no exception (Q-2).
  */
 async function loadBundledPack(name: string, cliVersion: string): Promise<BundledPack> {

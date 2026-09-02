@@ -2,7 +2,7 @@
 **Version:** 1.1
 **Status:** Accepted
 **Date:** 2026-09-01
-**Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/cli`, binary `lintel`, with **`harness` as a command group** — the command specified here is reached as `lintel harness init` (Q-16 as amended by Q-63). No UI; a terminal is optional (see US-43).
+**Platform:** Node ≥ 22 / TypeScript CLI, published as `@linteldk/cli`, binary `lintel`, with **`harness` as a command group** — the command specified here is reached as `lintel harness init` (Q-16 as amended by Q-63). No UI; a terminal is optional (see US-43).
 **Design spec:** n/a (no UI)
 **ADR:** {{`F2-ADR-NNN-init-apply-engine.md` — filled in by the architect after this spec is reviewed}}
 **References:** [`../general/pack-application.md`](../general/pack-application.md) (the two-phase model — **authoritative**) · [`../general/interaction-model.md`](../general/interaction-model.md) §3, §5, §11.1, **§11.2** (`init`'s command surface — **a hard input, not background**), IM-2, IM-7, IM-8, IM-10, IM-11, IM-14, IM-17, IM-18, IM-19, IM-38, IM-39, IM-41 · [`../general/system-architecture.md`](../general/system-architecture.md) §3 (the trust-critical path) and §4 (the F2 row) · [`F1-spec-pack-format-and-manifest.md`](F1-spec-pack-format-and-manifest.md) **v2.9** — US-3, US-4, US-8, US-9, US-10, **US-13**, US-14, US-16, US-29, US-30, US-31, US-32, §Error States, §NFR, **§F1.6**, §F1.7, §F1.8, §F1.9 · [`F1-ADR-001-pack-format-and-manifest.md`](F1-ADR-001-pack-format-and-manifest.md) §1 *Public interface contract*, §3.6, §7.1, §7.5 · [`LintelHarnessSpecification-1.0.md`](LintelHarnessSpecification-1.0.md) §Feature 2 · `packs/coding/`, `packs/writing/`, `packs/planning/`

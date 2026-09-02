@@ -2,7 +2,7 @@
 **Version:** 1.2
 **Status:** Accepted
 **Date:** 2026-09-01
-**Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/cli`, binary `lintel`, with **`harness` as a command group** — every command here is reached as `lintel harness <command>` (Q-16 as amended by Q-63). No UI.
+**Platform:** Node ≥ 22 / TypeScript CLI, published as `@linteldk/cli`, binary `lintel`, with **`harness` as a command group** — every command here is reached as `lintel harness <command>` (Q-16 as amended by Q-63). No UI.
 **Design spec:** n/a (no UI)
 **ADR:** `F3-ADR-NNN-update.md` — not written; to be filled in by the architect after this spec is reviewed
 **References:** `specifications/project-brief.md` §12 (**Q-62**, Q-1, Q-2, Q-42, Q-43, Q-52, Q-56, Q-57) · `specifications/v1.0/F1-spec-pack-format-and-manifest.md` v2.9 (**US-33**, US-10, US-13, US-14, US-15, §Error States, §F1.6, **§F1.8**, §F1.9) · `specifications/general/interaction-model.md` v1.1 (**§9**, §11.3, IM-13, IM-29…IM-35, IM-40, IM-41) · `specifications/general/pack-application.md` · `specifications/general/system-architecture.md` §4 · `specifications/v1.0/LintelHarnessSpecification-1.0.md` §Feature 3
@@ -118,7 +118,7 @@ needs an answer no project ever gave is refused rather than prompted for
   schema** — F1's, unchanged by this feature. `update` adds no key.
 - **Region-aware merging.** The anchors stay inert (Q-45); `update`
   classifies by recomputation, not by region, and needs no parser.
-- **Any network access.** "Newer" means *the user upgraded `@lintel/cli`*
+- **Any network access.** "Newer" means *the user upgraded `@linteldk/cli`*
   (Q-2). See §NFR *No network*.
 
 ---
@@ -133,7 +133,7 @@ the cited document, not re-litigated.
 |---|---|---|
 | Whether `update` ships | **v1.0** *(brief Q-62)* | Q-42's blocker was that a merge needs a base; Q-39/Q-43 made the base recomputable and deleted `.harness/base/`. `verify` is most of `update` |
 | Merge strategy | **None. Replace the unedited, hand over the edited** *(brief Q-62)* | A merge engine would be built for the minority case; the majority needs a replace and nothing more |
-| Where "newer" comes from | **The bundled pack in the installed `@lintel/cli`** *(brief Q-2)* | Packs are bundled with the published CLI. "Newer" is resolved by `npm i -g @lintel/cli@latest`, never over the wire (§NFR *No network*) |
+| Where "newer" comes from | **The bundled pack in the installed `@linteldk/cli`** *(brief Q-2)* | Packs are bundled with the published CLI. "Newer" is resolved by `npm i -g @linteldk/cli@latest`, never over the wire (§NFR *No network*) |
 | The base for classification | **`expected_old`, recomputed** — local `.harness/pack/` + its recipe + the manifest's answers and scaffolds *(F1 §F1.8, US-33)* | The identity `verify` already evaluates. No cached bytes, no stored base, no per-file hash list (Q-43) |
 | The target | **`expected_new`** — the newer bundled payload + its recipe + **the same** recorded answers and scaffolds | An update is a pack-version move and nothing else. Varying an answer at the same time would make the result irreproducible from the manifest |
 | Per-path comparison states | **`verify`'s closed four** — `match`, `adapted`, `differs`, `missing` *(F1 US-33, Q-56)* | One enumeration, one implementation. `update` adds a **disposition** derived from them (§F3.3), not a fifth state |
@@ -826,7 +826,7 @@ own contract rather than inherit a heading whose reasoning was reversed.
 - **Bundled version is *older* than recorded.** The run is refused:
   **`E-UPDATE-NOT-NEWER`**, exit **1**, **zero bytes**, in both modes,
   naming both versions, with the remedy
-  `→ npm i -g @lintel/cli@latest`. *(Requested from F1 as F3-R1.)*
+  `→ npm i -g @linteldk/cli@latest`. *(Requested from F1 as F3-R1.)*
   `update` moves a project to a **newer** version (Q-62); writing an
   older pack over a newer project is a downgrade, and a downgrade that
   replaced unedited paths would be indistinguishable in the report from
@@ -977,7 +977,7 @@ F3-R1** in §F3.6.
 | Requested code | Exit | Shape and reasoning |
 |---|---|---|
 | **`E-UPDATE-AVAILABLE`** | **1** | Raised by **`--dry-run` only**, when the bundled version is newer. `lintel: {pack}@{recorded} is applied; {bundled} is available.` / `  {n} files would be replaced, {m} left for you.` / `  → lintel harness update` — class 1 on IM-39's *drift the tool found*, with `E-VERIFY-MISMATCH` as the precedent. In the writing mode the same condition is not a fault; **one code, one occasion**, which is what F1's severity rule requires |
-| **`E-UPDATE-NOT-NEWER`** | **1** | The bundled pack is **older** than the applied one (US-70). `lintel: this project has {pack}@{recorded}; the {pack} bundled with lintel {cliVersion} is {bundled}.` / `  update moves a project forward, not back.` / `  → npm i -g @lintel/cli@latest` — distinct from `W-PACK-NEWER-THAN-CLI`, which is the same skew where it is **not** fatal (`verify`), and F1's rule is two codes rather than one code with two severities |
+| **`E-UPDATE-NOT-NEWER`** | **1** | The bundled pack is **older** than the applied one (US-70). `lintel: this project has {pack}@{recorded}; the {pack} bundled with lintel {cliVersion} is {bundled}.` / `  update moves a project forward, not back.` / `  → npm i -g @linteldk/cli@latest` — distinct from `W-PACK-NEWER-THAN-CLI`, which is the same skew where it is **not** fatal (`verify`), and F1's rule is two codes rather than one code with two severities |
 | **`E-UPDATE-PARAM-UNANSWERED`** | **2** | The new pack declares a `required` parameter with no `default` for which the manifest holds no answer (US-69). `lintel: {pack}@{bundled} requires the parameter "{id}", which this project never answered.` / `  {prompt}` / `  An answer cannot be supplied after the apply.` / `  → The pack must give "{id}" a default before it can be updated into.` Class 2 because the user cannot fix it and the pack author can |
 | **`E-UPDATE-SCAFFOLD-DROPPED`** | **2** | The manifest records a selected scaffold the new pack no longer declares (US-69). `lintel: this project selected the scaffold "{id}", which {pack}@{bundled} no longer declares.` / `  Computing the update would orphan every path it produced.` / `  → Stay on {recorded}, or re-apply into a fresh directory.` Class 2 for the same reason |
 
@@ -997,7 +997,7 @@ F3-R1** in §F3.6.
 ## Non-Functional Requirements
 
 - **No network.** `update` makes **no** network request, in either mode.
-  "Newer" means the pack bundled in the installed `@lintel/cli` (Q-2), so
+  "Newer" means the pack bundled in the installed `@linteldk/cli` (Q-2), so
   a newer version is obtained by upgrading the package and **never over
   the wire**. F1 §NFR *No network* already names `update` in its
   enumeration as of Q-62 and quantifies over **every v1.0 command**; this

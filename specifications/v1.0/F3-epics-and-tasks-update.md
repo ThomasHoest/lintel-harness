@@ -112,7 +112,7 @@ whatever the table says.
 - [x] **T-2305** `[Implementer]` Version resolution: compare the applied
   pack version against the **bundled** one with `src/semver/compare.ts`.
   Not newer → **`E-UPDATE-NOT-NEWER`**, exit 1, remedy `npm i -g
-  @lintel/cli@latest`. **`update` never resolves "newer" over the wire** —
+  @linteldk/cli@latest`. **`update` never resolves "newer" over the wire** —
   a project moves to the version bundled in the installed CLI, which keeps
   §NFR *No network* true for every v1.0 command with no exception. Covers
   equal and older together, because the remedy is the same.
