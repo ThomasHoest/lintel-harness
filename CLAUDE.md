@@ -485,7 +485,11 @@ authoritative, verify it rather than trusting the assertion.
   update. **This is the outstanding dogfooding item**, it leads this
   list on purpose, and the blocker is no longer authoring: it is that
   there is no CLI to run. `ls .harness` is the check.
-- **No CLI source exists.** Not a line. Everything below assumes that.
+- **CLI source exists now, on the `v1.0` branch.** `T-0101`–`T-0104`,
+  `T-0113` and `T-1219` are done; **29 tests pass**; CI runs three
+  platforms. `DEVELOPING.md` is the working note. **Everything below this
+  line was written when there was no code and should be read with that
+  date on it.**
 - **The ⚠️ register is closed — all fourteen** (`general/technology-choices.md`
   §6), so **no task in any feature is blocked**. The build is **`tsc` only**
   (it must type-check, not strip — the path brands are compile-time

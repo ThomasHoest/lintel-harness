@@ -1,0 +1,84 @@
+# CI for the harness itself.
+#
+# LEVEL NOTE, because this repo is self-hosting and the two are easy to
+# confuse: this file is META — it is how *this repository* is built. It is
+# not pack content, and it is not applied to anyone. F1 reserves `.github`
+# as a class-2 destination *for packs*, which forbids a pack writing a
+# workflow into a user's project; it says nothing about the product having
+# its own CI. Do not "fix" this file by deleting it.
+#
+# U-13 (general/technology-choices.md §5.4) chose GitHub Actions and fixed
+# two requirements that are the substance rather than the vendor:
+#   - the matrix runs on macOS, Linux and Windows — G-F1-7's three
+#     platforms;
+#   - the WINDOWS LEG IS NOT OPTIONAL. The executable bit, collisionKey's
+#     case folding and CRLF normalization are precisely the rules that
+#     differ there, so a green Linux-only run asserts almost nothing this
+#     project worries about.
+#
+# T-1214 is not discharged by this file. That task additionally requires
+# `lintel harness validate --all --strict` over the three bundled packs and
+# the adversarial fixture suite — neither of which exists yet, because
+# E-09 and E-12 are waves 6 and 7. This runs what there is, and grows.
+
+name: CI
+
+on:
+  push:
+    branches: [main, 'v*']
+  pull_request:
+    branches: [main, 'v*']
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: ${{ matrix.os }} · node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Never cancel the other legs on one failure: a Windows-only break is
+      # the most likely kind here and the most useful to see in full.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['22']
+        include:
+          # Node 22 is the floor (engines.node >= 22). One leg on current
+          # to catch a break before the floor moves.
+          - os: ubuntu-latest
+            node: '24'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      # `npm ci` and not `npm install`: it installs from the lockfile
+      # exactly and fails if package.json and the lock disagree, which is
+      # the check that matters for a package whose whole posture is about
+      # what ends up in the dependency tree.
+      - run: npm ci
+
+      # Q-81. The published package declares no runtime dependency. Asserted
+      # here as well as in the unit suite, because CI is where a transitive
+      # arrival would show up first.
+      - name: Assert no runtime dependency
+        shell: bash
+        run: |
+          count=$(node -p "Object.keys(require('./package.json').dependencies ?? {}).length")
+          echo "runtime dependencies: $count"
+          test "$count" -eq 0
+
+      # Type-checking is a control, not a formality (U-12): the path brands
+      # and the total RecipeStep union are compile-time. Run it before the
+      # build so a type error is reported as one.
+      - run: npm run typecheck
+
+      - run: npm run build
+
+      - run: npm test
