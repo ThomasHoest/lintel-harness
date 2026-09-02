@@ -27,7 +27,7 @@
   "scripts": {
     "build": "tsc",
     "build:test": "tsc -p tsconfig.unit.json && tsc -p tsconfig.tests.json",
-    "typecheck": "tsc --noEmit -p tsconfig.unit.json && tsc --noEmit -p tsconfig.tests.json",
+    "typecheck": "npm run build && tsc --noEmit -p tsconfig.unit.json && tsc --noEmit -p tsconfig.tests.json",
     "test": "npm run build:test && npm run test:unit && npm run test:integration",
     "test:unit": "node --test \"dist/**/*.test.js\"",
     "test:integration": "node --test \"dist-tests/integration/**/*.test.js\"",

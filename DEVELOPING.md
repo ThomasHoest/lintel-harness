@@ -31,6 +31,14 @@ Not a preference — a consequence.
 | `tsconfig.unit.json` | `src` → `dist` | the same, tests included |
 | `tsconfig.tests.json` | `tests` → `dist-tests` | integration, driving the **built** artefact |
 
+**The build is a prerequisite of type-checking**, which is unusual enough
+to state: `tests/` imports from `dist/`, on purpose, because integration
+tests drive the **built** artefact rather than the sources. So
+`tsconfig.tests.json` cannot resolve until `dist/` exists, and
+`npm run typecheck` builds first. CI hit this before the script did —
+four red legs on a green local checkout, because `dist/` was already
+there locally and never is on a fresh one.
+
 **`src/paths.ts` must compile to `dist/paths.js` — exactly one level
 inside the out root.** `packs/` sits *beside* `dist/` in the published
 package, so `../packs/` is right from there and wrong from anywhere
@@ -129,7 +137,9 @@ its own CI.
 
 ## Before you commit
 
-- `npm run typecheck && npm test` — both green.
+- `npm run typecheck && npm test` — both green, and **from a clean
+  checkout**: `rm -rf dist dist-tests` first if in doubt. Stale build
+  output has already hidden one failure that CI found.
 - If you changed anything in `F1-spec` §Error States, the drift guards
   will tell you; if you changed a **module** to disagree with it, they
   will tell you that too, and the spec wins.
