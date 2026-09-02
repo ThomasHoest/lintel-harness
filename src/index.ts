@@ -159,6 +159,12 @@ export {
   type WalkResult,
 } from './fs/walk.js';
 
+export {
+  SECRET_NAME_PATTERN,
+  declarationLooksSecret,
+  valueLooksSecret,
+} from './security/secret-heuristic.js';
+
 // ── pack resolution (E-01) ──────────────────────────────────────────────
 export { packDir, packsDir } from './paths.js';
 
