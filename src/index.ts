@@ -160,6 +160,29 @@ export {
 } from './fs/walk.js';
 
 export {
+  checkScaffoldCollisions,
+  parametersFor,
+  selectScaffolds,
+  selectedIds,
+  type Selection,
+  type WriteSets,
+} from './pack/scaffolds.js';
+
+export {
+  MAX_COMBINATIONS,
+  aliasesFor,
+  checkAnswer,
+  checkParameterSet,
+  checkRecordedAnswers,
+  checkWhenParameters,
+  combinations,
+  resolveAnswers,
+  type Answer,
+  type Occasion,
+  type WhenValues,
+} from './pack/parameters.js';
+
+export {
   SECRET_NAME_PATTERN,
   declarationLooksSecret,
   valueLooksSecret,

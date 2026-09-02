@@ -62,7 +62,7 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'E-PACK-FORMAT-NEWER': ["lintel: pack {name} uses pack format {n}; this CLI understands up to {m}.", "  → Upgrade the CLI, or use a pack built for format {m}."],
   'E-PACK-INVALID': ["lintel: {path} is not a usable pack declaration ({detail}).", "  A pack.json is an object declaring at least name, version, minCliVersion, recipe and anatomy.", "  → Fix the file, then re-run validate."],
   'E-PARAM-COMBINATORICS': ["lintel: pack {name} has {n} parameter combinations to validate; the limit is 32.", "  → Reduce step-selecting parameters, or split the pack."],
-  'E-PARAM-FLAG-INVALID': ["lintel: parameter \"{id}\" declares the flag alias \"--{flag}\", which {reason}.", "  Reserved: --set, --scaffold, --json, --strict, --force, --rollback, --all", "  → Choose a kebab-case alias that is not reserved and not already used by another parameter."],
+  'E-PARAM-FLAG-INVALID': ["lintel: parameter \"{id}\" declares the flag alias \"--{flag}\", which {reason}.", "  Reserved: --set, --scaffold, --json, --strict, --force, --rollback, --all, --dry-run", "  → Choose a kebab-case alias that is not reserved and not already used by another parameter."],
   'E-PARAM-INVALID': ["lintel: \"{value}\" is not a valid answer for \"{id}\".", "  Allowed: {values}"],
   'E-PARAM-MISSING': ["lintel: parameter \"{id}\" is required and has no answer.", "  {prompt}"],
   'E-PARAM-NO-PATTERN': ["lintel: parameter \"{id}\" is a string and declares no \"pattern\".", "  Every string answer is recorded verbatim in a committed manifest and replayed on every verify, so its shape must be declared.", "  → Add an anchored pattern, e.g. \"pattern\": \"^[\\p{L}\\p{N} ._-]{1,64}$\""],
