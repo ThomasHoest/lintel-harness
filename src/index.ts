@@ -94,6 +94,21 @@ export {
   type ValidatePackResult,
 } from './pack/schema.js';
 
+export {
+  compareSemver,
+  parseSemver,
+  satisfiesFloor,
+  type Semver,
+} from './semver/compare.js';
+
+export {
+  MAX_PATTERN_LENGTH,
+  matchGlob,
+  matchesAny,
+  selectPaths,
+  unusedPatterns,
+} from './recipe/glob.js';
+
 // ── confinement (E-02) ──────────────────────────────────────────────────
 export {
   collisionKey,

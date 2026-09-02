@@ -1,5 +1,5 @@
 # Pack Format & Manifest Specification — Lintel Harness v1.0
-**Version:** 4.3
+**Version:** 4.4
 **Status:** Accepted
 **Date:** 2026-09-01
 **Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/cli`, binary `lintel`, with **`harness` as a command group** — every command in this document is reached as `lintel harness <command>` (Q-16 **as amended by Q-63**). Pack content is Markdown, shell, PowerShell and Bicep; `pack.json`, `recipe.json` and the manifest are JSON. No UI.
@@ -38,6 +38,7 @@
 | **4.1** | **2026-09-02** | **The boolean-typed enumeration said four in three places and five in one.** Q-79 added **`RecipeStep.fillExpected`** at v3.0 and updated US-1's own bullet to **five** — and left §Technical Context's *Boolean fields* row, US-31's `adaptExpected` bullet and C-34's disposition row all saying **four**. **This is C-34's own finding recurring**, which is why it is folded rather than tidied: C-34 was raised because two security-gating booleans sat **outside** a closed enumeration, and in JavaScript `"false"` is **truthy** — so `"executable": "false"` read as `true` and `"notASecret": "no"` disabled the credential ban, **two gates failing open on a typo**. A validator built against "four" leaves `fillExpected` uncovered, and that is the field gating whether **`update` may overwrite a filled `project-brief.md`**. **The count is five in every place it appears**, and C-34's row now says so with its own history intact. No code added; the catalogue holds **89**. |
 | **4.2** | **2026-09-02** | **The placeholder rule v3.9 introduced was itself wrong, and rendering `E-PARAM-NO-PATTERN` proved it.** That message recommends `"^[\p{L}\p{N} ._-]{1,64}$"`, and **`L` and `N` are valid identifiers** — so *"a placeholder is `{name}` with an identifier name"* ate both **Unicode property escapes** and rendered `^[\p200\p64 ._-]{1,64}$`. Advice that is not merely wrong but **unusable**: a pack author copying it gets a regex that does not compile. **The rule gains one clause:** a brace preceded by `\p` or `\P` is a **property escape and is literal**. Note what v3.9 got *right* by accident — `{1,64}` was already literal, because a quantifier is not an identifier — which is why the fault survived: the same line contained a brace the rule handled correctly and two it did not. **This is the third revision of the same rule**, after v3.9 defined it and v4.2 corrects it, and the pattern across all three is that **every counter-example came from a message, not from thinking about the grammar.** A general guard now renders **every** message with its declared names supplied and fails on any surviving brace. |
 | **4.3** | **2026-09-02** | **`W-UNKNOWN-KEY` added — the unknown-key rule had a name, a class and a required test, and no code.** US-1 has specified since v1.0 that an unknown **key** warns while an unknown **value** is fatal (C-16); §US-2 calls it *"US-1's unknown-key rule"* when distinguishing it from `E-ANATOMY-SOURCE-ON-ABSENT`; Q-60 assigns it **`defect`** class; and US-1 asks for *"a test … requiring **no** unknown-key warning"*. **None of that was assertable**, because §Error States makes the **code** the stable contract and forbids asserting a fault by string-matching its prose — so a warning with no code is one nothing can test for, in either direction. **Catalogue 89 → 90.** **Second time in two days that a rule stated repeatedly turned out to have no code**, after `E-PACK-INVALID`; both were found by writing the module that had to raise them, and both had survived every review because prose that names a fault reads exactly like prose that codes one. |
+| **4.4** | **2026-09-02** | **The glob dialect is decided and stated (U-3, T-0306).** U-3 left it open — *"`*` vs `**`, character classes, braces, negation"* — and asked for the **smallest** that serves `exclude`, `in` and anatomy `paths`. **Surveying every glob the three bundled packs actually contain answers it: `*` is the only non-literal character any of them uses.** So the dialect is **`*` matching within one segment, never crossing `/`, and everything else literal** — `?`, `[`, `]`, `{`, `}`, `!` included, and **`**` is simply two stars and therefore still single-segment**. **No `**`, and the asymmetry is what decides it**: adding it later is **additive**, since every pattern that works keeps working, whereas shipping it and removing it would break packs. A dialect can grow; it cannot shrink. **No classes, braces or negation** — each is a small grammar with its own edges, and **G-F1-9** requires the matcher to be small enough that `pack info` renders an apply *completely*, a claim that degrades as the pattern language grows past what a reader can evaluate in their head. **The matcher is a two-pointer walk, not a compiled `RegExp`**: an author-supplied pattern is untrusted input, and building a regex from one would reintroduce exactly the risk C-7 bounds for `pattern`. A test asserts **no bundled pack uses a construct outside the dialect**, so the survey that decided this cannot silently stop being true. **No code added; the catalogue holds 90.** |
 
 ---
 
@@ -3342,6 +3343,25 @@ change the exit code.
   whitespace, blank lines and the presence or absence of a final newline
   are all significant. Two projects whose files differ only in line
   endings compare equal.
+- **The glob dialect** (decided at v4.4, U-3). One matcher serves
+  `exclude`, `in` and anatomy `paths`. **`*` matches zero or more
+  characters within one segment and never crosses `/`; everything else is
+  literal** — including `?`, `[`, `]`, `{`, `}`, `!`, and `**`, which is
+  two stars and so still single-segment.
+  - **Chosen by survey, not by taste:** across all three bundled packs,
+    **`*` is the only non-literal character any glob contains**.
+  - **`**` is deliberately absent, and the asymmetry decides it.** Adding
+    it later is **additive** — every working pattern keeps working —
+    while shipping it and withdrawing it would break packs. A dialect can
+    grow and cannot shrink.
+  - **No classes, braces or negation.** Each is a small grammar with its
+    own edge cases, and **G-F1-9** requires the matcher small enough that
+    `pack info` renders an apply *completely* — a claim that degrades as
+    the pattern language outgrows what a reader can evaluate unaided.
+  - **The matcher takes no filesystem handle** (C-27) and is a two-pointer
+    walk rather than a compiled `RegExp`: an author-supplied pattern is
+    untrusted input, and compiling one would reintroduce the risk C-7
+    bounds for `pattern`.
 - **Message templates and placeholders** (new at v3.9, from building
   T-0104). A **placeholder** is `{name}` where `name` matches
   `^[A-Za-z][A-Za-z0-9]*$`; **every other brace is literal** and renders

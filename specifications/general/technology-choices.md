@@ -284,6 +284,11 @@ must be the **same** matcher in all three positions, because two dialects means 
 author has to know which one they are in. ✅ **U-3 closed by Q-81** — hand-rolled over
 a known path set with no filesystem handle, and the dialect is therefore this
 project's to state rather than a library's to imply.
+**Stated at F1 v4.4 (T-0306): `*` within one segment, everything else
+literal.** Chosen by **surveying every glob the three bundled packs
+contain** — `*` is the only non-literal character any of them uses — and
+`**` is left out because adding it later is **additive** while
+withdrawing it would not be.
 
 ### 4.6 Path normalisation and `collisionKey` — **NFC is Firm; the fold is ASCII-only (Q-81)**
 
