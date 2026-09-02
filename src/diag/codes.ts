@@ -73,6 +73,7 @@ export type DiagnosticCode =
   | 'E-MAP-RESERVED-DEST'
   | 'E-PACK-CLI-TOO-OLD'
   | 'E-PACK-FORMAT-NEWER'
+  | 'E-PACK-INVALID'
   | 'E-PARAM-COMBINATORICS'
   | 'E-PARAM-FLAG-INVALID'
   | 'E-PARAM-INVALID'
@@ -132,7 +133,7 @@ export interface CodeEntry {
   readonly class?: DiagnosticClass;
 }
 
-/** Every code in the catalogue. **88** at F1 v3.8. */
+/** Every code in the catalogue. **89** at F1 v4.0. */
 export const CODES: Readonly<Record<DiagnosticCode, CodeEntry>> = {
   'E-ALREADY-APPLIED': { severity: 'error', exit: 1 },
   'E-ANATOMY-EMPTY': { severity: 'error', exit: 2 },
@@ -172,6 +173,7 @@ export const CODES: Readonly<Record<DiagnosticCode, CodeEntry>> = {
   'E-MAP-RESERVED-DEST': { severity: 'error', exit: 2 },
   'E-PACK-CLI-TOO-OLD': { severity: 'error', exit: 1 },
   'E-PACK-FORMAT-NEWER': { severity: 'error', exit: 2 },
+  'E-PACK-INVALID': { severity: 'error', exit: 2 },
   'E-PARAM-COMBINATORICS': { severity: 'error', exit: 2 },
   'E-PARAM-FLAG-INVALID': { severity: 'error', exit: 2 },
   'E-PARAM-INVALID': { severity: 'error', exit: 1 },

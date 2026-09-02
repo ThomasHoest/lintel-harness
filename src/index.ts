@@ -66,6 +66,9 @@ export {
 
 export { run, stubbedCommands, type RunResult, type Streams } from './cli/main.js';
 
+// ── authored JSON (E-03) ───────────────────────────────────────────────
+export { parseStrictJson, type JsonValue, type ParseStrictResult } from './json/parse-strict.js';
+
 // ── confinement (E-02) ──────────────────────────────────────────────────
 export {
   collisionKey,

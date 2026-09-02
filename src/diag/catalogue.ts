@@ -60,6 +60,7 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'E-MAP-RESERVED-DEST': ["lintel: step {index} writes \"{path}\", which is a reserved destination (\"{reserved}\").", "  Reserved at any segment: .git .hg .svn .github .vscode .idea node_modules .circleci .devcontainer", "  Reserved as a first segment: .harness/", "  Reserved by basename: package.json .envrc .npmrc .yarnrc.yml Makefile GNUmakefile justfile .justfile .mcp.json .gitlab-ci.yml Jenkinsfile azure-pipelines.yml bitbucket-pipelines.yml", "  Reserved under any .claude segment: settings.json settings.local.json", "  Also reserved: the directory lintel itself is installed in.", "  A recipe step may never write under .harness/ — that is where the payload it reads from lives.", "  No pack writes project settings, MCP server declarations, CI pipelines, editor tasks or package manifests at v1.0.", "  → Choose a destination inside the project that lintel does not own."],
   'E-PACK-CLI-TOO-OLD': ["lintel: pack {name}@{version} needs lintel {minCliVersion} or newer.", "  You are running {cliVersion}.", "  → Upgrade with: npm i -g @lintel/cli@latest"],
   'E-PACK-FORMAT-NEWER': ["lintel: pack {name} uses pack format {n}; this CLI understands up to {m}.", "  → Upgrade the CLI, or use a pack built for format {m}."],
+  'E-PACK-INVALID': ["lintel: {path} is not a usable pack declaration ({detail}).", "  A pack.json is an object declaring at least name, version, minCliVersion, recipe and anatomy.", "  → Fix the file, then re-run validate."],
   'E-PARAM-COMBINATORICS': ["lintel: pack {name} has {n} parameter combinations to validate; the limit is 32.", "  → Reduce step-selecting parameters, or split the pack."],
   'E-PARAM-FLAG-INVALID': ["lintel: parameter \"{id}\" declares the flag alias \"--{flag}\", which {reason}.", "  Reserved: --set, --scaffold, --json, --strict, --force, --rollback, --all", "  → Choose a kebab-case alias that is not reserved and not already used by another parameter."],
   'E-PARAM-INVALID': ["lintel: \"{value}\" is not a valid answer for \"{id}\".", "  Allowed: {values}"],
@@ -112,24 +113,6 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'W-SCAN-SYMLINK-SKIPPED': ["lintel: skipped \"{path}\" — it is a symbolic link, and lintel does not follow links out of the project."],
 } as const;
 
-/**
- * A placeholder is `{name}` where `name` is an identifier. **Everything
- * else between braces is literal text and is passed through untouched.**
- *
- * That rule is not a simplification — it is forced by the catalogue.
- * F1 §Error States says *"`{…}` interpolation only"* and does not define
- * the name grammar, and nine brace occurrences across the 88 messages are
- * **not** substitutions:
- *
- *   - JSON the remedy line is telling the user to write —
- *     `{ "status": "absent", "reason": "…" }` and three more;
- *   - a regex quantifier, `{1,64}`, inside a recommended `pattern`;
- *   - three **prose-descriptive slots**, listed in `DESCRIPTIVE_SLOTS`
- *     below, which are real substitutions with no name.
- *
- * A reader that treats every `{…}` as a placeholder mangles the first two
- * kinds, which is how this rule was found.
- */
 const PLACEHOLDER = /\{([A-Za-z][A-Za-z0-9]*)\}/g;
 
 /**
