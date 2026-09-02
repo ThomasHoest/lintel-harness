@@ -1,7 +1,11 @@
 # Contributing
 
-Internal repository. This is how work happens here, and the conventions are
-load-bearing rather than stylistic.
+**Public repository, MIT licensed, and not currently taking outside pull
+requests.** The two are separate: the licence says what you may do with
+the code, and this file says how work happens *inside* the project. Fork
+it freely.
+
+The conventions below are load-bearing rather than stylistic.
 
 `CLAUDE.md` is the map. `DEVELOPING.md` is the working note for writing
 code. This file is the process around both.

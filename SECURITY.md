@@ -4,7 +4,10 @@
 yet.** This file records the security posture the specification set builds
 to, and the two things that must be true before v1.0 goes out.
 
-Report anything found internally to the repository owner.
+**Reporting.** The repository is public and MIT licensed, but nothing here
+has shipped. Report anything you find to the repository owner via a GitHub
+issue, or privately if it is a live vulnerability in a released version —
+of which there are none yet.
 
 ---
 

@@ -201,10 +201,21 @@ saying *this one* — and the full three-platform matrix runs before the
 publish rather than after.
 
 The registry is **GitHub Packages**, so auth is the workflow's own
-`GITHUB_TOKEN` and the package inherits the repository's visibility.
+`GITHUB_TOKEN` — no secret to create — and the package inherits the
+repository's visibility.
+
+**One prerequisite remains**, and it is the registry's rule rather than a
+preference: GitHub Packages requires the package scope to match the
+repository owner, so `@lintel/cli` publishes only from a `lintel`
+organisation. Creating one is free and the transfer preserves history,
+issues and stars; `release-check.mjs` derives the requirement from
+`repository.url`, so the move clears it with no edit to `package.json`.
 
 ## Licence
 
-**UNLICENSED, and the repository is private.** Not open source, and not
-currently accepting outside contributions. Coherent for a package whose
-visibility follows the repository's; it would not be for public npm.
+**MIT** — see `LICENSE`.
+
+The repository is **public**. It is not currently accepting outside
+contributions (see `CONTRIBUTING.md`), which is a statement about the
+working process rather than about the licence: the code is yours to use,
+fork and modify.

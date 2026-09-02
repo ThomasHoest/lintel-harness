@@ -40,8 +40,16 @@
 #
 # ── Before the first release ──────────────────────────────────────────
 #
-#   1. `npm run release:check` and clear what it names.
-#   2. Tag: `git tag v1.0.0 && git push origin v1.0.0`.
+#   1. Create the `lintel` GitHub organisation and transfer this
+#      repository into it. Free, preserves history, issues and stars, and
+#      it is what lets the package keep the name `@lintel/cli` that the
+#      specification set uses throughout. `git remote set-url` afterwards.
+#   2. `npm run release:check` and clear what it still names.
+#   3. Tag: `git tag v1.0.0 && git push origin v1.0.0`.
+#
+# `release-check.mjs` derives the required scope from `repository.url`, so
+# step 1 clears its blocker with no edit to `package.json` at all — the
+# name is already right and the owner is what changes.
 
 name: Release
 
