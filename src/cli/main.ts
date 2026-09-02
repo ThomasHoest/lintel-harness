@@ -11,6 +11,8 @@
  * `F1-ADR-001`'s file plan is superseded on this point — it planned four
  * commands and no group — and the ADR records the supersession itself.
  */
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { DiagnosticBag, type Diagnostic } from '../diag/diagnostic.js';
 import { escapeLine } from '../diag/escape.js';
 import { initOptions, runInit } from './commands/init.js';
@@ -226,9 +228,38 @@ export function stubbedCommands(): readonly Command[] {
 
 /* c8 ignore start — the process entry point, exercised by the acceptance
    harness rather than in-process. */
-const invokedDirectly =
-  process.argv[1] !== undefined && import.meta.url === new URL(`file://${process.argv[1]}`).href;
-if (invokedDirectly) {
+
+/**
+ * Did node start *this* file?
+ *
+ * **Compared as resolved real paths, never as strings.** `package.json`'s
+ * `bin` becomes a **symlink** at `node_modules/.bin/lintel`, so
+ * `process.argv[1]` is the link while `import.meta.url` is already
+ * resolved — they are two spellings of one file and string equality says
+ * they are different. Every installed invocation therefore fell through
+ * this guard and **the CLI did nothing at all**: no output, exit 0.
+ *
+ * Nothing caught it, because every test in this repository runs the file
+ * by its real path — from source, from `dist/`, or spawned with an
+ * absolute path — which is the one arrangement where the two spellings
+ * agree. **The bug lived exactly in the gap between how it is tested and
+ * how it is used**, and only `npm install` reached it.
+ *
+ * `realpathSync` throws if the path is gone; a launcher whose own argv[1]
+ * does not exist is not an invocation of this file, so the catch is a
+ * `false` rather than a crash.
+ */
+function startedByNode(): boolean {
+  const entry = process.argv[1];
+  if (entry === undefined) return false;
+  try {
+    return realpathSync(entry) === realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (startedByNode()) {
   const result = await run(process.argv.slice(2));
   process.exitCode = result.code;
 }
