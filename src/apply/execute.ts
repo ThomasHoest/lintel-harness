@@ -43,6 +43,8 @@
  * `F1-ADR-001`'s pipeline names one. It does not exist: Q-54 deleted it
  * with `merge-json`, and nothing writes `.claude/settings.json` at v1.0.
  */
+import { lstat } from 'node:fs/promises';
+import { join } from 'node:path';
 import { DiagnosticBag } from '../diag/diagnostic.js';
 import { atomicWrite, writePlain } from '../fs/atomic-write.js';
 import { buildJournal, type Journal, type JournalCommand, type PlannedWrite } from '../fs/journal.js';
@@ -87,6 +89,32 @@ export async function executeApply(inputs: ExecuteInputs): Promise<ExecuteResult
 
   const plannedWrites: PlannedWrite[] = [];
   for (const f of inputs.files) {
+    // **`lstat` the target itself before reading it** (C-51's shape,
+    // applied to the overwrite path).
+    //
+    // `confineAtWrite` walks the ANCESTORS; it does not stat the final
+    // component. So a symlink planted **at** an overwrite target between
+    // planning and writing passes confinement — and the very next thing
+    // this loop does is read that path's bytes into `.harness/journal.d/`
+    // as a backup. That is an arbitrary file read, with the result landing
+    // in a directory the project commits.
+    //
+    // C-51 names exactly this for `update`'s deletes and says *the risk is
+    // the backup, not the unlink*. The overwrite path has the identical
+    // shape and carried no equivalent, so it gets one here: a target whose
+    // type changed since planning is `E-TARGET-RACE`, journal intact,
+    // nothing read.
+    if (f.preExisting && (await isLink(inputs.root, f.path))) {
+      bag.add('E-TARGET-RACE', {
+        values: {
+          path: f.path,
+          detail: 'it is a symbolic link now, and the plan saw a regular file',
+          command: inputs.command,
+        },
+      });
+      return { written, createdDirs, complete: false, bag };
+    }
+
     const pre = f.preExisting ? await inputs.readExisting(f.path) : null;
     plannedWrites.push({
       path: f.path,
@@ -126,6 +154,7 @@ export async function executeApply(inputs: ExecuteInputs): Promise<ExecuteResult
       const outcome = await atomicWrite(
         inputs.root,
         {
+          command: inputs.command,
           path: f.path,
           bytes: f.bytes,
           mode: f.executable ? 0o755 : 0o644,
@@ -155,7 +184,13 @@ export async function executeApply(inputs: ExecuteInputs): Promise<ExecuteResult
 
   const manifestWrite = await atomicWrite(
     inputs.root,
-    { path: inputs.manifest.path, bytes: inputs.manifest.bytes, mode: 0o644, expectNew: false },
+    {
+      command: inputs.command,
+      path: inputs.manifest.path,
+      bytes: inputs.manifest.bytes,
+      mode: 0o644,
+      expectNew: false,
+    },
     knownDirs,
   );
   for (const d of manifestWrite.bag.items) bag.push(d);
@@ -173,4 +208,15 @@ export async function executeApply(inputs: ExecuteInputs): Promise<ExecuteResult
 
 function joinRoot(root: string, relative: string): string {
   return `${root}/${relative}`;
+}
+
+/** Is this destination a symbolic link **right now**? `lstat`, never
+ *  `stat`: `stat` follows the link and answers about its target, which is
+ *  the question that lets the escape through. */
+async function isLink(root: string, path: string): Promise<boolean> {
+  try {
+    return (await lstat(join(root, ...path.split('/')))).isSymbolicLink();
+  } catch {
+    return false; // absent is not a link, and not this check's fault to report
+  }
 }

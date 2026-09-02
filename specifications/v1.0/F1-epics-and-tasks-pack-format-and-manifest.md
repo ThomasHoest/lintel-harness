@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 4.1
+**Version:** 4.2
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 4.2 | 2026-09-02 | **The adversarial fixtures ran, and found a real hole on the first attempt.** **`.git`, `.hg` and `.svn` were absent from the destination denylist.** US-3 stage 2 declares **two** classes; the module encoded class 2 and carried `.harness` separately, so class 1 *looked* handled — and **the drift guard read the class-2 row alone**, so the code and its guard agreed with each other while disagreeing with the spec. The hole was not academic: **`.git/hooks/pre-commit` executes on every commit**, so a pack able to write one had arbitrary code execution on the next `git commit`, reachable by a single `copy` step. Fixed, and **the guard now derives from both rows** — *a guard that reads half a rule certifies half a rule*. **The harness also caught four of its own fixtures failing for the wrong reason**, which is the property US-16 names: a `generate` with empty `anchors`, and three `copy` steps changing a basename, each refused by its own schema before its attack was ever reached. A fixture that fails for the wrong reason has stopped testing what it was written for, and asserting the **exact code** rather than non-zero is what surfaces it. **T-1213's coverage gate is the control that would have caught US-16's own recorded finding**: it parses the minimum-set table out of the spec and checks both directions — a row with no fixture is an untested rule, and a fixture with no row means the table stopped being the count of record. Its first draft matched an un-trimmed line against an **indented** table, found zero rows, and would have reported perfect coverage of nothing; the length assertion is what caught that. **47 adversarial fixtures.** |
 | 4.1 | 2026-09-02 | **E-09 — `validate --all --strict` exits 0 on all three packs, and the run is not silent.** That last clause is the part easy to satisfy by accident: **four findings stand** — `planning`'s provisional role set and inert guard script, `writing`'s two absent parts — and every one is `notice`, so `--strict` promotes none. Q-60's whole reason for existing, demonstrated rather than argued. **All fourteen steps are implemented**, with two narrower than the text and both narrowings stated where they live. **Found by building: US-16's *"the write set is computed **once** here"* is wrong on a shipping pack** — read as one set merged across `when` branches it reports **three `E-MAP-COLLISION`s against a correct `planning`**, whose two calibration copies write `portfolio/` from directories with identical basenames and can never both apply. Corrected to per-combination with the union consumed downstream (F1 v5.7). **Step 11 renders and F1 names no source for the answers it needs** — known limit 22. **`E-PACK-CLI-TOO-OLD` is in none of the fourteen steps** though `checkCliFloor` exists for exactly that report. **And one finding that was read as a spec defect and was mine**: `W-PATH-NON-NFC` looked unreachable, but the rule is about a **source basename from directory recursion** and nothing was normalizing them — an NFD name from a macOS checkout would not have matched a Linux teammate's NFC one, breaking G-F1-7 silently. **631 unit tests.** |
 | 4.0 | 2026-09-02 | **T-1109 — all three packs apply into a real directory and verify clean.** Everything before this asserted a piece; this asserts the **loop**: `planApply` → `executeApply` → bytes on disk → `payloadDigest` → `verifyProject`, over the packs that ship, with no fixtures anywhere. **It is the first evidence for the claim the product rests on** — that applied state is **recomputable** (Q-43). The manifest holds no per-file hashes, so if the recomputation did not reproduce the tree exactly nothing here would pass, and no amount of specification would make it so. Three further properties fall out and are asserted rather than argued: **phase 1 is byte-for-byte verbatim with no file skipped**; **a completed apply leaves a manifest and no journal**, because one present afterwards would claim an interrupted run; and **two applies of one pack produce byte-identical trees**, checked against disk rather than in memory. **A freshly applied project reports `unfilled` on every pack**, which is exactly what Q-79 added the state to say. **This is S7's shape, one step short**: S7 wants *this* repository produced by the tool, and this produces a temporary one — what it proves is that the machinery can. **154 integration tests.** |
 | 3.9 | 2026-09-02 | **E-11's implementer half — the apply, decided before anything is written.** `plan-phase2.ts` is a **separate module so that *the executor re-reads the payload* is a change somebody has to make on purpose**: an execute-time read lets content change between steps, and that content would have passed **no validation**, appeared in **no disclosure** and been covered by **no `payloadDigest`** — three guarantees, all stated over what the *planner* saw, all made false at once by a single read. `executeApply` therefore **computes nothing**: its only filesystem reads are destination-side safety checks. **The order is the design** — journal before the first write so a crash leaves a record of intent; manifest **last**, because one present after a crash would claim an apply that did not finish; journal removed only after it lands. **`E-TARGET-EXISTS`'s three comparisons all resolve by `collisionKey`, unconditionally**, and the reason is rollback safety rather than tidiness: under `===`, a project holding `.claude/Settings.json` and a step writing `.claude/settings.json` are the same file on macOS, so the apply overwrites, the journal records `preExisting: false`, no backup is taken, and `--rollback` **deletes a user file it did not create**. **Fixed here, from E-07's report: stage 4 took `AppliedPath`, so a phase-1 payload write could not be re-confined at all** — the largest write the product performs was the one write with no stage-4 check. It takes `WritablePath` now, which is what the ADR said all along. **544 unit tests.** |
@@ -1524,7 +1525,7 @@ for the applying fixtures E-11.
 
 ### The harness
 
-- [ ] **T-1201** `[Implementer]` `tests/fixtures/adversarial/` and its runner in
+- [x] **T-1201** `[Implementer]` `tests/fixtures/adversarial/` and its runner in
   `tests/fixtures/run-fixtures.ts` — each fixture a **minimal pack** with a
   declared expected outcome; CI asserts the **exact code and the exit class**,
   not merely non-zero, because a fixture that fails for the wrong reason has
@@ -1544,7 +1545,7 @@ for the applying fixtures E-11.
 > rule, a closed enumeration or a fail-closed parse adds its fixture in the
 > same change.*
 
-- [ ] **T-1202** `[TestWriter]` Reserved-destination fixtures, **settings files
+- [x] **T-1202** `[TestWriter]` Reserved-destination fixtures, **settings files
   by name**: a `copy` to `.claude/settings.json`; a `rename` to
   `.claude/Settings.json` (the `collisionKey` match); a `generate` to
   `.claude/settings.local.json`; and a `copy` to `docs/.claude/settings.json`
@@ -1552,7 +1553,7 @@ for the applying fixtures E-11.
   stage, while §NFR's load-bearing claim depended on it failing).
   *Depends on: T-1201, T-0203.*
 
-- [ ] **T-1203** `[TestWriter]` Reserved-destination fixtures, **by route rather
+- [x] **T-1203** `[TestWriter]` Reserved-destination fixtures, **by route rather
   than by name** — the property that a `to`-keyed rule cannot have: a `copy` of
   a directory whose recursion **produces** `.claude/settings.json`; a
   `strip-suffix` whose recursion **produces** `.github/workflows/x.yml`; and a
@@ -1560,7 +1561,7 @@ for the applying fixtures E-11.
   C-19, C-31, C-39a.
   *Depends on: T-1201, T-0404.*
 
-- [ ] **T-1204** `[TestWriter]` Reserved-destination fixtures, **class 2 by
+- [x] **T-1204** `[TestWriter]` Reserved-destination fixtures, **class 2 by
   basename**: `package.json`, `.envrc`, `.mcp.json`, and one `copy` fixture per
   remaining new class-2 basename — `.gitlab-ci.yml`, `Jenkinsfile`,
   `azure-pipelines.yml`, `bitbucket-pipelines.yml`, `GNUmakefile`, `.justfile`
@@ -1569,7 +1570,7 @@ for the applying fixtures E-11.
   category named exactly it.
   *Depends on: T-1201, T-0203.*
 
-- [ ] **T-1205** `[TestWriter]` Reserved-destination fixtures, **the any-segment
+- [x] **T-1205** `[TestWriter]` Reserved-destination fixtures, **the any-segment
   quantifier**: `.github/workflows/ci.yml` and `.vscode/tasks.json` at the
   root; `docs/.git/hooks/pre-commit` (**C-33** — under first-segment scoping
   this passed); `pkg/node_modules/.bin/foo` (**C-39d** — nested
@@ -1580,7 +1581,7 @@ for the applying fixtures E-11.
   (C-41).
   *Depends on: T-1201, T-0203.*
 
-- [ ] **T-1206** `[TestWriter]` `.harness/` and written-set fixtures: a step whose
+- [x] **T-1206** `[TestWriter]` `.harness/` and written-set fixtures: a step whose
   `to` is `.harness/README.md` (**C-5 is absolute and has no carve-out, for a
   README or for anything else**); a `substitute` whose `in` glob is
   `[".claude/settings.json"]` and a `rewrite-path` whose `in` glob is
@@ -1589,20 +1590,20 @@ for the applying fixtures E-11.
   all (C-27).
   *Depends on: T-1201, T-0404.*
 
-- [ ] **T-1207** `[TestWriter]` Fail-closed parse and closed-enumeration
+- [x] **T-1207** `[TestWriter]` Fail-closed parse and closed-enumeration
   fixtures: `"op": "copy "` with a trailing space; `pack.json` declaring
   `"name"` twice; `recipe.json` declaring `"formatVersion": 999`; and a recipe
   declaring **257** steps across base plus scaffolds. C-24, C-25, C-30.
   *Depends on: T-1201, T-0301, T-0402.*
 
-- [ ] **T-1208** `[TestWriter]` Boolean-typing fixtures (**C-34**): a step
+- [x] **T-1208** `[TestWriter]` Boolean-typing fixtures (**C-34**): a step
   declaring `"executable": "false"` and a parameter declaring
   `"notASecret": "no"`, each `E-UNKNOWN-VALUE`, exit 2, nothing written. Under
   v2.3 the first read as `true` and the second disabled the credential ban —
   two security gates failing **open** on a typo.
   *Depends on: T-1201, T-0303.*
 
-- [ ] **T-1209** `[TestWriter]` Executable-bit fixtures: a `copy` to
+- [x] **T-1209** `[TestWriter]` Executable-bit fixtures: a `copy` to
   `.git/hooks/pre-commit` with `"executable": true`, which is **two
   independent faults**, `E-MAP-RESERVED-DEST` **and**
   `E-EXEC-DEST-FORBIDDEN`; and a `copy` to `docs/.claude/hooks/x.sh` with
@@ -1612,14 +1613,14 @@ for the applying fixtures E-11.
   scoping this was refused by neither list (C-39b).
   *Depends on: T-1201, T-0508.*
 
-- [ ] **T-1210** `[TestWriter]` Payload-integrity fixtures: a symlink in the pack
+- [x] **T-1210** `[TestWriter]` Payload-integrity fixtures: a symlink in the pack
   (`E-SYMLINK-IN-PACK`); a `generate` whose `template` names nothing in the
   payload (`E-RECIPE-SOURCE-MISSING`, C-38); and a payload file shipped `0755`,
   which **applies cleanly** and whose `.harness/pack/` copy must be **`0644`** —
   asserted on the mode, since there is no code (C-26).
   *Depends on: T-1201, T-0605, T-0406.*
 
-- [ ] **T-1211** `[TestWriter]` Permission-frontmatter fixtures (C-32a, C-39c,
+- [x] **T-1211** `[TestWriter]` Permission-frontmatter fixtures (C-32a, C-39c,
   C-40): `.claude/commands/x.md` declaring `allowed-tools:`; the same file
   present **only in the payload**, named by no recipe step — the phase-1
   quantifier, which under v2.4 landed unchecked and undisclosed inside the
@@ -1631,7 +1632,7 @@ for the applying fixtures E-11.
   file-kind half of the rule tested rather than assumed.
   *Depends on: T-1201, T-0803.*
 
-- [ ] **T-1212** `[TestWriter]` The two fixtures that need a **target directory**
+- [x] **T-1212** `[TestWriter]` The two fixtures that need a **target directory**
   (US-16, N-5, C-36): a target holding `.claude/Agents/README.md` applied by a
   pack writing `.claude/agents/README.md` → `E-TARGET-EXISTS`, exit 1, zero
   bytes; and **the same fixture re-run with `--force` and byte-identical
@@ -1641,7 +1642,7 @@ for the applying fixtures E-11.
   code.
   *Depends on: T-1201, T-1108, T-1109.*
 
-- [ ] **T-1213** `[TestWriter]` A **coverage** test in
+- [x] **T-1213** `[TestWriter]` A **coverage** test in
   `tests/fixtures/coverage.test.ts` asserting that every row of US-16's
   minimum-set table has a fixture and every fixture maps to a row — so the
   obligation *"any amendment adding a rule adds its fixture in the same

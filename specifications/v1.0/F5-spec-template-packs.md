@@ -35,6 +35,7 @@
 | **3.5** | **2026-09-02** | **A criterion that would have passed before the fix it verifies, and four smaller drifts — all found by building T-1601 and T-1603.** US-36 asks for zero hits on `copy this folder`, while §Flows records the deleted text as *"copy the contents of this folder"* — **which that grep does not match**. The criterion tested a *phrasing* rather than the rule, so it was green against the unfixed pack: the single most useless property a check can have. The binding form is now **behavioural**, with the literals demoted to a floor. Also stated for the first time: **which task owns which half of US-36** — T-1603 sees applied-destined content only, and **four of the five §Flows deletions are not applied-destined**, so criteria 3 and 4 are T-1505's or nobody's; **what "five" counts** (five files, five phrases and four-plus-two headings were three different enumerations); **that the twenty-line tree budget includes the fences**, derived from the spec's own numbers; and `coding`'s README line count, quoted as 120 and actually **118**. **One pack defect reported, not fixed** (T-1604): `packs/writing/README.md` makes **no self-containment statement**, where `coding` states it outright and `planning` puts it in its identity line — part 9's explanation of why an absent part is absent is a claim about the product, not about the pack, and a reader who skips the anatomy table never meets it. |
 | **3.6** | **2026-09-02** | **T-1501 and T-1502 ran, and the check E-15's preamble said had never been run is now a script that exits 1.** *"Treat a task here that reports new differences as the check working, not as a setback."* It reported them. **`coding`**: 32 differences over 38 source paths, reproducing v3.3's hand-run exactly, with **one residue** — `targets/Run.md`, whose two path literals gained a `template/` prefix pointing at a directory that exists in **neither the pack nor an applied project**, unlike every other repointed file. **`writing`: never diffed at all until now** — §11 discharged ADR-002's condition 2 with four *greps over the shipped pack*, which say nothing about what the source held or what failed to extract. 231 differences over 229 source paths, **16 residue**, and the reason is structural: **US-24's ten classes are `coding`'s, and `writing` has no by-file enumeration anywhere** — §Flows gives four *kinds* with no files under any. **The finding worth the whole epic is a class-evidence failure**: class (e) declares *"is five files"* and offers a grep minus classes (b) and (h) — which now yields **seven**, because **v3.4 released two files from class (h) and nobody re-checked (e)**. A correction to one class silently invalidated another class's assertion, which is exactly the failure mode a re-runnable check exists to catch and a hand-run cannot. **Four more defects**: class (b) has **two different memberships in one document** (US-24 says three kinds, §Flows says five), so `commands/target.md` is class (b) under one and residue under the other; **`templates/home.template.md` is declared authored by Q-51 and is not** — it pairs with the source's `Home.md`, same frontmatter, same callout verbatim, parameterised; **two of US-25's four exclusion classes cannot be enumerated from the recorded commit**, because both live in an **untracked** file absent from it, the same shape as the §NFR/US-25 contradiction §11 found; and **one sentence in `writing-guide/README.template.md` gets opposite verdicts from US-25 (approving) and US-36 (forbidding)**. All of these are **T-1503's to adjudicate** and none is decided here. **`specifications/v1.0/F5-migration-record.md` holds the evidence**; `node scripts/migration-diff.mjs <pack>` re-runs it and takes the commit from `provenance`, never from an argument. |
 | **3.7** | **2026-09-02** | **Four Q-82 casualties, and one retraction that survived inside the change which made it.** Found by building E-14's recipe-shape assertions; **no bundled pack failed a single one** — the recipes are the fact and these rows were the stale claim, so this is T-1406's *fix the table* branch and not its *fix the pack* branch. (a) **§7b said `coding` declares twenty-one steps** across two backend scaffolds; it declares **fifteen and no scaffolds**, `packs/coding/scaffolds/` does not exist, and `applied-readmes/` holds **five** files rather than six. (b) **The Folder READMEs row still counted a sixth**, `infrastructure/`, from a scaffold that left the product. (c) **The Executables row still said `coding` ships four under a declared root** — no v1.0 pack ships an executable, and a test now asserts every applied path of every pack is `0644`. (d) **The comparison matrix said `writing` does "per-folder index renames"** — *exactly* the mechanism **v3.0 identified as not existing** ("the recipe holds **one** `index.md` rename, and the scaffold ships **twelve pre-authored `index.md` files**"). v3.0 corrected the §7b table and **left this cell**, so the retracted claim survived in the summary matrix, committed inside the change that fixed it elsewhere. That is the closed-enumeration staleness `CLAUDE.md` warns about, in its purest form: **the fix and the survival were the same commit.** Also corrected there: `coding`'s row claimed a scaffold branch it no longer has. **Three more, recorded not fixed**, all in §7b's prose and all T-1406's: `writing`'s step table has **no row for its `substitute` step** (seven rows for eight steps, and the rows are not in recipe order); §7b's `coding` applied tree still shows an `infrastructure/` subtree no step produces; and the README produced-tree blocks are **elided** under US-28's twenty-line budget, so T-1405 must assert *listed paths exist* plus *applied paths are listed or covered by an elision marker* rather than treating them as closed listings. |
+| **3.8** | **2026-09-02** | **§7b needed a fourth round, and the section Q-82 never reached at all.** E-19's acceptance gate **passes** — all three packs, zero errors, zero `defect` warnings, exit `0` plain and under `--strict` — and building it found **ten** stale claims. **Four in `coding` §7b**, still describing the pre-Q-82 pack: the step table keeps the `Backend` and `infrastructure/` folder-README rows directly above the sentence saying they went, the applied tree still ends in `infrastructure/`, and the text still asserts *"`coding` is the one v1.0 pack that ships executables, and it declares them"* — `packs/coding/pack.json` declares no `executableRoots` and no scaffolds, and `report.disclosure.executables` is empty for every pack. **Three in §Scaffold inventory, which three prior rounds never opened**: *"Three scaffolds at v1.0"* four rounds after two of them left; the `executableRoots` claim again; and *"each scaffold's files are `.template`-suffixed"*, which is **false of the only surviving scaffold** — `writing-workstream` ships twelve plain `index.md` files with no suffix anywhere. **Two about what the packs emit**: *"`coding` and `writing` emit no notice at v1.0"* and *"exactly two findings, both against `planning`"* — `writing` emits **two `W-ANATOMY-ABSENT`**, for the parts 8 and 9 absences **this document requires it to declare three bullets above**. The real set is **four**. **The gate is why it survived**: four notices exit `0` exactly as two do, so nothing ever failed. **One pack finding, recorded not fixed** (T-1803): `planning` states the absorption-gate rule in **three different wordings** across `targets/Run.md`, `targets/README.md` and `CLAUDE.md.template` — three subjects, two objects, two conjunctions — and `targets/target.template.md`, the *"target contract"* T-1802 names, carries **no form of it at all**. T-1802 asks for identical wording precisely because three copies that drift are worse than one. |
 
 ---
 
@@ -527,10 +528,15 @@ agree that **US-39** is next free, so nothing here is renumbered.
   *precisely because* no pack may register an agent hook at v1.0. Neither
   is promoted by `--strict` and neither can be, so
   `validate packs/planning --all --strict` exits `0` while still printing
-  both. **`coding` and `writing` emit no notice at v1.0.** A test may
-  assert the whole claim: `validate --all --strict --json` exits `0` and
-  reports exactly two findings, both `"class": "notice"` and both against
-  `planning`.
+  both. **`coding` emits no notice at v1.0; `writing` emits two** —
+  `W-ANATOMY-ABSENT` for parts 8 and 9, which **this document requires it
+  to declare absent three bullets above**. The claim that it emitted none
+  contradicted that requirement and stood until v3.8. A test asserts the
+  whole set: `validate --all --strict --json` exits `0` and reports
+  exactly **four** findings, every one `"class": "notice"` — two against
+  `planning` and two against `writing`. **The gate is unaffected**, which
+  is why the error survived: four notices exit `0` exactly as two do, and
+  nothing failed.
 - A pack whose `pack.json` omits any of the nine parts fails validation
   with `E-ANATOMY-MISSING` (F1 §Error States, exit 2), and
   `lintel harness init` refuses to apply it.
@@ -1435,9 +1441,11 @@ Two things follow, both v1.0 facts:
   `W-HOOK-SCRIPT-INERT` for its guard script — and both are correct
   reports of states this spec **requires** the pack to be in, so a run
   that did *not* report them would mean the pack had changed. `coding`
-  and `writing` emit none at v1.0. Checkable in one run: `validate --all
-  --strict --json` exits `0`, reports exactly two findings, both
-  `"class": "notice"`, both against `planning`.
+  emits none at v1.0; **`writing` emits two**, for the parts 8 and 9
+  absences this spec requires it to declare. Checkable in one run:
+  `validate --all --strict --json` exits `0` and reports exactly **four**
+  findings, every one `"class": "notice"` — two against `planning`, two
+  against `writing`.
 - **Legibility:** each pack README **≤ 160 lines** — a legibility budget,
   raised when a pack's real content outgrows it rather than met by
   deleting substance (US-28) — naming all nine
@@ -3115,9 +3123,11 @@ generator.
 | `backend-aws` — Lambda + CDK. Any executable it ships lands under the same declared root | `coding` | `backend` | `infrastructure/backend-deploy/` | **To author** (Q-8a) |
 | `writing-workstream` — the corpus and per-workstream stage folders, each with an `index.md`. No executable content | `writing` | `workstream` | project root | **Exists** — extracts from the source project's shape |
 
-**`infrastructure/backend-deploy/` is the only `executableRoots` prefix
-any v1.0 pack declares**, and `coding` is the only pack that declares one
-at all. Both backend scaffolds write into it, which is why one root
+**No v1.0 pack declares an `executableRoots` prefix** (Q-82).
+*(Superseded: "`infrastructure/backend-deploy/` is the only
+`executableRoots` prefix any v1.0 pack declares, and `coding` is the only
+pack that declares one at all." The reasoning below is kept because the
+add-on mechanism inherits it.)* Both backend scaffolds write into it, which is why one root
 covers whichever is selected; `writing` and `planning` declare none.
 
 **The two backend scaffolds are alternatives, not composable peers.**
@@ -3132,9 +3142,14 @@ IaC could bake IaC assumptions into the scaffold interface. Mitigation,
 required at v1.0 and recorded: paper-check the interface against one
 platform-CLI target (Vercel, Fly) **without authoring it**.
 
-Each scaffold's files are `.template`-suffixed in the payload and
-`strip-suffix`ed by the recipe, so the payload never contains a file that
-looks runnable but is not.
+**The `.template` convention belongs to the add-ons, not to the surviving
+scaffold.** *(Superseded: "Each scaffold's files are `.template`-suffixed
+in the payload and `strip-suffix`ed by the recipe, so the payload never
+contains a file that looks runnable but is not." True of the two backend
+kits; **false of `writing-workstream`**, which ships twelve plain
+`index.md` files carried by five `copy` steps, with no suffix anywhere.
+The reasoning holds where it applies — a payload file that looks runnable
+and is not is a trap — and `writing-workstream` ships nothing runnable.)*
 
 ---
 

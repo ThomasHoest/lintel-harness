@@ -293,14 +293,14 @@ backend kit does not belong inside a way of working.
   is alone in its own. The assertion lives on as **F1 T-1220(b)**, against a
   fixture pack. **The id is not reused.**
 
-- [ ] **T-1702** `[TestWriter]` US-21, **the half that survives** — applying
+- [x] **T-1702** `[TestWriter]` US-21, **the half that survives** — applying
   each pack with **no** scaffold produces a complete, usable project, and
   `writing --scaffold writing-workstream` adds exactly the corpus and
   workstream trees and nothing else. The backend half of US-21 defers to
   v1.1 with the add-on mechanism.
   *Depends on: T-1405.*
 
-- [ ] **T-1703** `[TestWriter]` The executable rule, **rewritten as a
+- [x] **T-1703** `[TestWriter]` The executable rule, **rewritten as a
   negative** (Q-82): assert that **every applied path of every bundled pack,
   in every scaffold selection, is `0644`** — no v1.0 pack declares
   `executableRoots`, none declares `executable: true`, and none writes a
@@ -323,7 +323,7 @@ the gap rather than closing it.
 
 **Depends on:** E-14.
 
-- [ ] **T-1801** `[TestWriter]` Assert the guard ships as ordinary `0644`
+- [x] **T-1801** `[TestWriter]` Assert the guard ships as ordinary `0644`
   content under a `.claude/hooks/` path, that `validate` emits
   **`W-HOOK-SCRIPT-INERT`** as a **`notice`**, and that `--strict` does
   **not** promote it. This is one of the two codes `planning` emits **by
@@ -331,7 +331,7 @@ the gap rather than closing it.
   content it means to ship is the failure Q-60 exists to prevent.
   *Depends on: F1 T-0906.*
 
-- [ ] **T-1802** `[TestWriter]` US-26 and US-27 as **content** assertions,
+- [x] **T-1802** `[TestWriter]` US-26 and US-27 as **content** assertions,
   since they cannot be behavioural at v1.0: the bet template requires kill
   criteria and the `/bet` command's prose refuses without them; the
   absorption gate's rule text appears in `Run.md`, the target contract and
@@ -355,34 +355,34 @@ The gate that makes every claim above continuous rather than one-off.
 **Depends on:** every epic above, and **F1 E-09** (`validate`) and **F1
 E-12** (the fixture suite and CI).
 
-- [ ] **T-1901** `[TestWriter]` `lintel harness validate --all --strict`
+- [x] **T-1901** `[TestWriter]` `lintel harness validate --all --strict`
   exits **`0`** over all three bundled packs. **This is the gate Q-60 made
   reachable** — before the `defect`/`notice` split it could never pass,
   because two of `planning`'s findings are deliberate design decisions.
   *Depends on: F1 T-0907, T-1304, T-1406.*
 
-- [ ] **T-1902** `[TestWriter]` US-20 — `lintel harness pack info <name>`
+- [x] **T-1902** `[TestWriter]` US-20 — `lintel harness pack info <name>`
   renders each pack's nine parts with statuses, its parameters, its
   scaffolds and its complete step list, and the step list **matches
   `recipe.json` exactly**. G-F1-9: a reader must be able to see what an
   apply will do without running it.
   *Depends on: F1 T-0908, T-1401.*
 
-- [ ] **T-1903** `[TestWriter]` US-34 — assert **no pack applies by any
+- [x] **T-1903** `[TestWriter]` US-34 — assert **no pack applies by any
   route other than its recipe**: no pack ships an install script, no
   `postinstall`, no executable outside a declared root, and no instruction
   to run anything. The recipe is the only way a pack reaches a project, and
   that is a security property, not a convention.
   *Depends on: T-1703, T-1603.*
 
-- [ ] **T-1904** `[TestWriter]` The **determinism** assertion across packs:
+- [x] **T-1904** `[TestWriter]` The **determinism** assertion across packs:
   applying the same pack twice into two empty directories with identical
   answers and scaffolds produces byte-identical trees and byte-identical
   manifests, on macOS, Linux and Windows, modulo the executable bit.
   **✅ UNBLOCKED (U-13): GitHub Actions, three-platform matrix — the Windows leg is where the executable bit and CRLF normalization actually differ)
   *Depends on: F1 T-1218, T-1405.*
 
-- [ ] **T-1905** `[TestWriter]` `planning`'s **isolation** NFR: switching
+- [x] **T-1905** `[TestWriter]` `planning`'s **isolation** NFR: switching
   `constraintFloor` changes **only** the three calibrated files and
   `calibration.md`, and no other applied path moves. The two `when` steps
   are the only conditional content in the product, so this is the one place

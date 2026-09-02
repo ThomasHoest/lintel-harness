@@ -205,3 +205,63 @@ test('the journal is not removed when the apply did not complete', async () => {
     assert.equal(removed, false, 'the journal is the way back and must survive');
   });
 });
+
+/**
+ * **C-51's shape, applied to the overwrite path.**
+ *
+ * `confineAtWrite` walks the **ancestors**; it does not `lstat` the final
+ * component. So a symlink planted **at** an overwrite target between
+ * planning and writing passes confinement — and the next thing `execute`
+ * does is read that path's bytes into `.harness/journal.d/` as a backup.
+ *
+ * That is an **arbitrary file read**, with the result landing in a
+ * directory the project commits. C-51 names it for `update`'s deletes and
+ * says plainly that *the risk is the backup, not the unlink*: removing a
+ * symlink removes the link, but reading through one reads the target.
+ *
+ * F1's overwrite path carried no equivalent. Found by the F3 write-path
+ * work, which needed the same guarantee two steps further on.
+ */
+test('a target that became a symlink after planning is refused before it is read', async () => {
+  if (process.platform === 'win32') return;
+  await withProject(async (root, dir) => {
+    const { symlink, writeFile: wf, mkdir: md } = await import('node:fs/promises');
+    await md(join(dir, 'secret'), { recursive: true });
+    await wf(join(dir, 'secret/key.txt'), 'PRIVATE');
+
+    // The plan saw a regular file; by write time it is a link to a secret.
+    await symlink(join(dir, 'secret/key.txt'), join(dir, 'a.md'));
+
+    let readThrough = false;
+    const r = await executeApply(
+      inputs(root, [file(ap('a.md'), 2, 'OURS', { preExisting: true, preMode: 0o644 })], {
+        readExisting: async () => {
+          readThrough = true;
+          return B('should never be reached');
+        },
+      }),
+    );
+
+    assert.deepEqual(codes(r.bag), ['E-TARGET-RACE']);
+    assert.equal(r.complete, false);
+    assert.equal(readThrough, false, 'the bytes behind the link are never read');
+    assert.match(r.bag.items[0]!.message, /symbolic link now/);
+  });
+});
+
+// A path the plan expects to CREATE is claimed by `link`, which fails
+// EEXIST — so the link case there is already refused, and this check is
+// about the overwrite path specifically.
+test('an ordinary overwrite target is still read normally', async () => {
+  await withProject(async (root, dir) => {
+    const { writeFile: wf } = await import('node:fs/promises');
+    await wf(join(dir, 'a.md'), 'THEIRS');
+    const r = await executeApply(
+      inputs(root, [file(ap('a.md'), 2, 'OURS', { preExisting: true, preMode: 0o644 })], {
+        readExisting: async () => B('THEIRS'),
+      }),
+    );
+    assert.deepEqual(codes(r.bag), []);
+    assert.equal(r.complete, true);
+  });
+});

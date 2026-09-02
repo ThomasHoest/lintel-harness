@@ -39,6 +39,7 @@
  */
 import { DiagnosticBag, type Diagnostic } from '../diag/diagnostic.js';
 import { isTreeDigest, type TreeDigest } from '../hash/digest.js';
+import { hashBytes } from '../hash/sha256.js';
 import { checkRecordedAnswers, type Answer } from '../pack/parameters.js';
 import { parametersFor } from '../pack/scaffolds.js';
 import { compareSemver, parseSemver } from '../semver/compare.js';
@@ -317,6 +318,24 @@ export interface PlannedWrite {
    *  renames over it. Not the same write, which is why the disposition is
    *  carried rather than re-derived. */
   readonly disposition: 'added' | 'replaced';
+  /**
+   * **What the plan observed on disk**, so the executor can confirm it is
+   * still true immediately before the `rename` (US-66: every replacement
+   * is `lstat`ed, confirmed a regular file, re-hashed and confirmed still
+   * equal to what the plan observed).
+   *
+   * `null` for `added`, where the plan observed nothing — the executor's
+   * exclusive create is what checks that case, and a hash of an absent
+   * file would be a claim about something that was not there.
+   *
+   * Raw bytes, not normalized content. The classification compares
+   * normalized content because it is asking *did the user change this*;
+   * this field is asking *did anything at all move under us since we
+   * looked*, and a line-ending rewrite between plan and write is exactly
+   * the kind of movement it must refuse to write through.
+   */
+  readonly preHash: string | null;
+  readonly preMode: number | null;
 }
 
 export interface UpdatePlanInput {
@@ -375,6 +394,24 @@ export interface UpdatePlan {
   readonly payloadDeletes: readonly HarnessPath[];
   /** The paths handed over — the whole of what F6 reconciles (§F3.4). */
   readonly kept: readonly UpdateEntry[];
+  /**
+   * **Every fill-expected path either recipe declares** — the union, not
+   * the new recipe's alone, and not a filter of `entries`.
+   *
+   * Carried so the **executor** can enforce Q-79 independently of the
+   * classification rather than inheriting its conclusion. The prohibition
+   * is absolute (F1 US-31, T-2308): a fill-expected path is never
+   * overwritten by `update`, whatever the newer pack changed, whatever the
+   * bytes on disk say, under no flag. `dispositionInBoth` already ensures
+   * such a path cannot become a write; this list is what lets
+   * `executeUpdate` **check** that rather than trust it, so a future
+   * disposition rule cannot reach the writer through a classification bug.
+   *
+   * A defence in depth is only worth having when it is derived
+   * independently, which is why this is built from the two renders'
+   * declarations and never from `entries`.
+   */
+  readonly fillExpected: readonly AppliedPath[];
   /** Ids dropped from the rewritten manifest (US-69). */
   readonly droppedParameters: readonly string[];
   /** The answers the rewritten manifest records. */
@@ -417,6 +454,7 @@ export function planUpdate(input: UpdatePlanInput): UpdatePlan {
     writes: [],
     payloadDeletes: [],
     kept: [],
+    fillExpected: [],
     droppedParameters: [],
     answers: new Map(),
     selected: [],
@@ -466,11 +504,15 @@ export function planUpdate(input: UpdatePlanInput): UpdatePlan {
     answers: resolved.answers,
     selected: resolved.selected,
   });
-  const entries = classifyPaths({
-    expectedOld: input.renderOld(),
-    expectedNew,
-    onDisk: input.onDisk,
-  });
+  const expectedOld = input.renderOld();
+  const entries = classifyPaths({ expectedOld, expectedNew, onDisk: input.onDisk });
+
+  // Built from the **declarations** of both renders, never from the
+  // dispositions above — see `UpdatePlan.fillExpected` for why an
+  // independently derived list is the only kind worth checking against.
+  const fillExpected = new Set<AppliedPath>();
+  for (const r of expectedOld) if (r.fillExpected) fillExpected.add(r.path);
+  for (const r of expectedNew) if (r.fillExpected) fillExpected.add(r.path);
 
   const byPath = new Map(expectedNew.map((r) => [r.path, r]));
 
@@ -482,11 +524,17 @@ export function planUpdate(input: UpdatePlanInput): UpdatePlan {
        from is not reachable; kept so a future change cannot silently plan
        a write with no bytes. */
     if (rendered === undefined) continue;
+    // The plan's observation, taken here rather than in the executor: the
+    // executor's job is to confirm nothing moved between **planning** and
+    // writing, and it can only do that against what planning saw.
+    const found = e.disposition === 'replaced' ? input.onDisk(e.path) : null;
     writes.push({
       path: e.path,
       bytes: rendered.bytes,
       mode: rendered.mode,
       disposition: e.disposition,
+      preHash: found === null ? null : hashBytes(found.bytes),
+      preMode: found?.mode ?? null,
     });
   }
 
@@ -498,6 +546,7 @@ export function planUpdate(input: UpdatePlanInput): UpdatePlan {
     writes,
     payloadDeletes: payloadOrphans(bag, from.pack, input.oldPayload, input.newPayload),
     kept: keptEntries(entries),
+    fillExpected: [...fillExpected],
     droppedParameters: resolved.dropped,
     answers: resolved.answers,
     selected: resolved.selected,

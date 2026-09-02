@@ -32,45 +32,44 @@ correctly applied" a checked fact instead of a claim.
 ## Status — read this before trying anything
 
 **The specification set is complete and Accepted. The CLI is being built on
-the `v1.0` branch. No command works yet.**
-
-Every command dispatches to a stub:
-
-```
-$ lintel harness init coding
-lintel: "harness init" is not implemented in this build (F2 owns it).
-```
-
-What *does* work is the machinery underneath, and it works end to end. You
-can apply a pack into an empty directory today with a scaffold script:
+the `v1.0` branch. `init` works; the other five commands are still stubs.**
 
 ```bash
 npm ci
 npm run build
-node scripts/try-apply.mjs coding /tmp/demo --verify
+mkdir /tmp/demo && cd /tmp/demo
+node …/dist/cli/main.js harness init coding --set projectName="Demo Project"
 ```
 
-That plans both phases, writes a real project, and verifies it:
+That prints the security disclosure to stderr — every path where an answer
+is written into content, every agent file with its frontmatter verbatim,
+delimited by a per-run nonce — then applies the pack:
 
 ```
-answers: projectName=Demo Project
-plan: 41 payload files, 23 applied files
-payloadDigest: sha256-36d7bd859e92d1…
-applied 65 files into /tmp/demo
-verify: {"match":22,"adapted":0,"filled":0,"unfilled":1,"differs":0,"missing":0}
+lintel: applied coding 1.0.0.
+  41 payload files copied verbatim to .harness/pack/
+  23 files written into the project
+  scaffolds: (none)
+
+Still yours to do:
+  1. Fill project-brief.md — everything the pack does reads it.
+  …
 ```
 
-**`scripts/try-apply.mjs` is a scaffold for trying the machinery, not the
-product.** It fills required parameters instead of prompting, shows no
-disclosure and takes no lock — all of which belong to `init`. Delete it the
-day `init` lands.
+The remaining five still answer honestly:
+
+```
+$ lintel harness update
+lintel: "harness update" is not implemented in this build (F3 owns it).
+```
 
 | | |
 |---|---|
 | Specs and ADRs | all **Accepted** |
 | Packs | **3**, each with a `pack.json` and a `recipe.json` |
-| Epics | **F1** E-03, E-05, E-07, E-11 complete; E-01, E-02, E-04, E-06, E-08, E-09, E-10 have open tasks; **E-12 (adversarial fixtures) is barely started and is a shipping requirement**. **F5** E-13…E-16 built. **F3** E-23 built |
-| Tests | **852** — unit, integration, pack-conformance, structural |
+| Commands | `init` **works**; `validate`, `verify`, `pack info`, `update` and `skill install` have modules but are not wired to argv |
+| Epics | **F1** E-01…E-12 substantially built. **F5** E-13…E-19 built, and **E-19's acceptance gate passes**. **F2** E-20, E-21 built. **F3** E-23, E-24 built |
+| Tests | **1010** — unit, integration, pack-conformance, **adversarial fixtures**, structural |
 | Runtime dependencies | **zero** |
 
 **Counts move every session, so check rather than trust this table:**
@@ -79,6 +78,12 @@ day `init` lands.
 npm test                                              # the test counts
 grep -c '^- \[ \]' specifications/v1.0/*-epics-and-tasks-*.md   # what is left
 ```
+
+**The adversarial fixture suite is the one to run if you run one thing.**
+`npm run test:adversarial` drives ~47 minimal packs, each a declared attack
+with a required outcome, asserting the **exact code and exit class** — a
+fixture that fails for the wrong reason has stopped testing what it was
+written for. It found a real hole on its first run.
 
 ---
 
@@ -116,7 +121,7 @@ person can read it first.
 ├── src/              the CLI (v1.0 branch)
 ├── tests/            integration, pack-conformance, structural
 ├── specifications/   the brief, the five cross-cutting specs, F1…F6
-└── scripts/          gen-diag.mjs, migration-diff.mjs, try-apply.mjs
+└── scripts/          gen-diag.mjs, migration-diff.mjs
 ```
 
 **Two levels, and confusing them is the easiest mistake here.** An edit

@@ -152,7 +152,7 @@ whatever the table says.
 
 **Depends on:** E-23, F1 E-11 (journal, lock, atomic write, rollback).
 
-- [ ] **T-2401** `[Implementer]` The commit sequence in
+- [x] **T-2401** `[Implementer]` The commit sequence in
   `src/cli/commands/update.ts`: lock → journal (**v3**, `command:
   "update"`) → replace unedited paths → delete payload orphans → replace
   `.harness/pack/` with the newer payload → rewrite
@@ -161,7 +161,7 @@ whatever the table says.
   it and it must survive until nothing needs it.
   *Depends on: F1 T-1110, T-2307.*
 
-- [ ] **T-2402** `[Implementer]` The delete path — the only genuinely new
+- [x] **T-2402** `[Implementer]` The delete path — the only genuinely new
   write behaviour in this feature, and the reason journal v3 exists. A
   payload orphan is journalled with **`intent: "delete"`**, carrying
   `preExisting: true`, the pre-apply hash and mode, and a backup, and
@@ -170,7 +170,7 @@ whatever the table says.
   not.
   *Depends on: F1 T-1110, T-2401.*
 
-- [ ] **T-2403** `[Implementer]` Rollback for an interrupted update: the
+- [x] **T-2403** `[Implementer]` Rollback for an interrupted update: the
   journal's `command` field makes `E-JOURNAL-PRESENT`'s remedy read
   `update --rollback` rather than `init --rollback` — which, after a
   crashed update, sent the user to a command that answers
@@ -202,7 +202,7 @@ whatever the table says.
   *Depends on: T-2403.*
 
 
-- [ ] **T-2407** `[Implementer]` **Deletion re-confines immediately before
+- [x] **T-2407** `[Implementer]` **Deletion re-confines immediately before
   acting** (C-51). `confineAtWrite()` on each target, `lstat` it, and
   **refuse a path whose type changed since planning** — `E-TARGET-RACE`,
   exit 2, journal intact, the same code and class the write path already

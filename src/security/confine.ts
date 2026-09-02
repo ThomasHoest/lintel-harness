@@ -144,6 +144,22 @@ export function collisionKey(path: string): string {
  * and `node_modules/.bin/<name>` all passed every stage.
  */
 const RESERVED_NAMES = [
+  // ── class 1: tool- and VCS-owned trees ──────────────────────────────
+  //
+  // **These were missing until the adversarial fixtures ran**, and the
+  // hole was real: `.git/hooks/pre-commit` executes **on every commit**,
+  // so a pack able to write one had arbitrary code execution on the next
+  // `git commit` — reachable by a single `copy` step.
+  //
+  // US-3 stage 2 declares **two** classes and this module encoded only
+  // the second. `.harness` was carried separately as `RESERVED_ROOT`, so
+  // class 1 looked handled; `.git`, `.hg` and `.svn` were not there at
+  // all. The drift guard read the class-2 row alone and therefore agreed.
+  // It reads both rows now.
+  '.git',
+  '.hg',
+  '.svn',
+  // ── class 2: destinations some toolchain executes ───────────────────
   '.github',
   '.vscode',
   '.idea',

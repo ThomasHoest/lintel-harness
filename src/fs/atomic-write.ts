@@ -45,6 +45,22 @@ import { DiagnosticBag } from '../diag/diagnostic.js';
 import type { WritablePath } from '../security/harness-paths.js';
 
 export interface WriteRequest {
+  /**
+   * Which command is writing — `'init'` or `'update'`.
+   *
+   * **Required, and deliberately not defaulted.** `E-WRITE-FAILED` and
+   * `E-TARGET-RACE` both render `→ lintel harness {command} --rollback`,
+   * and a default of `'init'` would send a user recovering a crashed
+   * `update` to a command that answers `E-ALREADY-APPLIED` and leaves the
+   * journal exactly where it was. That is the fault F3-R3 raised, fixed
+   * once for `E-JOURNAL-PRESENT` and found again in these two codes
+   * (F1 v5.9) — *a remedy that cannot work is worse than none, because
+   * the user believes they tried it.*
+   *
+   * This module cannot know the command, so it is told. Making the field
+   * required is what stops the next caller forgetting.
+   */
+  readonly command: 'init' | 'update';
   readonly path: WritablePath;
   readonly bytes: Buffer;
   readonly mode: number;
@@ -95,7 +111,7 @@ export async function atomicWrite(
       await handle.close();
     }
   } catch (e) {
-    bag.add('E-WRITE-FAILED', { values: { path: req.path, errno: errnoOf(e) } });
+    bag.add('E-WRITE-FAILED', { values: { path: req.path, errno: errnoOf(e), command: req.command } });
     return { createdDirs, bag, ok: false };
   }
 
@@ -112,10 +128,11 @@ export async function atomicWrite(
         values: {
           path: req.path,
           detail: 'the plan expected to create it, and it exists now',
+          command: req.command,
         },
       });
     } else {
-      bag.add('E-WRITE-FAILED', { values: { path: req.path, errno: errnoOf(e) } });
+      bag.add('E-WRITE-FAILED', { values: { path: req.path, errno: errnoOf(e), command: req.command } });
     }
     return { createdDirs, bag, ok: false };
   }

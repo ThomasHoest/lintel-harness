@@ -13,6 +13,7 @@
  */
 import { DiagnosticBag, type Diagnostic } from '../diag/diagnostic.js';
 import { escapeLine } from '../diag/escape.js';
+import { initOptions, runInit } from './commands/init.js';
 import { COMMANDS, GROUP, OWNER, commandList, isCommand, type Command } from './surface.js';
 
 export interface Streams {
@@ -38,8 +39,24 @@ const realStreams: Streams = {
  */
 const STUB_NOTE = 'is not implemented in this build';
 
+/**
+ * Which commands still dispatch to the note.
+ *
+ * **Ownership is not the test any more.** It was `OWNER[c] !== 'F1'` while
+ * every non-F1 command was unbuilt; F2 has since landed `init`, which F1
+ * does not own and which is not a stub. Keeping the ownership test would
+ * have printed the stub note over a working command — a dispatch table
+ * that agrees with a documentation table rather than with the build.
+ *
+ * `DISPATCHED` is the built set, and it is what shrinks the stub set. F1's
+ * own three are still absent from it: `validate`, `verify` and `pack` have
+ * command modules (`runValidate`, `toJson`, `renderPackInfo`) that nothing
+ * in `run` calls yet, which is a separate piece of wiring and not F2's.
+ */
+const DISPATCHED: readonly Command[] = ['init'];
+
 function isStub(c: Command): boolean {
-  return OWNER[c] !== 'F1';
+  return !DISPATCHED.includes(c);
 }
 
 /** Emit a bag: one line per diagnostic line, all to stderr, all escaped. */
@@ -61,8 +78,18 @@ export interface RunResult {
  * surface is testable in-process — the same reason `F2-ADR-003` gives for
  * `runInit`. The acceptance layer still drives a real process, because the
  * exit class is what a user and CI see.
+ *
+ * `cwd` is the project a writing command applies to (IM §11.2: *"applies
+ * one pack to the current directory"*). It is a parameter and not a call
+ * to `process.cwd()` inside the dispatch **so that an in-process test can
+ * assert zero bytes written against a temp directory** rather than against
+ * the repository the suite is running in.
  */
-export async function run(argv: readonly string[], streams: Streams = realStreams): Promise<RunResult> {
+export async function run(
+  argv: readonly string[],
+  streams: Streams = realStreams,
+  cwd: string = process.cwd(),
+): Promise<RunResult> {
   const bag = new DiagnosticBag();
   const [group, command] = argv;
 
@@ -87,22 +114,36 @@ export async function run(argv: readonly string[], streams: Streams = realStream
     return { code: bag.exitCode(), diagnostics: bag.items };
   }
 
-  if (isStub(command)) {
-    streams.err(
-      escapeLine(`lintel: "${GROUP} ${command}" ${STUB_NOTE} (${OWNER[command]} owns it).`),
-    );
-    return { code: 1, diagnostics: [] };
+  if (command === 'init') {
+    // The two-pass walk is `init`'s, not this file's: pass 1 runs inside
+    // `initOptions` and pass 2 cannot run until the pack resolves. `run`
+    // therefore hands over the tokens **after** the group and the command
+    // and decides nothing else about them.
+    const { options, bag: parseBag } = initOptions(argv.slice(2), cwd);
+    if (parseBag.length > 0) {
+      report(parseBag, streams);
+      const code = parseBag.exitCode();
+      if (code !== 0) return { code, diagnostics: parseBag.items };
+    }
+    return { code: await runInit(options, { streams }), diagnostics: parseBag.items };
   }
 
-  // F1's three. Each lands as its epic does; until then the surface
-  // resolves them and the command reports the same stub note, which keeps
-  // the dispatch itself testable now.
-  streams.err(escapeLine(`lintel: "${GROUP} ${command}" ${STUB_NOTE} (F1, not yet built).`));
+  streams.err(
+    escapeLine(`lintel: "${GROUP} ${command}" ${STUB_NOTE} (${OWNER[command]} owns it).`),
+  );
   return { code: 1, diagnostics: [] };
 }
 
-/** Commands that currently dispatch to a stub. Asserted by a test so the
- *  set shrinks visibly; empty means this file's stub block can go. */
+/**
+ * Commands that currently dispatch to the stub note. Asserted by
+ * `main.test.ts` so the set shrinks visibly; empty means this file's stub
+ * block can go.
+ *
+ * **Five of six, and `init` is the one that left.** The comment above
+ * claimed this was already asserted by a test; **no such test existed**
+ * when F2 arrived, which is why the ownership test could disagree with the
+ * build without anything noticing. It exists now.
+ */
 export function stubbedCommands(): readonly Command[] {
   return COMMANDS.filter(isStub);
 }

@@ -33,6 +33,7 @@ async function withDir<T>(body: (dir: string) => Promise<T>): Promise<T> {
 test('a new file is written with its bytes and its mode', async () => {
   await withDir(async (dir) => {
     const r = await atomicWrite(dir, {
+      command: 'init',
       path: applied('docs/a.md'),
       bytes: B('hello'),
       mode: 0o644,
@@ -49,8 +50,9 @@ test('a new file is written with its bytes and its mode', async () => {
 
 test('both brands are accepted — the writer takes WritablePath', async () => {
   await withDir(async (dir) => {
-    const a = await atomicWrite(dir, { path: applied('a.md'), bytes: B('x'), mode: 0o644, expectNew: true });
+    const a = await atomicWrite(dir, { command: 'init', path: applied('a.md'), bytes: B('x'), mode: 0o644, expectNew: true });
     const h = await atomicWrite(dir, {
+      command: 'init',
       path: owned('.harness/pack/a.md'),
       bytes: B('y'),
       mode: 0o644,
@@ -73,6 +75,7 @@ test('a destination the plan expected to be new, which now exists, stops the run
   await withDir(async (dir) => {
     await writeFile(join(dir, 'a.md'), 'someone else got here first');
     const r = await atomicWrite(dir, {
+      command: 'init',
       path: applied('a.md'),
       bytes: B('mine'),
       mode: 0o644,
@@ -95,6 +98,7 @@ test('an expected overwrite replaces the file', async () => {
   await withDir(async (dir) => {
     await writeFile(join(dir, 'a.md'), 'old');
     const r = await atomicWrite(dir, {
+      command: 'init',
       path: applied('a.md'),
       bytes: B('new'),
       mode: 0o644,
@@ -110,9 +114,9 @@ test('an expected overwrite replaces the file', async () => {
  *  directory is routinely on another. */
 test('no temp file survives a successful write, or a failed one', async () => {
   await withDir(async (dir) => {
-    await atomicWrite(dir, { path: applied('a.md'), bytes: B('x'), mode: 0o644, expectNew: true });
+    await atomicWrite(dir, { command: 'init', path: applied('a.md'), bytes: B('x'), mode: 0o644, expectNew: true });
     await writeFile(join(dir, 'b.md'), 'exists');
-    await atomicWrite(dir, { path: applied('b.md'), bytes: B('y'), mode: 0o644, expectNew: true });
+    await atomicWrite(dir, { command: 'init', path: applied('b.md'), bytes: B('y'), mode: 0o644, expectNew: true });
 
     const left = (await readdir(dir)).filter((f) => f.includes('.tmp'));
     assert.deepEqual(left, [], 'a leftover temp is a file a later run would find and not understand');
@@ -129,6 +133,7 @@ test('no temp file survives a successful write, or a failed one', async () => {
 test('created directories come back outermost-first', async () => {
   await withDir(async (dir) => {
     const r = await atomicWrite(dir, {
+      command: 'init',
       path: applied('a/b/c/deep.md'),
       bytes: B('x'),
       mode: 0o644,
@@ -145,6 +150,7 @@ test('an existing directory is not reported as created', async () => {
   await withDir(async (dir) => {
     await ensureDir(join(dir, 'a'), new Set());
     const r = await atomicWrite(dir, {
+      command: 'init',
       path: applied('a/x.md'),
       bytes: B('x'),
       mode: 0o644,
@@ -157,7 +163,7 @@ test('an existing directory is not reported as created', async () => {
 test('directories are created 0755, reading no source mode', async () => {
   if (process.platform === 'win32') return;
   await withDir(async (dir) => {
-    await atomicWrite(dir, { path: applied('d/x.md'), bytes: B('x'), mode: 0o644, expectNew: true });
+    await atomicWrite(dir, { command: 'init', path: applied('d/x.md'), bytes: B('x'), mode: 0o644, expectNew: true });
     assert.equal((await stat(join(dir, 'd'))).mode & 0o777, DIR_MODE);
   });
 });
@@ -165,8 +171,8 @@ test('directories are created 0755, reading no source mode', async () => {
 test('a second write into a known directory creates nothing', async () => {
   await withDir(async (dir) => {
     const known = new Set<string>();
-    const first = await atomicWrite(dir, { path: applied('d/a.md'), bytes: B('a'), mode: 0o644, expectNew: true }, known);
-    const second = await atomicWrite(dir, { path: applied('d/b.md'), bytes: B('b'), mode: 0o644, expectNew: true }, known);
+    const first = await atomicWrite(dir, { command: 'init', path: applied('d/a.md'), bytes: B('a'), mode: 0o644, expectNew: true }, known);
+    const second = await atomicWrite(dir, { command: 'init', path: applied('d/b.md'), bytes: B('b'), mode: 0o644, expectNew: true }, known);
     assert.equal(first.createdDirs.length, 1);
     assert.deepEqual(second.createdDirs, []);
   });

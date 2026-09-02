@@ -22,6 +22,30 @@ const codes = (r: { bag: { items: readonly { code: string }[] } }): string[] =>
    every run. The first draft of this module restated it from memory at two
    basenames and was wrong about eleven, which is what this catches. */
 
+/**
+ * **The class-1 row, which this guard did not read until the adversarial
+ * fixtures found what that cost.**
+ *
+ * US-3 stage 2 declares **two** classes. The guard read the class-2 row
+ * alone, and the module encoded class 2 plus `.harness` — so `.git`, `.hg`
+ * and `.svn` were absent from both, and the two agreed with each other
+ * while disagreeing with the spec.
+ *
+ * The hole was not academic: **`.git/hooks/pre-commit` executes on every
+ * commit**, so a pack able to write one had arbitrary code execution on
+ * the next `git commit`, reachable by a single `copy` step.
+ *
+ * A guard that reads half a rule is a guard that certifies half a rule.
+ */
+async function specClassOneNames(): Promise<string[]> {
+  const src = await readFile(SPEC, 'utf8');
+  const row = src.split('\n').find((l) => l.startsWith('| **Tool- and VCS-owned trees**'));
+  assert.ok(row, 'could not locate the class-1 reserved-destination row');
+  const upTo = row.indexOf('; any applied path whose');
+  assert.ok(upTo > 0, 'the class-1 row no longer has the shape this guard parses');
+  return [...row.slice(0, upTo).matchAll(/`([^`]+)`/g)].map((m) => m[1] as string);
+}
+
 async function specDenylist(): Promise<{ names: string[]; basenames: string[]; claude: string[] }> {
   const src = await readFile(SPEC, 'utf8');
   const row = src
@@ -48,7 +72,16 @@ async function specDenylist(): Promise<{ names: string[]; basenames: string[]; c
 
 test('the denylist matches F1 US-3 stage 2 exactly', async () => {
   const spec = await specDenylist();
-  assert.deepEqual([...DENYLIST.names].sort(), spec.names.sort(), 'reserved names diverged');
+  // BOTH classes. The class-1 names are reserved at every segment exactly
+  // as class 2's are, so they live in the same list and must be derived
+  // from the same place.
+  const classOne = await specClassOneNames();
+  assert.deepEqual(classOne.sort(), ['.git', '.hg', '.svn'], 'class 1 changed shape');
+  assert.deepEqual(
+    [...DENYLIST.names].sort(),
+    [...classOne, ...spec.names].sort(),
+    'reserved names diverged from US-3 stage 2 (both classes)',
+  );
   assert.deepEqual([...DENYLIST.basenames].sort(), spec.basenames.sort(), 'basenames diverged');
   assert.deepEqual(
     [...DENYLIST.claudeSettings].sort(),

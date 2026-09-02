@@ -60,7 +60,7 @@ every declared parameter resolved by one ordered function.
 declarations).
 **Unlocks:** E-21.
 
-- [ ] **T-2001** `[Implementer]` `src/cli/commands/init.ts` — the command
+- [x] **T-2001** `[Implementer]` `src/cli/commands/init.ts` — the command
   skeleton and its argv shape: the `<pack>` positional, `--set` (repeatable),
   `--scaffold` (repeatable), `--force`, `--rollback`, and the pack-declared
   aliases resolved in argv pass 2 (F1 US-8). **`runInit` returns an exit
@@ -70,7 +70,7 @@ declarations).
   in-process.
   *Depends on: F1 T-0107, T-0112.*
 
-- [ ] **T-2002** `[Implementer]` `src/cli/answers.ts` — the six-step
+- [x] **T-2002** `[Implementer]` `src/cli/answers.ts` — the six-step
   resolution order of `F2-ADR-003` §1, as **one pure function** over
   (declarations, options, prompt callback): `--set` → alias → prompt →
   default → empty value → `E-PARAM-UNANSWERABLE`. **Pure and
@@ -81,7 +81,7 @@ declarations).
   with different values is `E-PARAM-INVALID` (F1 US-8).
   *Depends on: F1 T-0304, T-2001.*
 
-- [ ] **T-2003** `[Implementer]` Q-65's split, inside `answers.ts`: a
+- [x] **T-2003** `[Implementer]` Q-65's split, inside `answers.ts`: a
   `string` or `boolean` parameter that is neither `required` nor defaulted
   and receives no answer **records the type's empty value** (`""`,
   `false`); an **`enum`** in the same position is
@@ -95,14 +95,14 @@ declarations).
   message per `F2-ADR-003` §5 — it currently reads as TTY-scoped, and the
   fault is enum-scoped and fires with or without a terminal.*
 
-- [ ] **T-2004** `[Implementer]` `src/cli/prompt.ts` — `promptFor(decl)`
+- [x] **T-2004** `[Implementer]` `src/cli/prompt.ts` — `promptFor(decl)`
   over `node:readline/promises`. **Writes to stderr, never stdout.** Enum
   parameters render their `values` verbatim; booleans take y/n; strings are
   re-prompted on a `pattern` failure with the declaration's own message.
   **The only place in the product that reads a TTY.**
   *Depends on: T-2002.*
 
-- [ ] **T-2005** `[Implementer]` The interactive gate: prompt **iff
+- [x] **T-2005** `[Implementer]` The interactive gate: prompt **iff
   `stdin.isTTY && stderr.isTTY`**, with no flag and no environment
   variable. **Both streams, not just stdin** — prompts go to stderr, so a
   redirected stderr means the user cannot read the question they are being
@@ -128,14 +128,14 @@ declarations).
 journal, lock).
 **Unlocks:** E-22.
 
-- [ ] **T-2101** `[Implementer]` The main path in `init.ts`: `ApplyInputs`
+- [x] **T-2101** `[Implementer]` The main path in `init.ts`: `ApplyInputs`
   → `planApply` → render the disclosure → `executeApply` → summary.
   **`init` does not re-validate the pack** — `planApply` runs the
   validation, and a second call would double every diagnostic and create a
   second place where US-16's fixed check order is decided.
   *Depends on: F1 T-1103, T-1104, T-2001.*
 
-- [ ] **T-2102** `[Implementer]` Render the disclosure to **stderr, wrapped
+- [x] **T-2102** `[Implementer]` Render the disclosure to **stderr, wrapped
   in F1 v3.6's two delimiter lines carrying a per-run nonce** —
   `--- lintel disclosure begin {nonce} ---` and
   `--- lintel disclosure end {nonce} ---` — with the rows in §US-13's
@@ -146,7 +146,7 @@ journal, lock).
   v3.3 nothing fixed where the block started or stopped.
   *Depends on: F1 T-0804, T-2101.*
 
-- [ ] **T-2103** `[Implementer]` `src/cli/summary.ts` — Q-69's summary on
+- [x] **T-2103** `[Implementer]` `src/cli/summary.ts` — Q-69's summary on
   **stdout**: files written per phase, the applied pack and version, the
   selected scaffolds, and the three outstanding items of IM-14. **No path
   enumeration.** The disclosure already enumerated the security-relevant
@@ -162,7 +162,7 @@ journal, lock).
   and interleaving would make its capture position-dependent.
   *Depends on: T-2102, T-2103.*
 
-- [ ] **T-2105** `[Implementer]` The `--rollback` branch: read the journal,
+- [x] **T-2105** `[Implementer]` The `--rollback` branch: read the journal,
   call `rollback.ts`, exit. **Short-circuits before planning** — it
   resolves no answer, reads no bundled pack and takes no parameter.
   **`--rollback` with no journal exits `0` with zero bytes**, stating that
@@ -170,7 +170,7 @@ journal, lock).
   (Q-68).
   *Depends on: F1 T-1107, T-2001.*
 
-- [ ] **T-2106** `[Implementer]` The failure paths, all of them F1's codes
+- [x] **T-2106** `[Implementer]` The failure paths, all of them F1's codes
   and none of them new: `E-CLI-PACK-MISSING` (no positional),
   `E-CLI-UNKNOWN-PACK` (no such bundled pack, exit **1** — a user typed a
   name and can retype it), `E-ALREADY-APPLIED` (a `.harness/` exists) and

@@ -145,6 +145,7 @@ async function applyPack(name: string, root: ProjectRoot, dir: string) {
     },
     writeJournal: async (j) => {
       await atomicWrite(dir, {
+        command: 'init',
         path: hp('.harness/journal.json'),
         bytes: Buffer.from(JSON.stringify(j), 'utf8'),
         mode: 0o644,

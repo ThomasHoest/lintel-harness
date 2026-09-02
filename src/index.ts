@@ -66,6 +66,40 @@ export {
 
 export { run, stubbedCommands, type RunResult, type Streams } from './cli/main.js';
 
+// ── `harness init` (F2, E-20/E-21) ─────────────────────────────────────
+//
+// `F2-ADR-003`'s contract. **`resolveAnswers` is re-exported under a
+// different name**, and the rename is the honest half of a collision
+// rather than a preference: `pack/parameters.ts` already exports a
+// `resolveAnswers` — F1's, which resolves *supplied* answers against
+// declarations and knows nothing about a prompt — and F2's ADR named its
+// six-step ordered function the same thing. Two exports of one name is not
+// expressible; renaming the newer one keeps F1's contract symbol stable
+// and makes the difference visible at every call site.
+export { CLI_VERSION } from './cli/version.js';
+export {
+  resolveAnswers as resolveInitAnswers,
+  type AnswerInputs,
+  type PromptFn,
+  type ResolvedAnswers as ResolvedInitAnswers,
+} from './cli/answers.js';
+export {
+  PROMPT_TEXT,
+  interpret,
+  isInteractive,
+  makePrompt,
+  promptQuery,
+  type PromptStreams,
+} from './cli/prompt.js';
+export { SUMMARY_TEXT, summaryLines as initSummaryLines, type KeptPath, type SummaryInput } from './cli/summary.js';
+export {
+  INIT_TEXT,
+  initOptions,
+  runInit,
+  type InitDeps,
+  type InitOptions,
+} from './cli/commands/init.js';
+
 // ── authored JSON (E-03) ───────────────────────────────────────────────
 export { parseStrictJson, type JsonValue, type ParseStrictResult } from './json/parse-strict.js';
 
