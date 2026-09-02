@@ -176,7 +176,55 @@ export {
   type StepWhen,
 } from './recipe/types.js';
 
-export { OPS, type OpEntry } from './recipe/ops/index.js';
+export {
+  MANIFEST_KEYS,
+  MANIFEST_PACK_KEYS,
+  MANIFEST_PATH,
+  SUPPORTED_MANIFEST_VERSION,
+  manifestFile,
+  type ManifestPack,
+  type PackManifest,
+  type UnknownKeys,
+} from './manifest/types.js';
+export { canonicalJson } from './manifest/canonical-json.js';
+export { writeManifest } from './manifest/write.js';
+export {
+  readManifest,
+  type ReadManifestContext,
+  type ReadManifestResult,
+} from './manifest/read.js';
+
+export { OPS, renderStep, type OpEntry } from './recipe/ops/index.js';
+export { renderCopy } from './recipe/ops/copy.js';
+export { renderRename } from './recipe/ops/rename.js';
+export { renderStripSuffix } from './recipe/ops/strip-suffix.js';
+export { renderRewritePath } from './recipe/ops/rewrite-path.js';
+export { renderSubstitute, substituteText } from './recipe/ops/substitute.js';
+export { renderGenerate } from './recipe/ops/generate.js';
+export {
+  type FileMode,
+  type RenderContext,
+  type RenderResult,
+  type Substitution,
+  type Write,
+} from './recipe/render.js';
+export { CLOSING_LINE, checkAnchors, openingLine } from './recipe/anchors.js';
+export {
+  MAX_EXECUTABLES,
+  checkExecutableCap,
+  checkExecutablePaths,
+  checkExecutableRoots,
+  forbiddenReason,
+} from './recipe/executable.js';
+export {
+  BINARY_SNIFF_BYTES,
+  decodeText,
+  isBinary,
+  isValidUtf8,
+  normalizeText,
+} from './hash/normalize.js';
+export { SHA256_HEX_LENGTH, hashBytes, hashText } from './hash/sha256.js';
+export { isTreeDigest, treeDigest, type TreeDigest, type TreeEntry } from './hash/digest.js';
 export { usageOf, validateRecipe, type ValidateRecipeResult } from './recipe/schema.js';
 export { stepWriteSet, unionWriteSets, type WriteSetInput, type WriteSetResult } from './recipe/write-set.js';
 export { planSteps, type Plan, type PlanInput, type PlannedStep } from './recipe/plan-steps.js';

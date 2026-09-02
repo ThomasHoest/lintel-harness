@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeText } from './normalize.js';
+import { BINARY_SNIFF_BYTES, decodeText, isBinary, isValidUtf8, normalizeText } from './normalize.js';
 
 const buf = (s: string): Buffer => Buffer.from(s, 'utf8');
 
@@ -88,4 +88,57 @@ test('non-ASCII text passes through unchanged', () => {
   assert.equal(normalizeText(buf('héllo — naïve 😀')), 'héllo — naïve 😀');
   assert.equal(normalizeText(buf('a\u2028b\u2029c')), 'a\u2028b\u2029c', 'LS and PS are not line endings here');
   assert.equal(normalizeText(buf('a\u0085b')), 'a\u0085b', 'NEL is not a line ending here either');
+});
+
+/* ── T-0507: the classifier ──────────────────────────────────────────── */
+
+/**
+ * Two tests, because neither catches the other: UTF-16 text is
+ * valid-ish byte soup full of NULs, and a truncated UTF-8 file has no NUL
+ * at all.
+ */
+test('binary is a NUL in the first 8 KB, or bytes that are not valid UTF-8', () => {
+  assert.equal(isBinary(Buffer.from('plain text', 'utf8')), false);
+  assert.equal(isBinary(Buffer.from('naïve — em dash and é', 'utf8')), false, 'multibyte UTF-8 is text');
+
+  assert.equal(isBinary(Buffer.from([0x61, 0x00, 0x62])), true, 'a NUL');
+  assert.equal(isBinary(Buffer.from([0xff, 0xfe, 0x41])), true, 'not valid UTF-8');
+  assert.equal(isBinary(Buffer.from([0x89, 0x50, 0x4e, 0x47])), true, 'a PNG header');
+});
+
+/**
+ * The 8 KB bound is the point rather than an optimisation: a rule stated
+ * over "the file" would make the answer depend on file size, so two files
+ * with the same first 8 KB could classify differently for a reason no
+ * author could see.
+ */
+test('a NUL past 8 KB does not make a file binary', () => {
+  const late = Buffer.concat([Buffer.from('a'.repeat(BINARY_SNIFF_BYTES)), Buffer.from([0x00])]);
+  assert.equal(isBinary(late), false, 'and the bound is a declared number, not an accident');
+
+  const early = Buffer.concat([Buffer.from('a'.repeat(BINARY_SNIFF_BYTES - 1)), Buffer.from([0x00])]);
+  assert.equal(isBinary(early), true);
+});
+
+/**
+ * `Buffer.toString('utf8')` never fails — it substitutes U+FFFD — so "did
+ * it decode?" is not a question it can answer. The round-trip is what
+ * answers it, and a genuine U+FFFD in the source is correctly accepted as
+ * text, because it *is* valid UTF-8.
+ */
+test('a real U+FFFD is text, not a decoding failure', () => {
+  assert.equal(isValidUtf8(Buffer.from('a � b', 'utf8')), true);
+  assert.equal(isBinary(Buffer.from('a � b', 'utf8')), false);
+});
+
+test('decodeText refuses binary by returning null rather than throwing', () => {
+  assert.equal(decodeText(Buffer.from([0x00, 0xff])), null);
+  assert.equal(decodeText(Buffer.from('x', 'utf8')), 'x');
+});
+
+// Phase-2 output is UTF-8 and never emits a BOM, so a pack shipping a
+// BOM'd template produces a BOM-free applied file. Declared behaviour, not
+// an accident.
+test('decodeText drops a leading BOM so no op can write one back', () => {
+  assert.equal(decodeText(Buffer.from('﻿# Title', 'utf8')), '# Title');
 });

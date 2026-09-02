@@ -28,17 +28,21 @@ version, the parameter answers and the scaffold selection, and
 payload + recipe + answers, which is what lets a later `update` be
 computed rather than guessed.
 
-**Status: specified in part, no code.** The brief
+**Status: specified, and being built on the `v1.0` branch.** The brief
 (`specifications/project-brief.md`) is **Draft** and is the source of
-truth for scope. **F1 and F5 are spec-complete at v2.7**, `F1-ADR-001`
-carries an architectural `PROCEED`, and the five cross-cutting
-documents under `specifications/general/` are written (all **Draft**).
-**All three packs ship** under `packs/` with a `pack.json` and a
-`recipe.json` each. **No CLI source exists yet** — nothing in this repo
-is executable product code.
+truth for scope. **Every v1.0 spec and ADR is `Accepted`**, and the five
+cross-cutting documents under `specifications/general/` are written (all
+**Draft**). **All three packs ship** under `packs/` with a `pack.json`
+and a `recipe.json` each.
 
-The repo has a real history: **43 commits at the time of writing, all
-pushed** — `git log --oneline | wc -l` is the check, not this number.
+**Do not trust a version number written here.** F1 and F5 both move
+several times a working day, because **building the CLI keeps finding
+rules the specs stated and nothing enforced**. Read the `**Version:**`
+line of the document itself. `main` still has no code; the work is on
+`v1.0`, and `DEVELOPING.md` is the working note.
+
+The repo has a real history: **about a hundred commits at the time of
+writing, all pushed** — `git log --oneline | wc -l` is the check, not this number.
 **Every question raised so far is resolved**, with rationale, in the
 brief's §12 — that is the register, and this file does not restate it.
 Ids and next-free values live in **§Counter state**, once.
@@ -332,7 +336,7 @@ counter anywhere in this file, that is the bug, and this section wins.
 | Epic | **E-28** | `E-NN`, per feature, and the range is contiguous. **F1 E-01…E-12 · F5 E-13…E-19 · F2 E-20…E-22 · F3 E-23…E-25 · F6 E-26…E-27.** Every v1.0 feature now has epics. |
 | Task | per epic | Scheme A, epic-derived `T-XXYY`, so there is no single next-free id. **F1 T-0101…T-1219** (112) · **F5 T-1301…T-1906** (32) · **F2 T-2001…T-2206** (19) · **F3 T-2301…T-2507** (21) · **F6 T-2601…T-2708** (15) — **206 tasks** across five features. Each document ends with its own per-epic next-free table; that is where to look, not here. |
 | ADR | — | Five written: **`F1-ADR-001`** (`PROCEED`, amended 2026-09-01; its contract types are current, and F1 has since moved to v3.4), **`F5-ADR-002`** (`REVISE SPEC`), **`F2-ADR-003`** (`PROCEED`), **`F3-ADR-004`** (`PROCEED`), **`F6-ADR-005`** (issued `REVISE SPEC`, **conditions cleared, now `PROCEED`**). ADRs are feature-prefixed and numbered per feature, so there is no project-wide next-free id. Epic-scoped ADRs use `ADR-EXX`. |
-| Error code | — | F1's catalogue is the **only** one, and it holds **90** at v4.3. No other document may invent a code. Eleven were added: nine at v3.0, **`E-DISCLOSURE-FORGERY`** at v3.4 closing the Mode A CRITICAL, **`E-PACK-INVALID`** at v4.0 and **`W-UNKNOWN-KEY`** at v4.3 — both found by **building** the module that had to raise them, and both rules had been stated repeatedly in prose while having no code. |
+| Error code | — | F1's catalogue is the **only** one, and it holds **90** — unchanged since v4.3, through eight amendments since. `grep -c "^  'E-\|^  'W-" src/diag/codes.ts` is the check. No other document may invent a code. Eleven were added: nine at v3.0, **`E-DISCLOSURE-FORGERY`** at v3.4 closing the Mode A CRITICAL, **`E-PACK-INVALID`** at v4.0 and **`W-UNKNOWN-KEY`** at v4.3 — both found by **building** the module that had to raise them, and both rules had been stated repeatedly in prose while having no code. |
 
 ---
 
@@ -485,11 +489,24 @@ authoritative, verify it rather than trusting the assertion.
   update. **This is the outstanding dogfooding item**, it leads this
   list on purpose, and the blocker is no longer authoring: it is that
   there is no CLI to run. `ls .harness` is the check.
-- **CLI source exists now, on the `v1.0` branch.** `T-0101`–`T-0104`,
-  `T-0113` and `T-1219` are done; **29 tests pass**; CI runs three
-  platforms. `DEVELOPING.md` is the working note. **Everything below this
-  line was written when there was no code and should be read with that
-  date on it.**
+- **CLI source exists, on the `v1.0` branch, and E-01…E-07 are built.**
+  The counts move every session, so **run the suite rather than reading a
+  number here**: `npm test` gives unit, integration, pack-conformance and
+  structural. CI runs three platforms with Windows not optional.
+  `DEVELOPING.md` is the working note.
+- **Building is the most productive review this project has.** Roughly
+  twenty defects have been found by implementing a rule rather than by
+  reading it, and they cluster into one shape: **prose that names a fault
+  reads exactly like prose that codes one.** Two error codes were missing
+  entirely; a credential matcher's separators were not uniform; a control
+  character in a path forged a line in the tree digest; `executableRoots`
+  refused every root it permitted; `declaredBy` was restricted and checked
+  nowhere; `version`/`minCliVersion` *"are valid semver"* failed open in
+  both places at once; and a US-36 grep **would have passed against the
+  pack before the strip it was written to verify**. When a task looks like
+  transcription, it is usually the one about to find something.
+- **Everything below this line was written when there was no code and
+  should be read with that date on it.**
 - **The ⚠️ register is closed — all fourteen** (`general/technology-choices.md`
   §6), so **no task in any feature is blocked**. The build is **`tsc` only**
   (it must type-check, not strip — the path brands are compile-time

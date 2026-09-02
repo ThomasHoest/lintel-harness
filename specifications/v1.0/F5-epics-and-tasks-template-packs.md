@@ -193,7 +193,7 @@ differences as the check working, not as a setback.
 **Depends on:** E-13.
 **Unlocks:** S6's verification, and the `provenance` claims E-13 asserts.
 
-- [ ] **T-1501** `[TestWriter]` Write the re-runnable diff as a checked-in
+- [x] **T-1501** `[TestWriter]` Write the re-runnable diff as a checked-in
   script: `coding`'s payload against `template/` at the commit
   `pack.json`'s `provenance` records, and `writing`'s against
   `../AIImpactOnOrganizationsAndLeadership/` at its recorded commit. It
@@ -203,7 +203,7 @@ differences as the check working, not as a setback.
   what the pack claims.
   *Depends on: T-1302.*
 
-- [ ] **T-1502** `[TestWriter]` Run it, and **record the actual output** in
+- [x] **T-1502** `[TestWriter]` Run it, and **record the actual output** in
   the migration record — the count of differing paths per class, and the
   full list for the five classes Q-80 added, since those are the ones with
   no prior evidence. This task's deliverable is **evidence, not a pass**.
@@ -217,14 +217,14 @@ differences as the check working, not as a setback.
   a paperwork problem, and belongs in an ADR rather than in a list.
   *Depends on: T-1502.*
 
-- [ ] **T-1504** `[TestWriter]` US-25's extraction assertions for
+- [x] **T-1504** `[TestWriter]` US-25's extraction assertions for
   `writing`: zero hits in `packs/writing/` for `/Users/`, the host
   project's name and the owner's personal name outside a declared
   placeholder; no research content under the scaffold tree; the voice
   guide's sample reference converted to a placeholder.
   *Depends on: T-1501.*
 
-- [ ] **T-1505** `[TestWriter]` Q-46 prose stripping: **zero occurrences in
+- [x] **T-1505** `[TestWriter]` Q-46 prose stripping: **zero occurrences in
   `packs/` of the five bootstrap phrases** the spec enumerates. The recipe
   encodes what that prose used to say, so a surviving instance is a
   document telling a reader to do by hand what the CLI now does.
@@ -244,7 +244,7 @@ into it.
 
 **Depends on:** E-13.
 
-- [ ] **T-1601** `[TestWriter]` `tests/packs/readme.test.ts` — per pack,
+- [x] **T-1601** `[TestWriter]` `tests/packs/readme.test.ts` — per pack,
   assert **≤ 160 lines**; all nine anatomy parts named; the gaps stated
   explicitly; a produced-tree block of **≤ 20 lines**; the version and
   `minCliVersion` stated; and the self-containment statement, with
@@ -260,7 +260,7 @@ into it.
   them. This is the payload-aware half of F1's link check.
   *Depends on: F1 T-0908, T-1601.*
 
-- [ ] **T-1603** `[TestWriter]` US-36 — assert no pack file instructs a
+- [x] **T-1603** `[TestWriter]` US-36 — assert no pack file instructs a
   reader to apply the pack by hand. Grep for the imperative forms the Q-46
   strip removed (`copy this folder`, `rename the template`, and the rest of
   the enumerated five) across **applied-destined content specifically**,

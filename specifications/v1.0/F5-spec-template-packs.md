@@ -1,5 +1,5 @@
 # F5 — Template Packs Specification — Lintel Harness v1.0
-**Version:** 3.4
+**Version:** 3.6
 **Status:** Accepted — `T-1502` ran and `T-1503` adjudicated its two findings on 2026-09-01; both were class errors rather than migration bugs (`F5-ADR-002` §11). **Class (j) is empty on evidence rather than by assertion.**
 **Date:** 2026-09-01
 **Platform:** Pack content is plain files — Markdown, JSON, shell/PowerShell, Bicep, CDK TypeScript — bundled with the Node/TypeScript CLI and consumed by Claude Code's `.claude/` conventions. No runtime of its own.
@@ -32,6 +32,8 @@
 | **3.2** | **2026-09-01** | **`F5-ADR-002` re-issued `PROCEED`; US-24 gains class (k), and one pack edit is recorded.** The ADR's six v2.9 findings are all addressed and were **checked against the packs rather than against this document's own text** — which is the discipline the original finding demanded, since what §8 caught was a completeness claim that had never met a diff. **Condition 1 folded: US-24 gains class (k), a post-migration change recorded in this document's change history**, with the history as its audit trail. **The alternative was a class per improvement**, which turns the enumeration into a changelog with extra steps — the pack is product under active development, and F5's whole job is to improve it, so *"has the pack diverged from its source"* will always answer *yes, and increasingly*. Class (k)'s first member: **`packs/coding/specifications/README.md` gains a security-condition fold rule**, folding the Mode A review's closing argument — that a change creating a deferred condition's **trigger** must consult that condition, in the same change. It sits beside the existing fold-check rule because it is the same failure one layer down: that rule exists because a *summary* stays fluent after what it summarises changes; this exists because a *deferral* stays reasonable after its premise stops holding. **Condition 2 is not folded and cannot be by writing**: `T-1502` must **run**. Class (j)'s emptiness remains an untested claim of exactly the kind class (e)'s was. |
 | **3.3** | **2026-09-01** | **US-24's check has been run for `coding`, and it found two errors in the enumeration on its first execution.** ADR-002's condition 2 is **discharged for the `coding` half**; `writing`'s still needs the host repository. **The source commit recorded in `packs/coding/pack.json` was wrong** and is corrected: `2644096` is the commit that **removed** `template/`, so the source tree lives at its parent **`807d67d`**. A provenance pointing at the commit that deleted the thing it points to is the kind of defect only running the check finds. **Result: 38 source files, 41 shipped, 32 differences** — 7 only-in-source, 10 only-in-shipped, 15 modified. **Two are not placeable in the ten classes**, recorded rather than reclassified by fiat: **(1) `CLAUDE.md.template` and `README.md` are *modified*, not net-new** — class (h) lists both as net-new authoring, and the diff shows they were migrated and then edited; **(2) the seven `infrastructure/backend-deploy/**` files are gone from the pack entirely**, which class (c) does not describe — it says that tree became `scaffolds/backend-azure/`, and **Q-82 then moved it out of `packs/` altogether**, a second restructure the class predates. **Class (j) was not empty**, exactly as F5 v3.0 warned it might not be and exactly as ADR-002 §9 declined to treat as discharged. **T-1503's adjudication is now real work with real inputs**, and F5 stays **Draft** until it lands. |
 | **3.4** | **2026-09-01** | **`T-1503` adjudicated; both unplaceable differences were **class errors, not migration bugs**, and neither needed a new class.** **(1) Class (h) named two files that are not net-new.** `CLAUDE.md.template` exists in the source with **0 anchors and 0 tokens** and ships with **6 and 2** — so its difference is **classes (g) and (f), which already name it**; (h) claimed it a third time. `README.md` exists in the source as the Voxio-era *"Project Starter Pack"* and ships as the US-28 rewrite recorded in **v3.0's own change history** — **class (k)**. **Class (h) is exactly two files**: `specifications/README.template.md` and `specifications/project-brief.template.md`. **The error is instructive and is recorded rather than quietly fixed: (h) was written from a directory listing rather than from a diff** — asserting membership without checking, which is the *precise* failure US-24 exists to prevent, committed inside the change that widened it. **(2) The seven `infrastructure/` files are class (k)**, not a gap: Q-82 moved them to `addons/` and **is recorded in v3.1's change history**, which is exactly what (k) requires. Class (c) is narrowed to the restructure as it stood at migration time. **The enumeration approach has not failed** — T-1503's third option is explicitly not taken. **It works; it had simply never been run**, which was the whole finding. **`writing`'s half also ran**: US-25's greps return **zero** for `/Users/`, the owner's name and research content, and **one** hit for the host project name — `pack.json`'s `provenance.source`. **That single hit exposed a contradiction between two of this document's own requirements**: §NFR *Provenance* **requires** the source path recorded, and US-25 **forbids** the host project's name. US-25 now **excludes `provenance`** explicitly. **Condition 2 of `F5-ADR-002` is discharged in full; class (j) is empty for the first time on evidence.** |
+| **3.5** | **2026-09-02** | **A criterion that would have passed before the fix it verifies, and four smaller drifts — all found by building T-1601 and T-1603.** US-36 asks for zero hits on `copy this folder`, while §Flows records the deleted text as *"copy the contents of this folder"* — **which that grep does not match**. The criterion tested a *phrasing* rather than the rule, so it was green against the unfixed pack: the single most useless property a check can have. The binding form is now **behavioural**, with the literals demoted to a floor. Also stated for the first time: **which task owns which half of US-36** — T-1603 sees applied-destined content only, and **four of the five §Flows deletions are not applied-destined**, so criteria 3 and 4 are T-1505's or nobody's; **what "five" counts** (five files, five phrases and four-plus-two headings were three different enumerations); **that the twenty-line tree budget includes the fences**, derived from the spec's own numbers; and `coding`'s README line count, quoted as 120 and actually **118**. **One pack defect reported, not fixed** (T-1604): `packs/writing/README.md` makes **no self-containment statement**, where `coding` states it outright and `planning` puts it in its identity line — part 9's explanation of why an absent part is absent is a claim about the product, not about the pack, and a reader who skips the anatomy table never meets it. |
+| **3.6** | **2026-09-02** | **T-1501 and T-1502 ran, and the check E-15's preamble said had never been run is now a script that exits 1.** *"Treat a task here that reports new differences as the check working, not as a setback."* It reported them. **`coding`**: 32 differences over 38 source paths, reproducing v3.3's hand-run exactly, with **one residue** — `targets/Run.md`, whose two path literals gained a `template/` prefix pointing at a directory that exists in **neither the pack nor an applied project**, unlike every other repointed file. **`writing`: never diffed at all until now** — §11 discharged ADR-002's condition 2 with four *greps over the shipped pack*, which say nothing about what the source held or what failed to extract. 231 differences over 229 source paths, **16 residue**, and the reason is structural: **US-24's ten classes are `coding`'s, and `writing` has no by-file enumeration anywhere** — §Flows gives four *kinds* with no files under any. **The finding worth the whole epic is a class-evidence failure**: class (e) declares *"is five files"* and offers a grep minus classes (b) and (h) — which now yields **seven**, because **v3.4 released two files from class (h) and nobody re-checked (e)**. A correction to one class silently invalidated another class's assertion, which is exactly the failure mode a re-runnable check exists to catch and a hand-run cannot. **Four more defects**: class (b) has **two different memberships in one document** (US-24 says three kinds, §Flows says five), so `commands/target.md` is class (b) under one and residue under the other; **`templates/home.template.md` is declared authored by Q-51 and is not** — it pairs with the source's `Home.md`, same frontmatter, same callout verbatim, parameterised; **two of US-25's four exclusion classes cannot be enumerated from the recorded commit**, because both live in an **untracked** file absent from it, the same shape as the §NFR/US-25 contradiction §11 found; and **one sentence in `writing-guide/README.template.md` gets opposite verdicts from US-25 (approving) and US-36 (forbidding)**. All of these are **T-1503's to adjudicate** and none is decided here. **`specifications/v1.0/F5-migration-record.md` holds the evidence**; `node scripts/migration-diff.mjs <pack>` re-runs it and takes the commit from `provenance`, never from an argument. |
 
 ---
 
@@ -849,7 +851,14 @@ agree that **US-39** is next free, so nothing here is renumbered.
   parts. **The cap is a legibility budget, not a content budget:** it
   exists so a newcomer can read the page in one sitting, and it is raised
   whenever a pack's real content outgrows it rather than met by deleting
-  substance. `coding` is **120** lines, `writing` 151 and `planning` 148.
+  substance. `coding` is **118** lines, `writing` 151 and `planning` 148.
+  *(This said 120 for `coding` until v3.5; `wc -l` is the check, and the
+  ≤160 budget held either way — but a quoted count that drifts is a
+  quoted count nobody should trust.)* **The twenty-line produced-tree
+  budget counts the fences**, stated because it was not: `writing`'s block
+  is 15 lines inclusive and `planning`'s 18, which is how the spec's own
+  numbers were derived, and a page sitting at 20 or 21 would otherwise be
+  adjudicated two ways.
   **`coding`'s README was rewritten at v3.0** — through v2.9 it was 95
   lines that met **one** of this story's five criteria, naming none of the
   nine parts, stating no version, no `minCliVersion`, no gaps and no
@@ -941,7 +950,36 @@ agree that **US-39** is next free, so nothing here is renumbered.
 - Grepping `packs/` for the headings `Adopting this in a new project`
   and `Bootstrapping a new project` returns zero hits.
 - Grepping `packs/` case-insensitively for `copy this folder` returns
-  zero hits.
+  zero hits — **and this criterion, alone, is nearly worthless, which is
+  why the one below it exists.** §Flows records the deleted text as
+  *"copy the contents of this folder"*, and **`copy this folder` does not
+  match that string**. The criterion checks a **phrasing**, not the rule,
+  and it **would have passed against the pack before the strip it was
+  written to verify** — the single most useless property a test can have.
+  Found by building T-1603 (v3.5).
+- **Therefore the binding form of the rule is behavioural, not literal:**
+  no file in `packs/` that an apply places into a project may instruct a
+  reader to perform a step the CLI performs — copying a folder or its
+  contents, renaming a template, fixing a path, or adopting the pack into
+  a project. A check MUST use a form set wide enough to catch the
+  wordings §Flows actually deleted, and the enumerated literals are a
+  **floor rather than the definition**.
+- **Which task owns which half is stated here**, because the two scopes
+  differ and the difference decides coverage. **T-1603** checks
+  **applied-destined content only** — and four of the five §Flows
+  deletions are *not* applied-destined (`packs/coding/README.md` and
+  `targets/README.md` are never copied; `agents/README.md` and
+  `agent-teams/README.md` are excluded by their copy steps' `exclude`),
+  so **criteria 3 and 4 above are not checkable by T-1603 at all**.
+  **T-1505** carries them, over the whole payload tree. The split is
+  sound — a pack's own source documentation may legitimately discuss
+  copying, since it is never applied — but it was nowhere stated, and an
+  unstated split is how a criterion ends up owned by nobody.
+- **"Five" means three different things above and in §Flows**, and this
+  sentence fixes it: criterion 6 counts five **files**; T-1505 says five
+  **phrases**; §Flows enumerates four phrases plus two headings. The
+  checkable set is **two headings and three phrases**, which is what
+  criteria 1 and 2 together imply.
 - `packs/coding/agents/README.md` and
   `packs/coding/agent-teams/README.md` describe what the agents and teams
   *are* and how to pick one; neither says where to copy them.

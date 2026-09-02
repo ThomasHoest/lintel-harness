@@ -27,7 +27,15 @@
  * second, parallel switch on `op`: two places that must enumerate six arms
  * is one place too many.
  */
-import { RECIPE_OPS, isEditing, isPlacing, type RecipeOp } from '../types.js';
+import { RECIPE_OPS, isEditing, isPlacing, type RecipeOp, type RecipeStep } from '../types.js';
+import { renderCopy } from './copy.js';
+import { renderGenerate } from './generate.js';
+import { renderRename } from './rename.js';
+import { renderRewritePath } from './rewrite-path.js';
+import { renderStripSuffix } from './strip-suffix.js';
+import { renderSubstitute } from './substitute.js';
+import type { AppliedPath } from '../../security/confine.js';
+import type { RenderContext, RenderResult } from '../render.js';
 
 export interface OpEntry {
   readonly op: RecipeOp;
@@ -83,6 +91,42 @@ export const OPS: Readonly<Record<RecipeOp, OpEntry>> = {
     summary: 'render a payload template to one applied path',
   },
 };
+
+/**
+ * **The single dispatch**, and it lives here rather than in `render.ts`
+ * because T-0403's rule is that this module is *the only place an `op`
+ * name maps to an implementation*. A switch anywhere else would be a
+ * second place, and two enumerations of six arms is one too many.
+ *
+ * Exhaustive by `never`: a seventh arm added to the union without a case
+ * here is a **compile error**, not a runtime `undefined`.
+ */
+export function renderStep(
+  step: RecipeStep,
+  writeSet: readonly AppliedPath[],
+  ctx: RenderContext,
+): RenderResult {
+  switch (step.op) {
+    case 'copy':
+      return renderCopy(step, writeSet, ctx);
+    case 'rename':
+      return renderRename(step, writeSet, ctx);
+    case 'strip-suffix':
+      return renderStripSuffix(step, writeSet, ctx);
+    case 'rewrite-path':
+      return renderRewritePath(step, writeSet, ctx);
+    case 'substitute':
+      return renderSubstitute(step, writeSet, ctx);
+    case 'generate':
+      return renderGenerate(step, writeSet, ctx);
+    default:
+      return unreachable(step);
+  }
+}
+
+function unreachable(step: never): never {
+  throw new Error(`unreachable op: ${JSON.stringify(step)}`);
+}
 
 /** The registry agrees with `types.ts` about which ops place and which
  *  edit. Two declarations of one fact, so this is asserted rather than

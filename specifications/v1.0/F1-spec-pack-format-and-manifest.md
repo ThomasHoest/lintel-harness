@@ -1,5 +1,5 @@
 # Pack Format & Manifest Specification — Lintel Harness v1.0
-**Version:** 4.9
+**Version:** 5.1
 **Status:** Accepted
 **Date:** 2026-09-01
 **Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/cli`, binary `lintel`, with **`harness` as a command group** — every command in this document is reached as `lintel harness <command>` (Q-16 **as amended by Q-63**). Pack content is Markdown, shell, PowerShell and Bicep; `pack.json`, `recipe.json` and the manifest are JSON. No UI.
@@ -44,6 +44,8 @@
 | **4.7** | **2026-09-02** | **Two messages this document required and its own catalogue could not render.** Both found by building T-0402, and both the same shape as the two missing codes before them: **prose that names a behaviour reads exactly like prose that encodes one.** (a) **`E-RECIPE-PRIMITIVE-UNKNOWN`'s `merge-json` line existed only as prose.** The row said *"when `{op}` is `merge-json` the message adds"* and gave the wording — outside the `/`-joined template, so nothing could emit it, while US-31 both **requires** that wording and **forbids** a second code by insisting `merge-json` is this code *"like any other unknown value"*. It becomes a **`{note}` line with two declared values**, one of them empty, and **a line whose placeholders all render empty is omitted** — which is the general rule that makes a conditional line expressible at all. (b) **`E-RECIPE-STEP-INVALID`'s second line was a descriptive slot and should never have been one.** `{usage for that primitive}` is not an identifier, so the placeholder rule leaves it **literal**: every step diagnostic would have printed the words *usage for that primitive* where the usage belongs. Unlike the other two descriptive slots it needs no multi-line construction — it is one line, derived mechanically from the per-op field table. Renamed **`{usage}`** and removed from `DESCRIPTIVE_SLOTS`, which now holds **two**, both genuinely multi-line and both belonging to features not yet built. No code is added or removed; the catalogue holds **90**. |
 | **4.8** | **2026-09-02** | **A control character in a path was legal, and it forges a line inside an integrity control.** The stage-1 grammar refused a NUL and nothing else: `\n`, `\r`, `\t` and every other C0 control passed, on an applied path and on a pack path alike. §NFR's tree digest is a **newline-joined listing**, so a payload path containing `\n` contributes two lines, and **two different file sets digest alike** — a collision in the one mechanism `verify` uses to decide whether a payload was tampered with. **Fixed at the source rather than at the digest**: a path holding a control character is refusable on its own merits, since it breaks every line-oriented tool that will ever read the project, and closing it in the grammar closes it for both quantifiers at once instead of leaving `treeDigest` a precondition its caller must remember — which is the implicit-chain shape C-27 already rejects elsewhere. Both grammar remedy lines were **closed enumerations** and are amended with the clause. **Also folded, from the same finding: §NFR named no separator between a path and its hash** — it said *"then"*, which is not a format, while the value is a **compatibility contract** recomputed by later CLIs. Named as **one U+0020**, with the reason it stays unambiguous against a path containing a space. No code is added; the catalogue holds **90**. Found by building T-0601–T-0603, not by review. |
 | **4.9** | **2026-09-02** | **Three rules stated in prose that nothing enforced, and one word that promised more than the code does.** All four came out of the E-03 and E-13 verification passes rather than from review — the same shape as every gap this document has found by being built. (a) **`declaredBy` was restricted to `folderScaffolding` and checked nowhere.** A part declaring it names no globs, so it matched zero files *without* raising `E-ANATOMY-EMPTY`: a pack could declare `"roles": { "declaredBy": "recipe" }`, ship no roles, and validate clean. **That defeats G-F1-3 for eight of the nine parts**, whose whole content is that a missing part cannot be silent. Now `E-UNKNOWN-VALUE`, exit 2, and distinct from known limit 15, which is about other *values* rather than this *position*. (b) **`version` and `minCliVersion` "are valid semver" named no code and failed open in both places** — the validator checked only for strings, and the floor check read `satisfiesFloor(...) === false` while an unparseable input returns `null`, so `"1.0"` was neither satisfied nor refused but **ignored**. Both guards are now closed and the code is named. (c) **`W-ANSWER-LOOKS-SECRET` said "high-entropy" and measures no entropy** — it is alphabet-and-length, so `"a" × 40` matches. The check is right and the word was wrong; the word changed. (d) **`T-1220(b)` said `E-SCAFFOLD-EXCLUSIVE` is exit 2** where §Error States and US-9 both say **exit 1**; the epics document is corrected, since the class is the substance — a user picked two of a choose-one and can pick again. No code is added; the catalogue holds **90**. |
+| **5.0** | **2026-09-02** | **A rule that refused everything it permitted, and a claim about a pack that had stopped being true.** Both found by building E-05's primitives. (a) **`executableRoots` was self-contradicting.** It declares prefixes *"each ending `/`, each subject to the stage 1 grammar"* — and **stage 1 refuses an empty segment**, which a prefix ending `/` has by construction. So *every legal root was refused by the rule that governs it*, and the contradiction sat inside a **security** control: the roots are the bound on where a pack may write `0755`. It read perfectly well because each half is right on its own. The grammar now applies with the trailing separator **removed**, on the ground that a root names a **directory** while stage 1 is an **applied-path** grammar, and the separator is exactly what distinguishes them. (b) **`executableRoots`' only declarer left the product at Q-82.** F1 stated as fact that *"`coding` declares `executableRoots: ["infrastructure/backend-deploy/"]` and sets `"executable": true` on the two script steps of each backend scaffold"* — true when written, false once both backend kits became v1.1 add-ons. **No v1.0 pack declares a root or sets the bit**, so C-12's whole apparatus is fixture-covered like the scaffold rules Q-82 emptied; a test asserts the emptiness. **T-0508's task text carries the same stale claim** and is corrected with it. No code is added; the catalogue holds **90**. |
+| **5.1** | **2026-09-02** | **Four rulings the manifest needed and did not have, plus the exception that proves the unknown-key rule.** All found by building E-07, and all of the same shape as the gaps before them — a completeness claim in prose with no code behind it. (a) **A declared parameter with no recorded answer had no code.** *"Every declared parameter and its answer"* was unreportable: `parameters.ts` defers the case to the manifest's reader and the reader had nothing to raise. Ruled `E-MANIFEST-ANSWER-INVALID` — `E-MANIFEST-CORRUPT` would have said *"is not readable"* of a file that parses fine, while this one already names the exact pair of causes. (b) **Nothing said `cli`, `pack.name` and `pack.version` had to be well-formed**, though all three are read and compared; ruled `E-MANIFEST-CORRUPT` and **fails closed**, on the reasoning that caught the identical hole in `checkCliFloor` at v4.9. (c) **A `payloadDigest` nested inside `pack` was forbidden with no code**, so it would have been reported as *"the top-level key is missing"* — right exit class, wrong reason, remedy pointing at the wrong line. (d) **"Unknown keys at any level" meets a manifest with two closed objects**, root and `pack`, so an implementation carries two collections; the ADR's single flat `unknownKeys` could not hold a `pack`-level key at all. (e) **The manifest draws no `W-UNKNOWN-KEY`, deliberately**: that code is `defect` class, meaning *an author should delete this*, and the manifest has no author — an unknown key there is a newer CLI's data this document requires be **preserved**, so warning would ask a user to delete what forward compatibility depends on, and `--strict` would make a newer CLI's manifest fail an older CLI's CI. **`F1-ADR-001` is amended in the same pass**: `readManifest`, `writeManifest` and `canonicalJson` each had a signature that could not satisfy the task implementing it. No code is added; the catalogue holds **90**. |
 
 ---
 
@@ -1009,13 +1011,27 @@ resolved root, for every applied path:
   mode `0755`; otherwise files are written `0644`.
 - `pack.json` may declare **`executableRoots`**: applied-path prefixes,
   each ending `/`, each subject to the stage 1 grammar and the stage 2
-  denylist. `"executable": true` on a step whose applied path is not
+  denylist **with its trailing `/` removed**. That last clause is not a
+  detail: stage 1 refuses an **empty segment**, and a prefix ending `/`
+  has one by construction — so through v4.9 *every legal root was refused
+  by the rule that governs it*, and the two halves of this sentence
+  contradicted each other. A root names a **directory**; the stage-1
+  grammar is an **applied-path** grammar; the separator is what
+  distinguishes them, and it is stripped before the check rather than
+  fought with. `"executable": true` on a step whose applied path is not
   under a declared root fails with **`E-EXEC-ROOT-UNDECLARED`**, exit 2.
   Absent or empty means the pack ships no executable file, and that is
   the default.
-- **`coding` declares `executableRoots: ["infrastructure/backend-deploy/"]`
-  and sets `"executable": true` on the two script steps of each backend
-  scaffold** (C-38). This corrects a v2.3 statement — *"the case for
+- **No v1.0 pack declares `executableRoots`, and none sets
+  `"executable": true`** — **Q-82** moved both backend kits to `addons/`
+  as v1.1 add-ons, and they were the only declarers. The apparatus is
+  therefore **fixture-covered, not pack-covered**, exactly like the
+  scaffold-exclusivity rules Q-82 emptied, and a test asserts the
+  emptiness rather than leaving a reader to assume the coverage is real.
+  The rules stay in full because the add-on mechanism inherits them.
+  *(The paragraph below is kept as the record of why the apparatus exists
+  at all, and its claim about `coding` was true when written and is not
+  now — the scripts moved, the reasoning did not.)* This corrected a v2.3 statement — *"the case for
   every v1.0 pack"* — that was both wrong and, in the way that matters
   here, expensive: the deploy and setup scripts are **meant to be run**,
   so landing them `0644` forces every adopter to `chmod` by hand, and it
@@ -1734,6 +1750,29 @@ diagnostic.
   (`name`, `version`, `formatVersion`), **`payloadDigest`**, `parameters`
   (every declared parameter and its answer) and `scaffolds` (selected
   ids, in declared order). Nothing else.
+- **A declared parameter with no recorded answer is
+  `E-MANIFEST-ANSWER-INVALID`, exit 2** — the ruling this criterion needed
+  and did not have. *"Every declared parameter and its answer"* is a
+  completeness claim with no code behind it, so a manifest missing one was
+  unreportable: `parameters.ts` explicitly defers the case to the
+  manifest's reader, and the reader had nothing to raise. Of the two
+  candidates, `E-MANIFEST-CORRUPT` says *"is not readable"*, which is
+  false — the file parses fine — while `E-MANIFEST-ANSWER-INVALID` says
+  *"the manifest was edited, or the pack's declaration changed under it"*,
+  which is **exactly** the pair of causes. Same exit class, same remedy.
+- **`cli`, `pack.name` and `pack.version` must be well-formed, and a
+  malformed one is `E-MANIFEST-CORRUPT`, exit 2.** All three are read and
+  compared, and the document was silent on whether they had to parse. It
+  **fails closed** on `checkCliFloor`'s own reasoning (v4.9): a version of
+  `"1.0"` there was *neither satisfied nor refused, it was ignored*, and
+  the same hole in the manifest would let a recorded floor be quietly
+  disregarded.
+- **A `payloadDigest` nested inside `pack` is `E-MANIFEST-CORRUPT`, exit
+  2, naming the nesting.** This criterion already forbids the position and
+  offers a test for it, but named no code — so a manifest carrying one
+  would have been reported as *"the top-level key is missing"*: the right
+  exit class for the wrong reason, and a remedy pointing at the wrong
+  line.
 - **`payloadDigest` is one SHA-256 tree digest over `.harness/pack/`**
   (Q-52), of the form `sha256-<64 lowercase hex>`. It is recorded
   **top-level, between `pack` and `parameters`** — **never nested inside
@@ -4218,7 +4257,20 @@ payload.
   anything higher (`E-MANIFEST-NEWER`, never a warning).
 - Within a version, unknown keys at any level are preserved verbatim on
   rewrite, so an older CLI degrades to ignoring a newer one's data rather
-  than deleting it.
+  than deleting it. **"At any level" means the two objects that have a
+  closed key set** — the root and `pack` — so an implementation carries
+  **two** such collections, not one; the ADR's single flat `unknownKeys`
+  could not hold a `pack`-level key at all, and the second is the same
+  category rather than a seventh declared key.
+- **An unknown manifest key draws no `W-UNKNOWN-KEY`**, and the exception
+  is deliberate. That code is **`defect`** class — meaning an author is
+  expected to delete the key — and **there is no author here**: an unknown
+  manifest key is a *newer CLI's* data that the rule above requires be
+  preserved. Warning would ask the user to delete the very thing forward
+  compatibility depends on, and under `--strict` a `defect` warning is
+  fatal, so a newer CLI's manifest would fail an older CLI's CI. The
+  unknown-key rule governs **`pack.json` and `recipe.json`**, which have
+  authors; the manifest has a writer.
 - `pack.formatVersion` is recorded separately from `manifestVersion`:
   they version different things and will move at different rates.
 - The manifest is not a public API. No schema is published, and no

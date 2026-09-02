@@ -74,3 +74,73 @@ export function normalizeText(bytes: Buffer): string {
   // a CRLF is consumed whole, so it becomes one `\n` rather than two.
   return body.replace(/\r\n?/g, '\n');
 }
+
+/* ── T-0507: the classifier ──────────────────────────────────────────── */
+
+/**
+ * How much of a file is examined for a NUL. F1 fixes it at **8 KB**, and
+ * the bound is the point rather than an optimisation: a rule stated over
+ * "the file" would make the answer depend on file size, so two files with
+ * the same first 8 KB could classify differently for a reason no author
+ * could see.
+ */
+export const BINARY_SNIFF_BYTES = 8192;
+
+/**
+ * Text or binary. T-0507.
+ *
+ * **Binary iff** the bytes are not valid UTF-8, **or** the first 8 KB
+ * contain a NUL. Two tests, because neither catches the other: UTF-16 text
+ * is valid-ish byte soup that is full of NULs, and a truncated UTF-8 file
+ * has no NUL at all.
+ *
+ * ── What the classification decides ───────────────────────────────────
+ *
+ * A binary file is **copied verbatim, compared raw, and excluded from
+ * `substitute`, `rewrite-path` and `generate`**. The exclusion is not a
+ * convenience: those three ops work on a decoded string, and decoding
+ * arbitrary bytes as UTF-8 replaces every invalid sequence with U+FFFD.
+ * Running any of them over a binary file would **corrupt it on write**
+ * while reporting success — the worst available outcome, since the apply
+ * would look clean and the file would be destroyed.
+ *
+ * The same reasoning orders this before `normalizeText`, which is why
+ * that function documents the precondition it relies on.
+ *
+ * ── Validity is decided by re-encoding, not by a scanner ──────────────
+ *
+ * `Buffer.toString('utf8')` never fails — it substitutes U+FFFD — so
+ * "did it decode?" is not a question it can answer. Re-encoding the
+ * result and comparing lengths is: a substitution changes the byte length
+ * unless the original happened to be U+FFFD itself, which the equality
+ * check then accepts, correctly, because it *is* valid UTF-8.
+ */
+export function isBinary(bytes: Buffer): boolean {
+  const head = bytes.subarray(0, BINARY_SNIFF_BYTES);
+  if (head.includes(0)) return true;
+  return !isValidUtf8(bytes);
+}
+
+/** True iff `bytes` is valid UTF-8. See `isBinary` for why this is a
+ *  round-trip rather than a scan. */
+export function isValidUtf8(bytes: Buffer): boolean {
+  return Buffer.compare(Buffer.from(bytes.toString('utf8'), 'utf8'), bytes) === 0;
+}
+
+/**
+ * Decode a **text** file for a content op.
+ *
+ * Refuses binary by returning `null` rather than by throwing, so a caller
+ * has to handle it — the ops each report their own code, and a shared
+ * exception would have to guess which.
+ *
+ * **Phase-2 output is UTF-8 and never emits a BOM**, so the leading one is
+ * dropped here on the way in and no op writes one back. A pack shipping a
+ * BOM'd template therefore produces a BOM-free applied file, which is the
+ * declared behaviour and not an accident.
+ */
+export function decodeText(bytes: Buffer): string | null {
+  if (isBinary(bytes)) return null;
+  const text = bytes.toString('utf8');
+  return text.startsWith(BOM) ? text.slice(BOM.length) : text;
+}

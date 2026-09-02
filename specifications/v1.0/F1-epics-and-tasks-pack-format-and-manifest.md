@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 3.3
+**Version:** 3.5
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,8 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 3.5 | 2026-09-02 | **E-07 — the manifest, and three ADR signatures that could not do their own jobs.** Each was found by **building** the module, exactly as `validatePackJson`'s one-argument form was: `readManifest(projectRoot)` cannot re-validate answers (C-29 needs the pack's declarations), cannot raise `W-MANIFEST-NEWER-CLI` (needs the running CLI) and cannot raise `W-PACK-NEWER-THAN-CLI` (needs the bundled pack) — none of the three is derivable from a project root; `writeManifest(): Promise<void>` gives `E-WRITE-FAILED`, an **exit-3** code, nowhere to go; and `canonicalJson(value: unknown)` cannot express three of §F1.4's four rules, because a general stable-stringify must sort and sorting puts `payloadDigest` in the one position §F1.4 forbids. **`F1-ADR-001` amended in place**, superseded signatures kept beside each. **Four rulings folded into F1 v5.1**: a declared parameter with no recorded answer had no code at all; `cli`/`pack.name`/`pack.version` were never required to be well-formed though all three are read and compared; a `payloadDigest` nested inside `pack` was forbidden with no code, so it would have been reported as *the top-level key is missing* — right class, wrong reason; and *unknown keys at any level* meets a manifest with **two** closed objects, which the ADR's single flat field could not hold. **The manifest draws no `W-UNKNOWN-KEY`, deliberately** — that code means *an author should delete this*, and an unknown manifest key is a newer CLI's data F1 requires be preserved. **Also corrected: `T-0207` was marked done against a filename that was never created** — the `.harness/` constants live in `harness-paths.ts`, beside the brand they exist to make safe. **133 integration tests.** |
+| 3.4 | 2026-09-02 | **E-05 — the six primitives render, and the executable rule turned out to refuse everything it permitted.** The ops are **pure**: each reads the payload through a callback and returns the writes it wants made, so nothing here opens a file and `validate` can compute the result in CI with nothing checked out. The **write path is E-11's**, and the split is what lets `pack info` render an apply completely without performing it — the claim the whole no-script-primitive argument rests on. **The dispatch lives in the registry**, not in a helper, because T-0403's rule is that one module is the only place an `op` maps to an implementation, and two enumerations of six arms is one too many. `generate` **calls `substitute`'s function rather than resembling it** — two implementations of one token language would drift, and the drift would show as a `CLAUDE.md` resolving a token the pack's other files did not. **Found by building: `executableRoots` was self-contradicting** — it declares prefixes *each ending `/`, each subject to the stage 1 grammar*, and stage 1 refuses an **empty segment**, which a prefix ending `/` has by construction. Every legal root was refused by the rule that governs it, inside the control that bounds where a pack may write `0755`; it read perfectly well because each half is right alone (F1 v5.0). **And this task's own text named a consumer that had left the product**: Q-82 moved both backend kits to `addons/`, so no v1.0 pack declares a root or sets the bit, and the apparatus is fixture-covered like the scaffold rules Q-82 emptied — asserted rather than assumed. **338 unit tests.** |
 | 3.3 | 2026-09-02 | **E-03 complete, and E-04 with it — the first wave run in parallel.** Four streams: E-04 here, E-06's hash layer, E-13's pack conformance and E-03's acceptance tests, with **spec amendments kept to one hand** so F1's version history could not fork. **Every stream found something the spec had stated and nothing enforced**, which is the argument for the split rather than a side effect of it. **F1 v4.7**: `E-RECIPE-PRIMITIVE-UNKNOWN`'s `merge-json` line existed only as prose outside the template, and `E-RECIPE-STEP-INVALID`'s second line was a **descriptive slot that would have printed the words *usage for that primitive*** where the usage belongs. **v4.8**: a **control character in a path was legal**, and §NFR's digest listing is newline-joined — so a payload path containing `\n` forges a second line and two different file sets digest alike, **a collision inside the control `verify` uses to detect tampering**; closed in the grammar rather than at the digest, because a path holding a control character is refusable on its own merits and one clause covers both quantifiers. §NFR also named **no separator** between a path and its hash, in a value later CLIs recompute. **v4.9**: `declaredBy` was restricted to `folderScaffolding` and **checked nowhere** — a part carrying it matches zero files *without* `E-ANATOMY-EMPTY`, so a pack could ship no roles and validate clean, **defeating G-F1-3 for eight of the nine parts**; and `version`/`minCliVersion` *"are valid semver"* **failed open in both places at once**, the validator checking only for a string and the floor check reading `false` where an unparseable version returns `null`. **296 unit, 76 integration, 21 pack, 8 structural.** |
 | 3.2 | 2026-09-02 | **T-0305 — the pack loader, and the last implementer task in E-03.** Resolution is **install-relative** via `paths.ts`, and the cost of the one input F1 treats as trusted is paid here: a pack **name** is user input that becomes a path segment, so it is validated against the declared grammar **and against what is actually on disk** before it is joined to anything. A test drives ten escape shapes — `../packs`, `coding/../..`, `/etc`, a backslash, an over-long name — through the same gate, because an escape that fails later merely because the directory happens not to exist is not a control. **The CLI floor is checked separately from loading, deliberately**: `pack info` and `validate` must be able to read and report on a pack this CLI is too old to *apply*, and refusing to load it would make the diagnostic unobtainable from the tool that names it. `recipe` is judged on its **source text before resolution**, never resolved and then judged. **Found by building: `validatePackJson`'s one `packName` argument was doing two jobs** — the directory name a declaration must agree with, and the path a message shows — which caps every such message at a single path segment. Split, with the reason recorded at the signature. **221 unit tests; E-03 is complete but for its two TestWriter tasks.** |
 | 3.1 | 2026-09-02 | **T-0308 and T-0310 — answers, and the choose-one diagnostic.** The per-declaration rules already lived in `schema.ts`, so `parameters.ts` is what no single entry can see: **duplicate ids and sibling flag collisions**, the credential ban, `E-PARAM-UNDECIDABLE`, the combination bound, and the **C-29 split** — one check, two occasions, two codes, exit 1 at collection and exit 2 on read-back. **The order of two lines is the security control**: `maxLength` runs **before** `pattern`, which is what bounds pattern evaluation by construction; a test asserts a 5000-character answer is refused **for its length** rather than handed to the engine. A `string` parameter's combination domain is *the answers the recipe can tell apart* — its `when` values plus **one representative of "none of them"**, sentinelled as `null` because no string can be trusted not to collide with one a `when` names. `scaffolds.ts` carries Q-82's honesty: **every branch is fixture-covered, not pack-covered**, because the product ships exactly one scaffold and it is alone in its category — and **a test asserts that fact** rather than leaving the next reader to assume the coverage is real. Selection is in **`pack.json` order, never the order typed**, which is correctness rather than presentation: two users typing the flags differently must get byte-identical trees. **Found by building: `E-PARAM-FLAG-INVALID`'s message enumerated seven of the eight reserved flags** — a closed enumeration inside a remedy, shown to the one reader choosing a name against it (F1 v4.6, drift-guarded). **213 unit tests.** |
@@ -415,7 +417,14 @@ E-11. E-09's steps 6 and 7 are this epic's rules, run at validate time.
   produces one (Q-50 as amended). C-5, C-14.
   *Depends on: T-0201.*
 
-- [x] **T-0207** `[Implementer]` `src/fs/project-paths.ts` — the `.harness/`
+- [x] **T-0207** `[Implementer]` **Delivered as `src/security/harness-paths.ts`,
+  not as `src/fs/project-paths.ts`** — the `.harness/` layout constants
+  belong beside the `HarnessPath` brand that governs writes into it, and a
+  separate module would have split a type from the constants it exists to
+  make safe. **The filename in this line was never created**, and F1's
+  v2.4 note claiming "E-02 complete" was true of the work and wrong about
+  the path; corrected 2026-09-02 when E-07 went looking for the file.
+  Originally specified as `src/fs/project-paths.ts` — the `.harness/`
   layout constants and POSIX + NFC normalization helpers. All path *safety*
   stays in `src/security/`; this module holds names, not rules.
   *Depends on: T-0206.*
@@ -742,7 +751,7 @@ therefore has to land before any destination rule can be trusted.
   256-step bound counted before `when` filtering, and the `when` rules.
   *Runs in parallel with T-0401–T-0406 against the ADR's public interface contract.*
 
-- [ ] **T-0409** `[TestWriter]` Property tests for the write set in
+- [x] **T-0409** `[TestWriter]` Property tests for the write set in
   `tests/integration/write-set.test.ts`: one case per op proving the tabulated
   set, the matched-not-hit property for `in` primitives, totality over the six
   arms, and purity — the function is called with no project and no filesystem
@@ -777,18 +786,18 @@ format's central security property (§NFR *Bounded capability*).
 
 ### The placing primitives
 
-- [ ] **T-0501** `[Implementer]` `src/recipe/ops/copy.ts` — directory recursion in
+- [x] **T-0501** `[Implementer]` `src/recipe/ops/copy.ts` — directory recursion in
   **byte-ascending path order**, `exclude` globs relative to `from`, basename
   invariance for a file `from` (a changed basename is `rename`'s job), and the
   `executable` field. Source and destination directory **names** may differ,
   expressed by the step alone with no content change.
   *Depends on: T-0306, T-0403, T-0404.*
 
-- [ ] **T-0502** `[Implementer]` `src/recipe/ops/rename.ts` — one file in, one
+- [x] **T-0502** `[Implementer]` `src/recipe/ops/rename.ts` — one file in, one
   file out, basename may differ. A directory `from` is `E-RECIPE-STEP-INVALID`.
   *Depends on: T-0403.*
 
-- [ ] **T-0503** `[Implementer]` `src/recipe/ops/strip-suffix.ts` — copies a file
+- [x] **T-0503** `[Implementer]` `src/recipe/ops/strip-suffix.ts` — copies a file
   or a directory and rewrites basename `X<suffix>.Y` to `X.Y`. `suffix` is a
   **declared literal** matching `^\.[a-z0-9-]{1,16}$` with **no implicit
   `.template` default** — the coding pack's payload legitimately keeps
@@ -798,7 +807,7 @@ format's central security property (§NFR *Bounded capability*).
 
 ### The editing primitives
 
-- [ ] **T-0504** `[Implementer]` `src/recipe/ops/rewrite-path.ts` — literal
+- [x] **T-0504** `[Implementer]` `src/recipe/ops/rewrite-path.ts` — literal
   find/replace over already-written applied text files, with **hit counting**
   so a step matching nothing across all its `in` files is `E-REWRITE-UNUSED`
   (a rewrite that no longer applies is stale, and staleness is the defect this
@@ -806,7 +815,7 @@ format's central security property (§NFR *Bounded capability*).
   and neither may contain a line break.
   *Depends on: T-0404, T-0403.*
 
-- [ ] **T-0505** `[Implementer]` `src/recipe/ops/substitute.ts` — resolve
+- [x] **T-0505** `[Implementer]` `src/recipe/ops/substitute.ts` — resolve
   `{{harness:param.<id>}}`, `{{harness:pack.name}}`, `{{harness:pack.version}}`
   and `{{harness:cli.version}}` only, plus the `{{harness:lit:X}}` escape,
   **resolved once in one pass and never re-scanned**. Every other `{{…}}` is
@@ -822,7 +831,7 @@ format's central security property (§NFR *Bounded capability*).
   escaping rule** (Q-54).
   *Depends on: T-0404, T-0308, T-0403.*
 
-- [ ] **T-0506** `[Implementer]` `src/recipe/ops/generate.ts` and
+- [x] **T-0506** `[Implementer]` `src/recipe/ops/generate.ts` and
   `src/recipe/anchors.ts` — render one payload template, substitute exactly as
   T-0505 does, assert the declared anchors and write `to`. The assertion is a
   **literal line count, not a grammar and not a parser**: each declared id's
@@ -836,7 +845,7 @@ format's central security property (§NFR *Bounded capability*).
 
 ### Content rules that cut across the ops
 
-- [ ] **T-0507** `[Implementer]` Text/binary classification and its consequences,
+- [x] **T-0507** `[Implementer]` Text/binary classification and its consequences,
   in `src/hash/normalize.ts`'s classifier and consumed by every op: a file whose
   bytes are not valid UTF-8, or whose first 8 KB contain a NUL, is **binary** —
   copied verbatim, compared raw, and **excluded from `substitute`,
@@ -844,7 +853,7 @@ format's central security property (§NFR *Bounded capability*).
   a BOM.
   *Depends on: T-0601. Consumed by T-0504–T-0506, T-1002.*
 
-- [ ] **T-0508** `[Implementer]` The executable-bit rules, over the **write set**
+- [x] **T-0508** `[Implementer]` The executable-bit rules, over the **write set**
   and not over `to`: `"executable": true` writes `0755` and everything else
   `0644`; `pack.json`'s `executableRoots` prefixes are each subject to the
   stage-1 grammar and the stage-2 denylist; a bit outside every declared root
@@ -854,23 +863,28 @@ format's central security property (§NFR *Bounded capability*).
   declaration and again per applied path**, so a directory recursion cannot
   reach a forbidden destination the root did not name; and more than **32**
   executables in one apply is `E-EXEC-TOO-MANY`. C-12, C-33, C-39b.
-  **This apparatus has a real consumer** (Q-54's one addition): `coding`
-  declares `executableRoots: ["infrastructure/backend-deploy/"]` and each
-  backend scaffold sets the bit on four scripts — so a backend combination
-  produces **four** `0755` applied paths and **four real disclosure lines**,
-  and the base combination produces none.
+  **This apparatus had a real consumer and no longer has one.** The text
+  here said `coding` declares `executableRoots:
+  ["infrastructure/backend-deploy/"]` and that each backend scaffold sets
+  the bit on four scripts. **Q-82 moved both backend kits to `addons/`**,
+  so **no v1.0 pack declares a root or sets the bit** and the apparatus is
+  **fixture-covered**, like the scaffold-exclusivity rules Q-82 emptied.
+  Corrected at F1 v5.0, which also fixed the rule itself: a root ends `/`
+  and stage 1 refuses an empty segment, so **every legal root was refused
+  by the grammar that governs it** until the separator was stripped before
+  the check.
   *Depends on: T-0203, T-0404, T-0501, T-0503.*
 
 ### Verification
 
-- [ ] **T-0509** `[TestWriter]` Per-primitive acceptance tests in
+- [x] **T-0509** `[TestWriter]` Per-primitive acceptance tests in
   `tests/integration/primitives.test.ts` — US-3 for the three placing ops,
   US-4 for the two editing ops (including the escape's single-pass property:
   `{{harness:lit:lit:x}}` renders `{{harness:lit:x}}` and nothing further), and
   US-32 for `generate`'s three anchor failure modes.
   *Runs in parallel with T-0501–T-0506 against the ADR's public interface contract.*
 
-- [ ] **T-0510** `[TestWriter]` Tests for the cross-cutting content rules in
+- [x] **T-0510** `[TestWriter]` Tests for the cross-cutting content rules in
   `tests/integration/text-binary.test.ts` and
   `tests/integration/executable-bit.test.ts`: a binary payload file excluded
   from all three content ops and copied byte-identically; the executable cap,
@@ -892,18 +906,18 @@ moved**.
 **Unlocks:** E-07 (`payloadDigest` is a manifest key), E-10 (the fail-closed
 gate), E-11 (phase 1 is journalled exactly as phase 2 is).
 
-- [ ] **T-0601** `[Implementer]` `src/hash/normalize.ts` — `normalizeText()`:
+- [x] **T-0601** `[Implementer]` `src/hash/normalize.ts` — `normalizeText()`:
   strip a leading UTF-8 BOM, then replace every `\r\n` and every lone `\r`
   with `\n`. **Nothing else** — trailing whitespace, blank lines and a final
   newline are all significant (Q-26).
   *Depends on: T-0101. Prerequisite for T-0507, T-0603, T-1002.*
 
-- [ ] **T-0602** `[Implementer]` `src/hash/sha256.ts` — `hashText`, `hashBytes`,
+- [x] **T-0602** `[Implementer]` `src/hash/sha256.ts` — `hashText`, `hashBytes`,
   64 lowercase hex, no truncation and no salt, on `node:crypto` with no
   dependency. Used in exactly four places at v1.0 (§NFR).
   *Depends on: T-0101.*
 
-- [ ] **T-0603** `[Implementer]` `src/hash/digest.ts` — `treeDigest()`:
+- [x] **T-0603** `[Implementer]` `src/hash/digest.ts` — `treeDigest()`:
   path-prefixed, `\n`-joined, **byte-ascending**, returning `sha256-<hex>`.
   **One call site at v1.0.**
   *Depends on: T-0601, T-0602.*
@@ -957,7 +971,7 @@ read-back.
 **Unlocks:** E-10 (`verify` reads it), E-11 (the manifest write is the last
 write of an apply).
 
-- [ ] **T-0701** `[Implementer]` `src/manifest/types.ts` — `PackManifest`, **six
+- [x] **T-0701** `[Implementer]` `src/manifest/types.ts` — `PackManifest`, **six
   keys**: `manifestVersion`, `cli`, `pack`, `payloadDigest`, `parameters`,
   `scaffolds`, plus `unknownKeys` for forward compatibility (not a seventh
   declared key). **No `files[]`, no `regions`, no `ownedKeys` record, no
@@ -967,17 +981,17 @@ write of an apply).
   never nested inside `pack`.
   *Depends on: T-0302.*
 
-- [ ] **T-0702** `[Implementer]` `src/manifest/canonical-json.ts` —
+- [x] **T-0702** `[Implementer]` `src/manifest/canonical-json.ts` —
   `canonicalJson()`: fixed key order, 2-space indent, `\n` endings,
   `parameters` in declared parameter order, `scaffolds` in declared order.
   Re-serializing an unchanged manifest must be **byte-identical**.
   *Depends on: T-0701.*
 
-- [ ] **T-0703** `[Implementer]` `src/manifest/write.ts` — `writeManifest()`:
+- [x] **T-0703** `[Implementer]` `src/manifest/write.ts` — `writeManifest()`:
   atomic write through `HarnessPath`, byte-identical output.
   *Depends on: T-0702, T-0206.*
 
-- [ ] **T-0704** `[Implementer]` `src/manifest/read.ts` — `readManifest()`:
+- [x] **T-0704** `[Implementer]` `src/manifest/read.ts` — `readManifest()`:
   strict parse (`E-JSON-DUPLICATE-KEY`, **not** `E-MANIFEST-CORRUPT` — one
   fault, one code, wherever it occurs), the `manifestVersion` gate
   (`E-MANIFEST-NEWER`, exit 2, **never a warning**), unknown-key capture
@@ -991,7 +1005,7 @@ write of an apply).
 
 ### Verification
 
-- [ ] **T-0705** `[TestWriter]` Acceptance tests for US-10 and US-15 in
+- [x] **T-0705** `[TestWriter]` Acceptance tests for US-10 and US-15 in
   `tests/integration/manifest.test.ts`: the manifest's key order asserted
   directly with `payloadDigest` **fourth** and `pack.payloadDigest` absent; two
   applies producing byte-identical manifests; and one case per US-15 row —

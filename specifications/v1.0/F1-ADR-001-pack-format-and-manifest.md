@@ -1,6 +1,6 @@
 # ADR-001 — Pack format, recipe & manifest: a closed primitive set, a six-key manifest, and a pack that can only write text
 
-**Status:** Accepted — **rewritten 2026-08-31 against the two-phase model (Q-39…Q-53)**, then **amended 2026-08-31** to apply the answered `.harness/README.md` escalation and to specify the Q-50 `validate` check, then **amended again 2026-08-31** to repair six conditions the rewrite silently lapsed and to fold the Mode A re-review's C-19…C-30, then **amended 2026-08-31 by Q-54**, which **overturns §3.8** and voids every part of this ADR that reasons about `merge-json` — see *What Q-54 supersedes* immediately below the amendment history, and read it before §1 — and then **amended 2026-09-01 against F1 v3.0** for Q-62, Q-63, Q-79 and Q-81, which is the larger of the two supersession boxes and the one a reader compiling against this contract needs: see *What Q-62, Q-63, Q-79 and Q-81 supersede*
+**Status:** Accepted — **amended 2026-09-02 against F1 v5.0**: three symbols in §6.1's contract (`readManifest`, `writeManifest`, `canonicalJson`) were each unable to satisfy the task that implements them, and are corrected in place with the superseded signature kept beside each. All three were found by **building** the module, not by reading the contract — the same way `validatePackJson`'s one-argument form was. — **rewritten 2026-08-31 against the two-phase model (Q-39…Q-53)**, then **amended 2026-08-31** to apply the answered `.harness/README.md` escalation and to specify the Q-50 `validate` check, then **amended again 2026-08-31** to repair six conditions the rewrite silently lapsed and to fold the Mode A re-review's C-19…C-30, then **amended 2026-08-31 by Q-54**, which **overturns §3.8** and voids every part of this ADR that reasons about `merge-json` — see *What Q-54 supersedes* immediately below the amendment history, and read it before §1 — and then **amended 2026-09-01 against F1 v3.0** for Q-62, Q-63, Q-79 and Q-81, which is the larger of the two supersession boxes and the one a reader compiling against this contract needs: see *What Q-62, Q-63, Q-79 and Q-81 supersede*
 **Date:** 2026-08-31 (supersedes the 2026-08-30 original in full)
 **Deciders:** `architect` (this ADR) · escalations to Thomas Andersen
 **Refs:** `specifications/general/pack-application.md` (**authoritative** — the two-phase model) · `specifications/general/pack-inventory.md` (**authoritative** — the three packs, source and applied trees) · `F1-spec-pack-format-and-manifest.md` **v2.1** (this ADR's §6.1 folded) · `F5-spec-template-packs.md` **v2.0, second pass** (§6.2 folded) · `LintelHarnessSpecification-1.0.md` · `specifications/project-brief.md` §12 (Q-1…Q-53, **all resolved, authoritative**) · `packs/coding/specifications/conventions.md` · **security review of 2026-08-30** (Mode A over F1 v1.0 + ADR-001 original: `REVISE-SPEC`, S-1…S-14, conditions C-1…C-18 — re-dispositioned in §8)
@@ -929,10 +929,40 @@ export interface PackManifest {
   // NO pack.integrity, NO appliedAt, NO manifest self-hash.
 }
 
-export function readManifest(projectRoot: string):
-  Promise<{ manifest: PackManifest | null; diagnostics: readonly Diagnostic[] }>;
-export function writeManifest(projectRoot: string, m: PackManifest): Promise<void>;
-export function canonicalJson(value: unknown): string;
+// AMENDED 2026-09-02, against F1 v5.0. All three signatures below were
+// unable to do what their own tasks require, and each was found by
+// building the module rather than by reading the contract. The originals
+// are kept in the comment on each line, because a superseded signature a
+// reader may still be compiling against is worth naming.
+//
+//   was: readManifest(projectRoot: string)
+// T-0704 requires answer re-validation on EVERY read (C-29), which needs
+// the pack's ParameterDecl[]; W-MANIFEST-NEWER-CLI, which needs the
+// running CLI's version; and W-PACK-NEWER-THAN-CLI, which needs the
+// bundled pack's version. None is derivable from a project root, so the
+// old signature could satisfy none of the three. `declarations` is
+// POSITIONAL AND REQUIRED, not optional: an optional creates a
+// "no declarations, so skip the check" branch, and §F1.5 rules that shape
+// out one field over.
+export function readManifest(
+  root: ProjectRoot,
+  declarations: readonly ParameterDecl[],
+  context: ReadManifestContext,
+): Promise<ReadManifestResult>;
+
+//   was: writeManifest(projectRoot: string, m: PackManifest): Promise<void>
+// `E-WRITE-FAILED` is exit class 3, and `void` gives it nowhere to go: the
+// alternatives were throwing (no code — and this document makes the CODE
+// the stable contract, not the exception type) or silence.
+export function writeManifest(root: ProjectRoot, m: PackManifest): Promise<DiagnosticBag>;
+
+//   was: canonicalJson(value: unknown): string
+// Three of §F1.4's four rules — fixed key order, declared parameter order,
+// declared scaffold order — are facts about THIS DOCUMENT and cannot be
+// expressed over `unknown`. A general stable-stringify would have to sort,
+// and sorting places `payloadDigest` between `parameters` and `scaffolds`,
+// which is the one position §F1.4 forbids.
+export function canonicalJson(m: PackManifest): string;
 
 // ── verify (US-33, Q-53) ────────────────────────────────────────────────
 /** SEC (C-22). `partial` is NEW and it is a security fix, not a nicety.
