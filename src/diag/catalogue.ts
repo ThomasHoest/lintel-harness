@@ -113,7 +113,7 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'W-SCAN-SYMLINK-SKIPPED': ["lintel: skipped \"{path}\" — it is a symbolic link, and lintel does not follow links out of the project."],
 } as const;
 
-const PLACEHOLDER = /\{([A-Za-z][A-Za-z0-9]*)\}/g;
+const PLACEHOLDER = /(?<!\\[pP])\{([A-Za-z][A-Za-z0-9]*)\}/g;
 
 /**
  * Slots F1 describes in prose instead of naming. **Recorded, not

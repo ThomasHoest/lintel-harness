@@ -1,5 +1,5 @@
 # Pack Format & Manifest Specification — Lintel Harness v1.0
-**Version:** 4.1
+**Version:** 4.2
 **Status:** Accepted
 **Date:** 2026-09-01
 **Platform:** Node ≥ 22 / TypeScript CLI, published as `@lintel/cli`, binary `lintel`, with **`harness` as a command group** — every command in this document is reached as `lintel harness <command>` (Q-16 **as amended by Q-63**). Pack content is Markdown, shell, PowerShell and Bicep; `pack.json`, `recipe.json` and the manifest are JSON. No UI.
@@ -36,6 +36,7 @@
 | **3.9** | **2026-09-02** | **T-0104 built the catalogue and found three things §Error States does not say.** **(1) The placeholder grammar was undefined.** *"`{…}` interpolation only"* is not a rule a reader can implement: **nine of the 88 messages carry braces that are not substitutions** — JSON a remedy line tells the user to write (`{ "status": "absent", "reason": "…" }` and three more), a **regex quantifier** `{1,64}` inside a recommended `pattern`, and three prose slots. **Now stated: a placeholder is `{name}` where `name` matches `^[A-Za-z][A-Za-z0-9]*$`; every other brace is literal and passes through untouched.** 71 names across the catalogue. **(2) Three slots are described in prose rather than named** — `E-RECIPE-STEP-INVALID`'s *"usage for that primitive"*, and `E-TARGET-EXISTS`'s and `E-VERIFY-MISMATCH`'s *"first ten paths…"*. Under the identifier rule they render **literally**, so the emitting module builds those lines itself. **Recorded as a known gap rather than fixed by renaming**, because renaming changes message text three features already cite; `catalogue.ts` pins the list so it stays visible. **(3) A `→` marks a remedy only at the start of a line.** `E-REWRITE-UNUSED` renders `"{find}" → "{replace}"` as **content** in line 1 — so the obvious reading, *any line containing an arrow is a remedy*, is wrong about a shipping message. **A C-50 refinement lands with it:** an **interpolated value** is escaped more strictly than a template line — LF, CR and HT included — because a value carrying a newline and an arrow would **forge a remedy line**, which is C-1's forgery shape one layer down. C-50's exemption was written for templates, which the CLI controls, not for values, which a pack does. **No code added: the catalogue holds 88.** |
 | **4.0** | **2026-09-02** | **`E-PACK-INVALID` added — building the strict reader found the catalogue had no code for a malformed `pack.json`.** US-1 has specified since v2.0 that `pack.json` is parsed by the duplicate-key-rejecting reader, and `E-JSON-DUPLICATE-KEY` covers the duplicate case — but **a syntactically broken `pack.json` had nowhere to go.** `recipe.json` has `E-RECIPE-INVALID` and the manifest has `E-MANIFEST-CORRUPT`; the third document the same reader parses had neither. **By this catalogue's own rule the fault needs its own code** — a different file, a different remedy, and a message that must not be interchangeable with a recipe's. **The catalogue grows 88 → 89**, the first growth since v3.4, and it is the third gap found by *implementing* rather than by review: the placeholder grammar, the unnamed slots and now a missing code, all of which read perfectly in prose. |
 | **4.1** | **2026-09-02** | **The boolean-typed enumeration said four in three places and five in one.** Q-79 added **`RecipeStep.fillExpected`** at v3.0 and updated US-1's own bullet to **five** — and left §Technical Context's *Boolean fields* row, US-31's `adaptExpected` bullet and C-34's disposition row all saying **four**. **This is C-34's own finding recurring**, which is why it is folded rather than tidied: C-34 was raised because two security-gating booleans sat **outside** a closed enumeration, and in JavaScript `"false"` is **truthy** — so `"executable": "false"` read as `true` and `"notASecret": "no"` disabled the credential ban, **two gates failing open on a typo**. A validator built against "four" leaves `fillExpected` uncovered, and that is the field gating whether **`update` may overwrite a filled `project-brief.md`**. **The count is five in every place it appears**, and C-34's row now says so with its own history intact. No code added; the catalogue holds **89**. |
+| **4.2** | **2026-09-02** | **The placeholder rule v3.9 introduced was itself wrong, and rendering `E-PARAM-NO-PATTERN` proved it.** That message recommends `"^[\p{L}\p{N} ._-]{1,64}$"`, and **`L` and `N` are valid identifiers** — so *"a placeholder is `{name}` with an identifier name"* ate both **Unicode property escapes** and rendered `^[\p200\p64 ._-]{1,64}$`. Advice that is not merely wrong but **unusable**: a pack author copying it gets a regex that does not compile. **The rule gains one clause:** a brace preceded by `\p` or `\P` is a **property escape and is literal**. Note what v3.9 got *right* by accident — `{1,64}` was already literal, because a quantifier is not an identifier — which is why the fault survived: the same line contained a brace the rule handled correctly and two it did not. **This is the third revision of the same rule**, after v3.9 defined it and v4.2 corrects it, and the pattern across all three is that **every counter-example came from a message, not from thinking about the grammar.** A general guard now renders **every** message with its declared names supplied and fails on any surviving brace. |
 
 ---
 
@@ -3343,10 +3344,18 @@ change the exit code.
   T-0104). A **placeholder** is `{name}` where `name` matches
   `^[A-Za-z][A-Za-z0-9]*$`; **every other brace is literal** and renders
   untouched. Forced by the catalogue rather than chosen: nine brace
-  occurrences across the 88 messages are not substitutions — JSON a remedy
+  occurrences across the messages are not substitutions — JSON a remedy
   line instructs the user to write, and the quantifier `{1,64}` in a
   recommended `pattern`. **A reader treating every `{…}` as a placeholder
   mangles both.**
+  - **A brace preceded by `\p` or `\P` is a Unicode property escape and is
+    literal** (v4.2). Without this clause the identifier rule ate `\p{L}`
+    and `\p{N}` from `E-PARAM-NO-PATTERN`'s recommended regex and rendered
+    `\p200\p64` — **unusable advice**, since a pack author copying it gets
+    a regex that does not compile. The same line's `{1,64}` was already
+    safe, a quantifier not being an identifier, which is exactly why the
+    fault survived v3.9: one brace on the line was handled and two were
+    not.
   - **Three slots are described in prose and have no name** —
     `E-RECIPE-STEP-INVALID`, `E-TARGET-EXISTS`, `E-VERIFY-MISMATCH`. They
     render literally under this rule, so the emitting module builds those

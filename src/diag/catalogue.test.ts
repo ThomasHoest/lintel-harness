@@ -156,3 +156,29 @@ test('escapeLine keeps tab and newline; escapeValue does not', () => {
   assert.equal(escapeLine('a\u0000b'), 'a\\x00b');
   assert.equal(escapeValue('a\u2028b'), 'a\\x2028b');
 });
+
+// A Unicode property escape is not a placeholder. `L` and `N` are valid
+// identifiers, so the identifier rule alone ate `\p{L}` and `\p{N}` and
+// rendered `\p200\p64` into the regex E-PARAM-NO-PATTERN recommends —
+// advice that is not merely wrong but unusable.
+test('a Unicode property escape is literal, not a placeholder', () => {
+  assert.deepEqual(placeholdersOf('E-PARAM-NO-PATTERN'), ['id']);
+  const out = renderText('E-PARAM-NO-PATTERN', { id: 'projectName' });
+  assert.ok(out.includes('\\p{L}'), out);
+  assert.ok(out.includes('\\p{N}'), out);
+  assert.ok(out.includes('{1,64}'), 'the quantifier stays literal too');
+  assert.ok(!/\{[A-Za-z][A-Za-z0-9]*\}/.test(out.replace(/\\p\{[LN]\}/g, '')), out);
+});
+
+// Every message must render with no visible placeholder once its declared
+// names are supplied. This is the general form of the four bugs the
+// confinement modules had.
+test('every message renders clean when its placeholders are supplied', () => {
+  for (const code of Object.keys(CODES) as DiagnosticCode[]) {
+    const values = Object.fromEntries(placeholdersOf(code).map((n) => [n, `<${n}>`]));
+    const out = renderText(code, values);
+    const stripped = out.replace(/\\p\{[A-Za-z]+\}/g, '');
+    const leftover = [...stripped.matchAll(/\{([A-Za-z][A-Za-z0-9]*)\}/g)].map((m) => m[1]);
+    assert.deepEqual(leftover, [], `${code} renders with unfilled ${leftover.join(', ')}`);
+  }
+});
