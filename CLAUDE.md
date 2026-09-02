@@ -500,10 +500,13 @@ authoritative, verify it rather than trusting the assertion.
   `specifications/v1.0/build-order.md`: **ten waves, and the declared epic
   graph is acyclic.** It agrees with the master spec's
   `F1 → F2 → F5 → F3 → F6` without being derived from it. **Twelve
-  back-edges** where task dependencies contradict the epic order, of which
-  **three are real task-level cycles** — E-05/E-10/E-12 define each other,
-  which is ordinary, while **E-02 → E-11 reads backwards** and is worth a
-  look. **A snapshot, not generated**, and it says so.
+  back-edges** where task dependencies contradict the epic order —
+  E-05/E-10/E-12 define each other, which is ordinary. **The task graph
+  itself is acyclic**: three cycles were reported on 2026-09-02 and
+  **withdrawn the same day** — they were parser artefacts, since the
+  `Depends on:` line carries forward references under **three** phrasings
+  (`Prerequisite for`, `Consumed by`, `Re-checked`) and only the first was
+  handled. **A snapshot, not generated**, and it says so.
 - **Every v1.0 spec and ADR is `Accepted`.** F5 was the last, and it took
   running `T-1502` and adjudicating with `T-1503`: both unplaceable
   differences were **class errors, not migration bugs**, and **class (j)

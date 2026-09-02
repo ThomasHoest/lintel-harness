@@ -1,6 +1,8 @@
 # Build order — epic level
 
-**Status:** Draft
+**Status:** Draft — **corrected 2026-09-02, see §Correction.** The three
+task-level cycles this document first reported **do not exist**; they were
+artefacts of the parser that produced them.
 **Date:** 2026-09-02
 **Derived from:** the five `F*-epics-and-tasks-*.md` documents · master spec §Recommended sequencing
 **Scope:** **epics, not tasks.** The task graph is 206 nodes and 371 edges; this is the 27-node view, which is the one a person can hold.
@@ -83,17 +85,8 @@ scheduling:
 - **E-26 → E-25** means the skill's reference material needs `update`'s
   `--json` contract, which is right and just later than E-26's wave.
 
-**At task level these appear as three cycles**, which is what surfaced
-them:
-
-```
-T-0507 → T-1002 → T-0507
-T-0604 → T-0507 → T-1002 → T-1001 → T-0604
-T-0205 → T-1106 → T-1101 → T-0205
-```
-
-None is visible task-by-task: every individual `Depends on:` line reads
-as reasonable, and only the assembled graph shows they close a loop.
+**At task level these appeared as three cycles**, and **that was wrong** —
+see §Correction below. The task graph is **acyclic**.
 
 ---
 
@@ -105,13 +98,21 @@ as reasonable, and only the assembled graph shows they close a loop.
 | Epic | `**Depends on:**` under each epic, plus the "Depends on" column in each feature's overview table | complete, and **acyclic** |
 | Feature | Master spec §Recommended sequencing | `F1 → F2 → F5 → F3 → F6`, with reasoning |
 
-**The trap:** a task's italic line carries **both directions** —
-`*Depends on: T-0101. Prerequisite for T-0104, T-0105 …*`. A parser that
-takes every `T-nnnn` on that line reads the forward references as
-dependencies and reports **185 false cycles**. Split on *"Prerequisite
-for"*. This is the first thing to know before writing any tool over this
-data, and it is why the three real cycles above were nearly missed among
-the noise.
+**The trap, and it bit twice.** A task's italic line carries **both
+directions**, and **it uses three different phrasings** for the forward
+half:
+
+| Phrasing | Uses |
+|---|---|
+| `Prerequisite for …` | 21 |
+| `Consumed by …` | 2 |
+| `Re-checked whenever …` | 1 |
+
+A parser taking every `T-nnnn` on the line reads all of them as
+dependencies. Handling only *"Prerequisite for"* — the obvious one, and
+the one with twenty-one uses — leaves the other three edges reversed, and
+**three reversed edges are exactly enough to manufacture three cycles**.
+Split on **all three**.
 
 ---
 
@@ -129,3 +130,39 @@ for and is small enough to be useful by hand.
 cross-wave ones describe real mutual dependencies between modules. The
 fix, where there is one, is in how the tasks are split — not in deleting
 an edge that is telling the truth.
+
+---
+
+## Correction — 2026-09-02
+
+**The three task-level cycles this document reported do not exist.** They
+were produced by the parser that wrote it, not by the task data.
+
+| Reported | Actual |
+|---|---|
+| `T-0507 → T-1002 → T-0507` | `T-0507`'s line is *"Depends on: T-0601. **Consumed by** T-0504–T-0506, T-1002."* — `T-1002` is a forward reference |
+| `T-0604 → T-0507 → T-1002 → T-1001 → T-0604` | same reversed edge |
+| `T-0205 → T-1106 → T-1101 → T-0205` | `T-0205`'s line is *"Depends on: T-0204. **Consumed by** T-1106."* — likewise |
+
+**With all three forward phrasings handled, the task graph has 367 edges
+and zero cycles.**
+
+**What the mistake was, precisely.** The first parse reported 185 cycles
+and the fix was to split on *"Prerequisite for"* — the phrasing with
+twenty-one uses. That took the count from 185 to 3, which **read like
+signal emerging from noise** and was reported as such. It was the same
+noise, quieter: two `Consumed by` edges and one `Re-checked` edge, still
+reversed. **A large drop in a false-positive count is not evidence that
+the remainder is true**, and a graph that had just gone from 185 cycles to
+3 deserved one more question rather than a write-up.
+
+**The twelve back-edges are unaffected** — they were computed from epic
+`Depends on:` declarations against derived task edges, and the three
+reversed edges do not appear among them. `E-05 ↔ E-10` and `E-10 ↔ E-12`
+remain genuine mutual dependencies between epics; **`E-02 → E-11` was the
+`T-0205` artefact and is withdrawn.**
+
+**The durable fix is unchanged and now better motivated:** a checked-in
+generator with a cycle check that fails CI, whose forward-phrase list is
+in one place and asserted. The phrasings would have been caught the first
+time anyone wrote the parser twice.
