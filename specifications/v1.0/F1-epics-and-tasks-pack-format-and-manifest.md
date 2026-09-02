@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 2.1
+**Version:** 2.2
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 2.2 | 2026-09-02 | **E-01 complete — T-0106…T-0112 done, and two defects of mine were caught by their own tests.** The surface is data (`surface.ts`), so `E-CLI-UNKNOWN-COMMAND`'s six-command list is **rendered from the array** rather than restated. **T-0111 was already satisfied**: deriving the catalogue from §Error States gave all nine v3.0 codes with their classes for free, which is what deriving rather than transcribing buys. **Defect 1 — the two-pass walk was structurally wrong.** Pass 2 re-read pass 1's *leftovers*, but pass 1 cannot know whether an unknown flag takes a value, so `--calibration high-floor` leaves the flag in `deferred` and the value in `positionals` and **nothing reading only the leftovers can reunite them**. Pass 2 now **re-parses the original argv**, which is what the spec said. **Defect 2, security-relevant — aliases were resolved before the reserved table**, so a pack declaring `force` would have shadowed `--force`, which gates US-13's pre-existing-path rule. That is the `--accept-permissions` shadowing concern reintroduced one layer below where anyone was looking. Reserved now wins by construction, as defence in depth rather than trusting `validate` refused the pack. **69 tests.** |
 | 2.1 | 2026-09-02 | **T-0105 done — the diagnostic group is complete.** `diagnostic.ts` makes *severity is a property of the code* **structural rather than remembered**: `diagnostic()` is the only constructor, it derives severity, class and message from the catalogue, and `DiagnosticInit` has **no field through which an occasion could override one**. `exitCodeFor` prices the worst present — errors contribute their own class, warnings **0**, a **defect** 1 under `--strict`, and a **notice 0 under every flag**, asserted over all thirteen warnings rather than one example. **A defect of mine was caught by its own test:** `get items()` returned the internal array, so `readonly Diagnostic[]` — a **compile-time** claim — was reachable by a cast, and this bag is append-only with its order as the contract (US-16's fixed check order). Returns a copy now. **34 unit tests, 6 integration.** |
 | 2.0 | 2026-09-02 | **T-0104 and T-0113 done, and building them found three things F1 did not say.** `catalogue.ts` carries all **88** message templates, derived from §Error States and drift-guarded like `codes.ts`; `escape.ts` is C-50's single escaping function. **(1) The placeholder grammar was undefined** — nine brace occurrences are **not** substitutions (JSON in remedy lines, the quantifier `{1,64}`), so *"`{…}` interpolation only"* was not implementable. Now `{name}` with an identifier name; everything else literal. **(2) Three slots are prose, not names**, and render literally — pinned in `DESCRIPTIVE_SLOTS` so the gap stays visible. **(3) A `→` marks a remedy only line-initially**; `E-REWRITE-UNUSED` uses one as content, and the first shape assertion written here was wrong about the message rather than the message being wrong. **A C-50 refinement**: values escape LF/CR/HT where templates do not, because a value carrying a newline and an arrow forges a remedy line. F1 v3.9. Next free task id **T-1222**. |
 | 1.9 | 2026-09-01 | **T-0103 done — the catalogue stops being prose.** `src/diag/codes.ts` carries the `DiagnosticCode` union over all **88** codes, `Severity`, Q-60's `defect | notice` axis and the code→exit-class map. **It is derived from F1 §Error States rather than transcribed**, and `codes.test.ts` **re-derives it on every run and fails on divergence** — so the two cannot agree until they do not, which is the failure mode this project has recorded four times in prose and is here made mechanical. The extraction found the section **internally consistent**: 88 rows, 75 `E-`, 13 `W-`, every exit class present, **every `W-` code classified**, no duplicates. The fail-closed rule is tested rather than asserted: an unclassified warning resolves to **`defect`**. |
@@ -214,7 +215,7 @@ T-0103…T-0105 land.
 
 ### The command surface
 
-- [ ] **T-0106** `[Implementer]` `src/cli/main.ts` — dispatch the **`harness`
+- [x] **T-0106** `[Implementer]` `src/cli/main.ts` — dispatch the **`harness`
   command group**: the binary is `lintel`, the group is the first positional
   and the command is the **second** (Q-63). `E-CLI-UNKNOWN-COMMAND` lists
   **six** commands — `init, update, skill, validate, verify, pack` (Q-62, `F6-ADR-005`) — even
@@ -226,7 +227,7 @@ T-0103…T-0105 land.
   that absence is deliberate and is F2's surface.
   *Depends on: T-0105.*
 
-- [ ] **T-0107** `[Implementer]` `src/cli/flags.ts` — the per-command flag
+- [x] **T-0107** `[Implementer]` `src/cli/flags.ts` — the per-command flag
   table and the **two-pass argv parse** (US-8): pass 1 recognises group,
   command, global flags, command flags and the pack name and **defers every
   unrecognised token without judging it**; pass 2 re-parses with the resolved
@@ -243,7 +244,7 @@ T-0103…T-0105 land.
   until the pack resolves.
   *Depends on: T-0106. Prerequisite for T-0905, T-0906, T-1003.*
 
-- [ ] **T-0108** `[Implementer]` `src/index.ts` — the library entry, re-exporting
+- [x] **T-0108** `[Implementer]` `src/index.ts` — the library entry, re-exporting
   **exactly** the ADR's public interface contract and nothing else. Downstream
   features compile against this file; a symbol that is not in the contract does
   not belong here.
@@ -251,14 +252,14 @@ T-0103…T-0105 land.
 
 ### Verification
 
-- [ ] **T-0109** `[TestWriter]` Acceptance tests for the exit-class contract in
+- [x] **T-0109** `[TestWriter]` Acceptance tests for the exit-class contract in
   `tests/integration/exit-classes.test.ts`: every class `0/1/2/3` reachable and
   meaning the same thing on every command (IM-39), a `notice`-only run exiting
   `0` under `--strict`, a `defect` run exiting `1` only under `--strict`
   (US-16), and every emitted message beginning `lintel:`.
   *Runs in parallel with T-0103–T-0106 against the ADR's public interface contract.*
 
-- [ ] **T-0110** `[TestWriter]` Integration tests for argv in
+- [x] **T-0110** `[TestWriter]` Integration tests for argv in
   `tests/integration/argv.test.ts`: a pack-declared alias resolving only in
   pass 2 and **never** reporting a false `E-CLI-UNKNOWN-FLAG`; the command as
   the second positional; `E-FLAG-NOT-PERMITTED` for a known flag on the wrong
@@ -266,7 +267,7 @@ T-0103…T-0105 land.
   *Depends on: T-0107 for the alias half; the rest runs in parallel.*
 
 
-- [ ] **T-0111** `[Implementer]` `src/diag/codes.ts` + `catalogue.ts` — the
+- [x] **T-0111** `[Implementer]` `src/diag/codes.ts` + `catalogue.ts` — the
   **nine codes F1 v3.0 added**, taking the catalogue from 78 to **87**.
   Four for `update`, which **F3 fires and F1 only defines**:
   `E-UPDATE-AVAILABLE` (exit 1, and the one place in this catalogue where
@@ -278,9 +279,15 @@ T-0103…T-0105 land.
   `E-PARAM-UNANSWERABLE`. One notice: **`W-LINK-FALLBACK`** (see T-1105).
   Each carries its exit class and its message template; the `DiagnosticCode`
   union grows in the same change, by US-1's closed-enumeration rule.
+  **Already satisfied when it was reached.** `codes.ts` and `catalogue.ts`
+  are **derived from §Error States**, so all nine arrived with their exit
+  classes and `W-LINK-FALLBACK`'s `notice` class for free. That is the
+  dividend of deriving rather than transcribing: a task whose whole content
+  is "add these nine" cannot be forgotten, because there was never a second
+  list to forget them from.
   *Depends on: T-0104. Prerequisite for T-1105, and for F2's and F3's CLI work.*
 
-- [ ] **T-0112** `[Implementer]` `src/cli/flags.ts` — the reserved-flag list
+- [x] **T-0112** `[Implementer]` `src/cli/flags.ts` — the reserved-flag list
   is **nine**, not eight: `--set`, `--scaffold`, `--json`, `--strict`,
   `--force`, `--rollback`, `--all`, **`--dry-run`**. `--dry-run` is reserved
   **although no F1 command accepts it** — it is `update`'s read-only mode,
