@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { join, resolve as resolvePath } from 'node:path';
 import { tmpdir } from 'node:os';
 import { confinePath } from './confine.js';
 import type { AppliedPath } from './confine.js';
@@ -65,16 +65,24 @@ test('no confinement diagnostic ships with an unfilled placeholder', async () =>
 
 /* ── strict descendant ──────────────────────────────────────────────── */
 
-// startsWith() is the obvious test and is wrong: /tmp/proj-evil shares a
-// prefix with /tmp/proj and is a different tree.
+// startsWith() is the obvious test and is wrong: a sibling sharing a
+// prefix — proj-evil against proj — is a different tree.
+//
+// Built with `resolve()` rather than written as POSIX literals: the
+// function compares on `path.sep`, and it only ever receives paths that
+// came from `resolve` or `realpath`, so a test using hand-written forward
+// slashes asserts something the function never sees. The Windows leg
+// caught exactly that.
 test('a sibling sharing a prefix is not a descendant', () => {
-  assert.equal(isStrictDescendant('/tmp/proj', '/tmp/proj/a'), true);
-  assert.equal(isStrictDescendant('/tmp/proj', '/tmp/proj-evil/a'), false);
-  assert.equal(isStrictDescendant('/tmp/proj', '/tmp/projevil'), false);
+  const root = resolvePath('/tmp/proj');
+  assert.equal(isStrictDescendant(root, resolvePath('/tmp/proj/a')), true);
+  assert.equal(isStrictDescendant(root, resolvePath('/tmp/proj-evil/a')), false);
+  assert.equal(isStrictDescendant(root, resolvePath('/tmp/projevil')), false);
 });
 
 test('the root itself is not a destination', () => {
-  assert.equal(isStrictDescendant('/tmp/proj', '/tmp/proj'), false);
+  const root = resolvePath('/tmp/proj');
+  assert.equal(isStrictDescendant(root, root), false);
 });
 
 /* ── stage 3 ────────────────────────────────────────────────────────── */
