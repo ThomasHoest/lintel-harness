@@ -87,6 +87,13 @@ export {
 } from './pack/types.js';
 
 export {
+  checkAnatomy,
+  incompleteParts,
+  type AnatomyResult,
+  type AnatomyRow,
+} from './pack/anatomy.js';
+
+export {
   MAX_LENGTH_CEILING,
   MAX_LENGTH_DEFAULT,
   PATTERN_MAX_SOURCE,
