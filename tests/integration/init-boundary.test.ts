@@ -41,7 +41,7 @@ import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { join } from 'node:path';
 import { EXIT, runCli, snapshot, withTempDir } from '../harness/cli.js';
 
@@ -100,7 +100,13 @@ async function runStubbed(argv: readonly string[], cwd: string): Promise<Stubbed
       (resolve, reject) => {
         const child = spawn(
           process.execPath,
-          ['--import', join(scratch, 'register.mjs'), CLI, ...argv],
+          // A **`file://` URL**, not a path. Node's ESM loader accepts a
+          // bare absolute path on POSIX and refuses it on Windows —
+          // `ERR_UNSUPPORTED_ESM_URL_SCHEME: Received protocol 'c:'` —
+          // because `C:\\…` parses as a URL whose scheme is the drive
+          // letter. The URL form is correct on every platform, so there is
+          // no branch here, only the right spelling.
+          ['--import', pathToFileURL(join(scratch, 'register.mjs')).href, CLI, ...argv],
           {
             cwd,
             env: { ...process.env, NO_COLOR: '1', LINTEL_STUB_LOG: log },

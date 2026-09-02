@@ -25,9 +25,20 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
 import { runCli, EXIT } from '../harness/cli.js';
 
-const REPO = new URL('../../', import.meta.url).pathname;
+/**
+ * `fileURLToPath`, never `.pathname`.
+ *
+ * On Windows a file URL's `.pathname` is `/C:/Users/...` — a leading
+ * slash before a drive letter, which is not a path any API accepts. It
+ * reads correctly on macOS and Linux and fails on exactly the platform
+ * this project's own CI note calls **not optional**, because the
+ * executable bit, `collisionKey`'s folding and CRLF normalization are
+ * what differ there.
+ */
+const REPO = fileURLToPath(new URL('../../', import.meta.url));
 
 test('validate --all --strict exits 0 through a real process', async () => {
   const r = await runCli(['harness', 'validate', '--all', '--strict'], REPO);

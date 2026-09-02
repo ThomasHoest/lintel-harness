@@ -21,25 +21,57 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { promisify } from 'node:util';
 
-const run = promisify(execFile);
-const REPO = new URL('../../', import.meta.url).pathname;
+const execFileAsync = promisify(execFile);
+
+/** `shell: true` throughout: the shim is a `.cmd` on Windows, which
+ *  `execFile` cannot start on its own. */
+const run = async (
+  file: string,
+  args: readonly string[],
+  options: { cwd: string },
+): Promise<{ stdout: string; stderr: string }> => {
+  const r = await execFileAsync(file, [...args], { ...options, shell: true, encoding: 'utf8' });
+  return { stdout: String(r.stdout), stderr: String(r.stderr) };
+};
+/**
+ * `fileURLToPath`, never `.pathname`.
+ *
+ * On Windows a file URL's `.pathname` is `/C:/Users/...` — a leading
+ * slash before a drive letter, which is not a path any API accepts. It
+ * reads correctly on macOS and Linux and fails on exactly the platform
+ * this project's own CI note calls **not optional**, because the
+ * executable bit, `collisionKey`'s folding and CRLF normalization are
+ * what differ there.
+ */
+const REPO = fileURLToPath(new URL('../../', import.meta.url));
 
 /** Installing is slow; every assertion below shares one install. */
 async function withInstall<T>(body: (bin: string, project: string) => Promise<T>): Promise<T> {
   const base = await mkdtemp(join(tmpdir(), 'lintel-install-'));
   try {
     await writeFile(join(base, 'package.json'), '{"name":"host","private":true}\n');
+    // `npm` is a shell script on POSIX and `npm.cmd` on Windows, and
+    // `execFile` runs neither without help — `shell: true` is what makes
+    // one call work on both.
     await run('npm', ['install', '--silent', '--no-audit', '--no-fund', REPO], { cwd: base });
 
     const project = join(base, 'project');
     await mkdir(project);
-    return await body(join(base, 'node_modules', '.bin', 'lintel'), project);
+
+    // The shim npm writes is `lintel` on POSIX and `lintel.cmd` on
+    // Windows. **Both are the thing under test** — this whole file exists
+    // because the shim is the one shape the rest of the suite never
+    // exercises — so the platform's own name is used rather than a
+    // POSIX-only guess.
+    const shim = join(base, 'node_modules', '.bin', process.platform === 'win32' ? 'lintel.cmd' : 'lintel');
+    return await body(shim, project);
   } finally {
     await rm(base, { recursive: true, force: true });
   }
