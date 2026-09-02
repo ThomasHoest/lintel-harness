@@ -47,14 +47,13 @@ conformance checks need only the schema, not the engine.
 
 ---
 
-## The twelve back-edges, and what they mean
+## The eleven back-edges, and what they mean
 
 **Where a task needs an epic in the same wave or a later one.** Each is a
 place the declared epic order and the task-level dependencies disagree.
 
 | Epic | Wave | Needs | Wave |
 |---|---|---|---|
-| E-02 | 1 | **E-11** | 6 |
 | E-05 | 4 | **E-10** | 5 |
 | E-06 | 3 | **E-05** | 4 |
 | E-10 | 5 | **E-12** | 7 |
@@ -69,12 +68,11 @@ place the declared epic order and the task-level dependencies disagree.
 
 **Read these as information, not as errors.** Six are same-wave, which
 means only that two epics interleave — the tasks are still orderable.
-The six in bold cross a wave boundary and are worth understanding before
-scheduling:
+The five in bold cross a wave boundary and are worth understanding before
+scheduling. **A twelfth, `E-02 → E-11`, was listed here and is
+withdrawn** — see §Correction; it was the `T-0205` parser artefact, and
+it was the one this document called "the sharpest".
 
-- **E-02 → E-11 is the sharpest.** Path confinement (wave 1) has a task
-  needing the write path (wave 6): `T-0205` depends on `T-1106`.
-  Confinement is what the writer *uses*, so this reads backwards.
 - **E-05 ↔ E-10 and E-10 ↔ E-12 are genuine mutual dependencies.** The
   text/binary classifier needs `verify`'s comparison and `verify` needs
   the classifier; the fixture suite needs `verify` and `verify`'s test
