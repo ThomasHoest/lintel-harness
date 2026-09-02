@@ -381,6 +381,51 @@ test('a completed update exits 0, leaves the edited path alone, and rewrites the
   });
 });
 
+test('a selected scaffold survives the update and is recorded again', async () => {
+  // Q-22: `update` never adds a scaffold and never drops one. The
+  // selection is re-read from the manifest, `expected_new` is rendered
+  // with it, and it is written back — so a project does not quietly lose
+  // a whole feature on a version bump.
+  await withTempDir(async (dir) => {
+    const s0 = streams();
+    const applyCode = await runInit(
+      {
+        pack: 'writing',
+        projectRoot: dir,
+        set: [],
+        scaffolds: ['writing-workstream'],
+        force: false,
+        rollback: false,
+        json: false,
+        argv: [
+          'writing',
+          '--scaffold',
+          'writing-workstream',
+          '--set',
+          'projectName=Demo',
+          '--set',
+          'projectPurpose=Testing',
+          '--set',
+          'authorName=Nobody',
+        ],
+      },
+      { streams: s0.streams, prompt: null },
+    );
+    assert.equal(applyCode, 0, s0.err.join('\n'));
+    await recordVersion(dir, '0.9.0');
+
+    const s = streams();
+    assert.equal(await runUpdate(opts({ projectRoot: dir }), { streams: s.streams }), 0, s.err.join('\n'));
+
+    const manifest = JSON.parse(await readFile(join(dir, '.harness', 'manifest.json'), 'utf8')) as {
+      scaffolds: string[];
+      parameters: Record<string, string>;
+    };
+    assert.deepEqual(manifest.scaffolds, ['writing-workstream']);
+    assert.equal(manifest.parameters['authorName'], 'Nobody');
+  });
+});
+
 test('a second update finds the project current', async () => {
   // The manifest and the payload move together or neither moves (US-65),
   // so the run that just completed leaves a project `update` recognises as

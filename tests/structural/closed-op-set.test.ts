@@ -82,3 +82,70 @@ test('nothing in the recipe layer imports a process-spawning module', async () =
     }
   }
 });
+
+/**
+ * **Every command and flag a remedy names must exist.**
+ *
+ * This project has now paid five times for one fault, in five different
+ * places:
+ *
+ *   v2.9  `E-JOURNAL-PRESENT` said `init --rollback` unconditionally,
+ *         which after a crashed `update` names a command that answers
+ *         `E-ALREADY-APPLIED`.
+ *   v5.5  `W-ROLLBACK-KEPT` said "it has changed" on a row where nothing
+ *         had.
+ *   v5.6  `E-UPDATE-PARAM-UNANSWERED` said `update --set`, a flag the
+ *         command refuses.
+ *   v5.9  `E-TARGET-RACE` and `E-WRITE-FAILED` hardcoded `init`.
+ *   v6.3  `E-UPDATE-AVAILABLE` said `→ lintel harness update` **to see
+ *         what would change** — and `update` writes. A user who followed
+ *         it performed the apply they were inspecting.
+ *
+ * Every one was found by **building the thing that raises the code**, and
+ * none by reading. So the property is asserted here instead: a remedy line
+ * naming a command names a **real** command, and a remedy naming a flag
+ * names one that command **accepts**.
+ *
+ * It cannot catch a remedy that is merely wrong about the world — v5.5's
+ * was a sentence, not a command — but four of the five were exactly this
+ * shape, and the fifth was worse than the four.
+ */
+test('every command and flag a remedy names is real and accepted', async () => {
+  const { MESSAGES, COMMANDS, accepts } = await import('../../dist/index.js');
+
+  const known = new Set<string>(COMMANDS);
+  const failures: string[] = [];
+
+  for (const [code, lines] of Object.entries(MESSAGES)) {
+    for (const line of lines as readonly string[]) {
+      // **Remedy lines only** — the ones beginning `→`, which are the
+      // ones a user is told to type. Prose elsewhere in a message may
+      // mention a command without offering it: `E-RECIPE-PRIMITIVE-UNKNOWN`
+      // says *"a new primitive is a change to the CLI"*, and reading that
+      // as an invocation is how a guard produces a false finding on its
+      // first run — which this one did.
+      if (!line.includes('→')) continue;
+      for (const m of line.matchAll(/lintel harness ([a-z]+)((?:\s+--[a-z-]+)*)/g)) {
+        const command = m[1] as string;
+        // `{command}` is a slot, resolved by the emitter from the journal.
+        if (command === 'command') continue;
+        if (!known.has(command)) {
+          failures.push(`${code}: names "${command}", which is not a command`);
+          continue;
+        }
+        for (const flag of (m[2] ?? '').split(/\s+/).filter(Boolean)) {
+          const name = flag.slice(2);
+          if (!accepts(command as never, name)) {
+            failures.push(`${code}: names "${command} ${flag}", which that command refuses`);
+          }
+        }
+      }
+    }
+  }
+
+  assert.deepEqual(
+    failures,
+    [],
+    `a remedy that cannot work is worse than none:\n  ${failures.join('\n  ')}`,
+  );
+});

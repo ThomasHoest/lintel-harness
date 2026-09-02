@@ -93,7 +93,7 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'E-TARGET-RACE': ["lintel: \"{path}\" changed while lintel was writing.", "  {detail}", "  Nothing further was written; the journal is intact.", "  → lintel harness {command} --rollback, then re-run."],
   'E-TRAVERSAL-LIMIT': ["lintel: the walk of \"{root}\" exceeded the {limit} limit ({n}).", "  Limits: depth 32, 10,000 entries per walk.", "  → Narrow the content, or split the pack."],
   'E-UNKNOWN-VALUE': ["lintel: \"{value}\" is not a valid {field}.", "  Allowed: {allowed}", "  → Fix the value, or upgrade to a lintel that understands it."],
-  'E-UPDATE-AVAILABLE': ["lintel: {pack}@{applied} is applied; lintel {cliVersion} bundles {bundled}.", "  → lintel harness update   to see what would change"],
+  'E-UPDATE-AVAILABLE': ["lintel: {pack}@{applied} is applied; lintel {cliVersion} bundles {bundled}.", "  → lintel harness update --dry-run   to see what would change"],
   'E-UPDATE-NOT-NEWER': ["lintel: {pack}@{applied} is applied; lintel {cliVersion} bundles {bundled}, which is not newer.", "  → Upgrade the CLI: npm i -g @lintel/cli@latest"],
   'E-UPDATE-PARAM-UNANSWERED': ["lintel: {pack}@{bundled} declares \"{id}\", which {pack}@{applied} did not.", "  {prompt}", "  Recorded answers cannot supply it, and there is no way to answer it now.", "  → The pack must give \"{id}\" a \"default\". Until it does, re-apply into a fresh directory."],
   'E-UPDATE-SCAFFOLD-DROPPED': ["lintel: {pack}@{bundled} no longer declares the scaffold \"{name}\", which this project selected.", "  update will not silently drop the files it placed.", "  → Re-apply into a fresh directory, or remove the scaffold's files by hand first."],

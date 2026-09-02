@@ -85,7 +85,17 @@ const FLAGS: Readonly<Record<ReservedFlag, FlagSpec>> = {
  */
 const ACCEPTS: Readonly<Record<Command, readonly ReservedFlag[]>> = {
   init: ['set', 'scaffold', 'force', 'rollback'],
-  update: ['dry-run', 'json'],
+  // `rollback` is here because **`E-JOURNAL-PRESENT` renders
+  // `→ lintel harness update --rollback`** from the journal's own
+  // `command` field, and the parser answered `E-FLAG-NOT-PERMITTED` to it
+  // — naming `init`, the command that cannot help. F3 §F3.2's header line,
+  // US-66 (*"the single recovery"*) and F3-R3 all require it, and the
+  // branch was written and tested behind a flag argv refused.
+  //
+  // **The fifth instance of one fault**, and the first where the CLI
+  // printed the unusable remedy itself: *a remedy that cannot work is
+  // worse than none, because the user believes they tried it.*
+  update: ['dry-run', 'json', 'rollback'],
   skill: [],
   validate: ['all', 'strict', 'json'],
   verify: ['json'],

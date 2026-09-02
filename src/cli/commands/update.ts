@@ -89,7 +89,7 @@ import {
 } from '../../manifest/types.js';
 import { checkCliFloor, loadPack } from '../../pack/load-pack.js';
 import { validatePackJson } from '../../pack/schema.js';
-import { selectedIds } from '../../pack/scaffolds.js';
+import { parametersFor, selectedIds } from '../../pack/scaffolds.js';
 import { payloadDigest } from '../../payload/digest.js';
 import { planPayloadCopy } from '../../payload/copy-payload.js';
 import { renderPhase2 } from '../../apply/plan-phase2.js';
@@ -278,7 +278,7 @@ export async function runUpdate(options: UpdateOptions, deps: UpdateDeps = {}): 
 
   /* ── the applied pack, read from `.harness/pack/` ───────────────────── */
 
-  const applied = await readAppliedPack(root, manifest.pack.name);
+  const applied = await readAppliedPack(root, manifest.pack.name, manifest.scaffolds);
   if (applied.pack === undefined) return emit(applied.bag) || 2;
   if (applied.bag.length > 0) emit(applied.bag);
 
@@ -595,7 +595,11 @@ interface AppliedPack {
  * would open the wrong tree. The reads and the two parses are the same
  * ones, called directly.
  */
-async function readAppliedPack(root: ProjectRoot, name: string): Promise<AppliedPack> {
+async function readAppliedPack(
+  root: ProjectRoot,
+  name: string,
+  scaffolds: readonly string[],
+): Promise<AppliedPack> {
   const bag = new DiagnosticBag();
   const dir = join(root, '.harness', 'pack');
   const empty: PackPayload = { entries: [], bytes: new Map(), truncated: false };
@@ -637,10 +641,13 @@ async function readAppliedPack(root: ProjectRoot, name: string): Promise<Applied
     pack,
     recipe: validatedRecipe.recipe,
     payload,
-    // Every parameter the applied pack declares, **selected scaffolds
-    // included**: these are what the recorded answers were recorded
-    // against, and therefore what gate 2 must still find them satisfying.
-    declarations: declarationsOf(pack, selectedScaffolds(pack, [])),
+    // Every parameter the applied pack declares **for the recorded
+    // selection**, scaffold parameters included: these are what the
+    // recorded answers were recorded against, and therefore what gate 2
+    // must still find them satisfying. Passing the empty selection here
+    // would silently exempt every scaffold parameter's answer from the
+    // re-validation C-29 exists for.
+    declarations: parametersFor(pack, selectedScaffolds(pack, scaffolds)),
     bag,
   };
 }
@@ -1175,18 +1182,17 @@ function checkGatesOnly(
   );
 }
 
-/** Every parameter the pack declares for a selection, in `pack.json`
- *  order — base parameters first, then each selected scaffold's. */
-function declarationsOf(
-  pack: PackJson,
-  selected: readonly ScaffoldDecl[],
-): readonly ParameterDecl[] {
-  return [...(pack.parameters ?? []), ...selected.flatMap((s) => s.parameters ?? [])];
-}
-
-/** The pack's declarations for the recorded ids, in **`pack.json` order**
- *  and never the manifest's: scaffold steps write files, so the merge
- *  order *is* the tree. */
+/**
+ * The pack's declarations for the recorded ids, in **`pack.json` order**
+ * and never the manifest's: scaffold steps write files, so the merge
+ * order *is* the tree.
+ *
+ * `selectScaffolds` is deliberately not reused. It raises
+ * `E-SCAFFOLD-UNKNOWN` for an id it does not find, and that code is
+ * reserved for an id a **user** typed — nobody typed these. The same
+ * fault on this command is `E-UPDATE-SCAFFOLD-DROPPED`, which
+ * `resolveUpdateInputs` raises against the *bundled* pack.
+ */
 function selectedScaffolds(pack: PackJson, ids: readonly string[]): readonly ScaffoldDecl[] {
   const wanted = new Set(ids);
   return (pack.scaffolds ?? []).filter((s) => wanted.has(s.id));
