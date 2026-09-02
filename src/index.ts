@@ -194,6 +194,33 @@ export {
   type ReadManifestResult,
 } from './manifest/read.js';
 
+export { fileHash, payloadDigest, payloadDigestOfDir } from './payload/digest.js';
+export {
+  NON_FAILING_STATES,
+  VERIFY_STATES,
+  compareOne,
+  contentEqual,
+  countByState,
+  failingEntries,
+  type CompareInput,
+  type VerifyEntry,
+  type VerifyState,
+} from './verify/compare.js';
+export {
+  emptyBag,
+  reportableFailures,
+  summaryLines,
+  toJson,
+  verifyExitCode,
+  type VerifyJson,
+} from './cli/commands/verify.js';
+export {
+  verifyProject,
+  type RecomputedPath,
+  type VerifyInput,
+  type VerifyResult,
+} from './verify/verify.js';
+
 export { OPS, renderStep, type OpEntry } from './recipe/ops/index.js';
 export { renderCopy } from './recipe/ops/copy.js';
 export { renderRename } from './recipe/ops/rename.js';

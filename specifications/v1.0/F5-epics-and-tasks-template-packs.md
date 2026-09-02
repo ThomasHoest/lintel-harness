@@ -125,7 +125,7 @@ README both describe — and that the two declarations `verify` depends on,
 **Depends on:** F1 E-04 (planning), E-05 (the primitives), E-13.
 **Unlocks:** E-17, E-18, E-19.
 
-- [ ] **T-1401** `[TestWriter]` `tests/packs/recipe-shape.test.ts` — assert
+- [x] **T-1401** `[TestWriter]` `tests/packs/recipe-shape.test.ts` — assert
   the declared step counts against `recipe.json`, not against prose:
   **`coding` 15 with no branches, `writing` 8 base + 5 scaffold, `planning`
   23 base**. **`coding` has no scaffolds as of Q-82**, so all fifteen of its
@@ -134,13 +134,13 @@ README both describe — and that the two declarations `verify` depends on,
   still the case where it does not.
   *Depends on: F1 T-0405.*
 
-- [ ] **T-1402** `[TestWriter]` Assert the **adapt-expected set is exactly
+- [x] **T-1402** `[TestWriter]` Assert the **adapt-expected set is exactly
   three paths** — the generated `CLAUDE.md`, one per pack — and that no
   pack declares `adaptExpected` on a `copy`, `rename`, `strip-suffix`,
   `rewrite-path` or `substitute` step.
   *Depends on: F1 T-0407, T-1401.*
 
-- [ ] **T-1403** `[TestWriter]` Assert the **fill-expected set is exactly
+- [x] **T-1403** `[TestWriter]` Assert the **fill-expected set is exactly
   four paths**: `specifications/project-brief.md` in `coding`,
   `project-brief.md` in `writing` and `planning`, and
   `writing-guide/tone-of-voice.md` in `writing`. Assert **no step declares
@@ -153,7 +153,7 @@ README both describe — and that the two declarations `verify` depends on,
   give truthfully.
   *Depends on: F1 T-0410, T-1401.*
 
-- [ ] **T-1404** `[TestWriter]` Assert the **anchor counts** each pack's
+- [x] **T-1404** `[TestWriter]` Assert the **anchor counts** each pack's
   `generate` step declares: `coding` **6**, `writing` **6**, `planning`
   **7** — **nineteen** across three templates — and that exactly three
   `generate` steps exist in the product, one per pack, each writing

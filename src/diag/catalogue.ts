@@ -88,7 +88,7 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'E-SUBST-NEWLINE': ["lintel: the answer for \"{id}\" contains a line break and cannot be substituted into \"{path}\".", "  A single answer may not become two lines of a generated file.", "  → Answer on one line, or tighten the parameter's \"pattern\"."],
   'E-SUBST-UNRESOLVED': ["lintel: unresolved {{harness:{token}}} in {path}:{line}.", "  → Declare a parameter named \"{id}\", add the token to the step's \"tokens\" list, or remove the token."],
   'E-SYMLINK-IN-PACK': ["lintel: \"{path}\" is a symbolic link. Pack content must be regular files."],
-  'E-TARGET-EXISTS': ["lintel: {n} files already exist where this pack would write.", "  {first ten paths, one per line, two-space indented}", "  → Apply into an empty directory, or re-run with --force to keep byte-identical files and stop on the rest."],
+  'E-TARGET-EXISTS': ["lintel: {n} files already exist where this pack would write.", "  {paths}", "  → Apply into an empty directory, or re-run with --force to keep byte-identical files and stop on the rest."],
   'E-TARGET-RACE': ["lintel: \"{path}\" changed while lintel was writing.", "  {detail}", "  Nothing further was written; the journal is intact.", "  → lintel harness init --rollback, then re-run."],
   'E-TRAVERSAL-LIMIT': ["lintel: the walk of \"{root}\" exceeded the {limit} limit ({n}).", "  Limits: depth 32, 10,000 entries per walk.", "  → Narrow the content, or split the pack."],
   'E-UNKNOWN-VALUE': ["lintel: \"{value}\" is not a valid {field}.", "  Allowed: {allowed}", "  → Fix the value, or upgrade to a lintel that understands it."],
@@ -96,7 +96,7 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'E-UPDATE-NOT-NEWER': ["lintel: {pack}@{applied} is applied; lintel {cliVersion} bundles {bundled}, which is not newer.", "  → Upgrade the CLI: npm i -g @lintel/cli@latest"],
   'E-UPDATE-PARAM-UNANSWERED': ["lintel: {pack}@{bundled} declares \"{id}\", which {pack}@{applied} did not.", "  Recorded answers cannot supply it, and update does not guess.", "  → lintel harness update --set {id}=<value>"],
   'E-UPDATE-SCAFFOLD-DROPPED': ["lintel: {pack}@{bundled} no longer declares the scaffold \"{name}\", which this project selected.", "  update will not silently drop the files it placed.", "  → Re-apply into a fresh directory, or remove the scaffold's files by hand first."],
-  'E-VERIFY-MISMATCH': ["lintel: {n} of {total} applied paths do not match what this pack and these answers produce.", "  {first ten paths, one per line, with \"differs\" or \"missing\"}", "  → Inspect the differences, or re-apply into a fresh directory."],
+  'E-VERIFY-MISMATCH': ["lintel: {n} of {total} applied paths do not match what this pack and these answers produce.", "  {paths}", "  → Inspect the differences, or re-apply into a fresh directory."],
   'E-WRITE-FAILED': ["lintel: could not write \"{path}\" ({errno}).", "  Nothing further was written; the project is mid-apply.", "  → lintel harness init --rollback"],
   'W-ANATOMY-ABSENT': ["lintel: pack {name} declares no {part}.", "  Reason given: {reason}"],
   'W-ANATOMY-PROVISIONAL': ["lintel: pack {name} ships {part} as provisional.", "  Note: {note}"],
@@ -117,18 +117,25 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
 const PLACEHOLDER = /(?<!\\[pP])\{([A-Za-z][A-Za-z0-9]*)\}/g;
 
 /**
- * Slots F1 describes in prose instead of naming. **Recorded, not
- * silently accepted** — the identifier rule leaves them literal, so an
- * emitter must build these lines itself until F1 gives them names.
+ * **Empty, and the concept is retired.** F1 v5.2.
  *
- * A caller that renders one of these codes without handling its slot
- * ships prose where content belongs, and `catalogue.test.ts` pins the
- * list so the gap stays visible rather than becoming folklore.
+ * This recorded codes whose message lines F1 described in prose instead
+ * of naming — `{first ten paths, one per line, …}` — which the identifier
+ * rule leaves **literal**, so an emitter would print those words where the
+ * content belongs. There were three. `E-RECIPE-STEP-INVALID`'s was closed
+ * at v4.7 by naming it `{usage}`; the other two were left because they are
+ * genuinely multi-line and `escapeValue` escapes `\n` (C-50), so a
+ * multi-line value cannot pass through a placeholder.
+ *
+ * **E-10 then built one of them** and `E-VERIFY-MISMATCH` was about to
+ * print its own description to a user. So `render` gained the expansion
+ * rule below instead, and both became `{paths}`.
+ *
+ * Kept as an empty export rather than deleted: `catalogue.test.ts` asserts
+ * it is empty, which is a stronger statement than the absence of a symbol
+ * nobody looks for.
  */
-export const DESCRIPTIVE_SLOTS: Readonly<Record<string, string>> = {
-  'E-TARGET-EXISTS': 'first ten paths, one per line, two-space indented',
-  'E-VERIFY-MISMATCH': 'first ten paths, one per line, with "differs" or "missing"',
-} as const;
+export const DESCRIPTIVE_SLOTS: Readonly<Record<string, string>> = {} as const;
 
 /** Placeholder names a template expects, in order of first appearance. */
 export function placeholdersOf(code: DiagnosticCode): readonly string[] {
@@ -163,13 +170,39 @@ export function missingPlaceholders(
 export function render(
   code: DiagnosticCode,
   data: Readonly<Record<string, string>> = {},
+  lists: Readonly<Record<string, readonly string[]>> = {},
 ): readonly string[] {
   const out: string[] = [];
   for (const line of MESSAGES[code]) {
+    // A LIST slot expands to one output line per item, keeping the
+    // template line's indentation. F1 v5.2.
+    //
+    // **Opt-in, and that is the security property.** The first attempt
+    // expanded any value that happened to contain a newline, and the C-50
+    // test caught it immediately: that rule would let *any* interpolated
+    // value — a path out of a pack, a token out of a template — forge a
+    // remedy line, which is precisely what C-50 forbids. Expansion is a
+    // decision the EMITTER makes about a slot it constructed, never a
+    // property the value can claim for itself.
+    //
+    // So `values` is escaped whole, newlines and all, exactly as before;
+    // only a name passed in `lists` expands, and each of its items is
+    // escaped as a value and then as a line.
+    const listName = onlyPlaceholder(line);
+    if (listName !== null && listName in lists) {
+      const indent = /^\s*/.exec(line)?.[0] ?? '';
+      for (const item of lists[listName] as readonly string[]) {
+        out.push(escapeLine(indent + escapeValue(item)));
+      }
+      continue;
+    }
+
     let had = false;
     const filled = line.replace(PLACEHOLDER, (whole, name: string) => {
       had = true;
       const v = data[name];
+      // C-50, unchanged and unnegotiable: a value is escaped WHOLE,
+      // newlines included, so no interpolated value can forge a line.
       return v === undefined ? whole : escapeValue(v);
     });
     // A line whose placeholders ALL rendered empty is omitted (F1 v4.7).
@@ -191,6 +224,19 @@ export function render(
 export function renderText(
   code: DiagnosticCode,
   data: Readonly<Record<string, string>> = {},
+  lists: Readonly<Record<string, readonly string[]>> = {},
 ): string {
-  return render(code, data).join('\n');
+  return render(code, data, lists).join('\n');
+}
+
+/**
+ * The one placeholder on a line that holds nothing else, or `null`.
+ *
+ * A list slot must be **the entire content** of its line: expanding one
+ * placeholder inside a line of prose would produce a first line with the
+ * prose and nine without it, which is not a message anybody wrote.
+ */
+function onlyPlaceholder(line: string): string | null {
+  const m = /^\s*\{([A-Za-z][A-Za-z0-9]*)\}\s*$/.exec(line);
+  return m === null ? null : (m[1] as string);
 }

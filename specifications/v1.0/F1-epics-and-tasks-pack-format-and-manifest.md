@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 3.5
+**Version:** 3.7
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,8 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 3.7 | 2026-09-02 | **E-08 — the frontmatter gate, the disclosure, and the nonce.** The frontmatter reader is hand-rolled and **fails closed on a block it cannot parse**: rather than trusting structure it has not understood, it raw-scans the block for every pinned spelling, so a grant key hidden in a flow mapping, an explicit key, a quoted key or a merge key is still refused — closed **without a new code**, because §Error States has none for *"lintel could not read this frontmatter block"* and inventing one is a catalogue change rather than an implementation decision. **The nonce replaces a comparison rather than tightening one.** The old property was *the emitter's matching rule dominates every consumer's*, which can only ever be **disproved** — and was, three times, the last by U+00A0 against an ASCII trim. Pack content is fixed before the run and the nonce is drawn during it, so the property becomes *a pack cannot predict a random value*: **falsifiable**, with the experiment in the tests. **Found by building: US-13's nonce example was 32 bits under a sentence requiring 64** (F1 v5.4), and **the `.claude/` permission pin has no runtime version to record**, which is a **release blocker** now held as known limit 21 rather than papered over with an invented string. **T-0803 is left as a marked gap** — it needs `copy-payload.ts`, which does not exist — reduced to a set-selection loop over two disjoint quantifiers calling one function. **A structural guard caught a convenience cast in the new tests**, and closing it exposed the guard's own blind spot: it walked `src/` only, so a forged brand under `tests/` was invisible. It walks both now, with the **one** deliberate forgery listed and its reason checked. **425 unit tests.** |
+| 3.6 | 2026-09-02 | **`verify` — the recomputation, the two suppressing gates, and the inversion.** `payloadDigest` is checked **first and fails closed**, and the tree comparison is **suppressed entirely** on mismatch: the expectation is computed *from* the payload, so an untrusted payload makes every row downstream a confident statement derived from unknown input. The recorded answers get the same treatment for the same reason — they are the recomputation's other input. **The inversion is the thing Q-79 exists for**: `adapted` and `filled` both mean *differs, and that was expected*, while **`unfilled` means MATCHES and that is the finding** — a fill-expected path equal to what shipped means the user has not done what the pack asked. Building it the same way round as `adapted` would report every unfilled brief as `match`, which is how US-33's green run passed through v2.9 *only because nobody had filled in a brief*. **Found by building: `E-VERIFY-MISMATCH` was still a descriptive slot** and would have printed the words *first ten paths, one per line, with "differs" or "missing"* to a user in place of the paths — v4.7 left it on the ground that it belonged to a feature not yet built, and E-10 built it. The fix needed care: **the first attempt expanded any value containing a newline, and C-50's own test caught it in the same hour** — that rule would let any interpolated value forge a remedy line. Expansion is now **opt-in per slot**, a decision the emitter makes about a slot it constructed, and `DESCRIPTIVE_SLOTS` is empty (F1 v5.2). **369 unit tests.** |
 | 3.5 | 2026-09-02 | **E-07 — the manifest, and three ADR signatures that could not do their own jobs.** Each was found by **building** the module, exactly as `validatePackJson`'s one-argument form was: `readManifest(projectRoot)` cannot re-validate answers (C-29 needs the pack's declarations), cannot raise `W-MANIFEST-NEWER-CLI` (needs the running CLI) and cannot raise `W-PACK-NEWER-THAN-CLI` (needs the bundled pack) — none of the three is derivable from a project root; `writeManifest(): Promise<void>` gives `E-WRITE-FAILED`, an **exit-3** code, nowhere to go; and `canonicalJson(value: unknown)` cannot express three of §F1.4's four rules, because a general stable-stringify must sort and sorting puts `payloadDigest` in the one position §F1.4 forbids. **`F1-ADR-001` amended in place**, superseded signatures kept beside each. **Four rulings folded into F1 v5.1**: a declared parameter with no recorded answer had no code at all; `cli`/`pack.name`/`pack.version` were never required to be well-formed though all three are read and compared; a `payloadDigest` nested inside `pack` was forbidden with no code, so it would have been reported as *the top-level key is missing* — right class, wrong reason; and *unknown keys at any level* meets a manifest with **two** closed objects, which the ADR's single flat field could not hold. **The manifest draws no `W-UNKNOWN-KEY`, deliberately** — that code means *an author should delete this*, and an unknown manifest key is a newer CLI's data F1 requires be preserved. **Also corrected: `T-0207` was marked done against a filename that was never created** — the `.harness/` constants live in `harness-paths.ts`, beside the brand they exist to make safe. **133 integration tests.** |
 | 3.4 | 2026-09-02 | **E-05 — the six primitives render, and the executable rule turned out to refuse everything it permitted.** The ops are **pure**: each reads the payload through a callback and returns the writes it wants made, so nothing here opens a file and `validate` can compute the result in CI with nothing checked out. The **write path is E-11's**, and the split is what lets `pack info` render an apply completely without performing it — the claim the whole no-script-primitive argument rests on. **The dispatch lives in the registry**, not in a helper, because T-0403's rule is that one module is the only place an `op` maps to an implementation, and two enumerations of six arms is one too many. `generate` **calls `substitute`'s function rather than resembling it** — two implementations of one token language would drift, and the drift would show as a `CLAUDE.md` resolving a token the pack's other files did not. **Found by building: `executableRoots` was self-contradicting** — it declares prefixes *each ending `/`, each subject to the stage 1 grammar*, and stage 1 refuses an **empty segment**, which a prefix ending `/` has by construction. Every legal root was refused by the rule that governs it, inside the control that bounds where a pack may write `0755`; it read perfectly well because each half is right alone (F1 v5.0). **And this task's own text named a consumer that had left the product**: Q-82 moved both backend kits to `addons/`, so no v1.0 pack declares a root or sets the bit, and the apparatus is fixture-covered like the scaffold rules Q-82 emptied — asserted rather than assumed. **338 unit tests.** |
 | 3.3 | 2026-09-02 | **E-03 complete, and E-04 with it — the first wave run in parallel.** Four streams: E-04 here, E-06's hash layer, E-13's pack conformance and E-03's acceptance tests, with **spec amendments kept to one hand** so F1's version history could not fork. **Every stream found something the spec had stated and nothing enforced**, which is the argument for the split rather than a side effect of it. **F1 v4.7**: `E-RECIPE-PRIMITIVE-UNKNOWN`'s `merge-json` line existed only as prose outside the template, and `E-RECIPE-STEP-INVALID`'s second line was a **descriptive slot that would have printed the words *usage for that primitive*** where the usage belongs. **v4.8**: a **control character in a path was legal**, and §NFR's digest listing is newline-joined — so a payload path containing `\n` forges a second line and two different file sets digest alike, **a collision inside the control `verify` uses to detect tampering**; closed in the grammar rather than at the digest, because a path holding a control character is refusable on its own merits and one clause covers both quantifiers. §NFR also named **no separator** between a path and its hash, in a value later CLIs recompute. **v4.9**: `declaredBy` was restricted to `folderScaffolding` and **checked nowhere** — a part carrying it matches zero files *without* `E-ANATOMY-EMPTY`, so a pack could ship no roles and validate clean, **defeating G-F1-3 for eight of the nine parts**; and `version`/`minCliVersion` *"are valid semver"* **failed open in both places at once**, the validator checking only for a string and the floor check reading `false` where an unparseable version returns `null`. **296 unit, 76 integration, 21 pack, 8 structural.** |
@@ -922,7 +924,7 @@ gate), E-11 (phase 1 is journalled exactly as phase 2 is).
   **One call site at v1.0.**
   *Depends on: T-0601, T-0602.*
 
-- [ ] **T-0604** `[Implementer]` `src/payload/digest.ts` — `payloadDigest()` over
+- [x] **T-0604** `[Implementer]` `src/payload/digest.ts` — `payloadDigest()` over
   the payload file set, per-file hash **normalized for text and raw for
   binary**. Normalization here is load-bearing and its cost is stated rather
   than hidden: a raw digest makes every Windows clone with `core.autocrlf`
@@ -1034,7 +1036,7 @@ E-11's pre-write summary (F2 renders it).
 > total-enumeration disclosure row (C-43) all postdate the ADR. F1 v2.9
 > US-3, US-13, US-29 and US-30 are the contract for this epic.
 
-- [ ] **T-0801** `[Implementer]` `src/security/claude-frontmatter.ts` — read a
+- [x] **T-0801** `[Implementer]` `src/security/claude-frontmatter.ts` — read a
   Markdown file's frontmatter block. It must **report a line**, **fail closed
   on an unparsed block**, and reproduce the block **verbatim** for the
   disclosure (no re-serialise), and it must be narrow enough to audit: a full
@@ -1049,7 +1051,7 @@ E-11's pre-write summary (F2 renders it).
   actually there.
   *Depends on: T-0105. Prerequisite for T-0802, T-0803, T-0804.*
 
-- [ ] **T-0802** `[Implementer]` The **pinned constant** in
+- [x] **T-0802** `[Implementer]` The **pinned constant** in
   `src/security/claude-frontmatter.ts`: **grant keys** (`allowed-tools` and its
   documented spellings), **mode keys** (`permissionMode` and its spellings) and
   **the non-widening mode value set** at the pinned runtime version, with the
@@ -1079,7 +1081,7 @@ E-11's pre-write summary (F2 renders it).
   Matched by `collisionKey` on **any** `.claude` segment. C-32a, C-39c, C-40.
   *Depends on: T-0802, T-0404, T-0605.*
 
-- [ ] **T-0804** `[Implementer]` `src/security/consent.ts` — the
+- [x] **T-0804** `[Implementer]` `src/security/consent.ts` — the
   `SecurityDisclosure` builder and `renderDisclosure()`, **built once by the
   pure planner** and rendered by three surfaces. Four rows, and the row list is
   US-13's table:
@@ -1117,7 +1119,7 @@ E-11's pre-write summary (F2 renders it).
   *Depends on: T-0803, T-0804.*
 
 
-- [ ] **T-0806** `[Implementer]` **The disclosure nonce and its
+- [x] **T-0806** `[Implementer]` **The disclosure nonce and its
   containment check** (C-49, C-59, **the CRITICAL**). Generate a **per-run
   nonce** — ≥ 64 bits from `node:crypto`, lowercase hex — emit it on both
   delimiter lines, and refuse any row containing it:
@@ -1264,7 +1266,7 @@ checked fact rather than a claim.
 exist in this repo, so S7 is unmet; F1 is a precondition for closing it, not
 the thing that closes it.**
 
-- [ ] **T-1001** `[Implementer]` `src/verify/verify.ts` — `verifyProject()`:
+- [x] **T-1001** `[Implementer]` `src/verify/verify.ts` — `verifyProject()`:
   **check `payloadDigest` first and fail-closed** — on mismatch,
   `E-PAYLOAD-DIGEST-MISMATCH`, exit 2, reporting recorded and computed digests,
   and **the tree comparison is suppressed entirely, `entries` empty, zero
@@ -1279,7 +1281,7 @@ the thing that closes it.**
   reported. Q-52, C-29.
   *Depends on: T-0208, T-0604, T-0704, T-0308, T-0405.*
 
-- [ ] **T-1002** `[Implementer]` `src/verify/compare.ts` — **six** states per
+- [x] **T-1002** `[Implementer]` `src/verify/compare.ts` — **six** states per
   recomputed path, and the enumeration is **closed**: `match`, **`adapted`**,
   **`filled`**, **`unfilled`**, `differs`, `missing`. Normalized comparison for text and raw for binary, so a
   CRLF checkout and an added BOM both read `match`; the executable bit compared
@@ -1310,7 +1312,7 @@ the thing that closes it.**
   `partial`.
   *Depends on: T-0407, T-0507, T-1001.*
 
-- [ ] **T-1003** `[Implementer]` `src/cli/commands/verify.ts` —
+- [x] **T-1003** `[Implementer]` `src/cli/commands/verify.ts` —
   `lintel harness verify [--json]`. Exit `0` when every path is `match` or
   `adapted`, printing the count checked **and, separately, the count reported
   `adapted`**; exit `1` on any `differs` or `missing` with

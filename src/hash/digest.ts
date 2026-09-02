@@ -46,23 +46,32 @@ export type TreeDigest = `sha256-${string}`;
 /**
  * Between a path and its hash on a listing line.
  *
- * **F1 §NFR does not name this character** — it says the path is
- * followed by the hash and stops. One space is chosen here and pinned by
- * a test, because the choice is a *compatibility* contract however
- * arbitrary it looks: a `payloadDigest` written by this CLI is
- * recomputed and compared by a later one, so a future build that picked
- * a tab would report every existing project as a tampered payload.
+ * **One U+0020, and F1 §NFR now says so** — it said only that the path is
+ * followed by the hash, which is not a format. The choice was made here
+ * and folded into the spec at v4.8, because it is a *compatibility*
+ * contract however arbitrary it looks: a `payloadDigest` written by this
+ * CLI is recomputed and compared by a later one, so a future build that
+ * picked a tab would report every existing project as a tampered payload.
+ *
+ * It stays unambiguous against a path containing a space, because the
+ * hash is a fixed 64 characters and the grammar forbids a segment ending
+ * in whitespace: the last 64 characters of a line are the hash, always.
  */
 const SEPARATOR = ' ';
 
 /**
- * Caller's precondition, stated because this function cannot enforce it:
- * **a path must contain no `\n`.** The listing is newline-delimited, so
- * an embedded newline would let one entry forge two lines and two
- * different file sets could digest alike. Payload paths reach here only
- * after the walk and `E-PAYLOAD-PATH-INVALID`; nothing here re-checks
- * them, because this module has no `DiagnosticBag` and inventing a
- * silent truncation would be worse than the precondition.
+ * Caller's precondition, and **the grammar now enforces it** rather than
+ * leaving it to the caller's memory: a path may contain **no control
+ * character** (F1 v5.0, US-3 stage 1). The listing is newline-delimited,
+ * so a `\n` in a path would let one entry forge two lines and two
+ * different file sets could digest alike — a collision inside the control
+ * `verify` uses to detect tampering.
+ *
+ * It was closed in the grammar rather than here deliberately: a path
+ * holding a control character breaks every line-oriented tool that will
+ * ever read the project, so it is refusable on its own merits, and one
+ * clause covers both the applied-path and payload-path quantifiers
+ * instead of leaving this function a precondition nobody re-states.
  */
 export function treeDigest(entries: readonly TreeEntry[]): TreeDigest {
   // Sort by UTF-8 **bytes**, not by JavaScript's `<`.

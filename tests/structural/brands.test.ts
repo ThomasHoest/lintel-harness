@@ -18,6 +18,28 @@ import { fileURLToPath } from 'node:url';
 import { join, relative } from 'node:path';
 
 const SRC = fileURLToPath(new URL('../../src/', import.meta.url));
+const TESTS = fileURLToPath(new URL('../../tests/', import.meta.url));
+
+/**
+ * **The one deliberate forgery, listed so it is visible.**
+ *
+ * Until now this test walked `src/` only, so a cast under `tests/` was
+ * invisible to it — a blind spot in a guard whose whole job is that a
+ * cast cannot hide. It walks both trees now.
+ *
+ * One test genuinely needs to forge a brand: C-27's second denylist
+ * re-check is **unreachable while the type system holds**, because the
+ * written-set is `AppliedPath[]` and a reserved path cannot be minted into
+ * one. Defence in depth that no test can reach is defence nobody can show
+ * works — so that single file forges, on purpose, and is named here.
+ *
+ * **An entry is a claim, not a convenience.** Adding one means writing
+ * down which test needs the forgery and why.
+ */
+const FORGERY_EXEMPT: Readonly<Record<string, string>> = {
+  'integration/write-set.test.ts':
+    "reaches C-27's per-path denylist re-check, which the brand makes unreachable by design",
+};
 
 /** The only files permitted to mint a brand. */
 const MINTERS: Readonly<Record<string, string>> = {
@@ -28,27 +50,55 @@ const MINTERS: Readonly<Record<string, string>> = {
 
 async function sources(): Promise<{ path: string; text: string }[]> {
   const out: { path: string; text: string }[] = [];
-  async function walk(dir: string): Promise<void> {
+  async function walk(root: string, dir: string): Promise<void> {
     for (const d of await readdir(dir, { withFileTypes: true })) {
       const full = join(dir, d.name);
-      if (d.isDirectory()) await walk(full);
+      if (d.isDirectory()) await walk(root, full);
       else if (d.name.endsWith('.ts')) {
-        out.push({ path: relative(SRC, full).split('\\').join('/'), text: await readFile(full, 'utf8') });
+        out.push({ path: relative(root, full).split('\\').join('/'), text: await readFile(full, 'utf8') });
       }
     }
   }
-  await walk(SRC);
+  await walk(SRC, SRC);
+  return out;
+}
+
+/**
+ * `src/` **and** `tests/`.
+ *
+ * Only the cast check uses this. The other assertions here are about the
+ * shape of the **product** — where a brand is minted, where the denylist
+ * lives — and widening their input would make them fail on a test file
+ * that merely mentions the thing they are counting.
+ */
+async function allSources(): Promise<{ path: string; text: string }[]> {
+  const out: { path: string; text: string }[] = [];
+  async function walk(root: string, dir: string): Promise<void> {
+    for (const d of await readdir(dir, { withFileTypes: true })) {
+      const full = join(dir, d.name);
+      if (d.isDirectory()) await walk(root, full);
+      else if (d.name.endsWith('.ts')) {
+        out.push({ path: relative(root, full).split('\\').join('/'), text: await readFile(full, 'utf8') });
+      }
+    }
+  }
+  await walk(SRC, SRC);
+  await walk(TESTS, TESTS);
   return out;
 }
 
 test('no brand is cast into outside its own constructor', async () => {
-  const files = await sources();
+  const files = await allSources();
   assert.ok(files.length > 5, 'the walk must find the sources');
 
   for (const [brand, minter] of Object.entries(MINTERS)) {
     const pattern = new RegExp(`as\\s+${brand}\\b`, 'g');
     for (const f of files) {
       if (f.path === minter) continue;
+      if (f.path in FORGERY_EXEMPT) continue;
+      // This file names every brand in order to check them, so it cannot
+      // be its own subject.
+      if (f.path === 'structural/brands.test.ts') continue;
       // A test may name the type; it may not mint one.
       const hits = [...f.text.matchAll(pattern)];
       assert.deepEqual(
@@ -102,4 +152,24 @@ test('the reserved-destination lists live in exactly one module', async () => {
     ['security/confine.ts'],
     'the denylist must not be copied — a second copy drifts silently',
   );
+});
+
+/**
+ * The exemption list is itself checked.
+ *
+ * An entry naming a file that no longer forges is an exemption nobody
+ * needs and everybody would inherit — the shape by which a narrow
+ * allowance becomes a general one.
+ */
+test('every forgery exemption is still used, and still explained', async () => {
+  const files = new Map((await allSources()).map((f) => [f.path, f.text]));
+  for (const [path, why] of Object.entries(FORGERY_EXEMPT)) {
+    const text = files.get(path);
+    assert.ok(text !== undefined, `${path} is exempted and does not exist`);
+    assert.ok(
+      /as\s+(AppliedPath|HarnessPath|ProjectRoot)\b/.test(text),
+      `${path} is exempted but casts nothing — remove the exemption`,
+    );
+    assert.ok(why.length > 20, `${path}'s exemption must say why`);
+  }
 });

@@ -10,6 +10,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { CODES, type DiagnosticCode } from './codes.js';
+
+const ALL_CODES = Object.keys(CODES) as DiagnosticCode[];
 import {
   MESSAGES,
   DESCRIPTIVE_SLOTS,
@@ -106,26 +108,32 @@ test('literal braces are passed through, not interpolated', () => {
 });
 
 /**
- * F1 describes two slots in prose instead of naming them. The identifier
- * rule leaves them literal, so an emitter must build those lines itself.
- * Pinned so the gap stays visible rather than becoming folklore.
+ * **`DESCRIPTIVE_SLOTS` is empty, and that is the assertion.** F1 v5.2.
  *
- * **It was three until F1 v4.7.** `E-RECIPE-STEP-INVALID` carried
- * `{usage for that primitive}`, which meant every step diagnostic would
- * have printed those five words where the usage belongs — and unlike the
- * two that remain it needed no multi-line construction, being one line
- * derived mechanically from the per-op field table. The two left are
- * genuinely multi-line and both belong to features not yet built.
+ * It recorded codes whose message lines F1 described in prose instead of
+ * naming — `{first ten paths, one per line, …}` — which the identifier
+ * rule leaves **literal**, so an emitter would print those words where the
+ * content belongs. There were three; the last two closed when E-10 built
+ * one of them and `E-VERIFY-MISMATCH` was about to print its own
+ * description to a user.
+ *
+ * Asserting the emptiness is stronger than deleting the symbol: a new slot
+ * added to F1 in prose would fail here rather than pass unnoticed.
  */
-test('the descriptive slots F1 leaves unnamed are recorded', () => {
-  assert.deepEqual(Object.keys(DESCRIPTIVE_SLOTS).sort(), [
-    'E-TARGET-EXISTS',
-    'E-VERIFY-MISMATCH',
-  ]);
-  for (const [code, slot] of Object.entries(DESCRIPTIVE_SLOTS)) {
-    const text = MESSAGES[code as DiagnosticCode].join('\n');
-    assert.ok(text.includes(`{${slot}}`), `${code}: slot text drifted from F1`);
-    assert.deepEqual(placeholdersOf(code as DiagnosticCode).includes(slot), false);
+test('no message line is a descriptive slot any more', () => {
+  assert.deepEqual(Object.keys(DESCRIPTIVE_SLOTS), []);
+  for (const code of ALL_CODES) {
+    for (const line of MESSAGES[code]) {
+      // A descriptive slot is a braced phrase ALONE on its line. Braces
+      // inside prose or a JSON example are ordinary content — that is the
+      // false positive the identifier rule exists to avoid, and
+      // `E-ANATOMY-MISSING` ships a JSON example that proves it.
+      assert.equal(
+        /^\s*\{[^}]*\s[^}]*\}\s*$/.test(line),
+        false,
+        `${code}: "${line}" is a braced phrase alone on a line, so it renders literally`,
+      );
+    }
   }
 });
 

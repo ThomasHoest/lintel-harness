@@ -57,6 +57,16 @@ export interface DiagnosticInit {
   readonly data?: DiagnosticData;
   /** Values for the message's `{name}` placeholders. */
   readonly values?: Readonly<Record<string, string>>;
+  /**
+   * Slots that expand to **one line per item** — the ten paths
+   * `E-VERIFY-MISMATCH` and `E-TARGET-EXISTS` list.
+   *
+   * Separate from `values` on purpose, and the separation is the security
+   * property: expansion is a decision the **emitter** makes about a slot
+   * it constructed, never something a value can claim for itself by
+   * containing a newline. A value stays escaped whole (C-50).
+   */
+  readonly lists?: Readonly<Record<string, readonly string[]>>;
 }
 
 /**
@@ -78,7 +88,7 @@ export function diagnostic(code: DiagnosticCode, init: DiagnosticInit = {}): Dia
   } = {
     code,
     severity,
-    message: renderText(code, init.values ?? {}),
+    message: renderText(code, init.values ?? {}, init.lists ?? {}),
   };
   if (severity === 'warning') base.class = classOf(code);
   if (init.path !== undefined) base.path = init.path;
