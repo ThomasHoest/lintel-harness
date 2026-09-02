@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 3.7
+**Version:** 4.1
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,10 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 4.1 | 2026-09-02 | **E-09 — `validate --all --strict` exits 0 on all three packs, and the run is not silent.** That last clause is the part easy to satisfy by accident: **four findings stand** — `planning`'s provisional role set and inert guard script, `writing`'s two absent parts — and every one is `notice`, so `--strict` promotes none. Q-60's whole reason for existing, demonstrated rather than argued. **All fourteen steps are implemented**, with two narrower than the text and both narrowings stated where they live. **Found by building: US-16's *"the write set is computed **once** here"* is wrong on a shipping pack** — read as one set merged across `when` branches it reports **three `E-MAP-COLLISION`s against a correct `planning`**, whose two calibration copies write `portfolio/` from directories with identical basenames and can never both apply. Corrected to per-combination with the union consumed downstream (F1 v5.7). **Step 11 renders and F1 names no source for the answers it needs** — known limit 22. **`E-PACK-CLI-TOO-OLD` is in none of the fourteen steps** though `checkCliFloor` exists for exactly that report. **And one finding that was read as a spec defect and was mine**: `W-PATH-NON-NFC` looked unreachable, but the rule is about a **source basename from directory recursion** and nothing was normalizing them — an NFD name from a macOS checkout would not have matched a Linux teammate's NFC one, breaking G-F1-7 silently. **631 unit tests.** |
+| 4.0 | 2026-09-02 | **T-1109 — all three packs apply into a real directory and verify clean.** Everything before this asserted a piece; this asserts the **loop**: `planApply` → `executeApply` → bytes on disk → `payloadDigest` → `verifyProject`, over the packs that ship, with no fixtures anywhere. **It is the first evidence for the claim the product rests on** — that applied state is **recomputable** (Q-43). The manifest holds no per-file hashes, so if the recomputation did not reproduce the tree exactly nothing here would pass, and no amount of specification would make it so. Three further properties fall out and are asserted rather than argued: **phase 1 is byte-for-byte verbatim with no file skipped**; **a completed apply leaves a manifest and no journal**, because one present afterwards would claim an interrupted run; and **two applies of one pack produce byte-identical trees**, checked against disk rather than in memory. **A freshly applied project reports `unfilled` on every pack**, which is exactly what Q-79 added the state to say. **This is S7's shape, one step short**: S7 wants *this* repository produced by the tool, and this produces a temporary one — what it proves is that the machinery can. **154 integration tests.** |
+| 3.9 | 2026-09-02 | **E-11's implementer half — the apply, decided before anything is written.** `plan-phase2.ts` is a **separate module so that *the executor re-reads the payload* is a change somebody has to make on purpose**: an execute-time read lets content change between steps, and that content would have passed **no validation**, appeared in **no disclosure** and been covered by **no `payloadDigest`** — three guarantees, all stated over what the *planner* saw, all made false at once by a single read. `executeApply` therefore **computes nothing**: its only filesystem reads are destination-side safety checks. **The order is the design** — journal before the first write so a crash leaves a record of intent; manifest **last**, because one present after a crash would claim an apply that did not finish; journal removed only after it lands. **`E-TARGET-EXISTS`'s three comparisons all resolve by `collisionKey`, unconditionally**, and the reason is rollback safety rather than tidiness: under `===`, a project holding `.claude/Settings.json` and a step writing `.claude/settings.json` are the same file on macOS, so the apply overwrites, the journal records `preExisting: false`, no backup is taken, and `--rollback` **deletes a user file it did not create**. **Fixed here, from E-07's report: stage 4 took `AppliedPath`, so a phase-1 payload write could not be re-confined at all** — the largest write the product performs was the one write with no stage-4 check. It takes `WritablePath` now, which is what the ADR said all along. **544 unit tests.** |
+| 3.8 | 2026-09-02 | **The write path's foundations — and the rule whose message contradicted one of its own rows.** `link` then `unlink` rather than `rename`, because **`link` fails `EEXIST` where `rename` silently overwrites**, and the window is real: a plan is computed, a disclosure is shown, a human reads it, and only then does the write happen. Where `link` is unavailable the fallback is atomic but weaker, and the narrowing is **reported with a code** rather than absorbed. The journal is **version 3 with no version 2 to be compatible with** — a journal exists only between the start and the end of one run, so the only reader of an older one would be a CLI recovering a crash under a CLI that no longer exists. **Breaking a lock takes three conditions and each alone is wrong**: host alone breaks a running lock, liveness alone breaks a **reused pid**, age alone breaks the long apply the lock exists for. **Found by building T-1107: `W-ROLLBACK-KEPT` said *"it has changed since it was written"*** — and of the table's **three** keeping rows, one is `--force`'s **byte-identical** case where the file *"was already correct and was never ours"* and changed **not at all**. One code, three reasons, one fixed sentence that could only ever fit two; it takes `{reason}` now (F1 v5.5). **T-0803's two disjoint quantifiers land with it**: the write set on rendered bytes and the payload set on payload bytes, **never one widened set**, because widening would break the `AppliedPath`/`HarnessPath` separation C-14 rests on. **468 unit tests.** |
 | 3.7 | 2026-09-02 | **E-08 — the frontmatter gate, the disclosure, and the nonce.** The frontmatter reader is hand-rolled and **fails closed on a block it cannot parse**: rather than trusting structure it has not understood, it raw-scans the block for every pinned spelling, so a grant key hidden in a flow mapping, an explicit key, a quoted key or a merge key is still refused — closed **without a new code**, because §Error States has none for *"lintel could not read this frontmatter block"* and inventing one is a catalogue change rather than an implementation decision. **The nonce replaces a comparison rather than tightening one.** The old property was *the emitter's matching rule dominates every consumer's*, which can only ever be **disproved** — and was, three times, the last by U+00A0 against an ASCII trim. Pack content is fixed before the run and the nonce is drawn during it, so the property becomes *a pack cannot predict a random value*: **falsifiable**, with the experiment in the tests. **Found by building: US-13's nonce example was 32 bits under a sentence requiring 64** (F1 v5.4), and **the `.claude/` permission pin has no runtime version to record**, which is a **release blocker** now held as known limit 21 rather than papered over with an invented string. **T-0803 is left as a marked gap** — it needs `copy-payload.ts`, which does not exist — reduced to a set-selection loop over two disjoint quantifiers calling one function. **A structural guard caught a convenience cast in the new tests**, and closing it exposed the guard's own blind spot: it walked `src/` only, so a forged brand under `tests/` was invisible. It walks both now, with the **one** deliberate forgery listed and its reason checked. **425 unit tests.** |
 | 3.6 | 2026-09-02 | **`verify` — the recomputation, the two suppressing gates, and the inversion.** `payloadDigest` is checked **first and fails closed**, and the tree comparison is **suppressed entirely** on mismatch: the expectation is computed *from* the payload, so an untrusted payload makes every row downstream a confident statement derived from unknown input. The recorded answers get the same treatment for the same reason — they are the recomputation's other input. **The inversion is the thing Q-79 exists for**: `adapted` and `filled` both mean *differs, and that was expected*, while **`unfilled` means MATCHES and that is the finding** — a fill-expected path equal to what shipped means the user has not done what the pack asked. Building it the same way round as `adapted` would report every unfilled brief as `match`, which is how US-33's green run passed through v2.9 *only because nobody had filled in a brief*. **Found by building: `E-VERIFY-MISMATCH` was still a descriptive slot** and would have printed the words *first ten paths, one per line, with "differs" or "missing"* to a user in place of the paths — v4.7 left it on the ground that it belonged to a feature not yet built, and E-10 built it. The fix needed care: **the first attempt expanded any value containing a newline, and C-50's own test caught it in the same hour** — that rule would let any interpolated value forge a remedy line. Expansion is now **opt-in per slot**, a decision the emitter makes about a slot it constructed, and `DESCRIPTIVE_SLOTS` is empty (F1 v5.2). **369 unit tests.** |
 | 3.5 | 2026-09-02 | **E-07 — the manifest, and three ADR signatures that could not do their own jobs.** Each was found by **building** the module, exactly as `validatePackJson`'s one-argument form was: `readManifest(projectRoot)` cannot re-validate answers (C-29 needs the pack's declarations), cannot raise `W-MANIFEST-NEWER-CLI` (needs the running CLI) and cannot raise `W-PACK-NEWER-THAN-CLI` (needs the bundled pack) — none of the three is derivable from a project root; `writeManifest(): Promise<void>` gives `E-WRITE-FAILED`, an **exit-3** code, nowhere to go; and `canonicalJson(value: unknown)` cannot express three of §F1.4's four rules, because a general stable-stringify must sort and sorting puts `payloadDigest` in the one position §F1.4 forbids. **`F1-ADR-001` amended in place**, superseded signatures kept beside each. **Four rulings folded into F1 v5.1**: a declared parameter with no recorded answer had no code at all; `cli`/`pack.name`/`pack.version` were never required to be well-formed though all three are read and compared; a `payloadDigest` nested inside `pack` was forbidden with no code, so it would have been reported as *the top-level key is missing* — right class, wrong reason; and *unknown keys at any level* meets a manifest with **two** closed objects, which the ADR's single flat field could not hold. **The manifest draws no `W-UNKNOWN-KEY`, deliberately** — that code means *an author should delete this*, and an unknown manifest key is a newer CLI's data F1 requires be preserved. **Also corrected: `T-0207` was marked done against a filename that was never created** — the `.harness/` constants live in `harness-paths.ts`, beside the brand they exist to make safe. **133 integration tests.** |
@@ -933,7 +937,7 @@ gate), E-11 (phase 1 is journalled exactly as phase 2 is).
   lives in the payload. Q-52.
   *Depends on: T-0603, T-0507.*
 
-- [ ] **T-0605** `[Implementer]` `src/payload/copy-payload.ts` — the verbatim
+- [x] **T-0605** `[Implementer]` `src/payload/copy-payload.ts` — the verbatim
   copy: raw bytes in, raw bytes out; **no BOM handling, no EOL change, no
   suffix stripping, no filtering by scaffold selection, no payload file
   skipped**. Every file is written **`0644`** and every created directory
@@ -1063,7 +1067,7 @@ E-11's pre-write summary (F2 renders it).
   value pin is acceptable where a tool allowlist was not. C-40.
   *Depends on: T-0801.*
 
-- [ ] **T-0803** `[Implementer]` The gate, over **two disjoint quantifiers**
+- [x] **T-0803** `[Implementer]` The gate, over **two disjoint quantifiers**
   (C-39c): the **write set**, on **rendered** content, at US-16 step 11 — a
   later `substitute` or `rewrite-path` can introduce or complete the key, so
   checking payload sources would be checking the wrong bytes; and the
@@ -1165,7 +1169,7 @@ product is enforced here.
 **Depends on:** E-03, E-04, E-05, E-06, E-08.
 **Unlocks:** E-12 (the fixture suite is `validate` run over fixture packs).
 
-- [ ] **T-0901** `[Implementer]` `src/validate/validate-pack.ts` — the
+- [x] **T-0901** `[Implementer]` `src/validate/validate-pack.ts` — the
   **fourteen-step ordered check runner** of US-16 → `PackReport`, in the fixed
   order, which **is part of the contract**: a pack fails on the earliest and
   most explicable cause. **The write set is computed exactly once, immediately
@@ -1176,7 +1180,7 @@ product is enforced here.
   Emits `ok`, and **every finding carries its `class`** (Q-60).
   *Depends on: T-0303, T-0307, T-0402, T-0404, T-0406, T-0508, T-0803.*
 
-- [ ] **T-0902** `[Implementer]` `src/validate/combinations.ts` — the
+- [x] **T-0902** `[Implementer]` `src/validate/combinations.ts` — the
   per-parameter-combination render (step 11), the **32** cap
   (`E-PARAM-COMBINATORICS`), and `parameterVaryingSteps` — the steps whose
   inclusion depends on an answer and the applied paths each would write, which
@@ -1184,7 +1188,7 @@ product is enforced here.
   it.
   *Depends on: T-0308, T-0405, T-0505.*
 
-- [ ] **T-0903** `[Implementer]` `src/validate/folder-readmes.ts` — step 12
+- [x] **T-0903** `[Implementer]` `src/validate/folder-readmes.ts` — step 12
   (Q-50). **Per combination separately**: take the **proper** directory
   prefixes of every applied path the combination writes, remove the project
   root and every prefix at or under `.claude/` or `.harness/`, and require the
@@ -1198,7 +1202,7 @@ product is enforced here.
   read what the README says and does not run at apply time.
   *Depends on: T-0902.*
 
-- [ ] **T-0904** `[Implementer]` `src/validate/link-integrity.ts` — step 13.
+- [x] **T-0904** `[Implementer]` `src/validate/link-integrity.ts` — step 13.
   Every relative Markdown link and inline path reference in **rendered** output
   pointing inside the project must resolve either to a file the recipe produces
   **or to a path under `.harness/pack/` that exists in the payload** — the
@@ -1207,7 +1211,7 @@ product is enforced here.
   reference. `W-LINK-DANGLING`, `defect` class, listing file, line and target.
   *Depends on: T-0902, T-0605.*
 
-- [ ] **T-0905** `[Implementer]` `src/cli/commands/validate.ts` —
+- [x] **T-0905** `[Implementer]` `src/cli/commands/validate.ts` —
   `lintel harness validate <pack> | --all` with `--strict` and `--json`.
   Exit rules: `0` with no findings; `0` with **`notice`**-class findings only
   **under every flag, `--strict` included**; `1` with `defect`-class warnings
@@ -1219,7 +1223,7 @@ product is enforced here.
   stronger form).
   *Depends on: T-0107, T-0901.*
 
-- [ ] **T-0906** `[Implementer]` `src/cli/commands/pack-info.ts` and
+- [x] **T-0906** `[Implementer]` `src/cli/commands/pack-info.ts` and
   `renderPackInfo(report)` — `lintel harness pack info <name>` over the **same**
   `PackReport` `validate --json` emits, so there is exactly one report code
   path. Renders identity, all nine anatomy parts in fixed order with notes and
@@ -1365,7 +1369,7 @@ neither is in scope here.
 
 ### The primitives of writing
 
-- [ ] **T-1101** `[Implementer]` `src/fs/atomic-write.ts` — temp-then-rename,
+- [x] **T-1101** `[Implementer]` `src/fs/atomic-write.ts` — temp-then-rename,
   mode bits, created-directory tracking, and **exclusive-create semantics**:
   the temp file opened `wx`; a destination the plan expects to be **new**
   claimed by `link(tmp, dest)` then `unlink(tmp)`, which fails `EEXIST` if the
@@ -1384,7 +1388,7 @@ neither is in scope here.
   here; report it to the spec owner.
   *Depends on: T-0205, T-0207.*
 
-- [ ] **T-1102** `[Implementer]` `src/fs/journal.ts` — `.harness/journal.json`
+- [x] **T-1102** `[Implementer]` `src/fs/journal.ts` — `.harness/journal.json`
   **version 2** plus `.harness/journal.d/`. Per intended path: the hash this
   apply intends to write, `preExisting`, `preHash`, `preMode`, and a `backup`
   path holding the pre-apply bytes, written **before** the overwrite and
@@ -1395,7 +1399,7 @@ neither is in scope here.
   shipped and this check exists so that it never can. C-13.
   *Depends on: T-0206, T-0602.*
 
-- [ ] **T-1103** `[Implementer]` `src/fs/lock.ts` — advisory `.harness/lock`
+- [x] **T-1103** `[Implementer]` `src/fs/lock.ts` — advisory `.harness/lock`
   holding `{pid, host, startedAt, cli}`, acquired by exclusive create.
   `E-LOCK-HELD`, exit 1, otherwise. Broken **only** when all three hold: the
   recorded host is this host, the recorded pid is not alive, and `startedAt` is
@@ -1405,7 +1409,7 @@ neither is in scope here.
 
 ### Plan and execute
 
-- [ ] **T-1104** `[Implementer]` `src/apply/plan-phase2.ts` — render **every**
+- [x] **T-1104** `[Implementer]` `src/apply/plan-phase2.ts` — render **every**
   phase-2 step at **plan** time from planner-held payload bytes into
   `PlannedFile.bytes`. **SEC (C-23): `execute.ts` reads no payload file — no
   template read, no re-render, no re-glob.** Named as its own module so that
@@ -1415,7 +1419,7 @@ neither is in scope here.
   validation, appeared in no disclosure and been covered by no `payloadDigest`.
   *Depends on: T-0501–T-0506, T-0605.*
 
-- [ ] **T-1105** `[Implementer]` `src/apply/plan.ts` — `planApply(inputs)`:
+- [x] **T-1105** `[Implementer]` `src/apply/plan.ts` — `planApply(inputs)`:
   `ApplyInputs` → `ApplyPlan`. **Pure** — it plans both phases, computes
   `payloadDigest` over the **planned** payload set, builds the manifest and the
   `SecurityDisclosure`, and **writes nothing, ever**. Every `PlannedFile`
@@ -1424,7 +1428,7 @@ neither is in scope here.
   contract declares one and Q-54 deletes it with the gate.
   *Depends on: T-0704, T-0804, T-1104.*
 
-- [ ] **T-1106** `[Implementer]` `src/apply/execute.ts` — `executeApply()`: lock →
+- [x] **T-1106** `[Implementer]` `src/apply/execute.ts` — `executeApply()`: lock →
   journal → **phase 1** → **phase 2** → manifest → journal removal. **The only
   writer.** Re-confines immediately before each write (T-0205) and creates
   exclusively (T-1101); its only filesystem reads are destination-side safety
@@ -1434,7 +1438,7 @@ neither is in scope here.
   pipeline names one; it does not exist.
   *Depends on: T-1101, T-1102, T-1103, T-1105.*
 
-- [ ] **T-1107** `[Implementer]` `src/apply/rollback.ts` — the **five-case rule**
+- [x] **T-1107** `[Implementer]` `src/apply/rollback.ts` — the **five-case rule**
   of US-13, exhaustive, now covering phase-1 paths. Rollback **deletes only
   paths this apply created, restores only paths this apply overwrote, and acts
   on neither unless the on-disk bytes are still exactly what this apply
@@ -1445,7 +1449,7 @@ neither is in scope here.
 
 ### The collision rules
 
-- [ ] **T-1108** `[Implementer]` `E-TARGET-EXISTS` and `--force` in
+- [x] **T-1108** `[Implementer]` `E-TARGET-EXISTS` and `--force` in
   `src/apply/plan.ts` and `src/apply/execute.ts`: init into a tree where any
   target applied path already exists fails, listing the first ten colliding
   paths and the total; `--force` proceeds **only** for paths whose existing
@@ -1470,7 +1474,7 @@ neither is in scope here.
 
 ### Verification
 
-- [ ] **T-1109** `[TestWriter]` Integration tests for US-13 and US-14 in
+- [x] **T-1109** `[TestWriter]` Integration tests for US-13 and US-14 in
   `tests/integration/apply-atomicity.test.ts`: a failure at plan writing
   **nothing, not even `.harness/`**; a crash mid-write leaving a journal that
   the next command detects as `E-JOURNAL-PRESENT`; one case per row of the
@@ -1481,7 +1485,7 @@ neither is in scope here.
   *Depends on: T-1106, T-1107, T-1108.*
 
 
-- [ ] **T-1110** `[Implementer]` `src/fs/journal.ts` — **journal version 3**
+- [x] **T-1110** `[Implementer]` `src/fs/journal.ts` — **journal version 3**
   (Q-62). Two additions, each with a failure it prevents. **`intent: 'write'
   | 'delete'` per entry**, because `update` deletes payload orphans and the
   five-case rollback table models overwriting and creating but **not**

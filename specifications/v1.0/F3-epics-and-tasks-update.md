@@ -84,7 +84,7 @@ whatever the table says.
   `intent: "delete"`.
   *No dependencies. Prerequisite for every task below.*
 
-- [ ] **T-2302** `[Implementer]` `src/update/classify.ts` — the two
+- [x] **T-2302** `[Implementer]` `src/update/classify.ts` — the two
   recomputations. `expected_old` = phase 2 over the **local**
   `.harness/pack/`, its recipe, and the manifest's answers and scaffolds;
   `expected_new` = the same over the **bundled** payload. **Classification
@@ -92,7 +92,7 @@ whatever the table says.
   payloads and answers, returns entries, writes nothing.
   *Depends on: F1 T-1002, T-0604, T-0704, T-2301.*
 
-- [ ] **T-2303** `[TestWriter]` Assert `classify.ts` and `verify` agree on
+- [x] **T-2303** `[TestWriter]` Assert `classify.ts` and `verify` agree on
   a shared fixture — same project, same payload, same six states. **The
   cheapest guard against the divergence that matters**: two comparison
   implementations answer differently the first time one is fixed, and
@@ -100,7 +100,7 @@ whatever the table says.
   it, so any drift silently corrupts the gate.
   *Depends on: T-2302.*
 
-- [ ] **T-2304** `[Implementer]` The digest gate, **first and
+- [x] **T-2304** `[Implementer]` The digest gate, **first and
   fail-closed**, before any recomputation and long before any write:
   `.harness/pack/` must hash to the manifest's `payloadDigest` or
   `E-PAYLOAD-DIGEST-MISMATCH`, exit 2, **zero bytes**, with no
@@ -109,7 +109,7 @@ whatever the table says.
   same suppression).
   *Depends on: F1 T-0602, T-2302.*
 
-- [ ] **T-2305** `[Implementer]` Version resolution: compare the applied
+- [x] **T-2305** `[Implementer]` Version resolution: compare the applied
   pack version against the **bundled** one with `src/semver/compare.ts`.
   Not newer → **`E-UPDATE-NOT-NEWER`**, exit 1, remedy `npm i -g
   @lintel/cli@latest`. **`update` never resolves "newer" over the wire** —
@@ -118,7 +118,7 @@ whatever the table says.
   equal and older together, because the remedy is the same.
   *Depends on: F1 T-0304b, T-2304.*
 
-- [ ] **T-2306** `[Implementer]` The two refusals that stop a run before
+- [x] **T-2306** `[Implementer]` The two refusals that stop a run before
   it starts: **`E-UPDATE-PARAM-UNANSWERED`** — the newer pack declares a
   parameter the manifest has no answer for, and **`update` may not fall
   back to the declared default**, because a default is a reasonable first
@@ -129,13 +129,13 @@ whatever the table says.
   a version bump.
   *Depends on: T-2305.*
 
-- [ ] **T-2307** `[Implementer]` `src/update/plan-update.ts` — entries →
+- [x] **T-2307** `[Implementer]` `src/update/plan-update.ts` — entries →
   `UpdatePlan`: write set, delete set, kept set, counts per disposition.
   **All bytes rendered at plan time** (C-23), exactly as `plan-phase2.ts`
   does, so the executor reads no payload file.
   *Depends on: F1 T-1110b, T-2306.*
 
-- [ ] **T-2308** `[Implementer]` The **`fillExpected` prohibition**: a path
+- [x] **T-2308** `[Implementer]` The **`fillExpected` prohibition**: a path
   in the fill-expected set is `kept-fill-expected` and is **never
   overwritten** — not when the newer pack changed the file, not when the
   path is byte-identical to what shipped, and under no flag. **Absolute

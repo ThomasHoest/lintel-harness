@@ -124,19 +124,49 @@ test('each brand is minted in exactly one file', async () => {
 // write is a HarnessPath and can never be anything else. If planning could
 // reach a HarnessPath constructor, that partition would be a convention
 // rather than a type.
-test('nothing in recipe-step planning imports the harness-path constructor', async () => {
+/**
+ * Recipe-step planning may not **construct** a `HarnessPath`.
+ *
+ * The rule is about the two minters, `harnessPath` and `payloadPath`, and
+ * this test used to enforce it by banning **any** import from the module —
+ * which also caught `import type { WritablePath }`. A type import is
+ * **erased at compile time and can construct nothing**, so that was a
+ * false positive, and it fired the moment `apply/plan.ts` legitimately
+ * needed to *name* the union it plans phase 1 over.
+ *
+ * Narrowed to what the test's own name says. `recipe/` still imports
+ * nothing from the module at all, and `apply/plan*` may name the type
+ * while remaining unable to mint one — which is the property C-14 is
+ * about.
+ */
+test('nothing in recipe-step planning imports a harness-path constructor', async () => {
   const files = await sources();
   const planningDirs = ['recipe/', 'apply/plan'];
-  const offenders = files.filter(
-    (f) =>
-      planningDirs.some((d) => f.path.startsWith(d)) &&
-      /from\s+'.*harness-paths\.js'/.test(f.text),
+  const MINTERS = ['harnessPath', 'payloadPath'];
+
+  for (const f of files) {
+    if (!planningDirs.some((d) => f.path.startsWith(d))) continue;
+
+    for (const m of f.text.matchAll(/import\s+(type\s+)?\{([^}]*)\}\s+from\s+'[^']*harness-paths\.js'/g)) {
+      const isTypeOnly = m[1] !== undefined;
+      const named = (m[2] as string).split(',').map((n) => n.trim());
+      for (const name of named) {
+        if (isTypeOnly || name.startsWith('type ')) continue;
+        assert.equal(
+          MINTERS.includes(name),
+          false,
+          `${f.path} imports the constructor ${name}; recipe-step planning must not be able to mint a HarnessPath`,
+        );
+      }
+    }
+  }
+
+  // And `recipe/` imports nothing from the module at all — the stronger
+  // property, kept where it still holds.
+  const recipeImports = files.filter(
+    (f) => f.path.startsWith('recipe/') && /from\s+'[^']*harness-paths\.js'/.test(f.text),
   );
-  assert.deepEqual(
-    offenders.map((f) => f.path),
-    [],
-    'recipe-step planning must not be able to construct a HarnessPath',
-  );
+  assert.deepEqual(recipeImports.map((f) => f.path), []);
 });
 
 // The gate is the only way in, so nothing may re-implement it. A second

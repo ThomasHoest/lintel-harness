@@ -196,6 +196,90 @@ export {
 
 export { fileHash, payloadDigest, payloadDigestOfDir } from './payload/digest.js';
 export {
+  MAX_FILE_BYTES,
+  MAX_PAYLOAD_BYTES,
+  PAYLOAD_DIR_MODE,
+  PAYLOAD_FILE_MODE,
+  planPayloadCopy,
+  type PayloadEntry,
+  type PayloadPlan,
+  type PlannedCopy,
+} from './payload/copy-payload.js';
+export {
+  checkPayloadClaudeFiles,
+  checkRenderedClaudeFiles,
+  type PayloadFile,
+  type RenderedFile,
+} from './security/claude-gate.js';
+export { DIR_MODE, atomicWrite, ensureDir, writePlain, type WriteRequest } from './fs/atomic-write.js';
+export {
+  JOURNAL_VERSION,
+  backupPathFor,
+  buildJournal,
+  readJournal,
+  rollbackCommandFor,
+  type Journal,
+  type JournalEntry,
+  type JournalIntent,
+  type PlannedWrite,
+} from './fs/journal.js';
+export {
+  STALE_AFTER_MS,
+  decideLock,
+  lockContents,
+  readLock,
+  type LockDecision,
+  type LockFile,
+} from './fs/lock.js';
+export {
+  readPackPayload,
+  validatePack,
+  validatePackByName,
+  type PackReport,
+} from './validate/validate-pack.js';
+export { parameterVaryingSteps } from './validate/combinations.js';
+export { runValidate, validateJson } from './cli/commands/validate.js';
+export { packInfoJson, renderPackInfo } from './cli/commands/pack-info.js';
+
+export {
+  DISPOSITIONS,
+  KEPT_DISPOSITIONS,
+  WRITING_DISPOSITIONS,
+  classifyPaths,
+  countByDisposition,
+  keptEntries,
+  type ClassifyInput,
+  type Disposition,
+  type UpdateEntry,
+} from './update/classify.js';
+export {
+  checkUpdateGates,
+  planUpdate,
+  resolveTargetVersion,
+  resolveUpdateInputs,
+  type GateResult,
+  type UpdatePlan,
+  type UpdatePlanInput,
+  type VersionVerdict,
+} from './update/plan-update.js';
+
+export { renderPhase2, type Phase2Inputs, type Phase2Result, type RenderedOutput } from './apply/plan-phase2.js';
+export { planApply, type ApplyInputs, type ApplyPlan, type PlannedFile } from './apply/plan.js';
+export { executeApply, type ExecuteInputs, type ExecuteResult } from './apply/execute.js';
+export {
+  checkTargets,
+  preExistingByKey,
+  type ExistingFile,
+  type TargetCheck,
+} from './apply/target-exists.js';
+export {
+  keptPaths,
+  planRollback,
+  type RollbackAction,
+  type RollbackDecision,
+  type RollbackPlan,
+} from './apply/rollback.js';
+export {
   NON_FAILING_STATES,
   VERIFY_STATES,
   compareOne,

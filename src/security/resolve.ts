@@ -12,6 +12,7 @@
 import { lstat, realpath } from 'node:fs/promises';
 import { isAbsolute, resolve as resolvePath, sep } from 'node:path';
 import { DiagnosticBag } from '../diag/diagnostic.js';
+import type { WritablePath } from './harness-paths.js';
 import type { AppliedPath, ConfineContext } from './confine.js';
 
 /** A project root resolved **once per run** with `realpath()`. Resolving
@@ -71,7 +72,7 @@ export interface ResolveResult {
  */
 export async function confineResolved(
   root: ProjectRoot,
-  path: AppliedPath,
+  path: WritablePath,
   ctx: ConfineContext,
 ): Promise<ResolveResult> {
   const bag = new DiagnosticBag();
@@ -135,9 +136,26 @@ export function isStrictDescendant(root: string, absolute: string): boolean {
  * **not** open the file: exclusive creation belongs to the atomic writer
  * (E-11), and splitting them keeps this module free of any write.
  */
+/**
+ * **Stage 4** — the same walk, immediately before the write.
+ *
+ * Takes **`WritablePath`**, not `AppliedPath`. It took the narrower type
+ * until E-11, which meant a **phase-1 payload write could not be
+ * re-confined at all** — `.harness/pack/**` is a `HarnessPath`, so the
+ * call did not type-check and the largest write the product performs was
+ * the one write with no stage-4 check. `F1-ADR-001` says the atomic writer
+ * takes `WritablePath = AppliedPath | HarnessPath` (C-14), and this is the
+ * gate that feeds it.
+ *
+ * The walk itself is unchanged and needs no branch: it asks *"is any
+ * ancestor a symlink, and does the result stay under the root"*, which is
+ * a question about a path in a project and not about which brand carries
+ * it. Found by E-07 while building the manifest write, which is a
+ * `HarnessPath` for the same reason.
+ */
 export async function confineAtWrite(
   root: ProjectRoot,
-  path: AppliedPath,
+  path: WritablePath,
   ctx: ConfineContext,
 ): Promise<ResolveResult> {
   return confineResolved(root, path, ctx);

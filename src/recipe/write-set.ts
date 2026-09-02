@@ -89,14 +89,14 @@ export function stepWriteSet(input: WriteSetInput): WriteSetResult {
       break;
 
     case 'copy':
-      raw.push(...expand(input, step.from, step.to, step.exclude, null));
+      raw.push(...expand(input, step.from, step.to, step.exclude, null, bag));
       break;
 
     case 'strip-suffix':
       // The suffix is dropped from the basename BEFORE confinement, so
       // the gate sees the path that will actually be written. Checking
       // the pre-strip name would gate a path nothing creates.
-      raw.push(...expand(input, step.from, step.to, step.exclude, step.suffix));
+      raw.push(...expand(input, step.from, step.to, step.exclude, step.suffix, bag));
       break;
 
     case 'rewrite-path':
@@ -151,6 +151,7 @@ function expand(
   to: string,
   exclude: readonly string[] | undefined,
   suffix: string | null,
+  bag: DiagnosticBag,
 ): string[] {
   if (!isDir(from)) {
     // A file `from`. `copy` may not change the basename; `strip-suffix`
@@ -164,7 +165,23 @@ function expand(
     const rel = p.slice(from.length);
     if (rel === '') continue;
     if (exclude !== undefined && matchesAny(exclude, rel)) continue;
-    out.push(suffix === null ? `${to}${rel}` : stripSuffix(`${to}${rel}`, suffix));
+
+    // **NFC is mandatory, and a source basename is where it can fail.**
+    // A `to` is checked by the grammar gate, but a name discovered by
+    // directory recursion comes from the filesystem — and a macOS checkout
+    // can hold NFD filenames. An NFD applied path would not match a Linux
+    // teammate's NFC one, breaking G-F1-7 **silently**: two projects
+    // applied from the same pack would differ in a way no comparison
+    // reports, because each is internally consistent.
+    //
+    // So the applied path is normalized and the pack author is told, which
+    // is what `W-PATH-NON-NFC` is for — `defect` class, because renaming
+    // the file in the pack is the fix.
+    const normalized = rel.normalize('NFC');
+    if (normalized !== rel) {
+      bag.add('W-PATH-NON-NFC', { values: { path: `${from}${rel}` } });
+    }
+    out.push(suffix === null ? `${to}${normalized}` : stripSuffix(`${to}${normalized}`, suffix));
   }
   return out;
 }

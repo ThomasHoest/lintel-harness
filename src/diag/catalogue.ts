@@ -94,7 +94,7 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'E-UNKNOWN-VALUE': ["lintel: \"{value}\" is not a valid {field}.", "  Allowed: {allowed}", "  → Fix the value, or upgrade to a lintel that understands it."],
   'E-UPDATE-AVAILABLE': ["lintel: {pack}@{applied} is applied; lintel {cliVersion} bundles {bundled}.", "  → lintel harness update   to see what would change"],
   'E-UPDATE-NOT-NEWER': ["lintel: {pack}@{applied} is applied; lintel {cliVersion} bundles {bundled}, which is not newer.", "  → Upgrade the CLI: npm i -g @lintel/cli@latest"],
-  'E-UPDATE-PARAM-UNANSWERED': ["lintel: {pack}@{bundled} declares \"{id}\", which {pack}@{applied} did not.", "  Recorded answers cannot supply it, and update does not guess.", "  → lintel harness update --set {id}=<value>"],
+  'E-UPDATE-PARAM-UNANSWERED': ["lintel: {pack}@{bundled} declares \"{id}\", which {pack}@{applied} did not.", "  {prompt}", "  Recorded answers cannot supply it, and there is no way to answer it now.", "  → The pack must give \"{id}\" a \"default\". Until it does, re-apply into a fresh directory."],
   'E-UPDATE-SCAFFOLD-DROPPED': ["lintel: {pack}@{bundled} no longer declares the scaffold \"{name}\", which this project selected.", "  update will not silently drop the files it placed.", "  → Re-apply into a fresh directory, or remove the scaffold's files by hand first."],
   'E-VERIFY-MISMATCH': ["lintel: {n} of {total} applied paths do not match what this pack and these answers produce.", "  {paths}", "  → Inspect the differences, or re-apply into a fresh directory."],
   'E-WRITE-FAILED': ["lintel: could not write \"{path}\" ({errno}).", "  Nothing further was written; the project is mid-apply.", "  → lintel harness init --rollback"],
@@ -109,7 +109,7 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'W-MANIFEST-NEWER-CLI': ["lintel: this project was last touched by lintel {recorded}; you are running {current}."],
   'W-PACK-NEWER-THAN-CLI': ["lintel: this project has {pack}@{version}; the newest {pack} bundled with lintel {cliVersion} is {bundled}.", "  verify still works — it reads .harness/pack/, not the bundle."],
   'W-PATH-NON-NFC': ["lintel: \"{path}\" is not in Unicode NFC; its applied path has been normalized.", "  An NFD name would not match the same file on Linux."],
-  'W-ROLLBACK-KEPT': ["lintel: kept \"{path}\" — it has changed since it was written."],
+  'W-ROLLBACK-KEPT': ["lintel: kept \"{path}\" — {reason}."],
   'W-SCAN-SYMLINK-SKIPPED': ["lintel: skipped \"{path}\" — it is a symbolic link, and lintel does not follow links out of the project."],
   'W-UNKNOWN-KEY': ["lintel: {where} declares an unknown key \"{key}\".", "  It is ignored — this lintel does not know what it means.", "  → Remove it, or upgrade to a lintel that understands it."],
 } as const;
