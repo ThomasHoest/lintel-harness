@@ -100,6 +100,19 @@ process can see:
 
 ---
 
+## Branches
+
+| Branch | Role |
+|---|---|
+| `main` | production |
+| `develop` | staging — tested before promotion |
+| `v1.0` | implementation work; commits land here directly |
+
+All three run the same CI matrix. A staging branch whose pushes are not
+checked is not staging anything.
+
+---
+
 ## CI
 
 `.github/workflows/ci.yml` — three platforms, Node 22, plus one Node 24
