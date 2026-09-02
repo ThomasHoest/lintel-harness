@@ -154,13 +154,14 @@ test('pack info with no pack name says what is missing, not what is wrong', asyn
  * so `init` would have printed "not implemented in this build" while
  * working. The predicate tests builtness now, and this is what holds it.
  */
-test('four commands are dispatched, and the two that are not say why', () => {
-  // This has read three, then two, then one, and each edit was a feature
-  // landing. **`verify` is last on purpose**: its shaping functions exist,
-  // but its command layer must recompute from `.harness/pack/` rather than
-  // from a plan it was handed — the property that makes it an INDEPENDENT
-  // check rather than a restatement — so wiring it is work, not wiring.
-  assert.deepEqual([...stubbedCommands()], ['verify']);
+test('the stub set is empty — all six commands are wired', () => {
+  // This has read three, then two, then one, then none, and every edit was
+  // a feature landing. **`verify` was last on purpose**: its shaping
+  // functions existed long before its command layer, because that layer
+  // has to recompute from `.harness/pack/` rather than from a plan it was
+  // handed — the property that makes it an INDEPENDENT check rather than a
+  // restatement, and work rather than wiring.
+  assert.deepEqual([...stubbedCommands()], []);
 });
 
 /* ── the version handshake ───────────────────────────────────────────── */

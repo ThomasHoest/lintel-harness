@@ -20,6 +20,8 @@
  * a project half-written; these three cannot, and keeping them apart from
  * the writers is how that stays obvious.
  */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { DiagnosticBag } from '../../diag/diagnostic.js';
 import { escapeLine } from '../../diag/escape.js';
 import { parsePass1 } from '../flags.js';
@@ -31,6 +33,16 @@ import {
 } from './validate.js';
 import { packInfoJson, renderPackInfo } from './pack-info.js';
 import { validatePackByName } from '../../validate/validate-pack.js';
+import { readAppliedPack } from '../../verify/read-applied.js';
+import { verifyProject, type RecomputedPath } from '../../verify/verify.js';
+import { planSteps } from '../../recipe/plan-steps.js';
+import { renderPhase2 } from '../../apply/plan-phase2.js';
+import { parametersFor, selectScaffolds } from '../../pack/scaffolds.js';
+import { readManifest } from '../../manifest/read.js';
+import { resolveRoot } from '../../security/resolve.js';
+import { summaryLines as verifySummary, toJson, verifyExitCode } from './verify.js';
+import type { AppliedPath } from '../../security/confine.js';
+import type { Answer } from '../../pack/parameters.js';
 import { bundledPackNames } from '../../pack/load-pack.js';
 import { CLI_VERSION } from '../version.js';
 import type { Streams } from '../main.js';
@@ -149,4 +161,123 @@ export async function runPackCommand(
   // still described, and its exit code says so without refusing to print
   // — which is the difference between this command and `validate`.
   return { code: 0, bag };
+}
+
+/**
+ * `lintel harness verify [--json]`. T-1003's command half.
+ *
+ * ── It recomputes; it does not restate ────────────────────────────────
+ *
+ * Every input comes from the **committed copy** — `.harness/pack/` and
+ * `.harness/manifest.json` — and none from the pack this CLI bundles. A
+ * `verify` that loaded the bundled pack would check the project against
+ * *what this CLI ships*, so it would **pass a project whose payload had
+ * been swapped** and fail one applied correctly by an older CLI.
+ *
+ * That is the whole reason this command exists as more than a
+ * convenience, and it is why it was the last of the six to be wired: the
+ * shaping functions were easy and this property is the work.
+ *
+ * ── Two gates, both suppressing, in this order ────────────────────────
+ *
+ *   1. the payload digest, against what the manifest recorded;
+ *   2. every recorded answer, against its own declaration (C-29).
+ *
+ * Either failing suppresses the tree comparison **entirely** — no
+ * per-path rows — because the expectation is computed *from* those two
+ * inputs, and reporting rows derived from inputs nobody can vouch for is
+ * worse than reporting none.
+ *
+ * ── It writes nothing, ever ───────────────────────────────────────────
+ *
+ * No lock, no journal, no temp file. `verify` has to work on a project
+ * mid-apply, which is exactly when somebody reaches for it.
+ */
+export async function runVerifyCommand(
+  argv: readonly string[],
+  streams: Streams,
+  cwd: string,
+): Promise<ReadOnlyResult> {
+  const { parsed, bag } = parsePass1(argv, 'verify');
+  if (bag.length > 0) {
+    report(streams, bag);
+    const code = bag.exitCode();
+    if (code !== 0) return { code, bag };
+  }
+
+  const { root, bag: rootBag } = await resolveRoot(cwd);
+  if (root === undefined) {
+    report(streams, rootBag);
+    return { code: rootBag.exitCode() || 1, bag: rootBag };
+  }
+
+  // The committed copy first: the manifest's answers are re-validated
+  // against the declarations in THIS pack.json, not the bundled one.
+  const { applied, bag: appliedBag } = await readAppliedPack(root);
+  if (applied === undefined) {
+    report(streams, appliedBag);
+    return { code: appliedBag.exitCode() || 2, bag: appliedBag };
+  }
+
+  const { manifest, bag: manifestBag } = await readManifest(root, applied.pack.parameters ?? [], {
+    cliVersion: CLI_VERSION,
+  });
+  for (const d of manifestBag.items) bag.push(d);
+  if (manifest === undefined) {
+    report(streams, manifestBag);
+    return { code: manifestBag.exitCode() || 1, bag: manifestBag };
+  }
+
+  // Recompute phase 2 from the committed payload and the recorded answers.
+  const answers = new Map<string, Answer>(Object.entries(manifest.parameters ?? {}));
+  const { selected } = selectScaffolds(applied.pack, manifest.scaffolds ?? []);
+  const steps = planSteps({
+    pack: applied.pack,
+    recipe: applied.recipe,
+    selected,
+    answers,
+    payload: applied.payload,
+  });
+
+  const rendered = renderPhase2({
+    steps: steps.steps,
+    payload: applied.payload,
+    readPayload: applied.readPayload,
+    answers,
+    packName: applied.pack.name,
+    packVersion: applied.pack.version,
+    cliVersion: manifest.cli,
+  });
+
+  const recomputed: RecomputedPath[] = rendered.outputs.map((o) => ({
+    path: o.path,
+    bytes: o.bytes,
+    mode: o.mode,
+    adaptExpected: steps.adaptExpected.includes(o.path),
+    fillExpected: steps.fillExpected.includes(o.path),
+  }));
+
+  const result = verifyProject({
+    recordedDigest: manifest.payloadDigest,
+    computedDigest: applied.digest,
+    declarations: parametersFor(applied.pack, selected),
+    recordedAnswers: answers,
+    recomputed,
+    onDisk: (p: AppliedPath) => {
+      try {
+        return { bytes: readFileSync(join(root, ...p.split('/'))), mode: null };
+      } catch {
+        return null;
+      }
+    },
+  });
+
+  if (parsed.flags['json'] === true) {
+    emit(streams, [JSON.stringify(toJson(result), null, 2)]);
+  } else {
+    emit(streams, verifySummary(result));
+  }
+  report(streams, result.bag);
+
+  return { code: verifyExitCode(result), bag: result.bag };
 }

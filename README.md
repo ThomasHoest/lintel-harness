@@ -32,9 +32,8 @@ correctly applied" a checked fact instead of a claim.
 ## Status — read this before trying anything
 
 **The specification set is complete and Accepted. The CLI is being built on
-the `v1.0` branch. Five of six commands work — `init`, `update`,
-`validate`, `pack info` and `skill install`. Only `verify` is still a
-stub.**
+the `v1.0` branch. **All six commands work** — `init`, `update`, `verify`,
+`validate`, `pack info` and `skill install`.**
 
 ```bash
 npm ci
@@ -81,18 +80,20 @@ $ lintel harness skill install
 lintel: installed the skill into .claude/skills/lintel/
 ```
 
-The one that is not built still answers honestly:
+And `verify` checks the result by **recomputing from `.harness/pack/`** —
+the committed copy — rather than from the pack this CLI happens to bundle:
 
 ```
 $ lintel harness verify
-lintel: "harness verify" is not implemented in this build (F1 owns it).
+lintel: 23 applied paths checked.
+  1 still at the template — these are yours to fill in.
 ```
 
 | | |
 |---|---|
 | Specs and ADRs | all **Accepted** |
 | Packs | **3**, each with a `pack.json` and a `recipe.json` |
-| Commands | **five of six work**: `init`, `update`, `validate`, `pack info`, `skill install`. `verify` has modules but is not wired to argv |
+| Commands | **all six work**: `init`, `update`, `verify`, `validate`, `pack info`, `skill install` |
 | Epics | **F2 is complete** — zero open tasks. **F1** E-01…E-12 substantially built. **F5** E-13…E-19 built, and **E-19's acceptance gate passes**. **F3** E-23…E-25 built. **F6** E-26 built |
 | Tests | **1146** — unit, integration, pack-conformance, **adversarial fixtures**, structural |
 | Runtime dependencies | **zero** |

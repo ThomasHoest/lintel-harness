@@ -31,35 +31,33 @@ const capture = async (argv: readonly string[], cwd = tmpdir()) => {
  * saying so is how `main.ts` came to claim two built commands were
  * unimplemented.
  */
-test('five commands are dispatched, and only verify remains', () => {
-  const stubs = stubbedCommands();
-  for (const built of ['init', 'validate', 'pack', 'skill', 'update'] as const) {
-    assert.ok(!stubs.includes(built), `${built} is dispatched`);
-  }
-  assert.deepEqual([...stubs], ['verify']);
-  assert.equal(stubs.length, COMMANDS.length - 5);
+test('every command is dispatched, and the stub set is empty', () => {
+  // **The last edit this test will need.** It has read five, then three,
+  // then two, then one, and each change was a feature landing — which is
+  // the whole reason it exists: a set that changed without anything saying
+  // so is how `main.ts` came to claim two built commands were
+  // unimplemented, while its predicate tested *ownership* rather than
+  // whether a command was built.
+  assert.deepEqual([...stubbedCommands()], []);
+  assert.equal(stubbedCommands().length, 0, `${COMMANDS.length} commands, none stubbed`);
 });
 
-test('every remaining stub is a command nothing dispatches yet', () => {
-  // One left, and it is the interesting one. `verify`'s shaping functions
-  // exist, but its command layer must recompute from
-  // `.harness/pack/` rather than from a plan it was handed — the property
-  // that makes it an *independent* check rather than a restatement — so
-  // wiring it would be work, not wiring.
-  for (const c of stubbedCommands()) {
-    assert.ok(OWNER[c] !== undefined, `${c} must still have an owner`);
+/**
+ * **Nothing reaches the stub note any more**, so the note itself is dead
+ * code — and `main.ts` says its block can go when this set empties. Kept
+ * as an assertion rather than deleted with it: a seventh command added
+ * without a dispatch would land back on the note, and this is what would
+ * say so.
+ */
+test('no command reaches the stub note', async () => {
+  for (const c of COMMANDS) {
+    const r = await capture(['harness', c]);
+    assert.equal(
+      r.err.includes('is not implemented in this build'),
+      false,
+      `${c} still reaches the stub note`,
+    );
   }
-});
-
-test('the last stubbed command exits 1 and writes nothing to stdout', async () => {
-  // `update` used to be this test's subject and is now dispatched, so the
-  // subject moved to `verify` — which is the fifth time this file has been
-  // edited by a feature landing, and each edit is the set announcing
-  // itself rather than drifting.
-  const r = await capture(['harness', 'verify']);
-  assert.equal(r.code, 1);
-  assert.match(r.err, /is not implemented in this build/);
-  assert.equal(r.out, '', 'stdout stays clean for machine consumers');
 });
 
 test('init dispatches: it reaches its own diagnostics rather than the stub note', async () => {

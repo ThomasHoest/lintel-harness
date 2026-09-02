@@ -17,7 +17,7 @@ import { DiagnosticBag, type Diagnostic } from '../diag/diagnostic.js';
 import { escapeLine } from '../diag/escape.js';
 import { initOptions, runInit } from './commands/init.js';
 import { COMMANDS, GROUP, OWNER, commandList, isCommand, type Command } from './surface.js';
-import { runPackCommand, runValidateCommand } from './commands/read-only.js';
+import { runPackCommand, runValidateCommand, runVerifyCommand } from './commands/read-only.js';
 import { runUpdate, updateOptions } from './commands/update.js';
 import { CLI_VERSION } from './version.js';
 import { runSkillCommand } from './commands/skill.js';
@@ -74,7 +74,7 @@ const STUB_NOTE = 'is not implemented in this build';
  * independent check rather than a restatement. That is real work, not
  * wiring, and claiming it here would be the same lie in a new place.
  */
-const DISPATCHED: readonly Command[] = ['init', 'validate', 'pack', 'skill', 'update'];
+const DISPATCHED: readonly Command[] = ['init', 'validate', 'pack', 'skill', 'update', 'verify'];
 
 function isStub(c: Command): boolean {
   return !DISPATCHED.includes(c);
@@ -190,6 +190,11 @@ export async function run(
 
   if (command === 'validate') {
     const { code, bag } = await runValidateCommand(argv.slice(2), streams);
+    return { code, diagnostics: bag.items };
+  }
+
+  if (command === 'verify') {
+    const { code, bag } = await runVerifyCommand(argv.slice(2), streams, cwd);
     return { code, diagnostics: bag.items };
   }
 

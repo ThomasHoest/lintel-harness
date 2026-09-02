@@ -129,20 +129,24 @@ test('the two --json surfaces emit identical bytes', async () => {
 });
 
 /**
- * The commands still honest about not existing. **The set shrinks
- * visibly**, and a command that quietly claimed to work would be the same
- * defect `main.ts` already carried once — its stub predicate tested
- * *ownership* rather than whether a command was built.
+ * **The stub set is empty**, and nothing reaches the stub note.
+ *
+ * This test listed three commands, then two, then one, and each edit was a
+ * feature landing — `skill` when F6 wired the installer, `update` when F3
+ * wired its command, `verify` last because its command layer had to
+ * recompute from `.harness/pack/` rather than restate a plan.
+ *
+ * It asserts the absence rather than being deleted with the note it
+ * watched: a seventh command added without a dispatch would land back on
+ * that note, and this is what would say so.
  */
-test('the commands that are not built say so, and exit 1', async () => {
-  // The list shrinks as features land — `skill` left when F6 wired
-  // `skill install`, `update` when F3 wired its command, and `verify` is
-  // the last. That this test keeps needing an edit is the point: a set
-  // that changed without anything saying so is how `main.ts` came to claim
-  // two built commands were unimplemented.
-  for (const command of ['verify']) {
+test('every command is wired, and none reaches the stub note', async () => {
+  for (const command of ['init', 'update', 'skill', 'validate', 'verify', 'pack']) {
     const r = await runCli(['harness', command], REPO);
-    assert.equal(r.code, EXIT.userFault, command);
-    assert.match(r.stderr, /is not implemented in this build/, command);
+    assert.equal(
+      r.stderr.includes('is not implemented in this build'),
+      false,
+      `${command} still reaches the stub note`,
+    );
   }
 });
