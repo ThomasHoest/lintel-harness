@@ -59,8 +59,13 @@ export interface WriteRequest {
    *
    * This module cannot know the command, so it is told. Making the field
    * required is what stops the next caller forgetting.
+   *
+   * **`'skill'` joined at F6.** `skill install` is the third writing
+   * command, and neither of the other two names it — so passing `'init'`
+   * would have rendered a remedy pointing at a different command, which is
+   * the exact fault the field exists to prevent.
    */
-  readonly command: 'init' | 'update';
+  readonly command: 'init' | 'update' | 'skill';
   readonly path: WritablePath;
   readonly bytes: Buffer;
   readonly mode: number;

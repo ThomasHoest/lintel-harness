@@ -238,14 +238,14 @@ instead.
 
 **Depends on:** E-24.
 
-- [ ] **T-2501** `[Implementer]` `src/update/report.ts` — the human
+- [x] **T-2501** `[Implementer]` `src/update/report.ts` — the human
   report: counts per disposition, then the edited paths listed with their
   reason. **`kept-fill-expected` is reported with its own reason** —
   *shipped to be filled in* rather than *edited* — so a user is never left
   wondering why their brief was skipped.
   *Depends on: T-2401.*
 
-- [ ] **T-2502** `[Implementer]` `UpdateEntry.expectedNew` — the
+- [x] **T-2502** `[Implementer]` `UpdateEntry.expectedNew` — the
   **rendered bytes** the new pack produces at each `kept-edited` path,
   carried in the report (Q-77). **Bytes, not a diff**: a diff format is a
   presentation decision the skill is better placed to make and would
@@ -255,14 +255,14 @@ instead.
   pack produces.
   *Depends on: T-2307, T-2501.*
 
-- [ ] **T-2503** `[Implementer]` `--dry-run`: the same classification with
+- [x] **T-2503** `[Implementer]` `--dry-run`: the same classification with
   **no lock, no journal and no write**, exiting **1** with
   `E-UPDATE-AVAILABLE` when an update is available and `0` when the
   project is current. This is the `status` command Q-62 folded into a mode,
   and the reserved flag F1 v3.0 protected before F3 existed.
   *Depends on: T-2302, T-2501.*
 
-- [ ] **T-2504** `[Implementer]` `--json`: the `UpdatePlan` shape with
+- [x] **T-2504** `[Implementer]` `--json`: the `UpdatePlan` shape with
   per-entry `state`, `disposition` and `expectedNew`, plus counts per
   disposition. F6 drives reconciliation from this, so it is a contract
   rather than a convenience.
@@ -292,7 +292,7 @@ instead.
   *Depends on: T-2401, T-2406.*
 
 
-- [ ] **T-2508** `[Implementer]` **The human report bounds its excerpts**
+- [x] **T-2508** `[Implementer]` **The human report bounds its excerpts**
   (C-54): a stated line cap on `expectedNew`, with an **explicit
   truncation notice naming how many lines were withheld**; `--json`
   remains the complete channel. **Never silently short** — F1's rule for

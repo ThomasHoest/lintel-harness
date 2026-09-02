@@ -76,6 +76,17 @@ export interface ExecuteResult {
   /** True iff the manifest landed. A `false` here means the project is
    *  mid-apply and the journal is the way back. */
   readonly complete: boolean;
+  /**
+   * True iff the journal was written — i.e. the run got past the
+   * preflight and **may** have written bytes.
+   *
+   * `complete: false` alone does not distinguish *"stopped before
+   * anything happened"* from *"stopped half way"*, and the two want
+   * opposite handling: the second must keep the lock so no second writer
+   * enters a mid-apply project (US-49), while the first has nothing to
+   * protect and holding the lock would strand it for the stale timeout.
+   */
+  readonly journalled: boolean;
   readonly bag: DiagnosticBag;
 }
 
@@ -87,24 +98,31 @@ export async function executeApply(inputs: ExecuteInputs): Promise<ExecuteResult
 
   /* ── the journal, before the first write ───────────────────────────── */
 
-  const plannedWrites: PlannedWrite[] = [];
+  /**
+   * **The preflight, before the journal and before any byte.**
+   *
+   * Two faults are checked here rather than at the write, because both
+   * would otherwise be reported mid-apply, with the project half-written,
+   * by a message describing something that did not happen:
+   *
+   *   A DIRECTORY at a planned path. The planner's probe sees only regular
+   *   files, so the plan says *create it* and the writer's exclusive-create
+   *   fails — reported as `E-TARGET-RACE`, whose message says *"changed
+   *   while lintel was writing"* about a directory that was there before
+   *   the run began. `E-TARGET-NOT-A-FILE`, exit 1, **zero bytes**.
+   *
+   *   A SYMLINK at a path the plan saw as a regular file. That one really
+   *   is a race, and `E-TARGET-RACE` is the truthful code — but it is
+   *   checked here too, so the backup read that follows cannot happen
+   *   through a link (C-51's shape; see below).
+   */
   for (const f of inputs.files) {
-    // **`lstat` the target itself before reading it** (C-51's shape,
-    // applied to the overwrite path).
-    //
-    // `confineAtWrite` walks the ANCESTORS; it does not stat the final
-    // component. So a symlink planted **at** an overwrite target between
-    // planning and writing passes confinement — and the very next thing
-    // this loop does is read that path's bytes into `.harness/journal.d/`
-    // as a backup. That is an arbitrary file read, with the result landing
-    // in a directory the project commits.
-    //
-    // C-51 names exactly this for `update`'s deletes and says *the risk is
-    // the backup, not the unlink*. The overwrite path has the identical
-    // shape and carried no equivalent, so it gets one here: a target whose
-    // type changed since planning is `E-TARGET-RACE`, journal intact,
-    // nothing read.
-    if (f.preExisting && (await isLink(inputs.root, f.path))) {
+    const kind = await targetKind(inputs.root, f.path);
+    if (kind === 'dir') {
+      bag.add('E-TARGET-NOT-A-FILE', { values: { path: f.path } });
+      return { written, createdDirs, complete: false, journalled: false, bag };
+    }
+    if (kind === 'link' && f.preExisting) {
       bag.add('E-TARGET-RACE', {
         values: {
           path: f.path,
@@ -112,9 +130,19 @@ export async function executeApply(inputs: ExecuteInputs): Promise<ExecuteResult
           command: inputs.command,
         },
       });
-      return { written, createdDirs, complete: false, bag };
+      return { written, createdDirs, complete: false, journalled: false, bag };
     }
+  }
 
+  const plannedWrites: PlannedWrite[] = [];
+  for (const f of inputs.files) {
+    // The symlink check ran in the preflight above, which is what makes
+    // the read below safe: `confineAtWrite` walks the ANCESTORS and does
+    // not stat the final component, so a link planted **at** an overwrite
+    // target would otherwise be read through when its bytes are captured
+    // into `.harness/journal.d/` — an arbitrary file read, landing in a
+    // directory the project commits. C-51 names exactly this for
+    // `update`'s deletes: *the risk is the backup, not the unlink*.
     const pre = f.preExisting ? await inputs.readExisting(f.path) : null;
     plannedWrites.push({
       path: f.path,
@@ -148,7 +176,7 @@ export async function executeApply(inputs: ExecuteInputs): Promise<ExecuteResult
       const gate = await confineAtWrite(inputs.root, f.path, { index: 0 });
       for (const d of gate.bag.items) bag.push(d);
       if (gate.absolute === undefined) {
-        return { written, createdDirs, complete: false, bag };
+        return { written, createdDirs, complete: false, journalled: true, bag };
       }
 
       const outcome = await atomicWrite(
@@ -168,7 +196,7 @@ export async function executeApply(inputs: ExecuteInputs): Promise<ExecuteResult
       if (!outcome.ok) {
         // Stop at the first failure. The journal is intact and the project
         // is recoverable; continuing would write more to undo.
-        return { written, createdDirs, complete: false, bag };
+        return { written, createdDirs, complete: false, journalled: true, bag };
       }
       written.push(f.path);
     }
@@ -179,7 +207,7 @@ export async function executeApply(inputs: ExecuteInputs): Promise<ExecuteResult
   const manifestGate = await confineAtWrite(inputs.root, inputs.manifest.path, { index: 0 });
   for (const d of manifestGate.bag.items) bag.push(d);
   if (manifestGate.absolute === undefined) {
-    return { written, createdDirs, complete: false, bag };
+    return { written, createdDirs, complete: false, journalled: true, bag };
   }
 
   const manifestWrite = await atomicWrite(
@@ -195,7 +223,7 @@ export async function executeApply(inputs: ExecuteInputs): Promise<ExecuteResult
   );
   for (const d of manifestWrite.bag.items) bag.push(d);
   if (!manifestWrite.ok) {
-    return { written, createdDirs, complete: false, bag };
+    return { written, createdDirs, complete: false, journalled: true, bag };
   }
   written.push(inputs.manifest.path);
 
@@ -203,20 +231,29 @@ export async function executeApply(inputs: ExecuteInputs): Promise<ExecuteResult
   // complete but still recoverable, which is the safe order to be in.
   await inputs.removeJournal();
 
-  return { written, createdDirs, complete: true, bag };
+  return { written, createdDirs, complete: true, journalled: true, bag };
 }
 
 function joinRoot(root: string, relative: string): string {
   return `${root}/${relative}`;
 }
 
-/** Is this destination a symbolic link **right now**? `lstat`, never
- *  `stat`: `stat` follows the link and answers about its target, which is
- *  the question that lets the escape through. */
-async function isLink(root: string, path: string): Promise<boolean> {
+/**
+ * What stands at this destination **right now**.
+ *
+ * `lstat`, never `stat`: `stat` follows a link and answers about its
+ * target, which is the question that lets the escape through.
+ */
+async function targetKind(
+  root: string,
+  path: string,
+): Promise<'absent' | 'file' | 'dir' | 'link'> {
   try {
-    return (await lstat(join(root, ...path.split('/')))).isSymbolicLink();
+    const st = await lstat(join(root, ...path.split('/')));
+    if (st.isSymbolicLink()) return 'link';
+    if (st.isDirectory()) return 'dir';
+    return 'file';
   } catch {
-    return false; // absent is not a link, and not this check's fault to report
+    return 'absent';
   }
 }

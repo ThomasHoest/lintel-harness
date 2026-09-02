@@ -473,13 +473,22 @@ export async function runInit(options: InitOptions, deps: InitDeps = {}): Promis
 
   const executeCode = emit(result.bag);
   if (!result.complete) {
-    // The journal **and** the lock stay: `--rollback` acts on the first,
-    // and releasing the second would invite a second writer into a project
-    // that is mid-apply (US-49).
+    // **Mid-apply: the journal and the lock both stay.** `--rollback` acts
+    // on the first, and releasing the second would invite a second writer
+    // into a project that is half-written (US-49).
+    //
+    // **Stopped before the journal: release the lock.** The preflight
+    // refuses a directory standing at a planned path
+    // (`E-TARGET-NOT-A-FILE`) before a single byte is written, so there is
+    // no mid-apply state to protect — and holding the lock would strand
+    // the project for the stale timeout over a fault the user can fix in
+    // one `rmdir`. `complete: false` alone cannot tell the two apart,
+    // which is why `journalled` exists.
+    if (!result.journalled) await releaseLock(root);
     return executeCode || 3;
   }
 
-  await rm(join(root, '.harness', 'lock'), { force: true });
+  await releaseLock(root);
 
   /* ── the summary, on stdout, on a 0-exit run and no other ──────────── */
 
@@ -959,4 +968,23 @@ function declaredIdsOf(
     ...(parameters ?? []).map((p) => p.id),
     ...(scaffolds ?? []).flatMap((s) => (s.parameters ?? []).map((p) => p.id)),
   ];
+}
+
+/**
+ * Release the advisory lock, and the `.harness/` directory with it when
+ * nothing else is in there.
+ *
+ * The directory is removed **only when empty**, on the same reasoning
+ * rollback removes created directories only when empty: a `.harness/` that
+ * still holds a payload or a manifest belongs to an apply that happened,
+ * and this function is not entitled to an opinion about it.
+ */
+async function releaseLock(root: string): Promise<void> {
+  await rm(join(root, '.harness', 'lock'), { force: true });
+  try {
+    await rmdir(join(root, '.harness'));
+  } catch {
+    // Not empty, or not there. Both are fine and neither is this
+    // function's to report.
+  }
 }

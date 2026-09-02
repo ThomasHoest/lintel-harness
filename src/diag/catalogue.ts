@@ -89,6 +89,7 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'E-SUBST-UNRESOLVED': ["lintel: unresolved {{harness:{token}}} in {path}:{line}.", "  → Declare a parameter named \"{id}\", add the token to the step's \"tokens\" list, or remove the token."],
   'E-SYMLINK-IN-PACK': ["lintel: \"{path}\" is a symbolic link. Pack content must be regular files."],
   'E-TARGET-EXISTS': ["lintel: {n} files already exist where this pack would write.", "  {paths}", "  → Apply into an empty directory, or re-run with --force to keep byte-identical files and stop on the rest."],
+  'E-TARGET-NOT-A-FILE': ["lintel: \"{path}\" is a directory, and this pack writes a file there.", "  Nothing was written.", "  → Remove or rename the directory, then re-run."],
   'E-TARGET-RACE': ["lintel: \"{path}\" changed while lintel was writing.", "  {detail}", "  Nothing further was written; the journal is intact.", "  → lintel harness {command} --rollback, then re-run."],
   'E-TRAVERSAL-LIMIT': ["lintel: the walk of \"{root}\" exceeded the {limit} limit ({n}).", "  Limits: depth 32, 10,000 entries per walk.", "  → Narrow the content, or split the pack."],
   'E-UNKNOWN-VALUE': ["lintel: \"{value}\" is not a valid {field}.", "  Allowed: {allowed}", "  → Fix the value, or upgrade to a lintel that understands it."],

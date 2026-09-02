@@ -16,10 +16,15 @@
 #     differ there, so a green Linux-only run asserts almost nothing this
 #     project worries about.
 #
-# T-1214 is not discharged by this file. That task additionally requires
-# `lintel harness validate --all --strict` over the three bundled packs and
-# the adversarial fixture suite — neither of which exists yet, because
-# E-09 and E-12 are waves 6 and 7. This runs what there is, and grows.
+# T-1214 is discharged here. Both halves now exist and both run: the
+# adversarial fixture suite is inside `npm test` (`test:adversarial`), and
+# `lintel harness validate --all --strict` runs as its own step below.
+#
+# It is a separate step deliberately. Inside `npm test` a failure reads as
+# "one of a thousand tests broke"; as its own step it reads as "the bundled
+# packs no longer pass their own gate", which is a different thing to be
+# told at 9am. The step is redundant with `ci-gate.test.ts` and that is the
+# point — the test proves the property, the step makes the failure legible.
 
 name: CI
 
@@ -85,3 +90,11 @@ jobs:
       - run: npm run build
 
       - run: npm test
+
+      # T-1214, as its own step. --strict and not bare --all: every warning
+      # in F1 is non-fatal by code, so a bare run would exit 0 whatever the
+      # packs contained. --strict promotes `defect` warnings and never a
+      # `notice` (Q-60), so a green run says both "no pack has an authoring
+      # defect" and "every finding is a state the pack declared on purpose".
+      - name: The bundled packs pass their own gate
+        run: node dist/cli/main.js harness validate --all --strict

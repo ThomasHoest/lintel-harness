@@ -48,7 +48,17 @@ import type { WritablePath } from '../security/harness-paths.js';
 export const JOURNAL_VERSION = 3;
 
 export type JournalIntent = 'write' | 'delete';
-export type JournalCommand = 'init' | 'update';
+/**
+ * Which command wrote the journal — and therefore which `--rollback` the
+ * remedy names.
+ *
+ * **`'skill'` joined at F6**, when `skill install` became the third
+ * command that writes. `E-JOURNAL-PRESENT`'s remedy is rendered from this
+ * value, so a missing arm would send a user recovering a crashed
+ * `skill install` to `init --rollback` — the fault F3-R3 raised and this
+ * type exists to make unrepresentable.
+ */
+export type JournalCommand = 'init' | 'update' | 'skill';
 
 export interface JournalEntry {
   readonly path: string;
@@ -164,7 +174,11 @@ export function readJournal(value: unknown): ReadJournalResult {
   if (o['version'] !== JOURNAL_VERSION) {
     return fail(`it declares version ${JSON.stringify(o['version'])}; this CLI reads ${JOURNAL_VERSION}`);
   }
-  if (o['command'] !== 'init' && o['command'] !== 'update') {
+  // Derived from the type rather than restated, so a fourth command
+  // cannot be admitted here and rejected there — or the reverse, which is
+  // how a journal a later CLI wrote becomes unreadable to this one.
+  const COMMANDS: readonly JournalCommand[] = ['init', 'update', 'skill'];
+  if (!COMMANDS.includes(o['command'] as JournalCommand)) {
     return fail(`it declares command ${JSON.stringify(o['command'])}`);
   }
   if (!Array.isArray(o['entries'])) return fail('"entries" is not an array');

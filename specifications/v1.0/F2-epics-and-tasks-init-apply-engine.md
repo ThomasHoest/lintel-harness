@@ -110,7 +110,7 @@ declarations).
   simply `prompt === null`.
   *Depends on: T-2004.*
 
-- [ ] **T-2006** `[TestWriter]` `tests/unit/answers.test.ts` — the
+- [x] **T-2006** `[TestWriter]` `tests/unit/answers.test.ts` — the
   resolution order, exhaustively, with **no terminal**: each step wins over
   every step below it; `--set` and alias disagreeing is `E-PARAM-INVALID`;
   an unknown `--set` id is `E-SET-UNKNOWN-PARAM` **including for a
@@ -156,7 +156,7 @@ journal, lock).
   user who wants the full list.
   *Depends on: T-2101.*
 
-- [ ] **T-2104** `[Implementer]` The stream split, asserted at the module
+- [x] **T-2104** `[Implementer]` The stream split, asserted at the module
   boundary: prompts, progress and the disclosure to **stderr**; the summary
   to **stdout**. Not cosmetic — F6 captures the disclosure from stderr,
   and interleaving would make its capture position-dependent.
@@ -178,7 +178,7 @@ journal, lock).
   check** and with **zero bytes**.
   *Depends on: T-2101, T-2105.*
 
-- [ ] **T-2107** `[TestWriter]` `tests/integration/init-failures.test.ts` —
+- [x] **T-2107** `[TestWriter]` `tests/integration/init-failures.test.ts` —
   each code in T-2106 with its exit class and **an empty project
   directory afterwards**, asserted by recursive comparison against a
   pre-run snapshot rather than by checking a few paths. Zero-bytes is the
@@ -192,14 +192,14 @@ journal, lock).
 **Depends on:** E-21, F1 E-12 (fixtures, runner), F5 E-14 (the packs
 produce what they claim).
 
-- [ ] **T-2201** `[TestWriter]` US-53/54/55 — stand up each bundled pack
+- [x] **T-2201** `[TestWriter]` US-53/54/55 — stand up each bundled pack
   into an empty directory and assert the applied tree against F5's §7b
   table. `coding` runs **fifteen steps with no branches** (Q-82 took its
   scaffolds), `writing` eight plus five under its scaffold, `planning`
   twenty-three with one `when` pair.
   *Depends on: F5 T-1405, T-2101.*
 
-- [ ] **T-2202** `[TestWriter]` The non-interactive path end to end: no
+- [x] **T-2202** `[TestWriter]` The non-interactive path end to end: no
   TTY, every answer by `--set`, a complete apply. Then the same run with
   **stderr redirected but stdin a TTY**, asserting it is still
   non-interactive — the case that distinguishes the both-streams rule from
@@ -207,7 +207,7 @@ produce what they claim).
   other test while getting wrong.
   *Depends on: T-2005, T-2201.*
 
-- [ ] **T-2203** `[TestWriter]` The disclosure capture, from a consumer's
+- [x] **T-2203** `[TestWriter]` The disclosure capture, from a consumer's
   position: run `init`, capture stderr, assert the two sentinel lines
   appear **exactly once each, in order**, **carrying the same nonce**,
   that every US-13 row lies between them, and that **nothing else does**.
@@ -217,20 +217,20 @@ produce what they claim).
   This is F6's IM-10 standing in for itself before F6 exists.
   *Depends on: T-2102.*
 
-- [ ] **T-2204** `[TestWriter]` Determinism through `init`: the same pack,
+- [x] **T-2204** `[TestWriter]` Determinism through `init`: the same pack,
   answers and scaffolds into two empty directories produce **byte-identical
   trees and manifests**, by recursive comparison with no exclusions.
   **✅ UNBLOCKED (U-13): GitHub Actions, three-platform matrix — the Windows leg is where the executable bit and CRLF normalization actually differ)
   *Depends on: F1 T-1218, T-2201.*
 
-- [ ] **T-2205** `[TestWriter]` `--rollback` after a forced mid-write
+- [x] **T-2205** `[TestWriter]` `--rollback` after a forced mid-write
   failure: the journal survives, `--rollback` restores exactly what the
   run touched, and **a file the run did not create is not deleted** (C-13,
   G-F1-6). Reuses F1's fault-injection fixture rather than building a
   second one.
   *Depends on: F1 T-1109, T-2105.*
 
-- [ ] **T-2206** `[TestWriter]` The boundary assertion, and it is a real
+- [x] **T-2206** `[TestWriter]` The boundary assertion, and it is a real
   test rather than a review note: **`init` writes no applied path except
   through `executeApply`**. Assert by running a full apply with
   `executeApply` stubbed and requiring the project directory to be

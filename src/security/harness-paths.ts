@@ -55,6 +55,35 @@ const OWNED = [
 
 export const OWNED_ENTRIES = OWNED;
 
+/**
+ * The **one** CLI-owned location outside `.harness/`. C-53, F1 T-0211.
+ *
+ * `skill install` writes here, and it is the only thing that ever does.
+ *
+ * ── Why this needs its own entry, and why it is not a hole ────────────
+ *
+ * `skills` is a **reserved destination at any `.claude` segment** (C-53),
+ * because *a pack may not install instructions into the agent runtime of
+ * the project it is applied to*. T-0211 states the exemption in one
+ * sentence — *"`skill install` is a CLI write and is unaffected; the
+ * reservation binds recipe steps"* — and **no constructor expressed it**,
+ * so the write could be typed at all only by casting past the brand.
+ *
+ * The distinction the brand already draws is exactly the right one:
+ * `AppliedPath` is *a recipe step's destination* and `HarnessPath` is *a
+ * CLI write*. The reservation binds the first and not the second, so this
+ * is a `HarnessPath` — the `.harness/` prefix was a property of the list,
+ * never of the brand's meaning.
+ *
+ * **It is one fixed subtree, not a policy.** No flag, no parameter and no
+ * pack value reaches it: the destination is a compile-time constant, which
+ * is why admitting it opens nothing. A second entry here is a change in
+ * this module **and** in F1, in the same commit.
+ */
+const CLI_OWNED_OUTSIDE_HARNESS = '.claude/skills/lintel' as const;
+
+export const CLI_OWNED_ROOT = CLI_OWNED_OUTSIDE_HARNESS;
+
 /** Every segment must be grammar-clean in the same way an applied path
  *  is; these are derived from paths already proven clean, so confinement
  *  is by construction rather than by re-checking. */
@@ -93,6 +122,19 @@ function segmentsAreClean(segments: readonly string[]): boolean {
  */
 export function harnessPath(relative: string): HarnessPath | undefined {
   const segments = relative.split('/');
+
+  // The one CLI-owned location outside `.harness/`. Matched by
+  // `collisionKey` like every other destination comparison, so a
+  // case-variant spelling cannot slip past it on a case-folding
+  // filesystem — the same reasoning N-5 gives for `E-TARGET-EXISTS`.
+  const skillRoot = CLI_OWNED_OUTSIDE_HARNESS.split('/');
+  if (
+    segments.length > skillRoot.length &&
+    skillRoot.every((seg, i) => collisionKey(seg) === collisionKey(segments[i] ?? ''))
+  ) {
+    const rest = segments.slice(skillRoot.length);
+    return segmentsAreClean(rest) ? (relative as HarnessPath) : undefined;
+  }
 
   if (collisionKey(segments[0] ?? '') !== collisionKey(HARNESS_ROOT)) return undefined;
   const rest = segments.slice(1);

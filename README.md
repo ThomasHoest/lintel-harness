@@ -32,7 +32,9 @@ correctly applied" a checked fact instead of a claim.
 ## Status — read this before trying anything
 
 **The specification set is complete and Accepted. The CLI is being built on
-the `v1.0` branch. `init` works; the other five commands are still stubs.**
+the `v1.0` branch. Five of six commands work — `init`, `update`,
+`validate`, `pack info` and `skill install`. Only `verify` is still a
+stub.**
 
 ```bash
 npm ci
@@ -56,20 +58,43 @@ Still yours to do:
   …
 ```
 
-The remaining five still answer honestly:
+`validate` is the CI gate, and it runs in this repo's own CI:
 
 ```
-$ lintel harness update
-lintel: "harness update" is not implemented in this build (F3 owns it).
+$ lintel harness validate --all --strict
+lintel: coding validated, no findings.
+  parameter combinations: 1
+…
+$ echo $?
+0
+```
+
+The whole loop runs:
+
+```
+$ lintel --version
+1.0.0
+$ lintel harness init coding --set projectName="Demo"
+$ lintel harness update --dry-run
+lintel: coding 1.0.0 is already the version this lintel bundles. Nothing to update.
+$ lintel harness skill install
+lintel: installed the skill into .claude/skills/lintel/
+```
+
+The one that is not built still answers honestly:
+
+```
+$ lintel harness verify
+lintel: "harness verify" is not implemented in this build (F1 owns it).
 ```
 
 | | |
 |---|---|
 | Specs and ADRs | all **Accepted** |
 | Packs | **3**, each with a `pack.json` and a `recipe.json` |
-| Commands | `init` **works**; `validate`, `verify`, `pack info`, `update` and `skill install` have modules but are not wired to argv |
-| Epics | **F1** E-01…E-12 substantially built. **F5** E-13…E-19 built, and **E-19's acceptance gate passes**. **F2** E-20, E-21 built. **F3** E-23, E-24 built |
-| Tests | **1010** — unit, integration, pack-conformance, **adversarial fixtures**, structural |
+| Commands | **five of six work**: `init`, `update`, `validate`, `pack info`, `skill install`. `verify` has modules but is not wired to argv |
+| Epics | **F2 is complete** — zero open tasks. **F1** E-01…E-12 substantially built. **F5** E-13…E-19 built, and **E-19's acceptance gate passes**. **F3** E-23…E-25 built. **F6** E-26 built |
+| Tests | **1146** — unit, integration, pack-conformance, **adversarial fixtures**, structural |
 | Runtime dependencies | **zero** |
 
 **Counts move every session, so check rather than trust this table:**

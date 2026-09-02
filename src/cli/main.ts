@@ -15,6 +15,10 @@ import { DiagnosticBag, type Diagnostic } from '../diag/diagnostic.js';
 import { escapeLine } from '../diag/escape.js';
 import { initOptions, runInit } from './commands/init.js';
 import { COMMANDS, GROUP, OWNER, commandList, isCommand, type Command } from './surface.js';
+import { runPackCommand, runValidateCommand } from './commands/read-only.js';
+import { runUpdate, updateOptions } from './commands/update.js';
+import { CLI_VERSION } from './version.js';
+import { runSkillCommand } from './commands/skill.js';
 
 export interface Streams {
   readonly out: (s: string) => void;
@@ -48,12 +52,27 @@ const STUB_NOTE = 'is not implemented in this build';
  * have printed the stub note over a working command — a dispatch table
  * that agrees with a documentation table rather than with the build.
  *
- * `DISPATCHED` is the built set, and it is what shrinks the stub set. F1's
- * own three are still absent from it: `validate`, `verify` and `pack` have
- * command modules (`runValidate`, `toJson`, `renderPackInfo`) that nothing
- * in `run` calls yet, which is a separate piece of wiring and not F2's.
+ * `DISPATCHED` is the built set, and it is what shrinks the stub set.
+ *
+ * **`validate` and `pack` join it here.** Both had command modules —
+ * `runValidate`, `renderPackInfo` — that were built, tested and **called
+ * by nothing**, so the CLI reported *"is not implemented in this build"*
+ * for two commands that were. That is the failure mode this predicate now
+ * exists to prevent: it tests whether a command is **built**, not who owns
+ * it, because the two disagreed once already and nothing noticed.
+ *
+ * **`update` joins it with F3's E-25.** Its command layer performs the
+ * recomputation from `.harness/pack/` that `verify`'s still owes, which is
+ * why the two arrive separately despite sharing that half.
+ *
+ * **`verify` is deliberately still absent.** Its shaping functions exist,
+ * but it needs a project on disk with a `.harness/` to read — and its
+ * command layer has to recompute from `.harness/pack/` rather than from a
+ * plan it was handed, which is the property that makes `verify` an
+ * independent check rather than a restatement. That is real work, not
+ * wiring, and claiming it here would be the same lie in a new place.
  */
-const DISPATCHED: readonly Command[] = ['init'];
+const DISPATCHED: readonly Command[] = ['init', 'validate', 'pack', 'skill', 'update'];
 
 function isStub(c: Command): boolean {
   return !DISPATCHED.includes(c);
@@ -93,6 +112,29 @@ export async function run(
   const bag = new DiagnosticBag();
   const [group, command] = argv;
 
+  /**
+   * `--version` and `-v`, **before the group**, printing the version alone.
+   *
+   * F6's skill opens **every flow** with a version handshake — *"run
+   * `lintel --version`, compare against the range `SKILL.md` records"* —
+   * and until this existed the command printed the group usage and exited
+   * 1, so **the skill halted at step 0 of every task it has**. A feature
+   * whose first instruction cannot be carried out is not a feature.
+   *
+   * It is answered **before** the group check rather than as a command,
+   * because a version handshake that required knowing the command
+   * vocabulary would be a handshake you could only perform after already
+   * understanding the CLI — which is the thing it exists to establish.
+   *
+   * **The bare version and nothing else**, on stdout: this is read by a
+   * program, and a banner is a parsing problem for the one caller that
+   * matters.
+   */
+  if (group === '--version' || group === '-v') {
+    streams.out(CLI_VERSION);
+    return { code: 0, diagnostics: [] };
+  }
+
   // No group at all, or an unknown one. **F1 has no code for an unknown
   // GROUP** — that is known limit 16, recorded rather than invented,
   // because the fault has a different list and a different remedy from
@@ -126,6 +168,40 @@ export async function run(
       if (code !== 0) return { code, diagnostics: parseBag.items };
     }
     return { code: await runInit(options, { streams }), diagnostics: parseBag.items };
+  }
+
+  if (command === 'update') {
+    // **One pass, not `init`'s two**, and that is a consequence rather
+    // than a shortcut: the second pass exists so a pack-declared
+    // `parameters[].flag` alias is not judged before the pack resolves,
+    // and `update` accepts no `--set` and no alias — an answer cannot be
+    // supplied or changed after the apply (Q-21). With no alias to wait
+    // for, the grammar is known at the first token.
+    const { options, bag: parseBag } = updateOptions(argv.slice(2), cwd);
+    if (parseBag.length > 0) {
+      report(parseBag, streams);
+      const code = parseBag.exitCode();
+      if (code !== 0) return { code, diagnostics: parseBag.items };
+    }
+    return { code: await runUpdate(options, { streams }), diagnostics: parseBag.items };
+  }
+
+  if (command === 'validate') {
+    const { code, bag } = await runValidateCommand(argv.slice(2), streams);
+    return { code, diagnostics: bag.items };
+  }
+
+  if (command === 'pack') {
+    const { code, bag } = await runPackCommand(argv.slice(2), streams);
+    return { code, diagnostics: bag.items };
+  }
+
+  if (command === 'skill') {
+    // **`cwd` is passed for the same reason `init` takes it** — this is a
+    // writing command, and an in-process test must be able to point it at
+    // a temp directory rather than at the repository the suite runs in.
+    const { code, bag } = await runSkillCommand(argv.slice(2), streams, cwd);
+    return { code, diagnostics: bag.items };
   }
 
   streams.err(

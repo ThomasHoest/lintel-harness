@@ -68,7 +68,7 @@ should treat an exemption here as a finding rather than a convenience.
 **Depends on:** F1 E-02 (confinement), E-11 (atomic write, journal); F2
 E-21 (the disclosure sentinels exist to be captured).
 
-- [ ] **T-2601** `[Implementer]` `skill/SKILL.md` — frontmatter plus the
+- [x] **T-2601** `[Implementer]` `skill/SKILL.md` — frontmatter plus the
   workflow. **Declares no permission-bearing key**: no `allowed-tools`, no
   `permissionMode`. A pack may not pre-authorise tools for the project it
   is applied to (F1 `E-CLAUDE-TOOL-GRANT`), and the product's own skill
@@ -76,7 +76,7 @@ E-21 (the disclosure sentinels exist to be captured).
   the skill is not a pack and no rule mechanically stops it.
   *Depends on: none. Prerequisite for T-2602…T-2605.*
 
-- [ ] **T-2602** `[Implementer]` The version handshake, first in every
+- [x] **T-2602** `[Implementer]` The version handshake, first in every
   workflow: run `lintel --version`, compare against the range `SKILL.md`
   records, and **report a mismatch rather than adapting to it**. A
   Markdown file cannot introspect its own package, so reporting is the
@@ -84,7 +84,7 @@ E-21 (the disclosure sentinels exist to be captured).
   CLI contract it cannot verify.
   *Depends on: T-2601.*
 
-- [ ] **T-2603** `[Implementer]` `skill/reference/init.md` — what `init`'s
+- [x] **T-2603** `[Implementer]` `skill/reference/init.md` — what `init`'s
   output looks like and what to do with each part. **Capture the
   disclosure between F1 v3.6's two delimiter lines**: **read the nonce
   from the begin line** and treat the line carrying that same nonce as
@@ -97,7 +97,7 @@ E-21 (the disclosure sentinels exist to be captured).
   inline in `SKILL.md`.
   *Depends on: F2 T-2102, T-2601.*
 
-- [ ] **T-2604** `[Implementer]` `skill/reference/update.md` — the
+- [x] **T-2604** `[Implementer]` `skill/reference/update.md` — the
   reconciliation workflow over `update --json`. For each `kept-edited`
   path: show the user their version and **the pack's version from
   `expectedNew`**, take a decision, write only that path. **The skill
@@ -106,7 +106,7 @@ E-21 (the disclosure sentinels exist to be captured).
   forbids.
   *Depends on: F3 T-2504, T-2601.*
 
-- [ ] **T-2605** `[Implementer]` The stopping rules, stated in `SKILL.md`
+- [x] **T-2605** `[Implementer]` The stopping rules, stated in `SKILL.md`
   where they cannot be missed: **stop on any non-zero exit** (IM-7), never
   retry, never route around a failure, never invent a remedy the CLI did
   not print. **This is what makes `update` exiting 0 with edited paths
@@ -114,7 +114,7 @@ E-21 (the disclosure sentinels exist to be captured).
   the skill would stop precisely when IM-31 gives it work.
   *Depends on: T-2601, T-2604.*
 
-- [ ] **T-2606** `[Implementer]` `src/cli/commands/skill.ts` —
+- [x] **T-2606** `[Implementer]` `src/cli/commands/skill.ts` —
   `lintel harness skill install`, copying `skill/` to
   `.claude/skills/lintel/`. **Through the confinement gate and the atomic
   writer**, journalled like any other write. **Project-local only:
@@ -126,7 +126,7 @@ E-21 (the disclosure sentinels exist to be captured).
   first.**
   *Depends on: F1 T-0203, T-1104, T-2601.*
 
-- [ ] **T-2607** `[Implementer]` `skill install`'s failure paths, all
+- [x] **T-2607** `[Implementer]` `skill install`'s failure paths, all
   existing F1 codes and **none new**: an existing installation is refused
   **unconditionally** with `E-TARGET-EXISTS`, whose remedy tells the user
   to remove the directory if they mean to replace it; an unwritable

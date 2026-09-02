@@ -100,6 +100,14 @@ export {
   type InitOptions,
 } from './cli/commands/init.js';
 
+// ── `harness skill install` (F6, E-26) ─────────────────────────────────
+//
+// `F6-ADR-005`'s file plan gives F6 exactly one non-Markdown deliverable,
+// and this is it. The destination is exported because it is the one thing
+// a seam test can assert without re-deriving it — E-27's `skill install is
+// confined` test is about *where* this writes.
+export { SKILL_INSTALL_DIR, runSkillCommand, type SkillResult } from './cli/commands/skill.js';
+
 // ── authored JSON (E-03) ───────────────────────────────────────────────
 export { parseStrictJson, type JsonValue, type ParseStrictResult } from './json/parse-strict.js';
 
@@ -296,6 +304,49 @@ export {
   type UpdatePlanInput,
   type VersionVerdict,
 } from './update/plan-update.js';
+
+// ── `harness update` — the write path and the report (F3, E-24/E-25) ───
+//
+// `F3-ADR-004`'s contract names `planUpdate` and `runUpdate`; the rest of
+// this block is what those two are built from, and each symbol is here
+// because something outside `src/update/` reads it. **`journalPresent` is
+// the one worth naming**: every command in the group raises
+// `E-JOURNAL-PRESENT`, none of them may spell the command name itself, and
+// exporting the single renderer is what stops the wrong-command bug F3-R3
+// fixed from coming back one call site at a time.
+export {
+  executeUpdate,
+  type UpdateWriteInputs,
+  type UpdateWriteResult,
+} from './update/execute-update.js';
+export {
+  journalPresent,
+  performRollback,
+  type RollbackIo,
+  type RollbackOutcome,
+} from './update/rollback-update.js';
+export {
+  EXCERPT_LINE_CAP,
+  REPORTED_DISPOSITIONS,
+  REPORT_TEXT,
+  excerptOf,
+  reportLines as updateReportLines,
+  updateAvailable,
+  updateExitCode,
+  updateJson,
+  type Excerpt,
+  type ExpectedNewEncoding,
+  type ReportMode,
+  type UpdateJson,
+  type UpdateJsonEntry,
+} from './update/report.js';
+export {
+  UPDATE_TEXT,
+  runUpdate,
+  updateOptions,
+  type UpdateDeps,
+  type UpdateOptions,
+} from './cli/commands/update.js';
 
 export { renderPhase2, type Phase2Inputs, type Phase2Result, type RenderedOutput } from './apply/plan-phase2.js';
 export { planApply, type ApplyInputs, type ApplyPlan, type PlannedFile } from './apply/plan.js';

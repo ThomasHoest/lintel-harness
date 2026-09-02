@@ -102,6 +102,7 @@ export type DiagnosticCode =
   | 'E-SUBST-UNRESOLVED'
   | 'E-SYMLINK-IN-PACK'
   | 'E-TARGET-EXISTS'
+  | 'E-TARGET-NOT-A-FILE'
   | 'E-TARGET-RACE'
   | 'E-TRAVERSAL-LIMIT'
   | 'E-UNKNOWN-VALUE'
@@ -134,7 +135,7 @@ export interface CodeEntry {
   readonly class?: DiagnosticClass;
 }
 
-/** Every code in the catalogue. **90** at F1 v4.0. */
+/** Every code in the catalogue. **91** at F1 v4.0. */
 export const CODES: Readonly<Record<DiagnosticCode, CodeEntry>> = {
   'E-ALREADY-APPLIED': { severity: 'error', exit: 1 },
   'E-ANATOMY-EMPTY': { severity: 'error', exit: 2 },
@@ -203,6 +204,7 @@ export const CODES: Readonly<Record<DiagnosticCode, CodeEntry>> = {
   'E-SUBST-UNRESOLVED': { severity: 'error', exit: 2 },
   'E-SYMLINK-IN-PACK': { severity: 'error', exit: 2 },
   'E-TARGET-EXISTS': { severity: 'error', exit: 1 },
+  'E-TARGET-NOT-A-FILE': { severity: 'error', exit: 1 },
   'E-TARGET-RACE': { severity: 'error', exit: 2 },
   'E-TRAVERSAL-LIMIT': { severity: 'error', exit: 2 },
   'E-UNKNOWN-VALUE': { severity: 'error', exit: 2 },
