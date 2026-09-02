@@ -1,6 +1,6 @@
 {
   "name": "@lintel/cli",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Harness template generator \u2014 applies a way of working to a project, and updates it later.",
   "type": "module",
   "bin": {
@@ -18,7 +18,11 @@
   "files": [
     "dist",
     "packs",
-    "skill"
+    "skill",
+    "!dist/**/*.test.js",
+    "!dist/**/*.test.d.ts",
+    "!dist/**/*.test.js.map",
+    "!dist/**/*.test.d.ts.map"
   ],
   "dependencies": {},
   "devDependencies": {
@@ -35,9 +39,18 @@
     "test:packs": "node --test \"dist-tests/packs/**/*.test.js\"",
     "test:adversarial": "node --test \"dist-tests/fixtures/**/*.test.js\"",
     "test:fixtures": "node --test \"dist-tests/fixtures/**/*.test.js\"",
-    "prepublishOnly": "rm -rf dist && npm run build",
-    "test:structural": "node --test \"dist-tests/structural/**/*.test.js\""
+    "prepublishOnly": "npm run clean && npm run build && npm test && node scripts/release-check.mjs",
+    "test:structural": "node --test \"dist-tests/structural/**/*.test.js\"",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "release:check": "node scripts/release-check.mjs"
   },
   "license": "UNLICENSED",
-  "private": true
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ThomasHoest/lintel-harness.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
 }

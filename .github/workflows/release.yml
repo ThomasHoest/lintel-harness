@@ -1,0 +1,115 @@
+# Publishing `@lintel/cli`.
+#
+# LEVEL NOTE, as in ci.yml: this file is META — it is how *this repository*
+# ships. It is not pack content and is applied to nobody.
+#
+# ── The shape, and why ────────────────────────────────────────────────
+#
+# Tag-triggered, never branch-triggered. A push to `v1.0` is work in
+# progress; a tag is somebody saying "this one". Publishing on push would
+# make every commit a release decision taken by whoever typed it.
+#
+# The full matrix runs FIRST and the publish depends on it. That ordering
+# is the point: `npm publish` runs `prepublishOnly` on one machine, and
+# this project's whole reason for a three-platform matrix is that the
+# executable bit, `collisionKey`'s folding and CRLF normalization differ on
+# the platform that machine is not. A green Linux-only publish asserts
+# almost nothing this project worries about — and CI was red on Windows for
+# three commits while every local run passed, which is the evidence.
+#
+# ── What it will refuse to do ─────────────────────────────────────────
+#
+# `release-check.mjs` runs before the publish and exits non-zero on any
+# blocker OR any unmade decision — `"private": true`, an UNLICENSED scoped
+# package, the version contradiction of known limit 23, the permission pin
+# with no runtime version. So this workflow **cannot currently publish**,
+# deliberately: every one of those is a person's call, and a release
+# pipeline that quietly answered them would be answering them wrongly.
+#
+# ── Registry: GitHub Packages ─────────────────────────────────────────
+#
+# Auth is the workflow's own `GITHUB_TOKEN` — no secret to create, and
+# nothing to rotate. The package inherits the repository's visibility, so a
+# private repo publishes a private package, which is why UNLICENSED is
+# coherent here and would not be on public npm.
+#
+# **GitHub Packages requires the package scope to match the repository
+# owner.** `@lintel/cli` under `ThomasHoest/lintel-harness` is rejected by
+# the registry, not merely frowned upon. `release-check.mjs` reports it as
+# a blocker rather than this workflow discovering it at the last step.
+#
+# ── Before the first release ──────────────────────────────────────────
+#
+#   1. `npm run release:check` and clear what it names.
+#   2. Tag: `git tag v1.0.0 && git push origin v1.0.0`.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+# Publishing is not idempotent: never cancel a run that may be mid-publish.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write # GitHub Packages, via the workflow's own GITHUB_TOKEN
+
+jobs:
+  verify:
+    name: ${{ matrix.os }} · node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['22']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test
+      # The bundled packs pass their own gate, on every platform. `--strict`
+      # and not bare `--all`: every warning is non-fatal by code, so a bare
+      # run would exit 0 whatever the packs contained.
+      - run: node dist/cli/main.js harness validate --all --strict
+
+  publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          registry-url: https://npm.pkg.github.com
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+
+      # The tag and the manifest must agree. A tag that says v1.2.0 over a
+      # package that says 1.1.0 publishes the wrong version under the right
+      # name, and npm will happily do it.
+      - name: The tag matches package.json
+        shell: bash
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg=$(node -p "require('./package.json').version")
+          echo "tag=$tag package.json=$pkg"
+          test "$tag" = "$pkg"
+
+      # Refuses on any blocker or any unmade decision. See the header.
+      - run: npm run release:check
+
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

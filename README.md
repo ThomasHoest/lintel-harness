@@ -192,7 +192,19 @@ something.
 
 ---
 
+## Releasing
+
+`npm run release:check` names every blocker and every unmade decision, and
+`.github/workflows/release.yml` refuses to publish while any stands. It is
+**tag-triggered** — a push to `v1.0` is work in progress; a tag is somebody
+saying *this one* — and the full three-platform matrix runs before the
+publish rather than after.
+
+The registry is **GitHub Packages**, so auth is the workflow's own
+`GITHUB_TOKEN` and the package inherits the repository's visibility.
+
 ## Licence
 
 **UNLICENSED, and the repository is private.** Not open source, and not
-currently accepting outside contributions.
+currently accepting outside contributions. Coherent for a package whose
+visibility follows the repository's; it would not be for public npm.

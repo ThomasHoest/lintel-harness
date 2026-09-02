@@ -9,13 +9,17 @@
  * so resolving the version from it would make **every bundled pack**
  * fail `E-PACK-CLI-TOO-OLD` and `init` unable to apply anything at all.
  *
- * The discrepancy is real and is **not** resolved here: F2 does not own
- * `package.json` and a build that silently rewrote a floor would be worse
- * than one that states the number in a file whose whole job is to state
- * it. **The reconciliation belongs to whoever cuts the 1.0.0 release** —
- * at that point `package.json` and this constant agree and this file can
- * read it instead, which is the change to make rather than the one to
- * pre-empt.
+ * **The discrepancy is resolved: `package.json` is `1.0.0` too**, and a
+ * test asserts the two agree — `tests/integration/tarball.test.ts`, which
+ * `release-check.mjs` also reports on.
+ *
+ * The constant **stays** rather than becoming a read of `package.json`,
+ * which was the obvious next move and is the wrong one. The reasoning is
+ * below and it did not change when the numbers agreed: a version the
+ * product must find on disk is a version that can go missing, and every
+ * version gate then fails open or closed depending on how the read was
+ * written. Two numbers kept equal by a test is a smaller risk than one
+ * number resolved at runtime.
  *
  * Reading `package.json` at runtime has a second cost worth recording:
  * `paths.ts` pins a **depth invariant** (`dist/paths.js`, exactly one
