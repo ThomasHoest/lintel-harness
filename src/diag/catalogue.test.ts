@@ -105,12 +105,20 @@ test('literal braces are passed through, not interpolated', () => {
   assert.ok(pattern.includes('{1,64}'), pattern);
 });
 
-// F1 describes three slots in prose instead of naming them. The identifier
-// rule leaves them literal, so an emitter must build those lines itself.
-// Pinned so the gap stays visible rather than becoming folklore.
+/**
+ * F1 describes two slots in prose instead of naming them. The identifier
+ * rule leaves them literal, so an emitter must build those lines itself.
+ * Pinned so the gap stays visible rather than becoming folklore.
+ *
+ * **It was three until F1 v4.7.** `E-RECIPE-STEP-INVALID` carried
+ * `{usage for that primitive}`, which meant every step diagnostic would
+ * have printed those five words where the usage belongs — and unlike the
+ * two that remain it needed no multi-line construction, being one line
+ * derived mechanically from the per-op field table. The two left are
+ * genuinely multi-line and both belong to features not yet built.
+ */
 test('the descriptive slots F1 leaves unnamed are recorded', () => {
   assert.deepEqual(Object.keys(DESCRIPTIVE_SLOTS).sort(), [
-    'E-RECIPE-STEP-INVALID',
     'E-TARGET-EXISTS',
     'E-VERIFY-MISMATCH',
   ]);
@@ -181,4 +189,44 @@ test('every message renders clean when its placeholders are supplied', () => {
     const leftover = [...stripped.matchAll(/\{([A-Za-z][A-Za-z0-9]*)\}/g)].map((m) => m[1]);
     assert.deepEqual(leftover, [], `${code} renders with unfilled ${leftover.join(', ')}`);
   }
+});
+
+/**
+ * F1 v4.7. A conditional message line, expressed as a placeholder with an
+ * empty value rather than as prose the CLI would have to invent.
+ *
+ * US-31 requires `merge-json` to be `E-RECIPE-PRIMITIVE-UNKNOWN` *"like
+ * any other unknown value"* — so a second code is forbidden — **and**
+ * requires the message to say the primitive was withdrawn rather than
+ * mistyped. One code, two messages, one line's difference.
+ */
+test('a line whose placeholders all render empty is omitted', () => {
+  const ordinary = render('E-RECIPE-PRIMITIVE-UNKNOWN', { index: '3', op: 'exec', note: '' });
+  const withdrawn = render('E-RECIPE-PRIMITIVE-UNKNOWN', {
+    index: '3',
+    op: 'merge-json',
+    note: 'merge-json does not ship at v1.0; it is deferred to v1.1.',
+  });
+
+  assert.equal(ordinary.length, 4);
+  assert.equal(withdrawn.length, 5);
+  assert.ok(withdrawn.some((l) => l.includes('deferred to v1.1')));
+  assert.equal(
+    ordinary.some((l) => l.trim() === ''),
+    false,
+    'and never as a blank line, which is what a fixed template would have given',
+  );
+  // The remedy survives in both — the note adds, it does not replace.
+  for (const m of [ordinary, withdrawn]) {
+    assert.ok(m.at(-1)?.includes('Express the step with an existing primitive'));
+  }
+});
+
+// An UNSUPPLIED placeholder is not an empty one. It stays visible as
+// `{name}`, because a visible `{note}` is a defect anybody can see whereas
+// a silently dropped line is one nobody can.
+test('an unsupplied placeholder does not omit its line', () => {
+  const out = render('E-RECIPE-PRIMITIVE-UNKNOWN', { index: '3', op: 'exec' });
+  assert.equal(out.length, 5);
+  assert.ok(out.some((l) => l.includes('{note}')));
 });

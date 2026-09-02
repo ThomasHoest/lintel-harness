@@ -27,6 +27,7 @@
  * would have had to be translated away.
  */
 import { DiagnosticBag } from '../diag/diagnostic.js';
+import { parseSemver } from '../semver/compare.js';
 import { confinePath } from '../security/confine.js';
 import type { JsonValue } from '../json/parse-strict.js';
 import {
@@ -138,8 +139,10 @@ export function validatePackJson(
 
   requireString(bag, value, 'name', file);
   requireString(bag, value, 'version', file);
+  requireSemver(bag, value, 'version', file);
   requireString(bag, value, 'title', file);
   requireString(bag, value, 'minCliVersion', file);
+  requireSemver(bag, value, 'minCliVersion', file);
 
   const name = value['name'];
   if (typeof name === 'string' && !ID_RE.test(name)) {
@@ -517,5 +520,26 @@ function validateExecutableRoots(bag: DiagnosticBag, o: Obj): void {
     // executable root cannot name somewhere a step could not write anyway.
     const r = confinePath(root.slice(0, -1), { index: 0 });
     for (const d of r.bag.items) bag.push(d);
+  }
+}
+
+/**
+ * US-1: *"`version` and `minCliVersion` are valid semver; a non-semver
+ * value fails validation."*
+ *
+ * **This was stated and enforced nowhere**, and it failed *open* in both
+ * directions: the validator only checked the fields were strings, and
+ * `checkCliFloor` acts on `satisfiesFloor(...) === false` while an
+ * unparseable input returns `null`. So `"minCliVersion": "1.0"` passed
+ * validation **and** passed the floor check — a pack could declare a floor
+ * this CLI silently ignored. Found by the E-13 conformance pass.
+ */
+function requireSemver(bag: DiagnosticBag, o: Obj, key: string, file: string): void {
+  const v = o[key];
+  if (typeof v !== 'string') return; // requireString already reported it.
+  if (parseSemver(v) === null) {
+    bag.add('E-UNKNOWN-VALUE', {
+      values: { value: v, field: `${file} ${key}`, allowed: 'a semver version, e.g. 1.0.0' },
+    });
   }
 }

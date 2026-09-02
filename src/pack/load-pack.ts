@@ -93,6 +93,10 @@ function recipePathFault(value: string): string | null {
   if (value.length === 0) return 'it is empty';
   if (value !== value.normalize('NFC')) return 'it is not NFC-normalised';
   if (value.includes('\\')) return 'it contains a backslash';
+  // F1 v4.8, and the same clause the applied-path grammar gained: a
+  // control character in a path forges a line in the digest listing.
+  // eslint-disable-next-line no-control-regex
+  if (/[\u0000-\u001f\u007f]/.test(value)) return 'it contains a control character';
   if (value.startsWith('/')) return 'it is absolute';
   if (/^[A-Za-z]:/.test(value)) return 'it begins with a drive letter';
   for (const seg of value.split('/')) {
@@ -188,8 +192,15 @@ export async function loadPack(name: string, cliVersion: string): Promise<LoadRe
  */
 export function checkCliFloor(pack: PackJson, cliVersion: string): DiagnosticBag {
   const bag = new DiagnosticBag();
+  // `!== true`, not `=== false`. `satisfiesFloor` returns **null** for an
+  // unparseable version, and reading only `false` is what made this check
+  // fail OPEN: a floor of "1.0" was neither satisfied nor refused, it was
+  // ignored. Unreachable for a validated pack now that the schema rejects
+  // non-semver, which is exactly why it must still fail closed here — the
+  // two guards are for the same fault and only one of them is load-bearing
+  // at a time.
   const ok = satisfies(cliVersion, pack.minCliVersion);
-  if (ok === false) {
+  if (ok !== true) {
     bag.add('E-PACK-CLI-TOO-OLD', {
       values: {
         name: pack.name,

@@ -1,5 +1,5 @@
 # Epics & Tasks: Pack Format & Manifest (Lintel Harness v1.0 — Feature 1)
-**Version:** 3.2
+**Version:** 3.3
 **Status:** Draft
 **Date:** 2026-09-01
 **References:** `F1-spec-pack-format-and-manifest.md` (**v3.7** — authoritative for every acceptance criterion, the **88**-code catalogue and US-16's fourteen-step order), `F1-ADR-001-pack-format-and-manifest.md` (**PROCEED**, amended 2026-09-01 against F1 v3.0 — authoritative for the file-level plan and the public interface contract; its contract types are current, and the Q-54 supersession box still governs what it covers), `specifications/general/system-architecture.md` §3, `specifications/general/interaction-model.md` §11, `specifications/general/technology-choices.md` §6 (the ⚠️ register — **nine closed, five open: U-5, U-7, U-9, U-12, U-13**), `specifications/general/pack-application.md`, `specifications/general/pack-inventory.md`, `packs/coding/specifications/conventions.md`, `CLAUDE.md`
@@ -9,6 +9,7 @@
 | Version | Date | Summary |
 |---|---|---|
 | 1.0 | 2026-09-01 | Initial breakdown. Claims the project's first epic and task numbers: **E-01…E-12**, **T-0101…T-1218**. |
+| 3.3 | 2026-09-02 | **E-03 complete, and E-04 with it — the first wave run in parallel.** Four streams: E-04 here, E-06's hash layer, E-13's pack conformance and E-03's acceptance tests, with **spec amendments kept to one hand** so F1's version history could not fork. **Every stream found something the spec had stated and nothing enforced**, which is the argument for the split rather than a side effect of it. **F1 v4.7**: `E-RECIPE-PRIMITIVE-UNKNOWN`'s `merge-json` line existed only as prose outside the template, and `E-RECIPE-STEP-INVALID`'s second line was a **descriptive slot that would have printed the words *usage for that primitive*** where the usage belongs. **v4.8**: a **control character in a path was legal**, and §NFR's digest listing is newline-joined — so a payload path containing `\n` forges a second line and two different file sets digest alike, **a collision inside the control `verify` uses to detect tampering**; closed in the grammar rather than at the digest, because a path holding a control character is refusable on its own merits and one clause covers both quantifiers. §NFR also named **no separator** between a path and its hash, in a value later CLIs recompute. **v4.9**: `declaredBy` was restricted to `folderScaffolding` and **checked nowhere** — a part carrying it matches zero files *without* `E-ANATOMY-EMPTY`, so a pack could ship no roles and validate clean, **defeating G-F1-3 for eight of the nine parts**; and `version`/`minCliVersion` *"are valid semver"* **failed open in both places at once**, the validator checking only for a string and the floor check reading `false` where an unparseable version returns `null`. **296 unit, 76 integration, 21 pack, 8 structural.** |
 | 3.2 | 2026-09-02 | **T-0305 — the pack loader, and the last implementer task in E-03.** Resolution is **install-relative** via `paths.ts`, and the cost of the one input F1 treats as trusted is paid here: a pack **name** is user input that becomes a path segment, so it is validated against the declared grammar **and against what is actually on disk** before it is joined to anything. A test drives ten escape shapes — `../packs`, `coding/../..`, `/etc`, a backslash, an over-long name — through the same gate, because an escape that fails later merely because the directory happens not to exist is not a control. **The CLI floor is checked separately from loading, deliberately**: `pack info` and `validate` must be able to read and report on a pack this CLI is too old to *apply*, and refusing to load it would make the diagnostic unobtainable from the tool that names it. `recipe` is judged on its **source text before resolution**, never resolved and then judged. **Found by building: `validatePackJson`'s one `packName` argument was doing two jobs** — the directory name a declaration must agree with, and the path a message shows — which caps every such message at a single path segment. Split, with the reason recorded at the signature. **221 unit tests; E-03 is complete but for its two TestWriter tasks.** |
 | 3.1 | 2026-09-02 | **T-0308 and T-0310 — answers, and the choose-one diagnostic.** The per-declaration rules already lived in `schema.ts`, so `parameters.ts` is what no single entry can see: **duplicate ids and sibling flag collisions**, the credential ban, `E-PARAM-UNDECIDABLE`, the combination bound, and the **C-29 split** — one check, two occasions, two codes, exit 1 at collection and exit 2 on read-back. **The order of two lines is the security control**: `maxLength` runs **before** `pattern`, which is what bounds pattern evaluation by construction; a test asserts a 5000-character answer is refused **for its length** rather than handed to the engine. A `string` parameter's combination domain is *the answers the recipe can tell apart* — its `when` values plus **one representative of "none of them"**, sentinelled as `null` because no string can be trusted not to collide with one a `when` names. `scaffolds.ts` carries Q-82's honesty: **every branch is fixture-covered, not pack-covered**, because the product ships exactly one scaffold and it is alone in its category — and **a test asserts that fact** rather than leaving the next reader to assume the coverage is real. Selection is in **`pack.json` order, never the order typed**, which is correctness rather than presentation: two users typing the flags differently must get byte-identical trees. **Found by building: `E-PARAM-FLAG-INVALID`'s message enumerated seven of the eight reserved flags** — a closed enumeration inside a remedy, shown to the one reader choosing a name against it (F1 v4.6, drift-guarded). **213 unit tests.** |
 | 3.0 | 2026-09-02 | **T-0309 — the credential ban, and known limit 19.** Two checks, two actors, two severities: the **pack declaring** a credential-shaped parameter is exit 2 at validate time, while the **person typing** a credential-shaped value gets a warning, because an error there would be a false-positive machine. Building it found that **C-15's matcher does not treat separators uniformly** — `connection.?string` admits any separator, `api[_-]?key` admits only `_` or `-`, so *"Your API key"* in a prompt is **not** matched. **Recorded as known limit 19 rather than widened** (F1 v4.5): broadening a ban changes which packs are refused, and that is the spec's decision, not the implementing module's. A test pins the actual behaviour so it cannot be mistaken for uniformity. `notASecret` is guarded with `=== true` rather than truthiness — the C-34 shape, in the one field whose whole job is switching a security gate off. **172 unit tests.** |
@@ -619,14 +620,14 @@ reader), E-09 (steps 1, 2, 9, 10).
 
 ### Verification
 
-- [ ] **T-0311** `[TestWriter]` Acceptance tests for US-1, US-2, US-8 and US-9 in
+- [x] **T-0311** `[TestWriter]` Acceptance tests for US-1, US-2, US-8 and US-9 in
   `tests/integration/pack-json.test.ts`, covering the `formatVersion` /
   `minCliVersion` gates, the nine anatomy outcomes, the parameter declaration
   rules including the C-29 two-code split, the `flag`-alias rules, and scaffold
   exclusivity and composition order.
   *Runs in parallel with T-0302–T-0310 against the ADR's public interface contract.*
 
-- [ ] **T-0312** `[TestWriter]` Tests for the strict reader in
+- [x] **T-0312** `[TestWriter]` Tests for the strict reader in
   `tests/integration/strict-json.test.ts`: a duplicate key at depth 1 and at
   depth 3 in each of the three documents, each reporting
   `E-JSON-DUPLICATE-KEY` with **both line numbers**, exit 2, nothing written,
@@ -649,7 +650,7 @@ therefore has to land before any destination rule can be trusted.
 
 ### The closed type
 
-- [ ] **T-0401** `[Implementer]` `src/recipe/types.ts` — `Recipe`, `RecipeStep`
+- [x] **T-0401** `[Implementer]` `src/recipe/types.ts` — `Recipe`, `RecipeStep`
   as a **six-arm** discriminated union (`copy`, `rename`, `strip-suffix`,
   `rewrite-path`, `substitute`, `generate`), `RECIPE_OPS`, `StepWhen`,
   `MAX_RECIPE_STEPS = 256`, and `adaptExpected` as an optional boolean on
@@ -659,7 +660,7 @@ therefore has to land before any destination rule can be trusted.
   and `adaptExpected` is a field the ADR's contract predates.
   *Depends on: T-0302. Prerequisite for every task in E-04 and E-05.*
 
-- [ ] **T-0402** `[Implementer]` `src/recipe/schema.ts` — the `recipe.json`
+- [x] **T-0402** `[Implementer]` `src/recipe/schema.ts` — the `recipe.json`
   validator, **fail-closed and total**: every step is narrowed to exactly one
   union arm or rejected. `E-RECIPE-INVALID`, `E-RECIPE-PRIMITIVE-UNKNOWN`
   (with `op` matched **literally** — no trimming, no case folding, no
@@ -675,7 +676,7 @@ therefore has to land before any destination rule can be trusted.
   `pack.json`'s validator: hand-rolled, F1 codes, US-16's order.
   *Depends on: T-0301, T-0401.*
 
-- [ ] **T-0403** `[Implementer]` `src/recipe/ops/index.ts` — the **closed
+- [x] **T-0403** `[Implementer]` `src/recipe/ops/index.ts` — the **closed
   registry**: the only place an `op` name maps to an implementation. Adding a
   primitive is a change here **and** in `types.ts` **and** in a superseding
   ADR, deliberately. There is no `exec.ts`, `script.ts`, `shell.ts` or seventh
@@ -684,7 +685,7 @@ therefore has to land before any destination rule can be trusted.
 
 ### The write set and the plan
 
-- [ ] **T-0404** `[Implementer]` `src/recipe/write-set.ts` — `stepWriteSet(step,
+- [x] **T-0404** `[Implementer]` `src/recipe/write-set.ts` — `stepWriteSet(step,
   writtenSoFar)`, **pure, project-free and total over the six arms**, returning
   every applied path whose **bytes** a step creates or changes, per op exactly
   as the ADR's contract tabulates. For the two `in` primitives the set is
@@ -700,7 +701,7 @@ therefore has to land before any destination rule can be trusted.
   implicit chain).
   *Depends on: T-0203, T-0306, T-0401. Prerequisite for T-0405, T-0508, T-0803, T-0901.*
 
-- [ ] **T-0405** `[Implementer]` `src/recipe/plan-steps.ts` — merge base steps
+- [x] **T-0405** `[Implementer]` `src/recipe/plan-steps.ts` — merge base steps
   with each selected scaffold's steps in **`pack.json`-declared scaffold
   order**, apply `when` filtering (single equality only; a compound `when` is
   `E-RECIPE-STEP-INVALID`), and run the edit-before-place ordering check.
@@ -711,7 +712,7 @@ therefore has to land before any destination rule can be trusted.
   `pack.json`/`recipe.json` scaffold mismatch in either direction.
   *Depends on: T-0202, T-0310, T-0404.*
 
-- [ ] **T-0406** `[Implementer]` Step-source existence in
+- [x] **T-0406** `[Implementer]` Step-source existence in
   `src/recipe/plan-steps.ts` — `E-RECIPE-SOURCE-MISSING`, exit 2, naming the
   step index, **the field** and the path, over `from` on the five primitives
   that have one **and over `generate`'s `template`** (C-38: one fault, one
@@ -719,7 +720,7 @@ therefore has to land before any destination rule can be trusted.
   input had no named code for the commonest authoring mistake).
   *Depends on: T-0405.*
 
-- [ ] **T-0407** `[Implementer]` The **adapt-expected set** in
+- [x] **T-0407** `[Implementer]` The **adapt-expected set** in
   `src/recipe/plan-steps.ts` — the union of the write sets of every step
   declaring `"adaptExpected": true`, resolved at plan time from the recipe
   alone. A declaring step whose write set is empty is `E-RECIPE-STEP-INVALID`.
@@ -749,7 +750,7 @@ therefore has to land before any destination rule can be trusted.
   *Depends on: T-0404.*
 
 
-- [ ] **T-0410** `[Implementer]` `src/recipe/plan-steps.ts` — resolve the
+- [x] **T-0410** `[Implementer]` `src/recipe/plan-steps.ts` — resolve the
   **fill-expected set** beside the adapt-expected set (T-0407), by the same
   write-set quantifier and at plan time from the recipe alone. A step
   declaring `"fillExpected": true` contributes every applied path in its
@@ -1731,7 +1732,10 @@ for the applying fixtures E-11.
   both selected, asserting the merged step order is base-then-scaffolds in
   `pack.json`-declared order; **(b) same-category collision** — two
   scaffolds sharing a `category`, both selected, `E-SCAFFOLD-EXCLUSIVE`,
-  exit 2, zero bytes; **(c) executable inside a declared root** — written
+  **exit 1** — this said *exit 2* until the E-03 acceptance pass caught it
+  against §Error States and US-9, which both say **exit 1**. The class is
+  the point rather than a detail: a user picked two of a choose-one and can
+  pick again, which is what exit 1 *means*; **(c) executable inside a declared root** — written
   `0755`, disclosed by US-13's pre-write disclosure, and reported by
   `verify`'s mode comparison with `modeChecked: true`; **(d) executable
   outside one** — `E-EXEC-DEST-FORBIDDEN`, exit 2.

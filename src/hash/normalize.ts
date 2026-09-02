@@ -1,0 +1,76 @@
+/**
+ * The **one** normalizer. T-0601, Q-26, §NFR.
+ *
+ * Two operations, in this exact order, and **nothing else**:
+ *
+ *   1. strip a **leading** UTF-8 BOM;
+ *   2. replace every `\r\n` and every lone `\r` with `\n`.
+ *
+ * ── Why these two ─────────────────────────────────────────────────────
+ *
+ * Both close the same fault from different directions: a checkout can
+ * rewrite bytes the pack never changed. A Windows clone with
+ * `core.autocrlf` rewrites every line ending, and an editor can add a
+ * BOM on save. Comparing or hashing raw bytes would make either of those
+ * read as *the user edited this file* — so `verify` would report drift
+ * that does not exist, `update` would classify an untouched path as
+ * edited and refuse to replace it, and `payloadDigest` would call an
+ * unmodified payload tampered.
+ *
+ * ── Why nothing else (Q-26) ───────────────────────────────────────────
+ *
+ * **Trailing whitespace, blank lines and the presence or absence of a
+ * final newline are all significant.** They are real content: a template
+ * a user filled in by deleting a trailing space has been edited, and a
+ * normalizer that trimmed would hide it. The rule is narrow on purpose —
+ * every additional erasure is another edit the product would silently
+ * fail to notice, and the boundary is easier to defend where the spec
+ * put it than one step further in.
+ *
+ * ── The accepted cost, stated rather than hidden ──────────────────────
+ *
+ * A **pure line-ending edit** of a file is undetectable — `verify` and
+ * `payloadDigest` both see it as unchanged. F1 §F1.9 records this as a
+ * known limit; it is the price of the CRLF-checkout immunity above, and
+ * the trade was made deliberately.
+ *
+ * ── Text only ─────────────────────────────────────────────────────────
+ *
+ * This runs on files already classified as **text**. Binary files are
+ * compared and hashed raw and never reach here (T-0507 owns the
+ * classifier). That ordering is load-bearing rather than tidy: decoding
+ * arbitrary bytes as UTF-8 replaces every invalid sequence with U+FFFD,
+ * so running this over a binary file would produce a *lossy* string in
+ * which many different files hash alike.
+ */
+
+/**
+ * The BOM as it decodes, U+FEFF — one UTF-16 code unit, not three bytes.
+ * Slicing three bytes off the buffer instead would be wrong the moment
+ * the file is not UTF-8-with-BOM, and would corrupt it silently.
+ *
+ * Written as an escape, never as the character: a literal U+FEFF in
+ * source is invisible, so a stray one pasted beside it would be
+ * undiagnosable.
+ */
+const BOM = '\uFEFF';
+
+/**
+ * Normalize text content for hashing or comparison.
+ *
+ * **Only the leading BOM is stripped, and only one.** A U+FEFF anywhere
+ * else in the file is ZWNBSP — ordinary content the author wrote — and
+ * removing it would be an edit this function is not entitled to make.
+ * The same reasoning stops a second leading one being consumed: only the
+ * first is a byte-order mark.
+ *
+ * Idempotent, which matters because a normalized string is compared
+ * against another normalized string on both sides of `verify`.
+ */
+export function normalizeText(bytes: Buffer): string {
+  const text = bytes.toString('utf8');
+  const body = text.startsWith(BOM) ? text.slice(BOM.length) : text;
+  // `\r\n?` covers both cases in one pass and in the right precedence:
+  // a CRLF is consumed whole, so it becomes one `\n` rather than two.
+  return body.replace(/\r\n?/g, '\n');
+}

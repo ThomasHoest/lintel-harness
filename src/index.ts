@@ -160,6 +160,28 @@ export {
 } from './fs/walk.js';
 
 export {
+  COMMON_STEP_FIELDS,
+  EDITING_OPS,
+  MAX_RECIPE_STEPS,
+  PLACING_OPS,
+  RECIPE_OPS,
+  STEP_BOOLEAN_FIELDS,
+  STEP_FIELDS,
+  SUPPORTED_RECIPE_FORMAT_VERSION,
+  isEditing,
+  isPlacing,
+  type Recipe,
+  type RecipeOp,
+  type RecipeStep,
+  type StepWhen,
+} from './recipe/types.js';
+
+export { OPS, type OpEntry } from './recipe/ops/index.js';
+export { usageOf, validateRecipe, type ValidateRecipeResult } from './recipe/schema.js';
+export { stepWriteSet, unionWriteSets, type WriteSetInput, type WriteSetResult } from './recipe/write-set.js';
+export { planSteps, type Plan, type PlanInput, type PlannedStep } from './recipe/plan-steps.js';
+
+export {
   PACK_NAME_RE,
   SUPPORTED_FORMAT_VERSION,
   bundledPackNames,

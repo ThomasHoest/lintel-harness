@@ -56,7 +56,7 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'E-MAP-COLLISION': ["lintel: two steps both write \"{path}\".", "  step {a}: {opA} {fromA}", "  step {b}: {opB} {fromB}", "  → A recipe may write each applied path exactly once."],
   'E-MAP-ESCAPES-ROOT': ["lintel: step {index} writes \"{to}\", which resolves outside the project root.", "  → Applied paths must be relative and must stay inside the project."],
   'E-MAP-NORM-COLLISION': ["lintel: \"{a}\" and \"{b}\" are two byte sequences for the same filename.", "  They differ only in Unicode normalization (NFC vs NFD), so macOS stores them as one file.", "  → Write both \"to\" values in NFC, using the same code points."],
-  'E-MAP-PATH-GRAMMAR': ["lintel: step {index} writes \"{to}\", which is not a legal applied path.", "  {construct}", "  → An applied path is one or more \"/\"-separated segments, relative, NFC, with no \"..\", no backslash, no drive letter and no segment ending in \".\" or whitespace."],
+  'E-MAP-PATH-GRAMMAR': ["lintel: step {index} writes \"{to}\", which is not a legal applied path.", "  {construct}", "  → An applied path is one or more \"/\"-separated segments, relative, NFC, with no \"..\", no backslash, no drive letter, no control character, and no segment ending in \".\" or whitespace."],
   'E-MAP-RESERVED-DEST': ["lintel: step {index} writes \"{path}\", which is a reserved destination (\"{reserved}\").", "  Reserved at any segment: .git .hg .svn .github .vscode .idea node_modules .circleci .devcontainer", "  Reserved as a first segment: .harness/", "  Reserved by basename: package.json .envrc .npmrc .yarnrc.yml Makefile GNUmakefile justfile .justfile .mcp.json .gitlab-ci.yml Jenkinsfile azure-pipelines.yml bitbucket-pipelines.yml", "  Reserved under any .claude segment: settings.json settings.local.json", "  Also reserved: the directory lintel itself is installed in.", "  A recipe step may never write under .harness/ — that is where the payload it reads from lives.", "  No pack writes project settings, MCP server declarations, CI pipelines, editor tasks or package manifests at v1.0.", "  → Choose a destination inside the project that lintel does not own."],
   'E-PACK-CLI-TOO-OLD': ["lintel: pack {name}@{version} needs lintel {minCliVersion} or newer.", "  You are running {cliVersion}.", "  → Upgrade with: npm i -g @lintel/cli@latest"],
   'E-PACK-FORMAT-NEWER': ["lintel: pack {name} uses pack format {n}; this CLI understands up to {m}.", "  → Upgrade the CLI, or use a pack built for format {m}."],
@@ -71,14 +71,14 @@ export const MESSAGES: Readonly<Record<DiagnosticCode, readonly string[]>> = {
   'E-PARAM-UNANSWERABLE': ["lintel: \"{id}\" has no answer and no default, and there is nowhere to ask.", "  Non-interactive: stdin and stderr are not both a terminal.", "  → Pass --set {id}=<value>, or run where lintel can prompt."],
   'E-PARAM-UNDECIDABLE': ["lintel: parameter \"{id}\" selects recipe steps but is neither required nor given a default.", "  → Add \"required\": true, or a \"default\"."],
   'E-PAYLOAD-DIGEST-MISMATCH': ["lintel: .harness/pack/ does not match the payload this project recorded.", "  recorded {recorded}", "  computed {computed}", "  The applied tree cannot be checked against an edited payload.", "  → Restore .harness/pack/ from version control, or re-apply into a fresh directory."],
-  'E-PAYLOAD-PATH-INVALID': ["lintel: \"{path}\" in pack {name} is not a legal pack path.", "  {construct}", "  → Rename it. Pack paths are \"/\"-separated, NFC, relative, with no \"..\", no backslash, no drive letter and no segment ending in \".\" or whitespace."],
+  'E-PAYLOAD-PATH-INVALID': ["lintel: \"{path}\" in pack {name} is not a legal pack path.", "  {construct}", "  → Rename it. Pack paths are \"/\"-separated, NFC, relative, with no \"..\", no backslash, no drive letter, no control character, and no segment ending in \".\" or whitespace."],
   'E-PAYLOAD-TOO-LARGE': ["lintel: pack {name} totals {size}; the limit for a pack payload is 32 MB.", "  The payload is copied into and committed by every project that applies the pack.", "  → Remove content, or split the pack."],
   'E-RECIPE-FORMAT-NEWER': ["lintel: {pack}'s recipe declares format version {declared}; this CLI supports {supported}.", "  → Upgrade lintel, or use a pack built for this version."],
   'E-RECIPE-INVALID': ["lintel: {path} is not a usable recipe ({detail}).", "  A recipe is { \"formatVersion\": <int>, \"steps\": [ … ], \"scaffolds\"?: { … } }.", "  → Fix the file, then re-run validate."],
   'E-RECIPE-MISSING': ["lintel: pack {name} declares \"recipe\": \"{path}\", which is not in the pack.", "  Phase 2 has nothing to run, so applying this pack would produce a payload and nothing else.", "  → Add {path}, or correct the \"recipe\" path."],
-  'E-RECIPE-PRIMITIVE-UNKNOWN': ["lintel: step {index} declares op \"{op}\", which is not a lintel harness primitive.", "  The six primitives are: copy, rename, strip-suffix, rewrite-path, substitute, generate.", "  The set is closed. A pack cannot add a step type; a new primitive is a change to the CLI.", "  → Express the step with an existing primitive, or open it as a CLI change."],
+  'E-RECIPE-PRIMITIVE-UNKNOWN': ["lintel: step {index} declares op \"{op}\", which is not a lintel harness primitive.", "  The six primitives are: copy, rename, strip-suffix, rewrite-path, substitute, generate.", "  The set is closed. A pack cannot add a step type; a new primitive is a change to the CLI.", "  {note}", "  → Express the step with an existing primitive, or open it as a CLI change."],
   'E-RECIPE-SOURCE-MISSING': ["lintel: step {index} (\"{op}\") reads \"{path}\" from \"{field}\", which is not in the pack.", "  Phase 2 reads only .harness/pack/, so every declared source must exist in the pack itself.", "  → Correct the path, or add the file to the pack."],
-  'E-RECIPE-STEP-INVALID': ["lintel: step {index} (\"{op}\") is not usable: {reason}.", "  {usage for that primitive}", "  → Fix the step."],
+  'E-RECIPE-STEP-INVALID': ["lintel: step {index} (\"{op}\") is not usable: {reason}.", "  {usage}", "  → Fix the step."],
   'E-RECIPE-TOO-MANY-STEPS': ["lintel: pack {name} declares {n} recipe steps; the limit is 256.", "  pack info prints every step so that an apply can be read before it runs, and a list nobody finishes reading is not a control.", "  → Reduce the step count, or raise the limit in an ADR that supersedes this one."],
   'E-REWRITE-UNUSED': ["lintel: step {index} rewrites \"{find}\" → \"{replace}\", which matched nothing in {globs}.", "  A rewrite that no longer applies is stale.", "  → Remove the step, or fix its \"in\" patterns."],
   'E-SCAFFOLD-COLLISION': ["lintel: scaffolds \"{a}\" and \"{b}\" both write \"{path}\".", "  They are in different categories, so a user may select both.", "  → Give them one category if they are alternatives, or move the shared file into the base recipe."],
@@ -126,7 +126,6 @@ const PLACEHOLDER = /(?<!\\[pP])\{([A-Za-z][A-Za-z0-9]*)\}/g;
  * list so the gap stays visible rather than becoming folklore.
  */
 export const DESCRIPTIVE_SLOTS: Readonly<Record<string, string>> = {
-  'E-RECIPE-STEP-INVALID': 'usage for that primitive',
   'E-TARGET-EXISTS': 'first ten paths, one per line, two-space indented',
   'E-VERIFY-MISMATCH': 'first ten paths, one per line, with "differs" or "missing"',
 } as const;
@@ -165,14 +164,27 @@ export function render(
   code: DiagnosticCode,
   data: Readonly<Record<string, string>> = {},
 ): readonly string[] {
-  return MESSAGES[code].map((line) =>
-    escapeLine(
-      line.replace(PLACEHOLDER, (whole, name: string) => {
-        const v = data[name];
-        return v === undefined ? whole : escapeValue(v);
-      }),
-    ),
-  );
+  const out: string[] = [];
+  for (const line of MESSAGES[code]) {
+    let had = false;
+    const filled = line.replace(PLACEHOLDER, (whole, name: string) => {
+      had = true;
+      const v = data[name];
+      return v === undefined ? whole : escapeValue(v);
+    });
+    // A line whose placeholders ALL rendered empty is omitted (F1 v4.7).
+    // This is what makes a conditional line expressible: the `merge-json`
+    // note on E-RECIPE-PRIMITIVE-UNKNOWN is one message line with two
+    // declared values, one of them "". The alternative was a blank line in
+    // every unknown-op diagnostic, or the CLI inventing prose the
+    // catalogue does not govern.
+    //
+    // Guarded on `had`, so a template line that is deliberately blank —
+    // there are none today — would still survive.
+    if (had && filled.trim() === '') continue;
+    out.push(escapeLine(filled));
+  }
+  return out;
 }
 
 /** The rendered message as one string, newline-joined — what reaches stderr. */

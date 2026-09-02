@@ -85,8 +85,11 @@ export function checkAnatomy(
     }
 
     // `present` is the DEFAULT, and that is load-bearing: it is why a pack
-    // may omit `status` on the parts it simply has, which is what `coding`
-    // and `writing` do for seven and five parts respectively.
+    // may omit `status` on the parts it simply has — `coding` omits it on
+    // all **nine**, `writing` on all **seven** non-absent parts.
+    // (`planning` restates it on eight, which is a pack-authoring defect
+    // no code can report and T-1304's to fix: `"status": "present"` is a
+    // known key with a permitted value.)
     const status = (decl['status'] as AnatomyStatus | undefined) ?? 'present';
 
     if (status === 'absent') {
@@ -95,6 +98,29 @@ export function checkAnatomy(
     }
 
     const paths = Array.isArray(decl['paths']) ? (decl['paths'] as string[]) : null;
+
+    // `declaredBy` is valid ONLY for folderScaffolding, whose shape *is*
+    // the recipe's set of destinations. Everywhere else it is a hole
+    // rather than a harmless key: a part carrying it names no globs, so it
+    // matches zero files WITHOUT raising E-ANATOMY-EMPTY — a pack could
+    // declare `"roles": { "declaredBy": "recipe" }`, ship no roles, and
+    // validate clean. That defeats G-F1-3 for eight of the nine parts,
+    // whose entire content is that a missing part cannot be silent.
+    //
+    // Stated since v2.0, enforced by nothing until F1 v4.9. Found by the
+    // E-03 acceptance pass.
+    if ('declaredBy' in decl && part !== 'folderScaffolding') {
+      bag.add('E-UNKNOWN-VALUE', {
+        values: {
+          value: JSON.stringify(decl['declaredBy']),
+          field: `${pack.name} anatomy.${part} declaredBy`,
+          allowed: 'nothing — "declaredBy" is valid only for folderScaffolding',
+        },
+      });
+      rows.push({ part, status: 'missing', matched: 0 });
+      continue;
+    }
+
     const declaredByRecipe = decl['declaredBy'] === 'recipe';
 
     if (paths === null && !declaredByRecipe) {

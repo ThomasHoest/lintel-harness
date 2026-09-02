@@ -28,9 +28,10 @@
     "build": "tsc",
     "build:test": "tsc -p tsconfig.unit.json && tsc -p tsconfig.tests.json",
     "typecheck": "npm run build && tsc --noEmit -p tsconfig.unit.json && tsc --noEmit -p tsconfig.tests.json",
-    "test": "npm run build:test && npm run test:unit && npm run test:integration && npm run test:structural",
+    "test": "npm run build:test && npm run test:unit && npm run test:integration && npm run test:packs && npm run test:structural",
     "test:unit": "node --test \"dist/**/*.test.js\"",
     "test:integration": "node --test \"dist-tests/integration/**/*.test.js\"",
+    "test:packs": "node --test \"dist-tests/packs/**/*.test.js\"",
     "test:fixtures": "node --test \"dist-tests/fixtures/**/*.test.js\"",
     "prepublishOnly": "rm -rf dist && npm run build",
     "test:structural": "node --test \"dist-tests/structural/**/*.test.js\""

@@ -24,7 +24,7 @@ import { DiagnosticBag } from '../diag/diagnostic.js';
 import { COMMANDS, type Command } from './surface.js';
 
 /**
- * **Nine reserved flag names, global rather than per-command** (F1 US-8).
+ * **Eight reserved flag names, global rather than per-command** (F1 US-8).
  * A pack's `flag` alias may not collide with one **whether or not the
  * command being run accepts it** — the list is the whole list.
  *

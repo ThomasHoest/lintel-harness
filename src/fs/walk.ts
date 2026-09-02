@@ -59,6 +59,25 @@ export interface WalkOptions {
 const REPRESENTS_MODE = process.platform !== 'win32';
 
 /**
+ * **Byte-ascending, which is not what `<` gives.**
+ *
+ * F1 §NFR requires a directory recursion to be walked in *byte-ascending
+ * path order*, and JavaScript's `<` on strings is **UTF-16 code-unit**
+ * order. The two disagree wherever an astral character is involved: a
+ * surrogate pair leads with 0xD800–0xDBFF, so `<` sorts it **before**
+ * U+E000–U+FFFF while its UTF-8 bytes sort it **after**.
+ *
+ * Invisible on every path in the three bundled packs, all of which are
+ * ASCII — which is exactly why it is worth fixing rather than noticing
+ * later. Walk order is a determinism claim: two applies of one pack
+ * version must produce byte-identical trees, and `copy`'s directory
+ * recursion consumes this order directly.
+ */
+function byteAscending(a: { name: string }, b: { name: string }): number {
+  return Buffer.compare(Buffer.from(a.name, 'utf8'), Buffer.from(b.name, 'utf8'));
+}
+
+/**
  * Walk `root`, bounded and without following links.
  *
  * Breadth-ish, directory by directory, sorted — the order is stable
@@ -89,7 +108,7 @@ export async function walk(root: string, options: WalkOptions = {}): Promise<Wal
       return; // unreadable is not a walk fault; the caller's checks report it
     }
 
-    for (const d of [...dirents].sort((a, b) => (a.name < b.name ? -1 : 1))) {
+    for (const d of [...dirents].sort(byteAscending)) {
       if (truncated) return;
       const childRel = rel === '' ? d.name : `${rel}/${d.name}`;
       const childAbs = join(dir, d.name);

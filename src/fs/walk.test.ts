@@ -137,3 +137,34 @@ test('a walk of the same tree twice produces the same list', async () => {
     assert.deepEqual(first, second, 'the order must be stable — the digest depends on it');
   });
 });
+
+/**
+ * F1 §NFR says **byte-ascending**, and JavaScript's `<` says UTF-16
+ * code-unit. They disagree on astral characters, and walk order feeds a
+ * determinism claim: `copy`'s directory recursion consumes it directly, so
+ * two applies of one pack version producing byte-identical trees depends
+ * on this comparator and not on the platform's `readdir`.
+ *
+ * Found by the E-06 work, on a tree where every real path is ASCII — which
+ * is why it could sit there being wrong.
+ */
+test('directory entries come back in byte-ascending order, not UTF-16 order', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'walk-order-'));
+  // U+1F600 is a surrogate pair: `<` puts it before "", UTF-8 after.
+  const names = ['\u{1F600}.md', '.md', 'a.md'];
+  for (const n of names) await writeFile(join(root, n), 'x');
+
+  const { entries } = await walk(root);
+  const got = entries.map((e) => e.path);
+  const expected = [...names].sort((a, b) =>
+    Buffer.compare(Buffer.from(a, 'utf8'), Buffer.from(b, 'utf8')),
+  );
+
+  assert.deepEqual(got, expected);
+  assert.notDeepEqual(
+    got,
+    [...names].sort(),
+    'and the two orders really do differ here, or this test proves nothing',
+  );
+  await rm(root, { recursive: true, force: true });
+});

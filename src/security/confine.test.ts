@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { DENYLIST, collisionKey, confinePath, isConfinable, reservedDestination } from './confine.js';
+import { MESSAGES } from '../diag/catalogue.js';
 
 /** Confinement always happens in a step's context; the messages name it. */
 const CTX = { index: 0 } as const;
@@ -173,4 +174,41 @@ test('reservedDestination names what was hit, for the message', () => {
 test('grammar is checked before the denylist, so a bad path reports one fault', () => {
   const r = confinePath('/.github/x', CTX);
   assert.deepEqual(codes(r), ['E-MAP-PATH-GRAMMAR'], 'the first failing stage reports, alone');
+});
+
+/**
+ * F1 v4.8. NUL was the only control the grammar refused, and the others
+ * are not cosmetic.
+ *
+ * §NFR's tree digest is a **newline-joined** listing of `<path> <hash>`
+ * lines, so a payload path containing `\n` contributes two lines — and two
+ * different file sets can then digest alike. That is a collision inside
+ * the one mechanism `verify` uses to decide whether a payload was
+ * tampered with, reachable by a pack author choosing a filename.
+ *
+ * Closed in the grammar rather than in `treeDigest`: a path holding a
+ * control character breaks every line-oriented tool that will ever read
+ * the project, and one clause here covers both the applied-path and the
+ * payload-path quantifier instead of leaving the digest a precondition its
+ * caller must remember.
+ *
+ * Found by building the hash layer, not by review.
+ */
+test('a control character in a path is refused', () => {
+  for (const ch of ['\u0000', '\n', '\r', '\t', '\u0007', '\u001b', '\u007f']) {
+    const r = confinePath(`a${ch}b.md`, { index: 0 });
+    assert.equal(r.path, undefined, JSON.stringify(ch));
+    assert.deepEqual(r.bag.items.map((d) => d.code), ['E-MAP-PATH-GRAMMAR']);
+  }
+  // An ordinary interior space is still legal — the fix is about controls,
+  // not about whitespace, and the digest separator is unambiguous anyway
+  // because the hash is a fixed 64 characters.
+  assert.ok(confinePath('a b.md', { index: 0 }).path);
+});
+
+// The remedy line is a closed enumeration, and it went stale once already
+// (F1 v4.6, on a different code). Pinned.
+test('the grammar remedy names the control-character clause', () => {
+  const m = MESSAGES['E-MAP-PATH-GRAMMAR'].join('\n');
+  assert.match(m, /no control character/);
 });

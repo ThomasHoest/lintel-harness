@@ -56,7 +56,24 @@ const GRAMMAR_FAULTS: readonly { readonly test: (p: string) => boolean; readonly
   // the process's per-drive cwd, which is a different escape with the same
   // shape. Both are refused by the same clause.
   { construct: 'a drive letter', test: (p) => /^[A-Za-z]:/.test(p) },
-  { construct: 'a NUL byte', test: (p) => p.includes('\u0000') },
+  {
+    // F1 v4.8. NUL was the only control refused, and the others are not
+    // cosmetic: §NFR's tree digest is a NEWLINE-JOINED listing, so a path
+    // containing `\n` contributes two lines and two different file sets
+    // digest alike — a collision inside the mechanism `verify` uses to
+    // decide whether a payload was tampered with.
+    //
+    // Closed HERE rather than in `treeDigest`, deliberately. A path
+    // holding a control character breaks every line-oriented tool that
+    // will ever read the project, so it is refusable on its own merits;
+    // and closing it in the grammar covers the applied-path and
+    // payload-path quantifiers at once, instead of leaving the digest a
+    // precondition its caller has to remember — the implicit-chain shape
+    // C-27 rejects elsewhere.
+    construct: 'a control character',
+    // eslint-disable-next-line no-control-regex
+    test: (p) => /[\u0000-\u001f\u007f]/.test(p),
+  },
   {
     construct: 'a "." or ".." or empty segment',
     test: (p) => p.split('/').some((seg) => seg === '' || seg === '.' || seg === '..'),

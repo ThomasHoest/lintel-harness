@@ -268,3 +268,35 @@ test('no bundled pack raises a defect-class warning', async () => {
     );
   }
 });
+
+/**
+ * US-1 has said since v1.0 that *"`version` and `minCliVersion` are valid
+ * semver; a non-semver value fails validation"* — and **nothing enforced
+ * it**, in either of the two places that could have.
+ *
+ * The validator checked only that both were strings. `checkCliFloor` acts
+ * on `satisfiesFloor(...) === false`, while an unparseable input returns
+ * **`null`** — so `"minCliVersion": "1.0"` passed validation *and* passed
+ * the floor check. A pack could declare a floor this CLI silently ignored,
+ * which is fail-open on the one field whose entire job is refusing to
+ * apply a pack this CLI is too old for.
+ *
+ * Found by the E-13 conformance pass, not by review — the rule read
+ * perfectly well while being enforced nowhere.
+ */
+test('a non-semver version or floor fails validation', () => {
+  for (const key of ['version', 'minCliVersion']) {
+    for (const bad of ['1.0', 'v1.0.0', '1.0.0.0', 'latest', '']) {
+      const { bag } = validatePackJson(base({ [key]: bad }) as never, 'demo');
+      assert.ok(
+        bag.items.some((d) => d.code === 'E-UNKNOWN-VALUE' && d.message.includes(key)),
+        `${key} = ${JSON.stringify(bad)}`,
+      );
+    }
+  }
+});
+
+test('a prerelease is still semver and still passes', () => {
+  const { bag } = validatePackJson(base({ version: '1.0.0-rc.1' }) as never, 'demo');
+  assert.deepEqual(bag.items.map((d) => d.code), []);
+});

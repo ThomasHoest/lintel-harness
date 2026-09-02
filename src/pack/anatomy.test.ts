@@ -162,3 +162,36 @@ test('planning declares a provisional part and still passes --strict', async () 
   assert.ok(r.bag.has('W-ANATOMY-PROVISIONAL'), 'planning declares one');
   assert.equal(r.bag.exitCode(true), 0, 'and --strict still exits 0');
 });
+
+/**
+ * F1 v4.9. `declaredBy` is valid **only** for `folderScaffolding`, whose
+ * shape *is* the recipe's set of destinations — and until v4.9 that
+ * restriction was stated and enforced by nothing.
+ *
+ * The consequence was not cosmetic. A part carrying `declaredBy` names no
+ * globs, so it matches zero files **without** raising `E-ANATOMY-EMPTY`:
+ * a pack could declare `"roles": { "declaredBy": "recipe" }`, ship no
+ * roles at all, and validate clean. That defeats G-F1-3 for **eight of the
+ * nine parts**, whose entire content is that a missing part cannot be
+ * silent — the one guarantee the anatomy exists to make.
+ *
+ * Found by the E-03 acceptance pass, not by review.
+ */
+test('declaredBy on any part but folderScaffolding is refused', () => {
+  for (const part of ANATOMY_PART_IDS) {
+    const { bag, rows } = checkAnatomy(pack(nine({ [part]: { declaredBy: 'recipe' } })), files);
+    const row = rows.find((r) => r.part === part)!;
+
+    if (part === 'folderScaffolding') {
+      assert.deepEqual(bag.items.map((d) => d.code), [], 'the one part it is for');
+      assert.equal(row.status, 'present');
+      continue;
+    }
+
+    assert.ok(
+      bag.items.some((d) => d.code === 'E-UNKNOWN-VALUE' && d.message.includes(part)),
+      `${part}: a part shipping nothing must not validate clean`,
+    );
+    assert.equal(row.status, 'missing', part);
+  }
+});
