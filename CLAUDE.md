@@ -492,6 +492,14 @@ authoritative, verify it rather than trusting the assertion.
   controls), `packs/` resolves from `import.meta.url` and **never
   `process.cwd()`**, and CI is **GitHub Actions** across three platforms
   with **Windows not optional**.
+- **The epic-level build order is derived and written down** —
+  `specifications/v1.0/build-order.md`: **ten waves, and the declared epic
+  graph is acyclic.** It agrees with the master spec's
+  `F1 → F2 → F5 → F3 → F6` without being derived from it. **Twelve
+  back-edges** where task dependencies contradict the epic order, of which
+  **three are real task-level cycles** — E-05/E-10/E-12 define each other,
+  which is ordinary, while **E-02 → E-11 reads backwards** and is worth a
+  look. **A snapshot, not generated**, and it says so.
 - **Every v1.0 spec and ADR is `Accepted`.** F5 was the last, and it took
   running `T-1502` and adjudicating with `T-1503`: both unplaceable
   differences were **class errors, not migration bugs**, and **class (j)
