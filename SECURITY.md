@@ -96,20 +96,34 @@ review**, because the review predates most of the code.
 
 ## Before v1.0 ships
 
-**Two blockers, both recorded rather than hoped about.**
+**One blocker. The other closed on 2026-09-03, and how it closed is worth
+reading.**
 
-**1. The `.claude/` permission pin has no runtime version.** `§US-3` and
-`§F1.9` obligation 13 both require *"the runtime version the pin was taken
-against recorded beside it"*, and **no document in this project names a
-Claude Code version**. The implementation records `null` and states the
-obligation at the constant, because an invented string would answer *"is
-this pin current?"* wrongly and with full confidence. Known limit 21.
+**1. ~~The `.claude/` permission pin has no runtime version.~~ Closed.**
+`§US-3` and `§F1.9` obligation 13 both require *"the runtime version the
+pin was taken against recorded beside it"*. The implementation recorded
+`null` for as long as **no document in this project named a Claude Code
+version**, because an invented string would answer *"is this pin current?"*
+wrongly and with full confidence — `null` answered it correctly.
+
+The gap was never *"someone must decide a number"*; it was *"nobody has
+observed one"*. It closed by **observing** it: `claude --version` in this
+repository reports **2.1.257**, which is recorded with its source in the
+pin's `observedIn`, and the guarding test now refuses a version that
+arrives **without** such evidence — the same job it did when it guarded
+`null`.
+
+The re-check that came with the stamp found a near miss worth keeping:
+**`dontAsk` is a real permission mode the pin has never named.** It is
+widening, so it must be refused — and it is, by the fail-closed rule
+rather than by an entry. A mode the pin has not heard of is refused, so
+this list going stale costs a refusal, never a silent widening. Known
+limit 21, closed.
 
 **2. A security-implementation review has not run.** The Mode-A passes
-reviewed specifications. Everything under `src/` is unreviewed.
-
-Neither is a defect in the code. Both are reasons the code should not ship
-yet.
+reviewed specifications. Everything under `src/` is unreviewed. **This
+one still stands, and it is the reason to hold the release** — not a
+defect in the code, but an unexamined surface.
 
 ---
 

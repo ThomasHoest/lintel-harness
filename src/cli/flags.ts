@@ -102,6 +102,26 @@ const ACCEPTS: Readonly<Record<Command, readonly ReservedFlag[]>> = {
   pack: ['json'],
 };
 
+/**
+ * The flags a command accepts, for `--help` and for the flag-error message.
+ *
+ * Exported so **the help text and the refusal read the same table**. They
+ * did not have to before, because there was no help text: every command's
+ * `--help` was refused, ignored, or — for `validate` and `verify` — quietly
+ * treated as *no flag at all*, so `lintel harness validate --help` **ran a
+ * validation** and reported no findings. A user asking what a command does
+ * got the command done to them instead.
+ */
+export function acceptedFlags(command: Command): readonly ReservedFlag[] {
+  return ACCEPTS[command];
+}
+
+/** Does a reserved flag take a value? Exported for the `--help` scan, which
+ *  must not mistake `--set x=--help` for a request for help. */
+export function flagTakesValue(name: string): boolean {
+  return (FLAGS as Record<string, FlagSpec | undefined>)[name]?.arity === 'value';
+}
+
 export interface ParsedArgs {
   readonly command: Command;
   /** Positionals after the command — the pack name, where one applies. */

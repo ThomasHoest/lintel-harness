@@ -39,7 +39,7 @@
     "test:packs": "node --test \"dist-tests/packs/**/*.test.js\"",
     "test:adversarial": "node --test \"dist-tests/fixtures/**/*.test.js\"",
     "test:fixtures": "node --test \"dist-tests/fixtures/**/*.test.js\"",
-    "prepublishOnly": "npm run clean && npm run build && npm test && node scripts/release-check.mjs",
+    "prepublishOnly": "npm run clean && npm run build && npm run typecheck && node scripts/release-check.mjs",
     "test:structural": "node --test \"dist-tests/structural/**/*.test.js\"",
     "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
     "release:check": "node scripts/release-check.mjs"

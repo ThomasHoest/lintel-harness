@@ -38,9 +38,20 @@ the `v1.0` branch. **All six commands work** — `init`, `update`, `verify`,
 ```bash
 npm ci
 npm run build
+npm link                     # puts the real `lintel` shim on your PATH
+
 mkdir /tmp/demo && cd /tmp/demo
-node …/dist/cli/main.js harness init coding --set projectName="Demo Project"
+lintel harness init coding --set projectName="Demo Project"
 ```
+
+**Use `npm link`, not `node path/to/dist/cli/main.js`.** Running the entry
+file directly works, and that is the problem: it is not how anybody runs
+this. The `bin` shim is a symlink, and the entry-point guard that decides
+*"was I started as a program, or imported?"* has to resolve it — when that
+guard compared strings instead of realpaths, `lintel --version` exited 0
+and printed **nothing**, while every test, and this README, kept passing
+because they all invoked the file by its real path. `npm link` is what
+exercises the path a user actually takes.
 
 That prints the security disclosure to stderr — every path where an answer
 is written into content, every agent file with its frontmatter verbatim,
@@ -112,6 +123,30 @@ fixture that fails for the wrong reason has stopped testing what it was
 written for. It found a real hole on its first run.
 
 ---
+
+## Commands
+
+Six, all under the `harness` group. `lintel harness --help` lists them;
+`lintel --version` prints the version alone, for scripts.
+
+| Command | What it does |
+|---|---|
+| `lintel harness init <pack>` | Applies a pack to the current project. Copies the pack verbatim to `.harness/pack/`, then runs its recipe to write files into the project, and records the answers in `.harness/manifest.json`. Prints the security disclosure first. |
+| `lintel harness update` | Recomputes what the pack *would* write now and compares it against what is there. Unedited files are replaced; **edited files are left alone and reported**; `adapted` paths are never blindly replaced. **No merge engine, by design** — reconciling an edited file is a conversation, not a diff. `--dry-run` reports without writing (this is the former `status` command, folded in by Q-62); `--rollback` undoes an interrupted run from its journal. |
+| `lintel harness verify` | Read-only. Recomputes the applied state from `.harness/pack/` + recipe + recorded answers and classifies every applied path: `match`, `adapted`, `filled`, `unfilled`, `differs`, `missing`. Changes nothing. |
+| `lintel harness validate <pack>` | Checks a pack *as a pack* — nine-part anatomy, recipe schema, glob dialect, the `.claude/` permission rules, credential-shaped parameters. `--all` validates the bundled packs; `--strict` promotes defects, never notices. |
+| `lintel harness pack info <pack>` | Renders what an apply would do, completely, without doing it — every step, every destination, every parameter the pack will ask for. |
+| `lintel harness skill install` | Installs the Claude Code skill that drives the CLI and handles the judgment steps `update` deliberately does not automate. |
+
+**`verify` and `pack info` write nothing, and `update --dry-run` writes
+nothing.** If you want to know what would happen, there is always a command
+that tells you without doing it.
+
+Flags are per-command rather than global: `init` takes `--set`,
+`--scaffold`, `--force` and `--rollback`; `update` takes `--dry-run`,
+`--json` and `--rollback`; `validate` takes `--all`, `--strict` and
+`--json`. **`lintel harness <command> --help` lists a command's flags**,
+and a bad flag names them too.
 
 ## How an apply works
 

@@ -68,3 +68,77 @@ test('init dispatches: it reaches its own diagnostics rather than the stub note'
   assert.match(r.err, /is not a pack bundled with lintel/);
   assert.equal(r.code, 1, 'a user typed a name and can retype it');
 });
+
+/**
+ * **The remedy that could not work, instance six.**
+ *
+ * `E-CLI-UNKNOWN-COMMAND` has always ended `→ lintel harness --help`, and
+ * that command produced the same error — whose remedy was to run it again.
+ * The five earlier instances of this class were fixed by correcting the
+ * message; this one is fixed by making the message true, so the test that
+ * guards it asserts **both halves together**: the remedy is offered, and
+ * the thing it names works.
+ *
+ * Asserting them apart is what let this survive — the structural guard
+ * checks that a remedy names a real command, and `--help` *is* real at the
+ * top level. It was only unreachable in the command slot.
+ */
+test('every spelling of help works in the command slot, and the remedy says so', async () => {
+  for (const spelling of ['--help', '-h', 'help']) {
+    const r = await capture(['harness', spelling]);
+    assert.equal(r.code, 0, `${spelling} is help, not a fault`);
+    assert.match(r.out, /usage: lintel harness <command>/, spelling);
+    assert.equal(r.err, '', `${spelling} must not write to stderr`);
+    for (const c of COMMANDS) assert.ok(r.out.includes(c), `${spelling} lists ${c}`);
+  }
+});
+
+test('the unknown-command remedy names a command that actually runs', async () => {
+  const bad = await capture(['harness', 'nosuchcommand']);
+  assert.notEqual(bad.code, 0);
+
+  // Pull the remedy out of the message rather than restating it, so this
+  // follows the catalogue if the wording changes.
+  const remedy = /→ lintel harness (\S+)/.exec(bad.err)?.[1];
+  assert.ok(remedy, `no remedy found in: ${bad.err}`);
+
+  const offered = await capture(['harness', remedy]);
+  assert.equal(offered.code, 0, `the remedy "lintel harness ${remedy}" must work`);
+});
+
+/**
+ * **Instance seven, and the one that did work: `--help` on a command.**
+ *
+ * `E-CLI-FLAG-UNKNOWN`'s remedy is `→ lintel harness <command> --help`, and
+ * before this it worked for **none** of the six. The case that makes this
+ * test non-negotiable is `validate` and `verify`, where `--help` parsed as
+ * nothing and the command **ran** — asking `validate` what it does
+ * validated a pack and exited 0. Help that silently does the work is worse
+ * than help that errors, because nothing tells the user it happened.
+ *
+ * Quantified over `COMMANDS` rather than a written list, so a seventh
+ * command cannot be added without answering `--help`.
+ */
+test('every command answers --help, and none of them does its work instead', async () => {
+  for (const c of COMMANDS) {
+    for (const spelling of ['--help', '-h']) {
+      const r = await capture(['harness', c, spelling]);
+      assert.equal(r.code, 0, `${c} ${spelling} must be help, not a fault`);
+      assert.match(r.out, new RegExp(`usage: lintel harness ${c} `), `${c} ${spelling}`);
+      assert.match(r.out, /Flags:/, `${c} ${spelling} lists its flags`);
+      assert.equal(r.err, '', `${c} ${spelling} must not write to stderr`);
+    }
+  }
+});
+
+/**
+ * A literal `--help` passed **as a value** is a value.
+ *
+ * The scan steps over the token after a value-taking flag. Without this,
+ * `--set x=--help` — and worse, `--set` followed by `--help` — would print
+ * usage and exit 0 while the user believed they had run an apply.
+ */
+test('--help in a value position is not a request for help', async () => {
+  const r = await capture(['harness', 'init', 'coding', '--set', 'x=--help']);
+  assert.ok(!/usage: lintel harness init/.test(r.out), 'a value must not trigger help');
+});

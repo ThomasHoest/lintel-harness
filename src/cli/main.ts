@@ -20,6 +20,7 @@ import { COMMANDS, GROUP, OWNER, commandList, isCommand, type Command } from './
 import { runPackCommand, runValidateCommand, runVerifyCommand } from './commands/read-only.js';
 import { runUpdate, updateOptions } from './commands/update.js';
 import { CLI_VERSION } from './version.js';
+import { acceptedFlags, flagTakesValue } from './flags.js';
 import { runSkillCommand } from './commands/skill.js';
 
 export interface Streams {
@@ -148,6 +149,69 @@ export async function run(
     return { code: 1, diagnostics: [] };
   }
 
+  /**
+   * `--help`, `-h` and `help` in the command slot.
+   *
+   * **This exists because `E-CLI-UNKNOWN-COMMAND`'s remedy is
+   * `→ lintel harness --help`, and that command did not work.** Typing it
+   * produced the same error, whose remedy was to type it again — the
+   * *"remedy that cannot work"* class, found five times before this
+   * (F1 v2.9, v5.5, v5.6, v5.9, v6.3) and now a sixth. Every previous
+   * instance was fixed by correcting the **message**; this one is fixed by
+   * making the message **true**, because the remedy it names is the one a
+   * user actually wants.
+   *
+   * The reach is deliberately all three spellings. `lintel harness` with
+   * no command is the natural first thing anybody types, and answering
+   * only `--help` would leave `help` — the other natural guess — landing
+   * on an error again.
+   *
+   * **Exit 0 and stdout**, unlike the group-usage path above, which is a
+   * *fault* (an unknown group) and stays on stderr at exit 1. Help that
+   * was asked for is not an error.
+   */
+  if (command === '--help' || command === '-h' || command === 'help') {
+    streams.out(escapeLine(`lintel: usage: lintel ${GROUP} <command> [options]`));
+    streams.out(escapeLine(`  Commands: ${commandList()}`));
+    return { code: 0, diagnostics: [] };
+  }
+
+  /**
+   * `--help` on a **command**, answered here for all six at once.
+   *
+   * Instance seven of the *"remedy that cannot work"* class, and the first
+   * that was **systematic rather than a typo**: `E-CLI-FLAG-UNKNOWN` ends
+   * `→ lintel harness <command> --help`, and that worked for **none** of
+   * the six. Three shapes of wrong, and the third is the one worth naming:
+   *
+   *   REFUSED   `update --help`, `skill --help` — "does not accept --help",
+   *             from the remedy that had just told you to type it.
+   *   DIVERTED  `init --help` — "needs a pack name", answering a question
+   *             about arguments with a demand for one.
+   *   **OBEYED** `validate --help`, `verify --help` — the flag parsed as
+   *             nothing at all, so the command **ran**. Asking `validate`
+   *             what it does validated a pack and reported no findings.
+   *             A user asking for help got the work done to them, and
+   *             exit 0 said it went fine.
+   *
+   * Answered **before** the command's own parser, because the diverted
+   * case proves the parser is the wrong place: `init` rejected `--help`
+   * for missing a pack name, which is a rule about arguments applied to a
+   * request to be told the rules.
+   */
+  if (command !== undefined && isCommand(command) && wantsHelp(argv.slice(2))) {
+    const accepted = acceptedFlags(command);
+    streams.out(escapeLine(`lintel: usage: lintel ${GROUP} ${command} [options]`));
+    streams.out(
+      escapeLine(
+        accepted.length === 0
+          ? '  Flags: (none)'
+          : `  Flags: ${accepted.map((f) => `--${f}`).join(', ')}`,
+      ),
+    );
+    return { code: 0, diagnostics: [] };
+  }
+
   if (command === undefined || !isCommand(command)) {
     // The command slot, which is the SECOND positional (Q-63).
     bag.add('E-CLI-UNKNOWN-COMMAND', {
@@ -269,3 +333,21 @@ if (startedByNode()) {
   process.exitCode = result.code;
 }
 /* c8 ignore stop */
+
+/**
+ * Is one of these tokens a request for help?
+ *
+ * **A value is not a request.** `--set x=--help` and `--scaffold --help`
+ * pass a literal `--help` *to* a flag, so the scan steps over the token
+ * after any value-taking flag. Reading it as help would make a legitimate
+ * (if odd) parameter value silently un-runnable, and the failure would
+ * look like the CLI ignoring the command.
+ */
+function wantsHelp(tokens: readonly string[]): boolean {
+  for (let i = 0; i < tokens.length; i++) {
+    const t = tokens[i] as string;
+    if (t === '--help' || t === '-h') return true;
+    if (t.startsWith('--') && !t.includes('=') && flagTakesValue(t.slice(2))) i++;
+  }
+  return false;
+}

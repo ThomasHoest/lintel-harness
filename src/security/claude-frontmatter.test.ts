@@ -132,16 +132,32 @@ test('the pin holds two key lists and one value set', () => {
   );
 });
 
-test('the pin records what it was taken against, and admits what it cannot', () => {
+test('the pin records what it was taken against, with the evidence for it', () => {
   // F1 §F1.9 obligation 13 wants the runtime version beside the keys.
-  // Nothing in the spec set names one, and an invented number would answer
-  // "is this pin current?" wrongly with full confidence. `null` answers it
-  // correctly, and this test is what stops it being quietly filled in with
-  // a guess.
-  assert.equal(CLAUDE_PERMISSION_PIN.runtime.name, 'claude-code');
-  assert.equal(CLAUDE_PERMISSION_PIN.runtime.version, null);
-  assert.ok(CLAUDE_PERMISSION_PIN.runtime.takenOn.length > 0);
-  assert.ok(CLAUDE_PERMISSION_PIN.runtime.observedIn.length > 0);
+  //
+  // This test guarded `null` until 2026-09-03, and its JOB HAS NOT CHANGED
+  // — only the shape of the thing it refuses. It existed to stop the
+  // version being quietly filled in with a GUESS; a guess answers "is this
+  // pin current?" wrongly and with full confidence, which is worse than
+  // `null` answering it correctly. So the bar a version has to clear is
+  // not "is present" but **"is present AND says where it came from"**:
+  // `observedIn` must carry a line naming the version, or the stamp is
+  // indistinguishable from the invention this test was written to prevent.
+  const { name, version, takenOn, observedIn } = CLAUDE_PERMISSION_PIN.runtime;
+  assert.equal(name, 'claude-code');
+  assert.ok(takenOn.length > 0);
+  assert.ok(observedIn.length > 0);
+
+  if (version === null) return; // still honest, still permitted
+
+  assert.match(version, /^\d+\.\d+\.\d+/, 'a version is a version, not a note');
+  assert.ok(
+    observedIn.some((e) => e.includes(version)),
+    `observedIn names no source for ${version} — a stamped version without ` +
+      'evidence is the guess this test refuses',
+  );
+  // Moved together, or the stamp claims a re-check that did not happen.
+  assert.match(takenOn, /^\d{4}-\d{2}-\d{2}$/);
 });
 
 test('key matching folds case and separators; value matching does not', () => {

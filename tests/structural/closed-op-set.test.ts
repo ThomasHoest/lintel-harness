@@ -114,6 +114,34 @@ test('every command and flag a remedy names is real and accepted', async () => {
   const { MESSAGES, COMMANDS, accepts } = await import('../../dist/index.js');
 
   const known = new Set<string>(COMMANDS);
+  /** Answered in `main.ts` ahead of the flag parser, so absent from
+   *  `ACCEPTS` by design and accepted everywhere in practice. */
+  const UNIVERSAL = new Set(['--help', '-h']);
+
+  /** The commands a journal's `command` field can hold, and therefore the
+   *  only ones `{command}` can render as. */
+  const JOURNAL_COMMANDS = new Set(['init', 'update', 'skill']);
+
+  /**
+   * **Known-unfollowable remedies, listed so they are visible rather than
+   * absent.** Each is a real gap, not a false positive: the remedy renders
+   * and the user cannot follow it.
+   *
+   *   `--rollback skill`  `skill install` writes **no journal** — it copies
+   *      files and, on failure, undoes nothing on purpose (reversing a
+   *      partial write by hand is the one thing this product forbids the
+   *      skill to do, and the CLI does not get to do it either). So there
+   *      is nothing for `--rollback` to act on, and giving the command the
+   *      flag would be a mode that lies. Documented as gap 3 in
+   *      `src/cli/commands/skill.ts`; closing it is F6 work, and F1 owns
+   *      the catalogue prose that renders it.
+   *
+   * Asserted **exactly**, in both directions: an unexplained one fails
+   * above, and an exemption that stops being needed fails below. A stale
+   * exemption is how a guard goes quietly blind.
+   */
+  const EXEMPT = new Set(['--rollback skill']);
+  const used = new Set<string>();
   const failures: string[] = [];
 
   for (const [code, lines] of Object.entries(MESSAGES)) {
@@ -125,17 +153,69 @@ test('every command and flag a remedy names is real and accepted', async () => {
       // as an invocation is how a guard produces a false finding on its
       // first run — which this one did.
       if (!line.includes('→')) continue;
-      for (const m of line.matchAll(/lintel harness ([a-z]+)((?:\s+--[a-z-]+)*)/g)) {
-        const command = m[1] as string;
-        // `{command}` is a slot, resolved by the emitter from the journal.
-        if (command === 'command') continue;
+
+      /* ── The two shapes this guard could not see ──────────────────────
+         Both of the remedies that actually could not work were invisible
+         here, and for the same reason: the pattern below required a
+         lower-case command word straight after `lintel harness`.
+
+           `→ lintel harness --help`            starts with `-`
+           `→ lintel harness {command} --help`  starts with `{`
+
+         Neither matched, so neither was checked — including their flags.
+         The guard reported a clean run while `--help` worked on **no**
+         command and on the group. A guard whose blind spot is exactly the
+         defect class it names is worse than no guard, because the clean
+         run is taken as evidence.
+
+         `--help` and `-h` are accepted by every command and by the group,
+         and are answered in `main.ts` **before** the flag parser, so they
+         are deliberately absent from `ACCEPTS` — which is why a table
+         lookup alone would call them refused. */
+      for (const m of line.matchAll(/lintel harness (--?[a-z-]+|\{command\}|[a-z]+)((?:\s+--?[a-z-]+)*)/g)) {
+        const head = m[1] as string;
+        const tail = (m[2] ?? '').split(/\s+/).filter(Boolean);
+
+        // Group-level: `lintel harness --help`. No command word at all.
+        if (head.startsWith('-')) {
+          for (const flag of [head, ...tail]) {
+            if (!UNIVERSAL.has(flag)) {
+              failures.push(`${code}: offers "harness ${flag}", which the group does not answer`);
+            }
+          }
+          continue;
+        }
+
+        // A slot means ANY command, so every flag must hold for all of them.
+        if (head === '{command}') {
+          for (const flag of tail) {
+            const refusedBy = (COMMANDS as readonly string[]).filter(
+              (c) => !UNIVERSAL.has(flag) && !accepts(c as never, flag.replace(/^--?/, '')),
+            );
+            // `{command}` renders from a JOURNAL's `command` field, which is
+            // `'init' | 'update' | 'skill'` — never the read-only commands.
+            // A command that cannot reach the code is not a counterexample.
+            const reachable = refusedBy.filter((c) => JOURNAL_COMMANDS.has(c));
+            const unexplained = reachable.filter((c) => !EXEMPT.has(`${flag} ${c}`));
+            if (unexplained.length > 0) {
+              failures.push(
+                `${code}: offers "{command} ${flag}", refused by ${unexplained.join(', ')} — ` +
+                  'a slot remedy must hold for every command it can render as',
+              );
+            }
+            for (const c of reachable) used.add(`${flag} ${c}`);
+          }
+          continue;
+        }
+
+        const command = head;
         if (!known.has(command)) {
           failures.push(`${code}: names "${command}", which is not a command`);
           continue;
         }
-        for (const flag of (m[2] ?? '').split(/\s+/).filter(Boolean)) {
-          const name = flag.slice(2);
-          if (!accepts(command as never, name)) {
+        for (const flag of tail) {
+          const name = flag.replace(/^--?/, '');
+          if (!UNIVERSAL.has(flag) && !accepts(command as never, name)) {
             failures.push(`${code}: names "${command} ${flag}", which that command refuses`);
           }
         }
@@ -147,5 +227,13 @@ test('every command and flag a remedy names is real and accepted', async () => {
     failures,
     [],
     `a remedy that cannot work is worse than none:\n  ${failures.join('\n  ')}`,
+  );
+
+  // The other direction: an exemption nothing exercises any more is a lie
+  // about the code, and leaves the guard weaker than it reads.
+  assert.deepEqual(
+    [...EXEMPT].filter((e) => !used.has(e)),
+    [],
+    'an exemption that is no longer reached must be deleted, not kept',
   );
 });

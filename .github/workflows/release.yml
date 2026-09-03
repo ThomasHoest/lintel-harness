@@ -116,6 +116,18 @@ jobs:
       # Refuses on any blocker or any unmade decision. See the header.
       - run: npm run release:check
 
+      # NOTE on `prepublishOnly`: it runs clean + build + typecheck +
+      # release-check, and deliberately **not** the test suite. The suite
+      # contains `installed.test.ts`, which does `npm install <this repo>`
+      # — and under `prepublishOnly` that packs the folder, which
+      # re-triggers `prepublishOnly`, which runs `clean` and deletes
+      # `dist/` underneath the running test. Circular, and it fails.
+      #
+      # The suite is not skipped; it is gated **above**, by the `verify`
+      # job, on three platforms, before this job starts. Running it a
+      # second time inside the publish would add a self-install to the
+      # critical path and no coverage at all.
+
       # `--provenance` records which workflow, commit and repository built
       # the tarball, and npm shows it on the package page. For a tool whose
       # entire posture is about what ends up in somebody's repository, a

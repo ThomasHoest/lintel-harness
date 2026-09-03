@@ -104,29 +104,46 @@ export const CLAUDE_PERMISSION_PIN = {
   /**
    * The contract this pin was taken against.
    *
-   * **`version` is `null`, and that is a reported gap, not an oversight.**
-   * F1 requires *"the runtime version the pin was taken against recorded
-   * beside it"*, and neither the F1/F5 spec set nor this repository names
-   * a Claude Code version anywhere. Writing a plausible-looking number
-   * here would satisfy the sentence and defeat its purpose: the point of
-   * recording the version is that a maintainer can tell whether the pin is
-   * current, and an invented version answers that question wrongly with
-   * full confidence. `null` answers it correctly.
+   * **`version` was `null` until 2026-09-03, and the reason it is now a
+   * number is that the number stopped being an invention.** F1 requires
+   * *"the runtime version the pin was taken against recorded beside it"*.
+   * For as long as nothing in the project named a Claude Code version,
+   * writing one here would have satisfied the sentence and defeated its
+   * purpose — the point of recording the version is that a maintainer can
+   * answer *"is this pin current?"*, and a plausible-looking number
+   * answers it wrongly and with full confidence. `null` answered it
+   * correctly. **That premise held until the version was observed rather
+   * than guessed**, which is the only thing that changed here.
    *
-   * **Release obligation (F1 §F1.9 obligation 13):** set `version` before
-   * publishing, and re-check all three lists against the runtime's
-   * contract at every release.
+   * ── The re-check, 2026-09-03 ──────────────────────────────────────
+   *
+   * All three lists were re-checked against 2.1.257's documented
+   * contract, and the finding worth recording is a **near miss**:
+   * `dontAsk` is a real permission mode this pin has never named. It is
+   * **widening**, so it must be refused — and it is, by the fail-closed
+   * half rather than by an entry. That is the asymmetry working as
+   * designed: a mode the pin has never heard of is refused, so the list
+   * going stale costs a refusal, never a silent widening.
+   * `bypassPermissions` is absent for the same reason and remains so.
+   *
+   * **Release obligation (F1 §F1.9 obligation 13):** re-check all three
+   * lists against the runtime's contract at every release, and move
+   * `version` and `takenOn` together — a version stamped without a
+   * re-check is worse than `null`, because it claims a check that did
+   * not happen.
    */
   runtime: {
     name: 'claude-code',
-    version: null,
-    takenOn: '2026-09-02',
+    version: '2.1.257',
+    takenOn: '2026-09-03',
     /** Where the spelling and value evidence came from, so the next
      *  re-check starts where this one did rather than from memory. */
     observedIn: [
       'F1-spec-pack-format-and-manifest.md §US-3 (grant keys, mode keys, non-widening values)',
       'F5-spec-template-packs.md §Flows 2 (the keys the runtime reads on an agent file)',
       'packs/coding/agents/README.md (permissionMode honoured by some harnesses, ignored by others)',
+      'claude --version => 2.1.257, observed in this repository on 2026-09-03 (the version stamp above)',
+      'Claude Code settings schema, permissions.defaultMode => default | plan | acceptEdits | dontAsk (the dontAsk near miss)',
     ],
   },
 
