@@ -17,11 +17,33 @@
  * character is legitimate content and should print rather than abort a run.
  */
 
-/** C0 except HT and LF, plus DEL and the two Unicode line separators. */
-const IN_LINE = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F\u2028\u2029]/g;
+/**
+ * Bidi controls and zero-width characters — U+061C, U+200B–U+200F,
+ * U+202A–U+202E, U+2066–U+2069, U+FEFF.
+ *
+ * **The Trojan Source class.** U+202E RIGHT-TO-LEFT OVERRIDE reverses the
+ * render order of what follows it, so a frontmatter `description` or a
+ * parameter `prompt` carrying one can display text the CLI never wrote —
+ * the same fault as an unescaped ANSI escape, reached with a character
+ * that is not a control code and was therefore outside both classes
+ * below. The zero-width group is the weaker relative: it makes two
+ * different strings render identically.
+ *
+ * **Escaped here, refused in a path.** A destination has no legitimate
+ * use for these, so `confinePath` rejects them outright at stage 1
+ * (`BIDI_AND_INVISIBLE`, the same set) — the stronger control. A prompt
+ * or a frontmatter fragment is prose the CLI must still print, so here it
+ * is made visible rather than fatal, which is this module's standing
+ * decision for control characters.
+ */
+const BIDI = '\\u061c\\u200b-\\u200f\\u202a-\\u202e\\u2066-\\u2069\\ufeff';
+
+/** C0 except HT and LF, plus DEL, the two Unicode line separators, and the
+ *  bidi/zero-width set. */
+const IN_LINE = new RegExp(`[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F\\u007F\\u2028\\u2029${BIDI}]`, 'g');
 
 /** The same set, and additionally HT, LF and CR. See `escapeValue`. */
-const IN_VALUE = /[\u0000-\u001F\u007F\u2028\u2029]/g;
+const IN_VALUE = new RegExp(`[\\u0000-\\u001F\\u007F\\u2028\\u2029${BIDI}]`, 'g');
 
 function hex(ch: string): string {
   const cp = ch.codePointAt(0) ?? 0;

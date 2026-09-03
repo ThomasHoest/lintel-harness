@@ -342,3 +342,97 @@ test("fixture: an ANSI escape in a step's destination is refused at the grammar,
     assert.ok(report.diagnostics.some((d) => d.code === 'E-MAP-PATH-GRAMMAR'));
   });
 });
+
+/* -- Trojan Source: bidi controls, the same three carriers as C-50 ------ */
+
+/**
+ * U+202E RIGHT-TO-LEFT OVERRIDE reverses the render order of everything
+ * after it. These are **not control codes**, which is precisely why they
+ * slipped both the escaper's character classes and the path grammar while
+ * ANSI and NUL were caught by both -- the same attack, reached by a
+ * character class nobody had enumerated.
+ *
+ * Found by the Mode B implementation review (2026-09-03), which ran the
+ * escaper rather than reading it. Fixed in both places at once, mirroring
+ * C-50's split exactly: **escaped** in a prompt and in frontmatter, which
+ * are prose the CLI must still print; **refused** in a destination, where
+ * the grammar is the stronger control and no legitimate use exists.
+ */
+const RLO = '\u202e'; // written as an escape, never a literal -- see below
+
+test('fixture: a bidi override in a parameter prompt is escaped, never raw', () => {
+  const decl: ParameterDecl = {
+    id: 'projectName',
+    prompt: `Project name ${RLO}`,
+    type: 'string',
+    pattern: '^.{0,64}$',
+  };
+  const query = promptQuery(decl);
+  assert.ok(!query.includes(RLO), 'the raw RLO must never reach the prompt');
+  assert.ok(query.includes('\\x202e'), 'it must appear as its escaped form');
+});
+
+test('fixture: a bidi override in agent frontmatter is escaped in the rendered disclosure', async () => {
+  const f: Fixture = {
+    name: 'agent frontmatter carrying a bidi override',
+    because: 'Mode B 2026-09-03 -- an unescaped RLO in verbatim frontmatter renders text the CLI never wrote',
+    packJson: basePack(),
+    recipeJson: baseRecipe([{ op: 'copy', from: 'src/x.md', to: '.claude/agents/x.md' }]),
+    files: {
+      'src/x.md': ['---', 'name: helper', `description: ${RLO}`, 'tools: Read', '---', '', 'body', ''].join('\n'),
+    },
+    expect: [],
+    exit: 0,
+  };
+
+  await withFixturePack(f, async (dir) => {
+    const report = await reportFor(f, dir);
+    const rendered = renderDisclosure(report.disclosure).join('\n');
+    assert.ok(!rendered.includes(RLO), 'the raw RLO must never reach the rendered disclosure');
+    assert.ok(rendered.includes('\\x202e'), 'it must appear escaped');
+  });
+});
+
+/**
+ * The third carrier, and the one that makes this worth a fixture rather
+ * than a unit test: a destination.
+ *
+ * `scripts/setup<RLO>gnp.sh` puts a SHELL SCRIPT on disk while rendering
+ * as `scripts/setuphs.png`. The disclosure -- *"here is every path I will
+ * write"* -- would have shown the user an image. Closed at the grammar,
+ * like ANSI, so no disclosure is ever built.
+ */
+test("fixture: a bidi override in a step's destination is refused at the grammar", async () => {
+  const f: Fixture = {
+    name: 'a step whose to carries a bidi override',
+    because: 'Mode B 2026-09-03 -- a destination that renders as something other than what it is',
+    packJson: basePack(),
+    recipeJson: baseRecipe([{ op: 'copy', from: 'src/a.md', to: `scripts/setup${RLO}gnp.sh` }]),
+    files: { 'src/a.md': 'a\n' },
+    expect: ['E-MAP-PATH-GRAMMAR'],
+    exit: 2,
+  };
+  await withFixturePack(f, async (dir) => {
+    const report = await reportFor(f, dir);
+    assert.ok(
+      report.diagnostics.some((d) => d.code === 'E-MAP-PATH-GRAMMAR'),
+      'a destination that renders as something else must be refused, not disclosed',
+    );
+  });
+});
+
+test("fixture: a zero-width space in a step's destination is refused at the grammar", async () => {
+  const f: Fixture = {
+    name: 'a step whose to carries a zero-width space',
+    because: 'Mode B 2026-09-03 -- two destinations that render identically are indistinguishable to the approver',
+    packJson: basePack(),
+    recipeJson: baseRecipe([{ op: 'copy', from: 'src/a.md', to: 'a\u200bb.md' }]),
+    files: { 'src/a.md': 'a\n' },
+    expect: ['E-MAP-PATH-GRAMMAR'],
+    exit: 2,
+  };
+  await withFixturePack(f, async (dir) => {
+    const report = await reportFor(f, dir);
+    assert.ok(report.diagnostics.some((d) => d.code === 'E-MAP-PATH-GRAMMAR'));
+  });
+});

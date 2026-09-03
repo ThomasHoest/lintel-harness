@@ -166,6 +166,37 @@ test('an interpolated value cannot forge a remedy line', () => {
   assert.ok(out.includes('\\n'), 'the newline must be visible, not structural');
 });
 
+/**
+ * The Trojan Source class, in the escaper.
+ *
+ * These are **not control codes**, which is exactly why they were outside
+ * both character classes while ANSI and NUL were inside them. U+202E
+ * reverses the render order of what follows, so an unescaped one in a
+ * prompt or a frontmatter fragment displays text the CLI never wrote —
+ * the same fault C-50 closed for ANSI, reached by a different route.
+ */
+test('bidi controls and zero-width characters are escaped, in both classes', () => {
+  const cases: readonly [string, string][] = [
+    ['\u061c', 'ARABIC LETTER MARK'],
+    ['\u200b', 'ZERO WIDTH SPACE'],
+    ['\u200d', 'ZERO WIDTH JOINER'],
+    ['\u200e', 'LEFT-TO-RIGHT MARK'],
+    ['\u200f', 'RIGHT-TO-LEFT MARK'],
+    ['\u202a', 'LEFT-TO-RIGHT EMBEDDING'],
+    ['\u202e', 'RIGHT-TO-LEFT OVERRIDE'],
+    ['\u2066', 'LEFT-TO-RIGHT ISOLATE'],
+    ['\u2069', 'POP DIRECTIONAL ISOLATE'],
+    ['\ufeff', 'ZERO WIDTH NO-BREAK SPACE'],
+  ];
+  for (const [ch, name] of cases) {
+    const input = `a${ch}b`;
+    assert.ok(!escapeLine(input).includes(ch), `escapeLine must escape ${name}`);
+    assert.ok(!escapeValue(input).includes(ch), `escapeValue must escape ${name}`);
+  }
+  // The rendered form is visible, not structural.
+  assert.equal(escapeLine('a\u202eb'), 'a\\x202eb');
+});
+
 test('escapeLine keeps tab and newline; escapeValue does not', () => {
   assert.equal(escapeLine('a\tb\nc'), 'a\tb\nc');
   assert.equal(escapeValue('a\tb\nc'), 'a\\tb\\nc');

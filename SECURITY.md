@@ -96,8 +96,8 @@ review**, because the review predates most of the code.
 
 ## Before v1.0 ships
 
-**One blocker. The other closed on 2026-09-03, and how it closed is worth
-reading.**
+**Both blockers closed on 2026-09-03.** How the first closed is worth
+reading; the second is recorded with its one outstanding finding.
 
 **1. ~~The `.claude/` permission pin has no runtime version.~~ Closed.**
 `§US-3` and `§F1.9` obligation 13 both require *"the runtime version the
@@ -120,10 +120,31 @@ rather than by an entry. A mode the pin has not heard of is refused, so
 this list going stale costs a refusal, never a silent widening. Known
 limit 21, closed.
 
-**2. A security-implementation review has not run.** The Mode-A passes
-reviewed specifications. Everything under `src/` is unreviewed. **This
-one still stands, and it is the reason to hold the release** — not a
-defect in the code, but an unexamined surface.
+**2. ~~A security-implementation review has not run.~~ Ran 2026-09-03.**
+The four Mode A rounds reviewed specifications; every line under `src/`
+was written afterwards, so no review had read the code. The Mode B pass
+is `specifications/v1.0/security-review-mode-b-implementation.md`.
+
+**Verdict: ⚠️ Secure with minor changes — 0 CRITICAL, 0 HIGH, 1 MEDIUM,
+2 LOW, 1 SUGGESTION.** CRITICAL and HIGH are the halt conditions, so
+**nothing blocks the release**.
+
+The MEDIUM is worth knowing even though it does not gate v1.0. The one
+escaper every diagnostic, prompt and disclosure row passes through
+escapes C0, DEL and U+2028/2029 — but **not** the bidirectional
+overrides (U+202A–U+202E, U+2066–U+2069) or the zero-width characters
+(U+200B–U+200D, U+FEFF), and `confinePath` accepts them in a
+destination. A step writing `scripts/setup\u202Egnp.sh` renders in a
+bidi-aware terminal as `scripts/setuphs.png`: the disclosure — this
+product's central security control — shows the user something other
+than what lands on disk. It is the Trojan Source shape, and the same
+class as the ANSI-escape attack that already has two fixtures.
+
+It is **unreachable at v1.0**, because `packDir()` resolves from the
+install directory and never `process.cwd()`, so the only applicable
+packs are the three shipped inside the tarball. **It becomes reachable
+the moment `contribute` (F4) or any third-party pack mechanism ships**,
+which is the release it must be fixed by.
 
 ---
 

@@ -87,7 +87,48 @@ const GRAMMAR_FAULTS: readonly { readonly test: (p: string) => boolean; readonly
     test: (p) => p.split('/').some((seg) => WINDOWS_RESERVED.test(seg)),
   },
   { construct: 'a non-NFC name', test: (p) => p.normalize('NFC') !== p },
+  {
+    /**
+     * **Bidi controls and invisibles — refused, not escaped.**
+     *
+     * The Trojan Source shape, applied to a destination. U+202E RIGHT-TO-
+     * LEFT OVERRIDE reverses the render order of everything after it, so
+     * `scripts/setup\u202Egnp.sh` puts a **shell script** on disk while a
+     * bidi-aware terminal renders it `scripts/setuphs.png`. The disclosure
+     * is this product's central control — *"here is every path I will
+     * write"* — and a path that renders as something other than what it
+     * is makes that control lie while appearing to work.
+     *
+     * **Refused here rather than escaped downstream**, on the reasoning
+     * T-0113 already recorded for ANSI: the escaper covers a prompt and a
+     * frontmatter fragment because those are legitimate prose, but a path
+     * carrying a control character is refused outright at stage 1, which
+     * is *a stronger control than escaping*. A destination has no
+     * legitimate use for any character in this set.
+     *
+     * The zero-width group is the weaker but related property: `a\u200Bb.md`
+     * and `ab.md` render identically, so two distinct destinations are
+     * indistinguishable to the reader approving them.
+     */
+    construct: 'a bidirectional control or zero-width character',
+    test: (p) => BIDI_AND_INVISIBLE.test(p),
+  },
 ];
+
+/**
+ * Bidi controls and zero-width characters, as one named set.
+ *
+ *   U+061C          ARABIC LETTER MARK
+ *   U+200B–U+200F   zero-width space/non-joiner/joiner, LRM, RLM
+ *   U+202A–U+202E   bidi embeddings and overrides
+ *   U+2066–U+2069   bidi isolates
+ *   U+FEFF          zero-width no-break space (BOM)
+ *
+ * Shared with the output escaper, which escapes the same set where it
+ * appears in prose the CLI must still print.
+ */
+export const BIDI_AND_INVISIBLE =
+  /[\u061c\u200b-\u200f\u202a-\u202e\u2066-\u2069\ufeff]/;
 
 /* ── collisionKey ───────────────────────────────────────────────────── */
 
