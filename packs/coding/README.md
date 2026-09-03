@@ -1,6 +1,6 @@
 # `coding` — a gated specification-and-build way of working
 
-**Version 1.0.0 · `minCliVersion` 1.0.0 · no scaffolds**
+**Version 1.0.0 · `minCliVersion` 0.1.0 · no scaffolds**
 
 A pack for projects whose output is software. A gated spec process where
 every arrow is a gate, ten single-purpose agents with non-overlapping write

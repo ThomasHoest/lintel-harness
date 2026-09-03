@@ -3,7 +3,7 @@
   "name": "coding",
   "version": "1.0.0",
   "title": "Coding — a gated spec process, 10 roles, 2 agent teams, targets",
-  "minCliVersion": "1.0.0",
+  "minCliVersion": "0.1.0",
   "recipe": "recipe.json",
   "anatomy": {
     "process": {

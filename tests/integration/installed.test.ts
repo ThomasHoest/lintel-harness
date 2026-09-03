@@ -27,6 +27,7 @@ import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { promisify } from 'node:util';
+import { CLI_VERSION } from '../../dist/cli/version.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -83,7 +84,11 @@ test('the installed shim runs, and the whole loop works through it', { timeout: 
     // produced an empty string and exit 0 — silence indistinguishable
     // from success, which is why nothing noticed.
     const version = await run(bin, ['--version'], { cwd: project });
-    assert.equal(version.stdout.trim(), '1.0.0', 'the shim must actually run');
+    // Compared against CLI_VERSION, not a literal. This line said
+    // `'1.0.0'` and broke the moment the release dropped to `0.1.0` —
+    // failing on the version rather than on the thing it exists to check,
+    // which is whether the installed SHIM runs at all.
+    assert.equal(version.stdout.trim(), CLI_VERSION, 'the shim must actually run');
 
     const init = await run(bin, ['harness', 'init', 'coding', '--set', 'projectName=Installed'], {
       cwd: project,

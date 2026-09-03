@@ -189,6 +189,7 @@ test('every bundled pack validates clean, and cleanly enough for --strict', asyn
 // task. A pack declaring `minCliVersion: "1.0"` would pass every module
 // in the build and then compare false-negative against the floor.
 test('identity, versions and the CLI floor are what US-1 requires', async () => {
+  const floors = (await bundled()).map((b) => b.pack.minCliVersion);
   for (const b of await bundled()) {
     assert.equal(b.pack.formatVersion, 1, `${b.name} formatVersion`);
     assert.equal(b.pack.name, b.name, `${b.name} name equals its directory`);
@@ -197,7 +198,15 @@ test('identity, versions and the CLI floor are what US-1 requires', async () => 
       parseSemver(b.pack.minCliVersion),
       `${b.name} minCliVersion "${b.pack.minCliVersion}" is not semver`,
     );
-    assert.equal(b.pack.minCliVersion, '1.0.0', `${b.name}: all three packs declare the same floor`);
+    // Compared to EACH OTHER, which is what this assertion's message
+    // claims, rather than to a literal. It said `'1.0.0'` and broke when
+    // the release moved the floor to `0.1.0` — reporting "all three packs
+    // declare the same floor" at the moment all three did.
+    assert.equal(
+      b.pack.minCliVersion,
+      floors[0],
+      `${b.name}: all three packs declare the same floor (${floors.join(', ')})`,
+    );
     assert.equal(typeof b.pack.title, 'string');
     assert.notEqual(b.pack.title.length, 0, `${b.name} declares an empty title`);
   }

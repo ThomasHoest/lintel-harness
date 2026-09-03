@@ -1,6 +1,6 @@
 # `planning` — portfolio and roadmap management as a decision loop
 
-**Version 1.0.0 · requires CLI 1.0.0 or later · self-contained.**
+**Version 1.0.0 · requires CLI 0.1.0 or later · self-contained.**
 
 A project running this pack is one whose *work is the portfolio*: bets,
 reviews, horizons, intake. The spine is a six-phase loop —

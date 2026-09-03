@@ -3,7 +3,7 @@
   "name": "writing",
   "version": "1.0.0",
   "title": "Writing — a nine-stage research-and-drafting process, 8 roles, a voice guide",
-  "minCliVersion": "1.0.0",
+  "minCliVersion": "0.1.0",
   "recipe": "recipe.json",
   "folderReadme": "index.md",
   "anatomy": {

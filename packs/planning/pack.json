@@ -3,7 +3,7 @@
   "name": "planning",
   "version": "1.0.0",
   "title": "Planning — portfolio and roadmap management as a calibrated decision loop",
-  "minCliVersion": "1.0.0",
+  "minCliVersion": "0.1.0",
   "recipe": "recipe.json",
   "provenance": {
     "kind": "authored",

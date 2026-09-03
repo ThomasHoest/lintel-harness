@@ -49,6 +49,12 @@ npx @linteldk/cli harness init coding --set projectName="Demo Project"
 Node **>= 22**, and **zero runtime dependencies** — `npm install` fetches
 this package and nothing else.
 
+**Shipping as `0.1.0`, deliberately.** The specification set is complete
+and the suite is green on three platforms, but this has not yet been used
+in anger by anyone but its author — so it ships under a `0.x` number,
+which is semver's way of saying *breaking changes may land without
+ceremony*. **`1.0.0` is reserved** for when that stops being true.
+
 **Not on npm yet.** `npm publish --dry-run` passes and the release
 workflow is wired, but no version has been pushed to the registry, so
 both commands above will 404 until it is. Until then, install from source:

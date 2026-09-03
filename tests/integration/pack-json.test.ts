@@ -237,11 +237,17 @@ test('a non-semver version or floor fails validation, and returns no pack', () =
 test('a CLI below the floor is refused, and told what to do about it', async () => {
   const pack = await declarationOf('coding');
 
-  const tooOld = checkCliFloor(pack, '0.9.0');
+  // DERIVED from the pack's actual floor, never written out. This line
+  // said `'0.9.0'` until the release dropped the floor to `0.1.0` — at
+  // which point 0.9.0 was ABOVE it, `checkCliFloor` correctly returned
+  // nothing, and the test failed while the code was right. A literal
+  // "below the floor" is only below the floor the day it is written.
+  const below = belowFloor(pack.minCliVersion);
+  const tooOld = checkCliFloor(pack, below);
   assert.deepEqual(codes(tooOld), ['E-PACK-CLI-TOO-OLD']);
   assert.equal(exitClassFor('E-PACK-CLI-TOO-OLD'), EXIT.userFault, 'upgradeable, so the user’s');
   const m = tooOld.items[0]!.message;
-  for (const part of [pack.name, pack.version, pack.minCliVersion, '0.9.0']) {
+  for (const part of [pack.name, pack.version, pack.minCliVersion, below]) {
     assert.ok(m.includes(part), `the message names ${part}: ${m}`);
   }
   // The package name, read from `package.json` rather than written out.
@@ -1119,3 +1125,17 @@ test('the product ships one scaffold, so those rules are fixture-covered on purp
   }
   assert.deepEqual(all, ['writing:writing-workstream:workstream']);
 });
+
+/**
+ * A version strictly below `floor`, derived rather than written out.
+ *
+ * Decrements the least-significant non-zero component, which is enough
+ * for any real floor and fails loudly for `0.0.0`, where nothing is below.
+ */
+function belowFloor(floor: string): string {
+  const [maj, min, patch] = floor.split('.').map((n) => Number.parseInt(n, 10));
+  if (patch! > 0) return `${maj}.${min}.${patch! - 1}`;
+  if (min! > 0) return `${maj}.${min! - 1}.99`;
+  if (maj! > 0) return `${maj! - 1}.99.99`;
+  throw new Error(`no version is below ${floor}`);
+}

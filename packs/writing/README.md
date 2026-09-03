@@ -1,6 +1,6 @@
 # `writing` — a research-and-drafting way of working
 
-**Version 1.0.0 · `minCliVersion` 1.0.0 · scaffold: `writing-workstream`**
+**Version 1.0.0 · `minCliVersion` 0.1.0 · scaffold: `writing-workstream`**
 
 A pack for projects whose output is prose: a research corpus that is built
 once, and per-deliverable writing stages that draw on it. Nine stages in two
