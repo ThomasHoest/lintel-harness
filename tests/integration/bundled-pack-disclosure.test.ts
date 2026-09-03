@@ -132,9 +132,19 @@ test('init: agentInstructionSubstitutions names exactly five applied paths with 
  *  source itself — so this test fails if the disclosure builder diverges
  *  from what the pack actually declares, not merely if a hand-copied
  *  string goes stale. */
+/**
+ * LF-normalised, because **git checks the pack out with CRLF on Windows**.
+ *
+ * Both sides of the comparison are normalised, not just this one: on
+ * Windows the CLI reads the very same bytes, so its disclosure carries the
+ * `\r` too. Normalising only the expectation would swap a real failure for
+ * a confusing one rather than fixing anything.
+ */
+const lf = (text: string): string => text.replaceAll('\r\n', '\n');
+
 async function sourceFrontmatter(agentBasename: string): Promise<string> {
   const url = new URL(`agents/${agentBasename}`, packDir('coding'));
-  const text = await readFile(fileURLToPath(url), 'utf8');
+  const text = lf(await readFile(fileURLToPath(url), 'utf8'));
   const lines = text.split('\n');
   assert.equal(lines[0], '---', `${agentBasename} must open with ---`);
   const closeAt = lines.indexOf('---', 1);
@@ -166,7 +176,7 @@ test('pack info: all ten coding agents are disclosed with their whole frontmatte
     const path = `.claude/agents/${basename}`;
     const expected = await sourceFrontmatter(basename);
     assert.ok(byPath.has(path), `no disclosure row for ${path}`);
-    assert.equal(byPath.get(path), expected, `${path}: frontmatter must be verbatim, whole block`);
+    assert.equal(lf(byPath.get(path) ?? ''), expected, `${path}: frontmatter must be verbatim, whole block`);
   }
 
   // Bash on exactly two: implementer and testwriter.

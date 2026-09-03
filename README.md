@@ -35,14 +35,38 @@ correctly applied" a checked fact instead of a claim.
 the `v1.0` branch. **All six commands work** — `init`, `update`, `verify`,
 `validate`, `pack info` and `skill install`.**
 
+### Install
+
+Once published, the package is `@linteldk/cli` and the command is `lintel`
+— the two names differ on purpose, and nothing reads the package name at
+runtime:
+
 ```bash
+npm install -g @linteldk/cli        # global: `lintel` on your PATH
+npx @linteldk/cli harness init coding --set projectName="Demo Project"
+```
+
+Node **>= 22**, and **zero runtime dependencies** — `npm install` fetches
+this package and nothing else.
+
+**Not on npm yet.** `npm publish --dry-run` passes and the release
+workflow is wired, but no version has been pushed to the registry, so
+both commands above will 404 until it is. Until then, install from source:
+
+### From source
+
+```bash
+git clone https://github.com/ThomasHoest/lintel-harness.git
+cd lintel-harness
 npm ci
 npm run build
 npm link                     # puts the real `lintel` shim on your PATH
 
-mkdir /tmp/demo && cd /tmp/demo
+mkdir /tmp/demo && cd /tmp/demo && git init
 lintel harness init coding --set projectName="Demo Project"
 ```
+
+`npm unlink -g @linteldk/cli` removes the link again.
 
 **Use `npm link`, not `node path/to/dist/cli/main.js`.** Running the entry
 file directly works, and that is the problem: it is not how anybody runs

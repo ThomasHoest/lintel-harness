@@ -28,19 +28,32 @@ const SKILL_MD = fileURLToPath(new URL('../../skill/SKILL.md', import.meta.url))
 const REF_INIT = fileURLToPath(new URL('../../skill/reference/init.md', import.meta.url));
 const REF_UPDATE = fileURLToPath(new URL('../../skill/reference/update.md', import.meta.url));
 
+/**
+ * Read text with line endings normalised to LF.
+ *
+ * **Git checks these files out with CRLF on Windows**, so `split('\n')`
+ * leaves a trailing `\r` on every line and `lines[0] === '---'` is false
+ * — which is exactly how this suite went red on `windows-latest` while
+ * passing on macOS and Ubuntu. The **product** handles CRLF correctly
+ * (`claudeFrontmatterFindings` raises the same codes for both encodings);
+ * this is test scaffolding assuming an encoding, which is the fourth
+ * Windows fault of that shape in this repo.
+ */
+const lf = (text: string): string => text.replaceAll('\r\n', '\n');
+
 async function readAll(): Promise<{ readonly name: string; readonly text: string }[]> {
   const files = [
     { name: 'SKILL.md', path: SKILL_MD },
     { name: 'reference/init.md', path: REF_INIT },
     { name: 'reference/update.md', path: REF_UPDATE },
   ];
-  return Promise.all(files.map(async (f) => ({ name: f.name, text: await readFile(f.path, 'utf8') })));
+  return Promise.all(files.map(async (f) => ({ name: f.name, text: lf(await readFile(f.path, 'utf8')) })));
 }
 
 /* ── no permission-bearing frontmatter key ──────────────────────────── */
 
 test('SKILL.md declares no permission-bearing frontmatter key', async () => {
-  const text = await readFile(SKILL_MD, 'utf8');
+  const text = lf(await readFile(SKILL_MD, 'utf8'));
   const lines = text.split('\n');
   assert.equal(lines[0], '---', 'SKILL.md must open with a frontmatter block');
   const close = lines.indexOf('---', 1);

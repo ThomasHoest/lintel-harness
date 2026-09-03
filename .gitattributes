@@ -1,0 +1,17 @@
+# Check every text file out with LF, on every platform.
+#
+# Without this, git converts LF to CRLF on Windows checkout, and this
+# repository compares file BYTES in several places — pack payload digests,
+# the `pack info` disclosure's "verbatim frontmatter block", the
+# frontmatter `---` fences. Four separate Windows-only CI failures have
+# come from that conversion, every one of them in test scaffolding that
+# assumed an encoding rather than in the product, which handles both.
+#
+# The tests normalise as well. This is the belt; that is the braces.
+* text=auto eol=lf
+
+# Bytes are bytes.
+*.png binary
+*.jpg binary
+*.gz  binary
+*.tgz binary
