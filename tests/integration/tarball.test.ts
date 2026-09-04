@@ -38,8 +38,30 @@ test('the binary and everything it reads at runtime is in the tarball', { timeou
   const files = shipped();
   const pkg = JSON.parse(await readFile(join(REPO, 'package.json'), 'utf8'));
 
-  const bin = String(pkg.bin.lintel).replace(/^\.\//, '');
-  assert.ok(files.includes(bin), `the binary ${bin} must ship`);
+  /**
+   * **No `./` prefix.** npm 11 rejects `"bin": {"lintel": "./dist/..."}`
+   * as an invalid script name, **strips the entry, and continues** —
+   * warning only:
+   *
+   *   npm warn publish "bin[lintel]" script name dist/cli/main.js
+   *                    was invalid and removed
+   *
+   * The package publishes successfully and installs with **no `lintel`
+   * command at all**. Found on the first real publish attempt, 2026-09-04.
+   *
+   * This test did not catch it, and the reason is the line that used to be
+   * here: it read the value through `.replace(/^\.\//, '')` — **normalising
+   * away the exact defect**, then asserting on the cleaned result. The
+   * tarball's own `package.json` keeps the prefix, so nothing downstream
+   * disagreed either. Asserted directly now, before it is used.
+   */
+  const raw = String(pkg.bin.lintel);
+  assert.ok(
+    !raw.startsWith('./'),
+    `bin must not start with "./" — npm strips such an entry at publish ` +
+      `time and ships a CLI with no command. Got: ${raw}`,
+  );
+  assert.ok(files.includes(raw), `the binary ${raw} must ship`);
 
   // The three packs ARE the product; a CLI that ships without them
   // installs a generator with nothing to generate.

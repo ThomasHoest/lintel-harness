@@ -4,7 +4,7 @@
   "description": "Harness template generator \u2014 applies a way of working to a project, and updates it later.",
   "type": "module",
   "bin": {
-    "lintel": "./dist/cli/main.js"
+    "lintel": "dist/cli/main.js"
   },
   "exports": {
     ".": {
