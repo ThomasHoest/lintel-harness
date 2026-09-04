@@ -70,6 +70,23 @@ export const PROMPT_TEXT = {
   boolean: 'y/n',
   /** Shown where a `default` is declared; an empty line accepts it. */
   default: 'default',
+  /**
+   * What an **empty** default says.
+   *
+   * `"default": ""` is a real and common declaration — `coding`'s `stack`
+   * uses it — and rendering it through the line above produced:
+   *
+   *     Primary stack, one line (appears in CLAUDE.md)
+   *       default
+   *     >
+   *
+   * a label with nothing after it, above a caret with no hint that Enter
+   * is a valid answer. **The first user of 0.1.0 read that as a hang and
+   * pressed Ctrl+C.** They were right to: nothing on screen said the CLI
+   * was waiting for them rather than stuck, and nothing said the field
+   * was optional. It is the emptiness that has to be spoken aloud.
+   */
+  emptyDefault: 'optional — press Enter to skip',
   /** Where the answer is typed. */
   caret: '> ',
 } as const;
@@ -95,7 +112,14 @@ export function promptQuery(decl: ParameterDecl): string {
   }
 
   if (decl.default !== undefined) {
-    lines.push(`  ${escapeLine(PROMPT_TEXT.default)} ${escapeValue(String(decl.default))}`);
+    // An empty default is announced, not rendered as absence. See
+    // PROMPT_TEXT.emptyDefault for why this is its own branch.
+    const shown = String(decl.default);
+    lines.push(
+      shown === ''
+        ? `  ${escapeLine(PROMPT_TEXT.emptyDefault)}`
+        : `  ${escapeLine(PROMPT_TEXT.default)} ${escapeValue(shown)}`,
+    );
   }
 
   return `${lines.join('\n')}\n${PROMPT_TEXT.caret}`;

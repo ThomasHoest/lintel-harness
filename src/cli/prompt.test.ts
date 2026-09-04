@@ -87,3 +87,42 @@ test('a string answer is not trimmed', () => {
   // only at a prompt.
   assert.equal(interpret(decl({}), '  spaced  '), '  spaced  ');
 });
+
+/**
+ * **An empty default must announce itself.**
+ *
+ * `"default": ""` is a real declaration — `coding`'s `stack` uses one —
+ * and it used to render as a bare label with nothing after it:
+ *
+ *     Primary stack, one line (appears in CLAUDE.md)
+ *       default
+ *     >
+ *
+ * The first user of the published 0.1.0 read that as a hang and pressed
+ * Ctrl+C. Nothing on screen said the CLI was waiting for them rather than
+ * stuck, and nothing said Enter was a valid answer. Pressing Enter would
+ * in fact have completed the apply — which makes this a pure presentation
+ * defect, and the most expensive kind: the tool worked and the user could
+ * not tell.
+ */
+test('an empty default is announced, never rendered as an empty label', () => {
+  const q = promptQuery({
+    id: 'stack',
+    prompt: 'Primary stack',
+    type: 'string',
+    default: '',
+  } as ParameterDecl);
+
+  assert.match(q, /optional/, 'it must say the field can be skipped');
+  assert.match(q, /Enter/, 'and name the key that skips it');
+  assert.ok(
+    !/default\s*\n/.test(q),
+    `"default" must never be followed by nothing:\n${q}`,
+  );
+});
+
+test('a non-empty default is still shown as a value', () => {
+  const q = promptQuery({ id: 'x', prompt: 'Something', type: 'string', default: 'node' } as ParameterDecl);
+  assert.match(q, /default node/, 'a real default reads as before');
+  assert.ok(!/optional/.test(q), 'and is not described as optional');
+});
