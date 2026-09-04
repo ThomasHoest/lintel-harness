@@ -155,7 +155,43 @@ export function makePrompt(
 
   const rl = createInterface({ input: streams.input, output: streams.output });
   return {
-    prompt: async (decl) => interpret(decl, await rl.question(promptQuery(decl))),
+    prompt: async (decl) => {
+      let answer: string;
+      try {
+        answer = await rl.question(promptQuery(decl));
+      } catch (e) {
+        // **Ctrl+C at a prompt is a person cancelling, not a crash.**
+        //
+        // `readline/promises`' `question()` REJECTS with an `AbortError`
+        // when the user interrupts. Nothing caught it, so node printed a
+        // raw unhandled rejection — ten lines of internal stack frames
+        // (`node:internal/readline/interface`) at somebody who pressed
+        // Ctrl+C on purpose. Reported by the first user of 0.1.0, on the
+        // very first command they ran.
+        //
+        // Rethrown as a typed cancellation the entry point turns into
+        // exit 130 (128 + SIGINT, the shell convention). **Nothing has
+        // been written at this point** — prompting happens while
+        // collecting answers, before any plan executes — so cancelling
+        // here leaves the project untouched, and the message can say so.
+        if ((e as NodeJS.ErrnoException)?.code === 'ABORT_ERR') throw new PromptCancelled();
+        throw e;
+      }
+      return interpret(decl, answer);
+    },
     close: () => rl.close(),
   };
+}
+
+/**
+ * The user interrupted a prompt.
+ *
+ * A distinct type rather than a flag, so the entry point can tell
+ * "cancelled deliberately" from "threw", and report each as what it is.
+ */
+export class PromptCancelled extends Error {
+  constructor() {
+    super('cancelled at a prompt');
+    this.name = 'PromptCancelled';
+  }
 }

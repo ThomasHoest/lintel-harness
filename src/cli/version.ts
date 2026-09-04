@@ -46,4 +46,4 @@
 
 /** The version `minCliVersion`, the manifest's `cli` key and
  *  `W-MANIFEST-NEWER-CLI` are all judged against. */
-export const CLI_VERSION = '0.1.0';
+export const CLI_VERSION = '0.1.1';

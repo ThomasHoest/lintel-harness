@@ -21,6 +21,7 @@ import { runPackCommand, runValidateCommand, runVerifyCommand } from './commands
 import { runUpdate, updateOptions } from './commands/update.js';
 import { CLI_VERSION } from './version.js';
 import { acceptedFlags, flagTakesValue } from './flags.js';
+import { PromptCancelled } from './prompt.js';
 import { runSkillCommand } from './commands/skill.js';
 
 export interface Streams {
@@ -329,8 +330,21 @@ function startedByNode(): boolean {
 }
 
 if (startedByNode()) {
-  const result = await run(process.argv.slice(2));
-  process.exitCode = result.code;
+  try {
+    const result = await run(process.argv.slice(2));
+    process.exitCode = result.code;
+  } catch (e) {
+    // Ctrl+C at a prompt. **Exit 130** — 128 + SIGINT, what a shell
+    // expects — with one line on stderr instead of a node stack trace.
+    // Nothing is written before answers are collected, so the claim that
+    // the project is untouched is a fact about the ordering, not a hope.
+    if (e instanceof PromptCancelled) {
+      process.stderr.write('lintel: cancelled. Nothing was written.\n');
+      process.exitCode = 130;
+    } else {
+      throw e;
+    }
+  }
 }
 /* c8 ignore stop */
 
